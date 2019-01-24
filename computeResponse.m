@@ -1,4 +1,5 @@
 function [excitations, theOI, L, M, S] = computeResponse(display, fovDeg, psf, theMosaic, image)
+% REPLACE BY ISETPipelineToolbox/ConeResponse (class)
 % Compute cone mosaic response, given mosaic parameters and RGB image.
 %
 % Syntax: 
