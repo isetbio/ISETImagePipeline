@@ -7,19 +7,17 @@ retina.visualizeCone()
 
 %% Response to image
 imgIdx = 1;
-load('./image_all.mat');
+load('./image_cifar_all.mat');
 image = reshape(image_all(imgIdx, :, :), [32, 32, 3]);
 
 % Compute response
-[excitation, oi, l, m, s] = retina.compute(image);
+[~, oi, l, m, s] = retina.compute(image);
 
-%% Visualize OI
+%% Visualize OI & Visualize cone excitation
 retina.visualizeOI();
-
-%% Visualize cone excitation
 retina.visualizeExcitation();
 
-%% previous code
+%% Previous code %%
 fovDeg = 1;
 theMosaic = coneMosaicHex(5, ...                % hex lattice sampling factor
    'fovDegs', fovDeg, ...                       % match mosaic width to stimulus size
