@@ -22,5 +22,5 @@ for imgIdx = 1 : nImage
 end
 
 % Write to output directory
-save(strcat(dataDirOut, 'exci_false_cifar_1.mat'), 'excitaions');
-save(strcat(dataDirOut, 'oi_false_cifar_1.mat'),   'optical_img');
+save(strcat(dataDirOut, 'cifar_exci_false_1.mat'), 'excitaions');
+save(strcat(dataDirOut, 'cifar_oi_false_1.mat'),   'optical_img');
