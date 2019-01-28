@@ -8,17 +8,21 @@ dataDirOut  = strcat(dataBaseDir, '/CIFAR_all/');
 load(dataDirIn);
 retina = ConeResponse();
 
-nImage     = 1000;
+nImage     = 100;
 excitaions = zeros(nImage, 740, 740);
-optical_img = zeros(1, nImage);
 
 % Compute mosaic excitation pattern and optical image
 for imgIdx = 1 : nImage
     input = reshape(image_all(imgIdx, :, :), [32, 32, 3]);
     [exci, oi] = retina.compute(input);
     
-    excitaions(imgIdx, :, :) = exci;
-    optical_img(imgIdx) = oi;
+    excitaions(imgIdx, :, :) = exci;    
+    if imgIdx == 1
+        optical_img = oi;
+        optical_img = repmat(optical_img, 1, nImage);
+    else
+        optical_img(imgIdx) = oi;
+    end        
 end
 
 % Write to output directory
