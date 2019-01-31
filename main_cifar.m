@@ -1,4 +1,23 @@
-%% Generate a hexagonal cone mosaic with ecc-based cone quantal efficiency
+% Example shows how to use ISETPipeineToolbox/ConeResponse
+% Create cone mosaic with default (simple) parameter and human psf (optics)
+retina = ConeResponse();
+
+%% cone mosaic
+retina.visualizeCone()
+
+%% Response to image
+imgIdx = 1;
+load('./image_cifar_all.mat');
+image = reshape(image_all(imgIdx, :, :), [32, 32, 3]);
+
+% Compute response
+[~, oi, l, m, s] = retina.compute(image);
+
+%% Visualize OI & Visualize cone excitation
+retina.visualizeOI();
+retina.visualizeExcitation();
+
+%% Previous code %%
 fovDeg = 1;
 theMosaic = coneMosaicHex(5, ...                % hex lattice sampling factor
    'fovDegs', fovDeg, ...                       % match mosaic width to stimulus size
