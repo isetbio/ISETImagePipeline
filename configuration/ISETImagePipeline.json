@@ -4,7 +4,7 @@
 		"hook": "",
 		"importance": "",
 		"localHookTemplate": "configuration/ISETImagePipelineLocalHookTemplate.m",
-		"name": "ISETTImagePipeline",
+		"name": "ISETImagePipeline",
 		"pathPlacement": "append",
 		"subfolder": ["toolbox", "tutorials", "compute", "validations"],
 		"toolboxRoot": "",
