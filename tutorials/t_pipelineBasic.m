@@ -21,6 +21,7 @@
 % History:
 %   01/30/19  lz       Wrote it.
 %   01/31/19  lz, dhb  Comments, clean up etc.
+%   02/04/19  lz       Update with cone excitation vector added etc.
 
 %% Clear etc
 clear; close all;
@@ -46,10 +47,12 @@ if (~exist(dataFileIn,'file'))
 end
 load(dataFileIn);
 
-%% Create the compute object
-fprintf('Constructing ConeResponse object ...');  
+%% Create the compute object, show cone mosaic being used
+fprintf('Constructing ConeResponse object ... \n');  
 retina = ConeResponse();
-fprintf('done\n');
+fprintf('Finish Constructing ConeResponse object \n');
+
+retina.visualizeCone();
 
 %% Define number of images
 nImages = 5;
@@ -63,7 +66,7 @@ for imgIdx = 1:nImages
     inputImage = reshape(image_all(imgIdx,:), [32, 32, 3]);
     
     % The ConeResponse object does all the work, and gives as the result
-    [excitationImage, oi] = retina.compute(inputImage);
+    [excitationImage, oi, allCone, L, M, S] = retina.compute(inputImage);
     
     % Write to output directory
     
@@ -79,11 +82,9 @@ for imgIdx = 1:nImages
         % Save one copy of the mosaic object that was used
         % to compute everything.
         
-        % Shwow some things
-        figure; clf; imshow(inputImage/max(inputImage(:)));
-        figure; clf; imshow(oi.data.photons(:,:,round(end/2))/max(oi.data.photons(:)));
-        figure; clf; imshow(excitationImage/max(excitationImage(:)));
-
+        % Show input image, optical image, and cone mosaic excitation        
+        retina.visualizeOI();
+        retina.visualizeExcitation();
     end
     
     % For optical image, just store the photon map (isomerizations)
@@ -95,8 +96,12 @@ for imgIdx = 1:nImages
     excitationFile = sprintf('excitations_%d.mat',imgIdx);
     save(fullfile(dataDirOut,excitationFile),'excitationImage');
       
-    % Get excitations as a vector with length number of cones and save
-    % that into its own file as well.
+    % Save excitations as a vector with length number of cones. This might 
+    % be useful, for example, if we are using them as likelihood function, 
+    % or in regression settings    
+    coneVectorFile = sprintf('coneVector_%d.mat', imgIdx);
+    save(fullfile(dataDirOut,coneVectorFile),'allCone');    
+    
 end
 
 
