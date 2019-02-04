@@ -50,7 +50,7 @@ load(dataFileIn);
 %% Create the compute object, show cone mosaic being used
 fprintf('Constructing ConeResponse object ... \n');  
 retina = ConeResponse();
-fprintf('Finish Constructing ConeResponse object \n');
+fprintf('Finish Constructing ConeResponse object. \n');
 
 retina.visualizeCone();
 
@@ -80,7 +80,10 @@ for imgIdx = 1:nImages
         save(fullfile(dataDirOut,oistructFile),'oi');
         
         % Save one copy of the mosaic object that was used
-        % to compute everything.
+        % to compute everything
+        mosaic = retina.getMosaic();
+        mosaicFile = 'mosaicStruct.mat';
+        save(fullfile(dataDirOut,mosaicFile), 'mosaic');
         
         % Show input image, optical image, and cone mosaic excitation        
         retina.visualizeOI();
