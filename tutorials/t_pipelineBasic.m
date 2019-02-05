@@ -34,15 +34,15 @@ rng(1);
 projectName = 'ISETImagePipeline';
 thisImageSet = 'CIFAR_all';
 theDir = 'true_1_tutorial';
-dataBaseDir = getpref(projectName,'dataDir');
+dataBaseDir = getpref(projectName, 'dataDir');
 dataFileIn = fullfile(dataBaseDir, thisImageSet, 'image_cifar_all.mat');
 dataDirOut = fullfile(dataBaseDir, thisImageSet, theDir);
-if (~exist(dataDirOut,'dir'))
+if (~exist(dataDirOut, 'dir'))
     mkdir(dataDirOut);
 end
 
 %% Load in the dataset data and create ConeResponse object
-if (~exist(dataFileIn,'file'))
+if (~exist(dataFileIn, 'file'))
     error('Need to get CIFAR dataset in .mat format into expected location before this will work');
 end
 load(dataFileIn);
@@ -63,7 +63,7 @@ for imgIdx = 1:nImages
     % pull out just one image. We rely on the fact that we know the size of
     % the image in each row. THis knowledge is specific to the CIFAR
     % dataset as we downloaded it.
-    inputImage = reshape(image_all(imgIdx,:), [32, 32, 3]);
+    inputImage = reshape(image_all(imgIdx, :), [32, 32, 3]);
     
     % The ConeResponse object does all the work, and gives as the result
     [excitationImage, oi, allCone, L, M, S] = retina.compute(inputImage);
@@ -77,13 +77,13 @@ for imgIdx = 1:nImages
     if (imgIdx == 1)
         % Save optical image structure
         oistructFile = 'oiStruct.mat';
-        save(fullfile(dataDirOut,oistructFile),'oi');
+        save(fullfile(dataDirOut, oistructFile), 'oi');
         
         % Save one copy of the mosaic object that was used
         % to compute everything
         mosaic = retina.getMosaic();
         mosaicFile = 'mosaicStruct.mat';
-        save(fullfile(dataDirOut,mosaicFile), 'mosaic');
+        save(fullfile(dataDirOut, mosaicFile), 'mosaic');
         
         % Show input image, optical image, and cone mosaic excitation        
         retina.visualizeOI();
@@ -91,19 +91,19 @@ for imgIdx = 1:nImages
     end
     
     % For optical image, just store the photon map (isomerizations)
-    oiFile = sprintf('oiPhotons_%d.mat',imgIdx);
+    oiFile = sprintf('oiPhotons_%d.mat', imgIdx);
     photons = oi.data.photons;
-    save(fullfile(dataDirOut,oiFile),'photons');
+    save(fullfile(dataDirOut, oiFile), 'photons');
     
     % Save excitation image
-    excitationFile = sprintf('excitations_%d.mat',imgIdx);
-    save(fullfile(dataDirOut,excitationFile),'excitationImage');
+    excitationFile = sprintf('excitations_%d.mat', imgIdx);
+    save(fullfile(dataDirOut, excitationFile), 'excitationImage');
       
     % Save excitations as a vector with length number of cones. This might 
     % be useful, for example, if we are using them as likelihood function, 
     % or in regression settings    
     coneVectorFile = sprintf('coneVector_%d.mat', imgIdx);
-    save(fullfile(dataDirOut,coneVectorFile),'allCone');    
+    save(fullfile(dataDirOut, coneVectorFile), 'allCone');    
     
 end
 
