@@ -33,7 +33,7 @@ rng(1);
 % down a directory tree from there.
 projectName = 'ISETImagePipeline';
 thisImageSet = 'CIFAR_all';
-theDir = 'false_1_tutorial';
+theDir = 'true_1_tutorial';
 dataBaseDir = getpref(projectName,'dataDir');
 dataFileIn = fullfile(dataBaseDir, thisImageSet, 'image_cifar_all.mat');
 dataDirOut = fullfile(dataBaseDir, thisImageSet, theDir);
@@ -49,7 +49,7 @@ load(dataFileIn);
 
 %% Create the compute object, show cone mosaic being used
 fprintf('Constructing ConeResponse object ... \n');  
-retina = ConeResponse();
+retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true);
 fprintf('Finish Constructing ConeResponse object. \n');
 
 retina.visualizeCone();
