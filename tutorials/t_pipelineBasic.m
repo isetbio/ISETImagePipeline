@@ -51,7 +51,6 @@ load(dataFileIn);
 fprintf('Constructing ConeResponse object ... \n');  
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true);
 fprintf('Finish Constructing ConeResponse object. \n');
-
 retina.visualizeCone();
 
 %% Define number of images
@@ -69,7 +68,7 @@ for imgIdx = 1:nImages
     [excitationImage, oi, allCone, L, M, S] = retina.compute(inputImage);
     
     % Write to output directory
-    
+    %
     % First time through, save full optical image structure.  This is
     % constant across images except for the photon data.  To save space, we
     % only store one of these, and then store the photon data separately
