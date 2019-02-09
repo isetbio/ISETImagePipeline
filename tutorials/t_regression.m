@@ -4,7 +4,7 @@ thisImageSet = 'CIFAR_all';
 dataBaseDir = getpref(projectName, 'dataDir');
 
 coneVecDir = 'all_1_true_coneVec';
-coneVecTr  = 'coneVector_hold.mat';
+coneVecTr  = 'coneVector10k.mat';
 coneVecTe  = 'coneVector_hold.mat';
 
 ConeVecIn = fullfile(dataBaseDir, thisImageSet, coneVecDir);
@@ -14,7 +14,7 @@ D = struct2cell(load(fullfile(ConeVecIn, coneVecTe)));
 coneVecTe = D{1}; clear D;
 
 imageFileIn = fullfile(dataBaseDir, thisImageSet);
-imageTr = 'cifar_hold_5k.mat';
+imageTr = 'cifar_10k.mat';
 imageTe = 'cifar_hold_5k.mat';
 
 D = struct2cell(load(fullfile(imageFileIn, imageTr)));
