@@ -31,16 +31,16 @@ regEstimator = RegressionEstimator(coneVecTr, imageTr, 'nDiag', round(nDiag * 0.
 
 %% Simple testing
 evalObj = CrossValidation(coneVecTe, imageTe, nTest);
-for nSample = 1:20
+for nSample = 1:50
     recon = evalObj.sampleTest(regEstimator);
     pause(0.5);
 end
 
 %% Full evaluation
 [totalMSE, listMSE] = evalObj.evalTest(regEstimator);
-histogram(listMSE); grid on;
+histogram(listMSE(listMSE < 10)); grid on;
 
 %% Cross validation
-stepSize = round(nDiag / 10);
+stepSize = round(nDiag / 20);
 regEstimator.setParaList(stepSize : stepSize : nDiag);
 [paraList, mse] = evalObj.crossValidate(regEstimator);
