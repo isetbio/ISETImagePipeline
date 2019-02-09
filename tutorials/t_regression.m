@@ -43,4 +43,4 @@ histogram(listMSE); grid on;
 %% Cross validation
 stepSize = round(nDiag / 10);
 regEstimator.setParaList(stepSize : stepSize : nDiag);
-evalObj.crossValidate(regEstimator);
+[paraList, mse] = evalObj.crossValidate(regEstimator);
