@@ -46,3 +46,7 @@ histogram(listMSE(listMSE < 10)); grid on;
 stepSize = round(nDiag / 20);
 regEstimator.setParaList(stepSize : stepSize : nDiag);
 [paraList, mse] = evalObj.crossValidate(regEstimator);
+
+%% Regression estimator with normalization
+nDiag = min(size(coneVecTr));
+regEstimator = NrmRegressionEstimator(coneVecTr, imageTr, 'nDiag', round(nDiag * 0.2));
