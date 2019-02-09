@@ -27,27 +27,9 @@ nTest  = size(imageTe, 1);
 
 %% Learning the regression estimator
 nDiag = min(size(coneVecTr));
-regEstimator = RegressionEstimator(coneVecTr, imageTr, 'nDiag', round(nDiag * 0.5));
-
-%% Regression estimator with normalization
-nDiag = min(size(coneVecTr));
-nrmregEstimator = NrmRegressionEstimator(coneVecTr, imageTr, 'nDiag', round(nDiag * 0.2));
-
-%% Simple testing
-evalObj = CrossValidation(coneVecTe, imageTe, nTest);
-for nSample = 1:25
-    recon = evalObj.sampleTest(regEstimator, true);
-    pause(0.5);
-end
+regEstimator = RegressionEstimator(imageTr, coneVecTr);
 
 %% Full evaluation
+evalObj = CrossValidation(imageTe, coneVecTe, nTest);
 [totalMSE, listMSE] = evalObj.evalTest(regEstimator);
-
-figure;
-histogram(listMSE(listMSE < 1)); grid on;
-
-%% Cross validation
-stepSize = round(nDiag / 20);
-regEstimator.setParaList(stepSize : stepSize : nDiag);
-[paraList, mse] = evalObj.crossValidate(regEstimator);
 
