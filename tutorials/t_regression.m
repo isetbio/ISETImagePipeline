@@ -26,7 +26,7 @@ nTrain = size(imageTr, 1);
 nTest  = size(imageTe, 1);
 
 %% Learning the regression estimator
-nDiag = min(size(imageTr));
+nDiag = min(size(coneVecTr));
 regEstimator = RegressionEstimator(coneVecTr, imageTr, 'nDiag', round(nDiag * 0.5));
 
 %% Simple testing
@@ -36,4 +36,11 @@ for nSample = 1:20
     pause(0.5);
 end
 
+%% Full evaluation
+[totalMSE, listMSE] = evalObj.evalTest(regEstimator);
+histogram(listMSE); grid on;
 
+%% Cross validation
+stepSize = round(nDiag / 10);
+regEstimator.setParaList(stepSize : stepSize : nDiag);
+evalObj.crossValidate(regEstimator);
