@@ -25,13 +25,13 @@ imageTe = D{1}; clear D;
 nTrain = size(imageTr, 1);
 nTest  = size(imageTe, 1);
 
+%% Tricks
+coneVecTr = [coneVecTr, ones(25000, 1)];
+coneVecTe = [coneVecTe, ones(5000, 1)];
+
 %% Learning the regression estimator
 nDiag = min(size(coneVecTr));
 regEstimator = RegressionEstimator(coneVecTr, imageTr, 'nDiag', round(nDiag * 0.5));
-
-%% Regression estimator with normalization
-nDiag = min(size(coneVecTr));
-nrmregEstimator = NrmRegressionEstimator(coneVecTr, imageTr, 'nDiag', round(nDiag * 0.2));
 
 %% Simple testing
 evalObj = CrossValidation(coneVecTe, imageTe, nTest);
@@ -51,3 +51,6 @@ stepSize = round(nDiag / 20);
 regEstimator.setParaList(stepSize : stepSize : nDiag);
 [paraList, mse] = evalObj.crossValidate(regEstimator);
 
+%% (Optional, Reload Data Before Running This) Regression estimator with normalization
+nDiag = min(size(coneVecTr));
+nrmregEstimator = NrmRegressionEstimator(coneVecTr, imageTr, 'nDiag', round(nDiag * 0.2));
