@@ -60,8 +60,7 @@ nSample = 36;
 for idx = 1:nSample
     subplot(6, 6, idx);
     [recon, gt] = evalObj.sampleTest(regEstimator, false);
-
-
+    
     scatter(gt, recon); grid on; hold on;
     refPoint = [-500, 5000];
     plot(refPoint, refPoint);
@@ -84,10 +83,14 @@ for idx = 1:nSample
 
     scatter(gt, recon); grid on; hold on;
     refPoint = [-500, 5000];
-    plot(refPoint, refPoint);
-    xlabel('True Cone Mean Response');
-    ylabel('Estimated Cone Mean Response');    
+    plot(refPoint, refPoint);   
+    
     axis square;    
     xlim(refPoint);
     ylim(refPoint);
 end
+
+%% Cross validation
+stepSize = round(nDiag / 20);
+nrmregEstimator.setParaList(stepSize : stepSize : nDiag);
+evalObj.crossValidate(nrmregEstimator);
