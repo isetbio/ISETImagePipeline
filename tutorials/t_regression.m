@@ -1,3 +1,11 @@
+% Demonstrate the basics of using the regression method for image reconstruction
+%
+% Description:
+%    This tutorial shows how do we train and test a regression estimator,
+%    use dataset generated in t_pipelineBasic.m
+%    
+%    This method is described in Golden et al., 2019.
+
 %% Setup training and test dataset
 projectName = 'ISETImagePipeline';
 thisImageSet = 'CIFAR_all';
