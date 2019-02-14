@@ -51,7 +51,7 @@ load(dataFileIn);
 fprintf('Constructing ConeResponse object ... \n');  
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true);
 fprintf('Finish Constructing ConeResponse object. \n');
-retina.visualizeCone();
+retina.visualizeMosaic();
 
 %% Define number of images
 nImages = 5;
