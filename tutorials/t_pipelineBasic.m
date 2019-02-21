@@ -48,8 +48,12 @@ end
 load(dataFileIn);
 
 %% Create the compute object, show cone mosaic being used
+displayFile = 'CRT12BitDisplay.mat';
+display = load(fullfile(dataBaseDir, displayFile));
+
 fprintf('Constructing ConeResponse object ... \n');  
-retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true);
+retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
+                      'display', display.CRT12BitDisplay);
 fprintf('Finish Constructing ConeResponse object. \n');
 retina.visualizeMosaic();
 
@@ -65,7 +69,7 @@ for imgIdx = 1:nImages
     inputImage = reshape(image_all(imgIdx, :), [32, 32, 3]);
     
     % The ConeResponse object does all the work, and gives as the result
-    [excitationImage, oi, allCone, L, M, S] = retina.compute(inputImage);
+    [excitationImage, oi, linearImage, allCone, L, M, S] = retina.compute(inputImage);
     
     % Write to output directory
     %
@@ -88,6 +92,9 @@ for imgIdx = 1:nImages
         retina.visualizeOI();
         retina.visualizeExcitation();
     end
+    
+    linearImageFile = sprintf('linearImage_%d.mat', imgIdx);
+    save(fullfile(dataDirOut, linearImageFile), 'linearImage');
     
     % For optical image, just store the photon map (isomerizations)
     oiFile = sprintf('oiPhotons_%d.mat', imgIdx);
