@@ -2,33 +2,31 @@
 projectName = 'ISETImagePipeline';
 thisImageSet = 'CIFAR_all';
 dataBaseDir = getpref(projectName, 'dataDir');
+dataInDir = fullfile(dataBaseDir, thisImageSet, 'all_1_true_dataset');
 
-coneVecDir = 'all_1_true_coneVec';
-coneVecTr  = 'coneVector25k.mat';
-coneVecTe  = 'coneVector_hold_5k.mat';
+coneVecTr  = 'coneVector10k.mat';
+coneVecTe  = 'coneVector10k.mat';
 
-ConeVecIn = fullfile(dataBaseDir, thisImageSet, coneVecDir);
-D = struct2cell(load(fullfile(ConeVecIn, coneVecTr)));
-coneVecTr = D{1}; clear D;
-D = struct2cell(load(fullfile(ConeVecIn, coneVecTe)));
-coneVecTe = D{1}; clear D;
+D = struct2cell(load(fullfile(dataInDir, coneVecTr)));
+coneVecTr = D{1}; coneVecTr = coneVecTr(1:10000, :); clear D;
+D = struct2cell(load(fullfile(dataInDir, coneVecTe)));
+coneVecTe = D{1}; coneVecTe = coneVecTe(9001:1e4, :); clear D;
 
-imageFileIn = fullfile(dataBaseDir, thisImageSet);
-imageTr = 'cifar_25k.mat';
-imageTe = 'cifar_hold_5k.mat';
+imageTr = 'linearImage10k.mat';
+imageTe = 'linearImage10k.mat';
 
-D = struct2cell(load(fullfile(imageFileIn, imageTr)));
-imageTr = D{1}; clear D;
-D = struct2cell(load(fullfile(imageFileIn, imageTe)));
-imageTe = D{1}; clear D;
+D = struct2cell(load(fullfile(dataInDir, imageTr)));
+imageTr = D{1}; imageTr = imageTr(1:10000, :); clear D;
+D = struct2cell(load(fullfile(dataInDir, imageTe)));
+imageTe = D{1}; imageTe = imageTe(9001:1e4, :); clear D;
 
 nTrain = size(imageTr, 1);
 nTest  = size(imageTe, 1);
 nDiag  = min(size(imageTr));
 
 %% Tricks
-imageTr = [imageTr, ones(25000, 1)];
-imageTe = [imageTe, ones(5000, 1)];
+imageTr = [imageTr, ones(nTrain, 1)];
+imageTe = [imageTe, ones(nTest, 1)];
 
 %% Learning the regression estimator
 regEstimator = RegressionEstimator(imageTr, coneVecTr);
