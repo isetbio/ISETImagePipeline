@@ -8,17 +8,17 @@ coneVecTr  = 'coneVector10k.mat';
 coneVecTe  = 'coneVector10k.mat';
 
 D = struct2cell(load(fullfile(dataInDir, coneVecTr)));
-coneVecTr = D{1}; coneVecTr = coneVecTr(1:10000, :); clear D;
+coneVecTr = D{1}; coneVecTr = coneVecTr(1:4000, :); clear D;
 D = struct2cell(load(fullfile(dataInDir, coneVecTe)));
-coneVecTe = D{1}; coneVecTe = coneVecTe(9001:1e4, :); clear D;
+coneVecTe = D{1}; coneVecTe = coneVecTe(1:4000, :); clear D;
 
 imageTr = 'linearImage10k.mat';
 imageTe = 'linearImage10k.mat';
 
 D = struct2cell(load(fullfile(dataInDir, imageTr)));
-imageTr = D{1}; imageTr = imageTr(1:10000, :); clear D;
+imageTr = D{1}; imageTr = imageTr(1:4000, :); clear D;
 D = struct2cell(load(fullfile(dataInDir, imageTe)));
-imageTe = D{1}; imageTe = imageTe(9001:1e4, :); clear D;
+imageTe = D{1}; imageTe = imageTe(1:4000, :); clear D;
 
 nTrain = size(imageTr, 1);
 nTest  = size(imageTe, 1);

@@ -16,7 +16,7 @@ retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, 
                       'display', display.CRT12BitDisplay);
 
 testImage = reshape(image_all(1, :), [32, 32, 3]);
-[~, ~, testLinearImage, testConeVec, ~, ~, ~] = retina.compute(testImage);
+[~, ~, testLinearImage, testConeVec] = retina.compute(testImage);
 
 nImage = 1e5;
 allConeVec = zeros(nImage, length(testConeVec));
