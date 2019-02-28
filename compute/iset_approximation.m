@@ -27,10 +27,6 @@ nTrain = size(imageTr, 1);
 nTest  = size(imageTe, 1);
 nDiag  = min(size(imageTr));
 
-%% Tricks
-imageTr = [imageTr, ones(nTrain, 1)];
-imageTe = [imageTe, ones(nTest, 1)];
-
 %% Learning the regression estimator
 regEstimator = RegressionEstimator(imageTr, coneVecTr);
 
@@ -47,14 +43,6 @@ axis square;
 
 %% Full evaluation
 [totalMSE, listMSE] = evalObj.evalTest(regEstimator);
-
-%% Cross validation
-stepSize = round(nDiag / 20);
-regEstimator.setParaList(stepSize : stepSize : nDiag);
-[paraList, mse] = evalObj.crossValidate(regEstimator);
-
-%% Reset regularization parameter
-regEstimator.setRegPara(600);
 
 %% Simple evaluation
 nSample = 36;
@@ -73,27 +61,7 @@ for idx = 1:nSample
     ylabel('Estimated Cone Mean Response');
 end
 
-%% Learning the normalized regression estimator
-nrmregEstimator = NrmRegressionEstimator(imageTr, coneVecTr);
-
-%% Simple evaluation
-evalObj = CrossValidation(imageTe, coneVecTe, nTest);
-
-nSample = 36;
-for idx = 1:nSample
-    subplot(6, 6, idx);
-    [recon, gt] = evalObj.sampleTest(nrmregEstimator, false);
-
-    scatter(gt, recon); grid on; hold on;
-    refPoint = [-500, 5000];
-    plot(refPoint, refPoint);   
-    
-    axis square;    
-    xlim(refPoint);
-    ylim(refPoint);
-end
-
 %% Cross validation
 stepSize = round(nDiag / 20);
-nrmregEstimator.setParaList(stepSize : stepSize : nDiag);
-evalObj.crossValidate(nrmregEstimator);
+regEstimator.setParaList(stepSize : stepSize : nDiag);
+[paraList, mse] = evalObj.crossValidate(regEstimator);
