@@ -15,7 +15,7 @@ retina = ConeResponse('eccBasedConeDensity', false, 'eccBasedConeQuantal', false
 
 %% Compute test image
 imageSize = [32, 32, 3];
-testImage1 = rand(imageSize) * 0.5;
+testImage1 = rand(imageSize) * 0.6;
 [~, ~, testLinearImage1, testConeVec1] = retina.compute(testImage1);
 
 %% Visulization
@@ -27,9 +27,10 @@ invTestImage1 = invGammaCorrection(testLinearImage1, display.CRT12BitDisplay);
 scatter(testImage1(:), invTestImage1(:));
 
 %% Linear test
-testImage2 = rand(imageSize) * 0.5;
+testImage2 = rand(imageSize) * 0.6;
 [~, ~, testLinearImage2, testConeVec2] = retina.compute(testImage2);
 
+%% Sum Image
 sumLinear = testLinearImage1 + testLinearImage2;
 sumImage  = invGammaCorrection(sumLinear, display.CRT12BitDisplay);
 [~, ~, testLinearImage3, testConeVec3] = retina.compute(sumImage);
