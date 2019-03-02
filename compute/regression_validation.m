@@ -54,7 +54,8 @@ end
 %% Cross validation
 evalObj = CrossValidation(coneVecTe, imageTe, nTest);
 
-regEstimator.setParaList(50 : 200 : 2050);
+stepSize = round(nDiag / 20);
+regEstimator.setParaList(stepSize : stepSize : nDiag);
 [paraList, mse] = evalObj.crossValidate(regEstimator);
 
 %% Plot hyperparameter - loss
