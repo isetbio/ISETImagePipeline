@@ -77,7 +77,7 @@ histogram(listMSE(1:floor(nTest * 0.975)));
 
 %% Gaussian Prior - Poisson Likelihood estimator
 renderMatrix = regEstimator.W';
-estimator = PoissonGaussianEst(renderMatrix, regBasis, mu');
+estimator = PoissonGaussianEstimator(renderMatrix, regBasis, mu');
 
 %% Simple evaluation
 figure();
