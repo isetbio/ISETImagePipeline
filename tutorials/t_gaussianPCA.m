@@ -78,10 +78,12 @@ histogram(listMSE(1:floor(nTest * 0.975)));
 %% Gaussian Prior - Poisson Likelihood estimator
 renderMatrix = regEstimator.W';
 estimator = PoissonGaussianEstimator(renderMatrix, regBasis, mu');
+evalObj   = CrossValidation(coneVecTe, imageTe, nTest);
 
 %% Simple evaluation
+estimator.dispOn();
+
 figure();
-evalObj = CrossValidation(coneVecTe, imageTe, nTest);
 for idx = 1:8
     [recon, test] = evalObj.sampleTest(estimator, false);
     rgbTest  = invGammaCorrection(reshape(test, imageSize), display.CRT12BitDisplay);
@@ -94,8 +96,10 @@ for idx = 1:8
 end
 
 %% Set hyperparameter
+estimator.setRegPara(round(nDiag * 0.5));
+estimator.dispOff();
+
 figure();
-estimator.setRegPara(round(nDiag * 0.25));
 for idx = 1:8
     [recon, test] = evalObj.sampleTest(estimator, false);
     rgbTest  = invGammaCorrection(reshape(test, imageSize), display.CRT12BitDisplay);
