@@ -27,6 +27,10 @@ nTrain = size(imageTr, 1);
 nTest  = size(imageTe, 1);
 nDiag  = min(size(imageTr));
 
+displayFile = 'CRT12BitDisplay.mat';
+display = load(fullfile(dataBaseDir, displayFile));
+imageSize = [32, 32, 3];
+
 %% Estimate the render matrix
 % We want to use a linear approximation of the isetbio routine (which is
 % linear indeed up to cone isomerization. The next few sections evaluate
@@ -76,5 +80,30 @@ renderMatrix = regEstimator.W';
 estimator = PoissonGaussianEst(renderMatrix, regBasis, mu');
 
 %% Simple evaluation
+figure();
 evalObj = CrossValidation(coneVecTe, imageTe, nTest);
-[recon, gt] = evalObj.sampleTest(estimator, false);
+for idx = 1:8
+    [recon, test] = evalObj.sampleTest(estimator, false);
+    rgbTest  = invGammaCorrection(reshape(test, imageSize), display.CRT12BitDisplay);
+    rgbRecon = invGammaCorrection(reshape(recon, imageSize), display.CRT12BitDisplay);
+    
+    subplot(4, 4, idx * 2 - 1);
+    imshow(rgbTest, 'InitialMagnification', 500);
+    subplot(4, 4, idx * 2);    
+    imshow(rgbRecon, 'InitialMagnification', 500);    
+end
+
+%% Set hyperparameter
+figure();
+estimator.setRegPara(round(nDiag * 0.25));
+for idx = 1:8
+    [recon, test] = evalObj.sampleTest(estimator, false);
+    rgbTest  = invGammaCorrection(reshape(test, imageSize), display.CRT12BitDisplay);
+    rgbRecon = invGammaCorrection(reshape(recon, imageSize), display.CRT12BitDisplay);
+    
+    
+    subplot(4, 4, idx * 2 - 1);
+    imshow(rgbTest, 'InitialMagnification', 500);
+    subplot(4, 4, idx * 2);    
+    imshow(rgbRecon, 'InitialMagnification', 500);    
+end
