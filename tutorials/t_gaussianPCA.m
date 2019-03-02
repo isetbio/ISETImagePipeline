@@ -76,6 +76,5 @@ renderMatrix = regEstimator.W';
 estimator = PoissonGaussianEst(renderMatrix, regBasis, mu');
 
 %% Simple evaluation
-profile on;
 evalObj = CrossValidation(coneVecTe, imageTe, nTest);
 [recon, gt] = evalObj.sampleTest(estimator, false);
