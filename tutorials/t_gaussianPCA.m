@@ -104,7 +104,26 @@ for idx = 1:8
     [recon, test] = evalObj.sampleTest(estimator, false);
     rgbTest  = invGammaCorrection(reshape(test, imageSize), display.CRT12BitDisplay);
     rgbRecon = invGammaCorrection(reshape(recon, imageSize), display.CRT12BitDisplay);
-    
+        
+    subplot(4, 4, idx * 2 - 1);
+    imshow(rgbTest, 'InitialMagnification', 500);
+    subplot(4, 4, idx * 2);    
+    imshow(rgbRecon, 'InitialMagnification', 500);    
+end
+
+%% Gaussian Prior - Gaussian Likelihood estimator (Ridge Regression)
+renderMatrix = regEstimator.W';
+estimator = RidgeGaussianEstimator(renderMatrix, regBasis, mu');
+evalObj   = CrossValidation(coneVecTe, imageTe, nTest);
+
+%% Simple evaluation
+figure();
+estimator.setRegPara(round(nDiag * 0.5));
+
+for idx = 1:8
+    [recon, test] = evalObj.sampleTest(estimator, false);
+    rgbTest  = invGammaCorrection(reshape(test, imageSize), display.CRT12BitDisplay);
+    rgbRecon = invGammaCorrection(reshape(recon, imageSize), display.CRT12BitDisplay);
     
     subplot(4, 4, idx * 2 - 1);
     imshow(rgbTest, 'InitialMagnification', 500);
