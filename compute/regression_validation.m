@@ -58,9 +58,5 @@ stepSize = round(nDiag / 20);
 regEstimator.setParaList(stepSize : stepSize : nDiag);
 [paraList, mse] = evalObj.crossValidate(regEstimator);
 
-%% Plot hyperparameter - loss
-figure();
-plot(paraList, mse, '-o', 'LineWidth', 2);
-
 %% Set parameter (use the best cross-validated hyperparameter)
 regEstimator.setRegPara(850);
