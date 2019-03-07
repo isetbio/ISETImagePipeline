@@ -43,12 +43,13 @@ regEstimator = RegressionEstimator(imageTr, coneVecTr);
 
 %% Gaussian Prior - Poisson Likelihood Estimator
 renderMatrix = regEstimator.W';
+
 estimator = PoissonGaussianEstimator(renderMatrix, regBasis, mu');
-estimator.setRegPara(2e3);
-estimator.dispOff();
+estimator.setRegPara(2.5e3);
+estimator.dispFinal();
 
 evalObj = CrossValidation(coneVecTe, imageTe, nTest);
-[totalMSE, listMSE] = evalObj.evalTest(obj, estimator);
+[totalMSE, listMSE] = evalObj.evalTest(estimator);
 
 %% Gaussian Prior - Gaussian Likelihood Estimator (Ridge Regression)
 renderMatrix = regEstimator.W';
