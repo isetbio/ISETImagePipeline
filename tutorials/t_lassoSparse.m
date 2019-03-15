@@ -48,3 +48,6 @@ Mdl    = rica(Z, nBasis, 'IterationLimit', 1e3, 'VerbosityLevel', 1, 'GradientTo
 % Visualization
 W   = Mdl.TransformWeights;
 [~] = visualizeBasis(U * diag(sqrt(SIG)) * W, 32, nBasis, false);
+
+regBasis = U * diag(sqrt(SIG)) * W;
+estimatorLasso = LassoGaussianEstimator(regEstimator.W', regBasis, MU');
