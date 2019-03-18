@@ -4,11 +4,11 @@ thisImageSet = 'CIFAR_all';
 dataBaseDir = getpref(projectName, 'dataDir');
 dataInDir = fullfile(dataBaseDir, thisImageSet, 'all_1_true_dataset');
 
-coneVecTr  = 'coneVector20k.mat';
-coneVecTe  = 'coneVector20k.mat';
-
 idxTrain = 1:1:1.8e4;
 idxTest  = (2e4 - 2e3 + 1):1:2e4;
+
+coneVecTr  = 'coneVector20k.mat';
+coneVecTe  = 'coneVector20k.mat';
 
 D = struct2cell(load(fullfile(dataInDir, coneVecTr)));
 coneVecTr = D{1}; coneVecTr = coneVecTr(idxTrain, :); clear D;
