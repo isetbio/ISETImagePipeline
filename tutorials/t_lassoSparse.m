@@ -34,31 +34,24 @@ imageSize = [32, 32, 3];
 %% Estimate the render matrix
 regEstimator = RegressionEstimator(imageTr, coneVecTr);
 
-%% Whitening with SVD
-[Z, U, SIG, MU] = whitening(imageTr, 'svd');
-
-%% Learning a sparse basis
-% This step could take a really long time, consider using the saved result
-% from shared dropbox. See code segment below. 
-
-% RICA analysis
-nBasis = 3072;
-Mdl    = rica(Z, nBasis, 'IterationLimit', 1e3, 'VerbosityLevel', 1, 'GradientTolerance', 1e-4, 'StepTolerance', 1e-4);
-W   = Mdl.TransformWeights;
-
-%% (Or alternatively) Load learned sparse basis
+%% Load learned sparse basis
 projectName = 'ISETImagePipeline';
 dataBaseDir = getpref(projectName, 'dataDir');
-basisInDir = fullfile(dataBaseDir, 'CIFAR_extend');
-basisName  = 'ica_color_3600.mat';
-load(fullfile(basisInDir, basisName));
+basisInDir = fullfile(dataBaseDir, 'CIFAR_all');
 
-nBasis = size(W, 2);
+load(fullfile(basisInDir, 'all_1_true_dataset', 'linearImage100k.mat'));
+load(fullfile(basisInDir, 'sparse_basis_linear', 'rica_color_3600.mat'));
+
+[Z, U, SIG, MU] = whitening(allLinearImage(1:9.8e4, :), 'svd'); 
+clear allLinearImage;
 
 %% Create the estimator
+W = Mdl.TransformWeights;
 regBasis = U * diag(sqrt(SIG)) * W;
 renderMatrix = regEstimator.W';
 estimatorLasso = LassoGaussianEstimator(renderMatrix, regBasis, MU');
+
+[~] = visualizeBasis(estimatorLasso.Basis, 32, size(estimatorLasso.Basis, 2), false);
 
 %% Sparsity check
 coff = Z * W;
@@ -67,7 +60,7 @@ figure;
 nPlot = 8;
 for idx = 1:(nPlot * nPlot)
     subplot(nPlot, nPlot, idx);
-    coffIdx = randi([1, nBasis]);
+    coffIdx = randi([1, size(estimatorLasso.Basis, 2)]);
     histogram(coff(:, coffIdx), 'Normalization', 'probability');    
 end
 
