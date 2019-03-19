@@ -39,16 +39,17 @@ projectName = 'ISETImagePipeline';
 dataBaseDir = getpref(projectName, 'dataDir');
 basisInDir = fullfile(dataBaseDir, 'CIFAR_all');
 
-load(fullfile(basisInDir, 'all_1_true_dataset', 'linearImage100k.mat'));
+load(fullfile(basisInDir, 'image_cifar_all_linear.mat'));
 load(fullfile(basisInDir, 'sparse_basis_linear', 'rica_color_3600.mat'));
 
 [Z, U, SIG, MU] = whitening(allLinearImage(1:9.8e4, :), 'svd'); 
 clear allLinearImage;
 
 %% Create the estimator
+renderMatrix = regEstimator.W';
+
 W = Mdl.TransformWeights;
 regBasis = U * diag(sqrt(SIG)) * W;
-renderMatrix = regEstimator.W';
 estimatorLasso = LassoGaussianEstimator(renderMatrix, regBasis, MU');
 
 [~] = visualizeBasis(estimatorLasso.Basis, 32, size(estimatorLasso.Basis, 2), false);
@@ -69,8 +70,11 @@ kurtStat = kurtosis(coff);
 histogram(kurtStat(kurtStat < 2e2) - 3);
 
 %% Reconstruction test
-evalObj = CrossValidation(coneVecTe, imageTe, nTest);
 estimatorLasso.dispOn();
+estimatorLasso.setLambda(0);
+estimatorLasso.setIterationLimit(2e4);
+
+evalObj = CrossValidation(coneVecTe, imageTe, nTest);
 
 figure();
 for idx = 1:8
