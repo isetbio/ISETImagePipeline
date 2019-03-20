@@ -1,6 +1,6 @@
 projectName = 'ISETImagePipeline';
 thisImageSet = 'CIFAR_all';
-theDir = 'all_1_true_dataset';
+theDir = 'all_0.125_true_dataset';
 dataBaseDir = getpref(projectName, 'dataDir');
 dataFileIn = fullfile(dataBaseDir, thisImageSet, 'image_cifar_all.mat');
 dataDirOut = fullfile(dataBaseDir, thisImageSet, theDir);
@@ -13,12 +13,12 @@ displayFile = 'CRT12BitDisplay.mat';
 display = load(fullfile(dataBaseDir, displayFile));
 
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-                      'display', display.CRT12BitDisplay);
+                      'fovealDegree', 0.125, 'display', display.CRT12BitDisplay);
 
 testImage = reshape(image_all(1, :), [32, 32, 3]);
 [~, ~, testLinearImage, testConeVec] = retina.compute(testImage);
 
-nImage = 1e5;
+nImage = 1e3;
 allConeVec = zeros(nImage, length(testConeVec));
 allLinearImage = zeros(nImage, length(testLinearImage(:)));
 
@@ -32,8 +32,8 @@ parfor idx = 1:nImage
     
 end
 
-linearImageFile = 'linearImage100k.mat';
+linearImageFile = 'linearImage1k.mat';
 save(fullfile(dataDirOut, linearImageFile), 'allLinearImage', '-v7.3');
 
-coneVectorFile = 'coneVector100k.mat';
+coneVectorFile = 'coneVector1k.mat';
 save(fullfile(dataDirOut, coneVectorFile), 'allConeVec', '-v7.3');
