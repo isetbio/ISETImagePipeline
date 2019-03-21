@@ -20,7 +20,7 @@ imageSize = [32, 32, 3];
 testImage = reshape(image_all(1, :), imageSize);
 [~, ~, testLinearImage, testConeVec] = retina.compute(testImage);
 
-nImage = 5e3;
+nImage = 1e3;
 allConeVec = zeros(nImage, length(testConeVec));
 allLinearImage = zeros(nImage, length(testLinearImage(:)));
 
@@ -86,7 +86,7 @@ retina.visualizeMosaic();
 %% Set some parameters for the estimation
 estimatorRidge.setLambda(1);
 
-estimatorLasso.dispOff();
+estimatorLasso.dispOn();
 estimatorLasso.setLambda(1);
 estimatorLasso.setTolerance(1e-8);
 estimatorLasso.setIterationLimit(5e4);
@@ -95,8 +95,8 @@ estimatorLasso.setIterationLimit(5e4);
 testIdx   = randi([9e4, size(image_all, 1)]);
 testImage = reshape(image_all(testIdx, :), imageSize);
 [~, ~, ~, coneRes] = retina.compute(testImage);
-retina.visualizeOI();
 retina.visualizeExcitation();
+retina.visualizeOI();
 
 reconRidge = estimatorRidge.estimate(coneRes');
 reconRidge = invGammaCorrection(reshape(reconRidge, imageSize), display.CRT12BitDisplay);
