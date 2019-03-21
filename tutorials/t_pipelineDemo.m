@@ -16,7 +16,8 @@ display = load(fullfile(dataBaseDir, displayFile));
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
                       'fovealDegree', 0.125, 'display', display.CRT12BitDisplay);
 
-testImage = reshape(image_all(1, :), [32, 32, 3]);
+imageSize = [32, 32, 3];
+testImage = reshape(image_all(1, :), imageSize);
 [~, ~, testLinearImage, testConeVec] = retina.compute(testImage);
 
 nImage = 5e3;
@@ -25,7 +26,7 @@ allLinearImage = zeros(nImage, length(testLinearImage(:)));
 
 parfor idx = 1:nImage
     
-    inputImage = reshape(image_all(idx, :), [32, 32, 3]);   
+    inputImage = reshape(image_all(idx, :), imageSize);   
     [~, ~, linearImage, coneExcitation, ~, ~, ~] = retina.compute(inputImage);
     
     allConeVec(idx, :) = coneExcitation;
@@ -35,6 +36,7 @@ end
 
 %% Render matrix approximation
 regEstimator = RegressionEstimator(allLinearImage, allConeVec);
+renderMatrix = regEstimator.W';
 
 %% Load linear image dataset
 projectName = 'ISETImagePipeline';
@@ -47,10 +49,10 @@ nSample = 36;
 for idx = 1:nSample
     subplot(6, 6, idx);
     testIdx =randi([1, size(image_all, 1)]);    
-    inputImage = reshape(image_all(testIdx, :), [32, 32, 3]);
+    inputImage = reshape(image_all(testIdx, :), imageSize);
     
     [~, ~, linearImage, gt, ~, ~, ~] = retina.compute(inputImage);
-    recon = regEstimator.estimate(reshape(linearImage, [1, 32*32*3]));
+    recon = regEstimator.estimate(reshape(linearImage, [1, prod(imageSize)]));
     
     scatter(gt, recon); grid on; hold on;
     refPoint = [-500, 4000];
@@ -60,3 +62,57 @@ for idx = 1:nSample
     ylim(refPoint);       
 end
 suptitle('Render Matrix Approximation');
+
+%% Gaussian Prior - Gaussian Likelihood Estimator (Ridge Regression)
+% PCA Basis
+[regBasis, mu] = computeBasisPCA(allLinearImage(1:9.8e4, :), 32, false);
+estimatorRidge = RidgeGaussianEstimator(renderMatrix, regBasis, mu');
+
+%% Laplace Prior - Gaussian Likelihood Estimator (LASSO Regression)
+% Sparse Basis
+load(fullfile(basisInDir, 'sparse_basis_linear', 'rica_color_3600.mat'));
+[Z, U, SIG, MU] = whitening(allLinearImage(1:9.8e4, :), 'svd');
+
+W = Mdl.TransformWeights;
+regBasis = U * diag(sqrt(SIG)) * W;
+estimatorLasso = LassoGaussianEstimator(renderMatrix, regBasis, MU');
+
+%% Visualization
+[~] = visualizeBasis(estimatorRidge.Basis, 32, size(estimatorRidge.Basis, 2), false);
+[~] = visualizeBasis(estimatorLasso.Basis, 32, size(estimatorLasso.Basis, 2), false);
+
+retina.visualizeMosaic();
+
+%% Set some parameters for the estimation
+estimatorRidge.setLambda(1);
+
+estimatorLasso.dispOff();
+estimatorLasso.setLambda(1);
+estimatorLasso.setTolerance(1e-8);
+estimatorLasso.setIterationLimit(5e4);
+
+%% Simple evaluation
+testIdx   = randi([9e4, size(image_all, 1)]);
+testImage = reshape(image_all(testIdx, :), imageSize);
+[~, ~, ~, coneRes] = retina.compute(testImage);
+retina.visualizeOI();
+retina.visualizeExcitation();
+
+reconRidge = estimatorRidge.estimate(coneRes');
+reconRidge = invGammaCorrection(reshape(reconRidge, imageSize), display.CRT12BitDisplay);
+
+reconLasso = estimatorLasso.estimate(coneRes');
+reconLasso = invGammaCorrection(reshape(reconLasso, imageSize), display.CRT12BitDisplay);
+
+figure;
+subplot(1, 3, 1);
+imshow(testImage, 'InitialMagnification', 500);
+title('Original');
+
+subplot(1, 3, 2);
+imshow(reconRidge, 'InitialMagnification', 500);
+title('Gaussian Prior');
+
+subplot(1, 3, 3);
+imshow(reconLasso, 'InitialMagnification', 500);
+title('Lasso Prior');
