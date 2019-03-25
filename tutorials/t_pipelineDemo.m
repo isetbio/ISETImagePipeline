@@ -163,11 +163,11 @@ for i = 1 : nRow
         
         set(0, 'CurrentFigure', h1)
         subplot(nRow, nCol, (i - 1) * nCol + j);
-        imshow(reconRidge, 'InitialMagnification', 500);        
+        imshow(reconRidge, 'InitialMagnification', 1000);        
         
         set(0, 'CurrentFigure', h2)
         subplot(nRow, nCol, (i - 1) * nCol + j);
-        imshow(reconLasso, 'InitialMagnification', 500);        
+        imshow(reconLasso, 'InitialMagnification', 1000);        
     end
 end
 
