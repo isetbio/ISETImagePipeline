@@ -142,8 +142,8 @@ title('Lasso Prior');
 estimatorRidge.setLambda(1);
 estimatorLasso.setLambda(1);
 
-nRow = 10;
-nCol = 10;
+nRow = 6;
+nCol = 8;
 
 h1 = figure(1);
 h2 = figure(2);
