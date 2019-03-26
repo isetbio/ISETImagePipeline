@@ -8,10 +8,9 @@ load(dataFileIn);
 displayFile = 'CRT12BitDisplay.mat';
 display = load(fullfile(dataBaseDir, displayFile));
 
-
 % retina = ConeResponse('spatialDensity', [0, 0.6, 0.3, 0.1 ], 'fovealDegree', 0.25, 'display', display.CRT12BitDisplay);
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-                      'fovealDegree', 1, 'display', display.CRT12BitDisplay);
+                      'fovealDegree', 0.5, 'display', display.CRT12BitDisplay);
 retina.visualizeMosaic();
 
 imageSize = [32, 32, 3];
