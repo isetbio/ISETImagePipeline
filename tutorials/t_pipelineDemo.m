@@ -138,40 +138,32 @@ imshow(reconLasso, 'InitialMagnification', 500);
 title('Lasso Prior');
 
 %% Single cone stimulation experiment
-estimatorRidge.setLambda(1);
-estimatorLasso.setLambda(1);
+dataBaseDir = getpref(projectName, 'dataDir');
+retina.visualizeMosaic();
+estimatorLasso.dispOff();
+estimatorRidge.setLambda(100);
+estimatorLasso.setLambda(10);
 
-nRow = 6;
-nCol = 8;
-
-h1 = figure(1);
-h2 = figure(2);
-for i = 1 : nRow
-    for j = 1 : nCol
-        stimulus = 0.5 * ones(imageSize);
-        [~, ~, ~, coneRes] = retina.compute(stimulus);
-        
-        stimIdx = randi([1, size(coneRes, 1)]);
-        coneRes(stimIdx) = coneRes(stimIdx) * 5;
-        
-        reconRidge = estimatorRidge.estimate(coneRes');
-        reconRidge = invGammaCorrection(reshape(reconRidge, imageSize), display.CRT12BitDisplay);
-        
-        reconLasso = estimatorLasso.estimate(coneRes');
-        reconLasso = invGammaCorrection(reshape(reconLasso, imageSize), display.CRT12BitDisplay);
-        
-        set(0, 'CurrentFigure', h1)
-        subplot(nRow, nCol, (i - 1) * nCol + j);
-        imshow(reconRidge, 'InitialMagnification', 1000);        
-        
-        set(0, 'CurrentFigure', h2)
-        subplot(nRow, nCol, (i - 1) * nCol + j);
-        imshow(reconLasso, 'InitialMagnification', 1000);        
-    end
+nIter    = 10;
+coneType = 'L';
+for idx = 1:nIter
+    stimulus = 0.4 * ones(imageSize);
+    [~, ~, ~, ~, L, M, S] = retina.compute(stimulus);
+    [coneResponse, coneCount] = retina.coneExcitationRnd(5, coneType);
+    
+    fig = figure; subplot(1, 2, 1);
+    retina.visualizeExcitation(true);
+    
+    reconLasso = estimatorLasso.estimate(coneResponse');
+    reconLasso = invGammaCorrection(reshape(reconLasso, imageSize), display.CRT12BitDisplay);
+    
+    subplot(1, 2, 2);
+    imshow(reconLasso, 'InitialMagnification', 500);
+    title('Lasso Prior Reconstruction');       
+    suptitle(sprintf('L: %d, M: %d, S: %d', coneCount(1), coneCount(2), coneCount(3)));
+    fig.InvertHardcopy = 'off';
+    
+    set(gcf,'Visible','Off')
+    saveDir = fullfile(dataBaseDir, 'SingleCone', sprintf('%s_%d', coneType, idx));    
+    print(fig, '-bestfit', saveDir, '-dpdf');
 end
-
-set(0, 'CurrentFigure', h1)
-suptitle('Gaussian');
-
-set(0, 'CurrentFigure', h2)
-suptitle('Lasso');
