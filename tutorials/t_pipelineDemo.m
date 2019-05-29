@@ -18,18 +18,16 @@ testImage = reshape(image_all(1, :), imageSize);
 [~, ~, testLinearImage, testConeVec] = retina.compute(testImage);
 
 %% Generate dataset for learning render matrix
-nImage = 5e3;
+nImage = 2e3;
 allConeVec = zeros(nImage, length(testConeVec));
 allLinearImage = zeros(nImage, length(testLinearImage(:)));
 
-parfor idx = 1:nImage
-    
+parfor idx = 1:nImage    
     inputImage = reshape(image_all(idx, :), imageSize);
     [~, ~, linearImage, coneExcitation, ~, ~, ~] = retina.compute(inputImage);
     
     allConeVec(idx, :) = coneExcitation;
-    allLinearImage(idx, :) = linearImage(:);
-    
+    allLinearImage(idx, :) = linearImage(:);    
 end
 
 %% Render matrix approximation
@@ -141,15 +139,14 @@ title('Lasso Prior');
 dataBaseDir = getpref(projectName, 'dataDir');
 retina.visualizeMosaic();
 estimatorLasso.dispOff();
-estimatorRidge.setLambda(100);
-estimatorLasso.setLambda(10);
+estimatorLasso.setLambda(20);
 
-nIter    = 10;
+nIter    = 20;
 coneType = 'L';
 for idx = 1:nIter
-    stimulus = 0.4 * ones(imageSize);
+    stimulus = 0.25 * ones(imageSize);
     [~, ~, ~, ~, L, M, S] = retina.compute(stimulus);
-    [coneResponse, coneCount] = retina.coneExcitationRnd(5, coneType);
+    [coneResponse, coneCount] = retina.coneExcitationRnd(8, coneType);
     
     fig = figure; subplot(1, 2, 1);
     retina.visualizeExcitation(true);
@@ -160,10 +157,9 @@ for idx = 1:nIter
     subplot(1, 2, 2);
     imshow(reconLasso, 'InitialMagnification', 500);
     title('Lasso Prior Reconstruction');       
-    suptitle(sprintf('L: %d, M: %d, S: %d', coneCount(1), coneCount(2), coneCount(3)));
-    fig.InvertHardcopy = 'off';
+    suptitle(sprintf('L: %d, M: %d, S: %d', coneCount(1), coneCount(2), coneCount(3)));    
     
     set(gcf,'Visible','Off')
     saveDir = fullfile(dataBaseDir, 'SingleCone', sprintf('%s_%d', coneType, idx));    
-    print(fig, '-bestfit', saveDir, '-dpdf');
+    print(fig, saveDir, '-depsc');
 end
