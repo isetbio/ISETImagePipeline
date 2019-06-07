@@ -4,15 +4,15 @@
 % ISETImagePipeline project.
 
 %% Define project
-toolboxName = 'ISETImagePipeline';
+projectName = 'ISETImagePipeline';
 
 %% Clear out old preferences
-if (ispref(toolboxName))
-    rmpref(toolboxName);
+if (ispref(projectName))
+    rmpref(projectName);
 end
 
 %% Specify project location
-istsBaseDir = tbLocateProject('ISETImagePipeline');
+istsBaseDir = tbLocateProject(projectName);
 
 % Figure out where baseDir for other kinds of data files is.
 %
@@ -41,7 +41,7 @@ end
 
 % Full path to data
 %   Get path to data in project code with getpref('ISETImagePipeline','dataDir');
-setpref(toolboxName,'dataDir',fullfile(baseDir,'IBIO_Analysis','ISETImagePipeline'));
+setpref(projectName,'dataDir',fullfile(baseDir,'IBIO_Analysis',projectName));
 
 
 
