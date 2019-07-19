@@ -38,24 +38,6 @@ end
 renderMtx = render;
 renderMtx(renderMtx < 0.75) = 0;
 
-%% Render matrix test
-nSample = 16;
-for idx = 1:nSample
-    subplot(4, 4, idx);
-    
-    inputImage = rand(size(testImage));
-    [~, ~, linear, gt] = retina.compute(inputImage);
-    recon = renderMtx * reshape(linear, [numel(inputImage), 1]);
-    
-    scatter(gt, recon); grid on; hold on;
-    refPoint = [-500, 4000];
-    plot(refPoint, refPoint);
-    axis square;
-    xlim(refPoint);
-    ylim(refPoint);
-end
-suptitle('Render Matrix Approximation');
-
 %% Load dataset
 projectName  = 'ISETImagePipeline';
 thisImageSet = 'ILSVRC_mat';
@@ -64,18 +46,22 @@ dataBaseDir  = getpref(projectName, 'dataDir');
 imageSet = load(fullfile(dataBaseDir, thisImageSet, 'imageDataLinear.mat'));
 imageSet = imageSet.imageDataLinear;
 
-%% Compute basis function with PCA
-[regBasis, mu] = computeBasisPCA(imageSet, 16, false);
-visualizeBasis(regBasis, 16, size(regBasis, 2), false);
+%% Whitening, SVD
+[Z, U, SIG, MU] = whitening(imageTr, 'svd');
+
+%% RICA analysis
+nBasis = 16 * 16;
+Mdl = rica(Z, nBasis, 'IterationLimit', 5e3, 'VerbosityLevel', 1, 'GradientTolerance', 1e-4, 'StepTolerance', 1e-4);
+regBasis = U * diag(sqrt(SIG)) * Mdl.TransformWeights;
 
 %% Sample test image
 projectName  = 'ISETImagePipeline';
 thisImageSet = 'ILSVRC';
 dataBaseDir  = getpref(projectName, 'dataDir');
-imageName    = 'ILSVRC2017_test_00000296.JPEG';
+imageName    = 'ILSVRC2017_test_00000021.JPEG';
 
 fileDir = fullfile(dataBaseDir, thisImageSet, imageName);
-image   = imresize(im2double(imread(fileDir)), 0.5);
+image   = imresize(im2double(imread(fileDir)), 0.4);
 
 patch = sampleImage(image, 140);
 patch(patch < 0) = 0;
@@ -103,8 +89,8 @@ xlim(refPoint);
 ylim(refPoint);
 
 %% Reconstruction
-estimator  = GaussianPatchEstimator(renderMtx, inv(regBasis), mu', 1, 2, size(patch));
-reconImage = estimator.estimate(patchConeVec);
+estimator  = SparsePatchEstimator(renderMtx, inv(regBasis), mu', 0.1, 2, size(patch));
+reconImage = estimator.estimate(renderMtx * patchLinear(:), 5e2, patchLinear(:));
 
 %% Show plot
 figure();
