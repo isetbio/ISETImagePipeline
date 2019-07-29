@@ -92,8 +92,8 @@ xlim(refPoint);
 ylim(refPoint);
 
 %% Reconstruction
-estimator  = SparsePatchEstimator(renderMtx, inv(regBasis), mu', 0.05, 2, size(patch));
-reconImage = estimator.estimate(renderMtx * patchLinear(:), 1e3);
+estimator  = SparsePatchEstimator(renderMtx, inv(regBasis), MU', 0.05, 2, size(patch));
+reconImage = estimator.estimate(renderMtx * patchLinear(:), 1e3, ones([numel(patch), 1]) * 0.5);
 
 %% Show plot
 figure();
