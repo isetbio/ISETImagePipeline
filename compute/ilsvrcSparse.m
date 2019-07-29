@@ -13,7 +13,7 @@ testImage = rand([140, 140, 3]);
 [~, ~, testLinearImage, testConeVec] = retina.compute(testImage);
 
 %% Visualization
-showPlot = true;
+showPlot = false;
 if showPlot
     retina.visualizeMosaic();
     
@@ -47,12 +47,15 @@ imageSet = load(fullfile(dataBaseDir, thisImageSet, 'imageDataLinear.mat'));
 imageSet = imageSet.imageDataLinear;
 
 %% Whitening, SVD
-[Z, U, SIG, MU] = whitening(imageTr, 'svd');
+[Z, U, SIG, MU] = whitening(imageSet, 'svd');
 
 %% RICA analysis
-nBasis = 16 * 16;
-Mdl = rica(Z, nBasis, 'IterationLimit', 5e3, 'VerbosityLevel', 1, 'GradientTolerance', 1e-4, 'StepTolerance', 1e-4);
+nBasis = 16 * 16 * 3;
+Mdl = rica(Z, nBasis, 'IterationLimit', 1e4, 'VerbosityLevel', 1, 'GradientTolerance', 1e-8, 'StepTolerance', 1e-8);
 regBasis = U * diag(sqrt(SIG)) * Mdl.TransformWeights;
+
+%% Visualization
+[~] = visualizeBasis(regBasis, 16, size(regBasis, 2), false);
 
 %% Sample test image
 projectName  = 'ISETImagePipeline';
@@ -89,8 +92,8 @@ xlim(refPoint);
 ylim(refPoint);
 
 %% Reconstruction
-estimator  = SparsePatchEstimator(renderMtx, inv(regBasis), mu', 0.1, 2, size(patch));
-reconImage = estimator.estimate(renderMtx * patchLinear(:), 5e2, patchLinear(:));
+estimator  = SparsePatchEstimator(renderMtx, inv(regBasis), mu', 0.05, 2, size(patch));
+reconImage = estimator.estimate(renderMtx * patchLinear(:), 1e3);
 
 %% Show plot
 figure();
