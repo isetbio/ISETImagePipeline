@@ -57,7 +57,7 @@ regBasis = U * diag(sqrt(SIG)) * Mdl.TransformWeights;
 %% Visualization
 [~] = visualizeBasis(regBasis, 16, size(regBasis, 2), false);
 
-%% Sample test image
+%% Option 1: Sample test image
 projectName  = 'ISETImagePipeline';
 thisImageSet = 'ILSVRC';
 dataBaseDir  = getpref(projectName, 'dataDir');
@@ -68,6 +68,15 @@ image   = imresize(im2double(imread(fileDir)), 0.4);
 
 patch = sampleImage(image, 140);
 patch(patch < 0) = 0;
+imshow(patch, 'InitialMagnification', 500);
+
+%% Option 2: Generate Uniform Field
+patch = zeros(140, 140, 3);
+
+patch(:, :, 1) = 1; % R channel
+patch(:, :, 2) = 0.6; % G channel
+patch(:, :, 3) = 0.25; % B channel
+
 imshow(patch, 'InitialMagnification', 500);
 
 %% Generate Cone Vec
@@ -93,11 +102,11 @@ ylim(refPoint);
 
 %% Reconstruction
 estimator  = SparsePatchEstimator(renderMtx, inv(regBasis), MU', 0.05, 2, size(patch));
-reconImage = estimator.estimate(renderMtx * patchLinear(:), 1e4, ones([numel(patch), 1]) * 0.5);
+reconImage = estimator.estimate(renderMtx * patchLinear(:), 2.5e3, ones([numel(patch), 1]) * 0.5);
 
 %% Show plot
 figure();
-subplot(1, 2, 1); title('input');
-imshow(patch, 'InitialMagnification', 500);
-subplot(1, 2, 2); title('reconstruction');
-imshow(invGammaCorrection(reconImage, display.CRT12BitDisplay), 'InitialMagnification', 500);
+subplot(1, 2, 1); 
+imshow(patch, 'InitialMagnification', 500); title('input');
+subplot(1, 2, 2);
+imshow(invGammaCorrection(reconImage, display.CRT12BitDisplay), 'InitialMagnification', 500); title('reconstruction');
