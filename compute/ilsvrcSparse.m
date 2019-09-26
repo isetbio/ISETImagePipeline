@@ -106,7 +106,37 @@ reconImage = estimator.estimate(renderMtx * patchLinear(:), 2.5e3, ones([numel(p
 
 %% Show plot
 figure();
-subplot(1, 2, 1); 
+subplot(1, 2, 1);
 imshow(patch, 'InitialMagnification', 500); title('input');
 subplot(1, 2, 2);
 imshow(invGammaCorrection(reconImage, display.CRT12BitDisplay), 'InitialMagnification', 500); title('reconstruction');
+
+%% Option 3: Single Cone Stimulation - Set Up
+% regularization parameter [0.1, 1, 2, 10]
+imageSize = [140, 140, 3];
+estimator = SparsePatchEstimator(renderMtx, inv(regBasis), MU', 2, 1, imageSize);
+
+%% Calculation
+nIter    = 5;
+coneType = 'L';
+for idx = 1:nIter
+    stimulus = 0.25 * ones(imageSize);
+    [~, ~, linStim, coneRes]  = retina.compute(stimulus);
+    coneResponse = renderMtx * linStim(:);
+    % [coneResponse, coneCount] = retina.coneExcitationRnd(8, coneType);
+    
+    stimIdx = randi(length(coneResponse));
+    coneResponse(stimIdx) = coneResponse(stimIdx) * 8;
+    
+    fig = figure(idx); 
+    % subplot(1, 2, 1);
+    % retina.visualizeExcitation(true);
+    
+    reconLasso = estimator.estimate(coneResponse, 2.5e3, ones([prod(imageSize), 1]) * 0.25);
+    reconLasso = invGammaCorrection(reshape(reconLasso, imageSize), display.CRT12BitDisplay);
+    
+    % subplot(1, 2, 2);
+    imshow(reconLasso, 'InitialMagnification', 500);
+    % title('Sparse Prior Reconstruction');
+    % suptitle(sprintf('L: %d, M: %d, S: %d', coneCount(1), coneCount(2), coneCount(3)));
+end
