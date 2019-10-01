@@ -140,3 +140,51 @@ for idx = 1:nIter
     % title('Sparse Prior Reconstruction');
     % suptitle(sprintf('L: %d, M: %d, S: %d', coneCount(1), coneCount(2), coneCount(3)));
 end
+
+%% Two line stimulus
+[~, allCone] = retina.computeWithOI(theOINoLca);
+
+retina.visualizeOI();
+retina.visualizeExcitation();
+
+%% Reconstruction
+% TODO? thresholding before reconstruction
+imageSize = [140, 140, 3];
+estimator  = SparsePatchEstimator(renderMtx, inv(regBasis), MU', 1, 1, imageSize);
+reconImage = estimator.estimate(allCone, 2.5e3, ones([prod(imageSize), 1]) * 0.0);
+reconImage = invGammaCorrection(reshape(reconImage, imageSize), display.CRT12BitDisplay);
+
+%% Show Image
+imshow(reconImage, 'InitialMagnification', 500);
+
+%% Check cone excitation
+retina.compute(reconImage);
+retina.visualizeOI();
+retina.visualizeExcitation();
+
+%% Reconstruction for regular scence (with optics)
+% Scene -> OI -> Cone Response -> Recon -> OI -> Cone Response
+[~, allCone] = retina.computeWithScene(scene);
+
+%% Visualization
+retina.visualizeOI();
+retina.visualizeExcitation();
+
+%% Reconstruction with this stimulus
+imageSize = [140, 140, 3];
+estimator  = SparsePatchEstimator(renderMtx, inv(regBasis), MU', 1, 1, imageSize);
+reconImageLCA = estimator.estimate(allCone, 2.5e3, ones([prod(imageSize), 1]) * 0.0);
+reconImageLCA = invGammaCorrection(reshape(reconImageLCA, imageSize), display.CRT12BitDisplay);
+
+%% Visualization
+imshow(reconImageLCA, 'InitialMagnification', 500);
+
+%% Check cone excitation
+retina.compute(reconImageLCA);
+retina.visualizeOI();
+retina.visualizeExcitation();
+
+%% TODO
+% Smaller cone mosaic with lower res image
+% Solve for exact render matric
+% Test two line stim with correct optics
