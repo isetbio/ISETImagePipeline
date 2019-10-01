@@ -183,8 +183,3 @@ imshow(reconImageLCA, 'InitialMagnification', 500);
 retina.compute(reconImageLCA);
 retina.visualizeOI();
 retina.visualizeExcitation();
-
-%% TODO
-% Smaller cone mosaic with lower res image
-% Solve for exact render matric
-% Test two line stim with correct optics
