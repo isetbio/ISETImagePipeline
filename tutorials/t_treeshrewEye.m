@@ -6,7 +6,7 @@ retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, 
 threwMosaic.noiseFlag = 'none';
 retina.Mosaic = threwMosaic;
 retina.PSF = threwPSF;
-retina.FovealDegree = 4;
+retina.FovealDegree = 5;
 
 %% Compute mosaic response
 imageSize = [128, 128, 3];
