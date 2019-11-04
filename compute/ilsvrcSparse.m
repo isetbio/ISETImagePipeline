@@ -7,13 +7,16 @@ display = load(fullfile(dataBaseDir, displayFile));
 
 %% Create the cone mosaic, test run
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 1.0, 'display', display.CRT12BitDisplay);
+    'fovealDegree', 1.5, 'display', display.CRT12BitDisplay);
 
-testImage = rand([140, 140, 3]);
+imageSize = [180, 180, 3];
+testImage = rand(imageSize);
 [~, ~, testLinearImage, testConeVec] = retina.compute(testImage);
 
+inteTime = retina.Mosaic.integrationTime;
+
 %% Visualization
-showPlot = false;
+showPlot = true;
 if showPlot
     retina.visualizeMosaic();
     
@@ -24,6 +27,7 @@ if showPlot
 end
 
 %% Compute render matrix with basis function
+retina.Mosaic.integrationTime = inteTime * 50;
 render = zeros(length(testConeVec), length(testLinearImage(:)));
 
 parfor idx = 1:length(testLinearImage(:))
@@ -34,9 +38,12 @@ parfor idx = 1:length(testLinearImage(:))
     render(:, idx) = coneVec;
 end
 
-%% Zero thresholding for numerical precision
-renderMtx = render;
-renderMtx(renderMtx < 0.75) = 0;
+retina.Mosaic.integrationTime = inteTime;
+render = render ./ 50;
+
+%% Zero thresholding / Scaling for numerical precision
+testRender = render;
+testRender(testRender < 1) = 0;
 
 %% Load dataset
 projectName  = 'ISETImagePipeline';
@@ -64,18 +71,19 @@ dataBaseDir  = getpref(projectName, 'dataDir');
 imageName    = 'ILSVRC2017_test_00000021.JPEG';
 
 fileDir = fullfile(dataBaseDir, thisImageSet, imageName);
-image   = imresize(im2double(imread(fileDir)), 0.4);
+image   = imresize(im2double(imread(fileDir)), 0.5);
 
-patch = sampleImage(image, 140);
+patch = sampleImage(image, imageSize(1));
 patch(patch < 0) = 0;
+patch(patch > 1) = 1;
 imshow(patch, 'InitialMagnification', 500);
 
 %% Option 2: Generate Uniform Field
-patch = zeros(140, 140, 3);
+patch = zeros(imageSize);
 
-patch(:, :, 1) = 1; % R channel
-patch(:, :, 2) = 0.6; % G channel
-patch(:, :, 3) = 0.25; % B channel
+patch(:, :, 1) = 1.0; % R channel
+patch(:, :, 2) = 1.0; % G channel
+patch(:, :, 3) = 1.0; % B channel
 
 imshow(patch, 'InitialMagnification', 500);
 
@@ -128,7 +136,7 @@ for idx = 1:nIter
     stimIdx = randi(length(coneResponse));
     coneResponse(stimIdx) = coneResponse(stimIdx) * 8;
     
-    fig = figure(idx); 
+    fig = figure(idx);
     % subplot(1, 2, 1);
     % retina.visualizeExcitation(true);
     
