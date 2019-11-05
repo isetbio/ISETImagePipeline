@@ -7,7 +7,7 @@ display = load(fullfile(dataBaseDir, displayFile));
 
 %% Create the cone mosaic, test run
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 1.5, 'display', display.CRT12BitDisplay);
+    'fovealDegree', 1.5, 'display', display.CRT12BitDisplay, 'pupilSize', 2.0);
 
 imageSize = [180, 180, 3];
 testImage = rand(imageSize);
@@ -27,7 +27,7 @@ if showPlot
 end
 
 %% Compute render matrix with basis function
-retina.Mosaic.integrationTime = inteTime * 50;
+retina.Mosaic.integrationTime = inteTime * 10;
 render = zeros(length(testConeVec), length(testLinearImage(:)));
 
 parfor idx = 1:length(testLinearImage(:))
@@ -39,11 +39,7 @@ parfor idx = 1:length(testLinearImage(:))
 end
 
 retina.Mosaic.integrationTime = inteTime;
-render = render ./ 50;
-
-%% Zero thresholding / Scaling for numerical precision
-testRender = render;
-testRender(testRender < 1) = 0;
+render = render ./ 10;
 
 %% Load dataset
 projectName  = 'ISETImagePipeline';
@@ -71,12 +67,12 @@ dataBaseDir  = getpref(projectName, 'dataDir');
 imageName    = 'ILSVRC2017_test_00000021.JPEG';
 
 fileDir = fullfile(dataBaseDir, thisImageSet, imageName);
-image   = imresize(im2double(imread(fileDir)), 0.5);
+image   = imresize(im2double(imread(fileDir)), 0.65);
 
 patch = sampleImage(image, imageSize(1));
 patch(patch < 0) = 0;
 patch(patch > 1) = 1;
-imshow(patch, 'InitialMagnification', 500);
+imshow(patch, 'InitialMagnification', 400);
 
 %% Option 2: Generate Uniform Field
 patch = zeros(imageSize);
@@ -94,13 +90,13 @@ if showPlot
     retina.visualizeMosaic();
     
     figure();
-    imshow(patch, 'InitialMagnification', 500);
+    imshow(patch, 'InitialMagnification', 400);
     retina.visualizeOI();
     retina.visualizeExcitation();
 end
 
 figure();
-scatter(patchConeVec, renderMtx * patchLinear(:));
+scatter(patchConeVec, render * patchLinear(:));
 grid on; hold on;
 refPoint = [-500, 4000];
 plot(refPoint, refPoint);
@@ -109,8 +105,8 @@ xlim(refPoint);
 ylim(refPoint);
 
 %% Reconstruction
-estimator  = SparsePatchEstimator(renderMtx, inv(regBasis), MU', 0.05, 2, size(patch));
-reconImage = estimator.estimate(renderMtx * patchLinear(:), 2.5e3, ones([numel(patch), 1]) * 0.5);
+estimator  = SparsePatchEstimator(render, inv(regBasis), MU', 0.05, 4, size(patch));
+reconImage = estimator.estimate(render * patchLinear(:), 3e3, ones([numel(patch), 1]) * 0.5);
 
 %% Show plot
 figure();

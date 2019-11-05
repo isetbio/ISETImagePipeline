@@ -1,5 +1,5 @@
 %% Generate cone mosaic
-retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, 'fovealDegree', 1.0);
+retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, 'fovealDegree', 1.0, 'pupilSize', 2.0);
 
 imageSize = [128, 128, 3];
 input = ones(imageSize) * 1;
