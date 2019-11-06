@@ -49,7 +49,7 @@ load('./sparsePrior.mat');
 projectName  = 'ISETImagePipeline';
 thisImageSet = 'ILSVRC';
 dataBaseDir  = getpref(projectName, 'dataDir');
-imageName    = 'ILSVRC2017_test_00000025.JPEG';
+imageName    = 'ILSVRC2017_test_00000021.JPEG';
 
 fileDir = fullfile(dataBaseDir, thisImageSet, imageName);
 image   = imresize(im2double(imread(fileDir)), 0.65);
@@ -72,14 +72,14 @@ end
 figure();
 scatter(patchConeVec, render * patchLinear(:));
 grid on; hold on;
-refPoint = [-500, 4000];
+refPoint = [0, 15000];
 plot(refPoint, refPoint);
 axis square;
 xlim(refPoint);
 ylim(refPoint);
 
 %% Reconstruction with Gaussian likelihood and sparse prior
-estimator = SparsePatchEstimator(render, inv(regBasis), MU', 100, 4, imageSize);
+estimator = SparsePatchEstimator(render, inv(regBasis), MU', 2e1, 4, imageSize);
 
 meanResp = render * patchLinear(:);
 response = poissrnd(meanResp);
@@ -117,3 +117,27 @@ title('input');
 subplot(1, 2, 2);
 imshow(invGammaCorrection(reconImage, display.CRT12BitDisplay), 'InitialMagnification', 400); 
 title('reconstruction');
+
+%% Effect of regularization - Gaussian distribution
+meanResp = render * patchLinear(:);
+response = poissrnd(meanResp);
+
+regPara = [10, 20, 40, 60, 80];
+reconImageGauss = zeros([5, imageSize]);
+
+for idx = 1:5
+    estimator = SparsePatchEstimator(render, inv(regBasis), MU', regPara(idx), 4, imageSize);
+    reconImageGauss(idx, :, :, :) = estimator.estimate(response, 2.5e3, rand([prod(imageSize), 1]));
+end
+
+%% Effect of regularization - Poisson distribution
+meanResp = render * patchLinear(:);
+response = poissrnd(meanResp);
+
+regPara = [1, 5, 10, 20, 40];
+reconImagePoiss = zeros([5, imageSize]);
+
+for idx = 1:5
+    estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara(idx), 4, imageSize);
+    reconImageGauss(idx, :, :, :) = estimator.estimate(response, 2.5e3, rand([prod(imageSize), 1]));
+end
