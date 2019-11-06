@@ -78,15 +78,35 @@ axis square;
 xlim(refPoint);
 ylim(refPoint);
 
-%% Reconstruction
-estimator  = SparsePatchEstimator(render, inv(regBasis), MU', 0.1, 4, imageSize);
+%% Reconstruction with Gaussian likelihood and sparse prior
+estimator = SparsePatchEstimator(render, inv(regBasis), MU', 100, 4, imageSize);
 
 meanResp = render * patchLinear(:);
 response = poissrnd(meanResp);
 
-reconImage = estimator.estimate(response, 4e3, rand([prod(imageSize), 1]));
+reconImage = estimator.estimate(response, 2.5e3, rand([prod(imageSize), 1]));
 
-%% Compare results
+%% Results of reconstruction
+% Show plot
+figure();
+
+subplot(1, 2, 1);
+imshow(patch, 'InitialMagnification', 400); 
+title('input');
+
+subplot(1, 2, 2);
+imshow(invGammaCorrection(reconImage, display.CRT12BitDisplay), 'InitialMagnification', 400); 
+title('reconstruction');
+
+%% Reconstruction with Poisson likelihood and sparse prior
+estimator = PoissonSparseEstimator(render, inv(regBasis), MU', 1, 4, imageSize);
+
+meanResp = render * patchLinear(:);
+response = poissrnd(meanResp);
+
+reconImage = estimator.estimate(response, 2.5e3, rand([prod(imageSize), 1]));
+
+%% Results of reconstruction
 % Show plot
 figure();
 
