@@ -134,10 +134,10 @@ end
 meanResp = render * patchLinear(:);
 response = poissrnd(meanResp);
 
-regPara = [1, 5, 10, 20, 40];
-reconImagePoiss = zeros([5, imageSize]);
+regPara = [1, 5, 10, 20, 40, 100];
+reconImagePoiss = zeros([6, imageSize]);
 
-for idx = 1:5
+for idx = 1:6
     estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara(idx), 4, imageSize);
-    reconImageGauss(idx, :, :, :) = estimator.estimate(response, 2.5e3, rand([prod(imageSize), 1]), true);
+    reconImageGauss(idx, :, :, :) = estimator.estimate(response, 3e3, rand([prod(imageSize), 1]), true);
 end
