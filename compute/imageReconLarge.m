@@ -139,5 +139,5 @@ reconImagePoiss = zeros([5, imageSize]);
 
 for idx = 1:5
     estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara(idx), 4, imageSize);
-    reconImageGauss(idx, :, :, :) = estimator.estimate(response, 2.5e3, rand([prod(imageSize), 1]));
+    reconImageGauss(idx, :, :, :) = estimator.estimate(response, 2.5e3, rand([prod(imageSize), 1]), true);
 end
