@@ -134,10 +134,35 @@ end
 meanResp = render * patchLinear(:);
 response = poissrnd(meanResp);
 
-regPara = [1, 5, 10, 20, 40, 100];
-reconImagePoiss = zeros([6, imageSize]);
+regPara = [1e-4, 1e-3, 5e-3, 0.01, 0.05, 0.1, 0.5, 1];
+reconImagePoiss = zeros([3, imageSize]);
 
-for idx = 1:6
+for idx = 1 : 3
     estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara(idx), 4, imageSize);
-    reconImageGauss(idx, :, :, :) = estimator.estimate(response, 3e3, rand([prod(imageSize), 1]), true);
+    reconImagePoiss(idx, :, :, :) = estimator.estimate(response, 3e3, rand([prod(imageSize), 1]), true);
 end
+
+%% Results of reconstruction
+% Show plot
+figure();
+imshow(patch, 'InitialMagnification', 400); 
+title('input');
+
+mseRecon = zeros(1, 8);
+for idx = 1 : 8
+    figure();
+    
+    reconImage = reshape(reconImagePoiss(idx, :, :, :), imageSize);
+    reconImage = invGammaCorrection(reconImage, display.CRT12BitDisplay);
+    imshow(reconImage, 'InitialMagnification', 400); pause(0.5);
+    title(strcat('reconstruction - lambda:', num2str(regPara(idx))));
+    
+    mseRecon(idx) = norm(patch(:) - reconImage(:));
+end
+
+figure();
+plot(log(regPara), mseRecon, 'k', 'LineWidth', 2);
+xlabel('Prior Weight');
+ylabel('Mean Squared Error');
+xticks(log(regPara)); 
+xticklabels(arrayfun(@(x) num2str(x), regPara, 'UniformOutput', false));
