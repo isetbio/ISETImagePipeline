@@ -49,10 +49,10 @@ load('./sparsePrior.mat');
 projectName  = 'ISETImagePipeline';
 thisImageSet = 'ILSVRC';
 dataBaseDir  = getpref(projectName, 'dataDir');
-imageName    = 'ILSVRC2017_test_00000021.JPEG';
+imageName    = 'ILSVRC2017_test_00000173.JPEG';
 
 fileDir = fullfile(dataBaseDir, thisImageSet, imageName);
-image   = imresize(im2double(imread(fileDir)), 0.65);
+image   = imresize(im2double(imread(fileDir)), 0.3);
 
 patch = sampleImage(image, imageSize(1));
 patch(patch < 0) = 0;
