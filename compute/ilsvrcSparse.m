@@ -64,7 +64,7 @@ regBasis = U * diag(sqrt(SIG)) * Mdl.TransformWeights;
 projectName  = 'ISETImagePipeline';
 thisImageSet = 'ILSVRC';
 dataBaseDir  = getpref(projectName, 'dataDir');
-imageName    = 'ILSVRC2017_test_00000021.JPEG';
+imageName    = 'ILSVRC2017_test_00000173.JPEG';
 
 fileDir = fullfile(dataBaseDir, thisImageSet, imageName);
 image   = imresize(im2double(imread(fileDir)), 0.65);
