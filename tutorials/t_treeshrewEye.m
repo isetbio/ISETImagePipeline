@@ -8,6 +8,28 @@ retina.Mosaic = threwMosaic;
 retina.PSF = threwPSF;
 retina.FovealDegree = 5;
 
+%% Use ISETTreeshrew
+retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
+    'fovealDegree', 0.1);
+
+fovDegs = 8;
+
+threwPSF = oiTreeShrewCreate('pupilDiameterMM', 2.0);
+threwMosaic = coneMosaicTreeShrewCreate(...
+    threwPSF.optics.micronsPerDegree, ...
+    'fovDegs', fovDegs, ...
+    'sConeMinDistanceFactor', 2, ...
+    'integrationTime', 0.1);
+
+threwMosaic.noiseFlag = 'none';
+retina.Mosaic = threwMosaic;
+retina.PSF = threwPSF;
+retina.FovealDegree = fovDegs;
+
+retina.compute(rand([256, 256, 3]));
+retina.visualizeOI();
+retina.visualizeExcitation();
+
 %% Compute mosaic response
 imageSize = [128, 128, 3];
 image   = imresize(im2double(imread('./input.jpeg')), 0.5);
