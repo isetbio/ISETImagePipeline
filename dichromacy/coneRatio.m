@@ -19,6 +19,7 @@ mosaicArray = cell(1, length(ratio));
 renderArray = cell(1, length(ratio));
 
 for idx = 1:length(ratio)
+    fprintf('M Cone Ratio: %.4f \n', ratio(idx));
     retina.reassignMCone(ratio(idx));
     mosaicArray(idx) = {retina.Mosaic.pattern};
     
@@ -46,67 +47,58 @@ end
 
 %% Manipulate of S cone ratio
 retina.resetCone();
-ratio = [0, 0.01, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 0.95];
 
+ratio = [0, 0.01, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 0.95];
+mosaicArray = cell(1, length(ratio));
+renderArray = cell(1, length(ratio));
 for idx = 1:length(ratio)
     retina.resetSCone();
     fprintf('L Cone Ratio: %.4f \n', ratio(idx));
     
     retina.reassignSCone(ratio(idx));
+    mosaicArray(idx) = {retina.Mosaic.pattern};
+    
+    % Generate render matrix for each cone mosaic
+    renderMtx = retina.forwardRender(imageSize);
+    renderArray(idx) = {renderMtx};
 end
 
 %% Input imageset for reconstruction
-nImage = 10;
-load('./inputImage.mat');
+load('./inputImage_128.mat');
+load('./sparsePrior.mat');
 
+nImage = 12;
 for idx = 1:nImage
-    image = reshape(inputImage(idx, :, :, :), imageSize);
+    image = reshape(inputLinear(idx, :, :, :), imageSize);
     
     figure();
     imshow(invGammaCorrection(image, display.CRT12BitDisplay), 'InitialMagnification', 500);
 end
 
-% Load test image
-artImage = imresize(im2double(imread('./artwork.png')), 0.125);
-artImage(artImage > 1) = 1;
-artImage(artImage < 0) = 0;
-
-figure();
-imshow(artImage, 'InitialMagnification', 500);
-
 %% Generate retina mosaic and cone response
 retinaIdx = 1;
 
 retina.Mosaic.pattern = mosaicArray{retinaIdx};
-retina.visualizeExcitation();
-retina.visualizeMosaic();
 render = double(renderArray{retinaIdx});
 
-[~, ~, imageLinear, imageCone] = retina.compute(artImage);
+imageIdx = 11;
+image = invGammaCorrection(reshape(inputLinear(imageIdx, :, :, :), imageSize), display.CRT12BitDisplay);
+
+[~, ~, imageLinear, imageCone] = retina.compute(image);
+retina.visualizeExcitation();
+retina.visualizeMosaic();
+
 figure(); hold on;
 scatter(imageCone, render * imageLinear(:));
 plot(xlim, ylim, '--k', 'LineWidth', 2);
 xlim([0, 1500]); ylim([0, 1500]);
 axis square;
 
-%% Reconstruction test1
-load('./sparsePrior.mat');
+%% Reconstruction test: Image Dataset
+inputTest = reshape(inputLinear(imageIdx, :, :, :), imageSize);
 
 estimator = PoissonSparseEstimator(render, inv(regBasis), MU', 5e-4, 4, imageSize);
-reconImage = estimator.estimate(render * imageLinear(:), 1e3, rand([prod(imageSize), 1]), true);
-
-figure(); subplot(1, 2, 1);
-imshow(artImage, 'InitialMagnification', 500);
-
-subplot(1, 2, 2);
-imshow(invGammaCorrection(reconImage, display.CRT12BitDisplay), 'InitialMagnification', 500);
-
-%% Reconstruction test2
-load('./inputImage.mat');
-inputTest = reshape(inputImage(6, :, :, :), imageSize);
-
-estimator = PoissonSparseEstimator(render, inv(regBasis), MU', 5e-4, 4, imageSize);
-reconTest = estimator.estimate(render * inputTest(:), 1e3, rand([prod(imageSize), 1]), true);
+reconTest = estimator.estimate(render * inputTest(:), 5e2, rand([prod(imageSize), 1]), true);
 
 figure(); subplot(1, 2, 1);
 imshow(invGammaCorrection(inputTest, display.CRT12BitDisplay), 'InitialMagnification', 500);
@@ -120,10 +112,10 @@ load('./inputImage.mat');
 load('./retina_render.mat');
 
 outputArray = cell(1, length(mosaicArray));
-regPara = 6e-4;
+regPara = 5e-4;
 parfor idx = 1:length(mosaicArray)
     fprintf('Reconstruction for Retina %d \n', idx);
-    outputArray(idx) = {imageRecon(double(renderArray{idx}), inputImage, regBasis, MU, regPara, imageSize)};
+    outputArray(idx) = {imageRecon(double(renderArray{idx}), inputLinear, regBasis, MU, regPara, imageSize)};
 end
 
 %% Show reconstruction
