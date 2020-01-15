@@ -53,7 +53,7 @@ mosaicArray = cell(1, length(ratio));
 renderArray = cell(1, length(ratio));
 for idx = 1:length(ratio)
     retina.resetSCone();
-    fprintf('L Cone Ratio: %.4f \n', ratio(idx));
+    fprintf('S Cone Ratio: %.4f \n', ratio(idx));
     
     retina.reassignSCone(ratio(idx));
     mosaicArray(idx) = {retina.Mosaic.pattern};
@@ -98,7 +98,7 @@ axis square;
 inputTest = reshape(inputLinear(imageIdx, :, :, :), imageSize);
 
 estimator = PoissonSparseEstimator(render, inv(regBasis), MU', 5e-4, 4, imageSize);
-reconTest = estimator.estimate(render * inputTest(:), 5e2, rand([prod(imageSize), 1]), true);
+reconTest = estimator.estimate(render * inputTest(:), 1e3, rand([prod(imageSize), 1]), true);
 
 figure(); subplot(1, 2, 1);
 imshow(invGammaCorrection(inputTest, display.CRT12BitDisplay), 'InitialMagnification', 500);
@@ -107,9 +107,8 @@ subplot(1, 2, 2);
 imshow(invGammaCorrection(reconTest, display.CRT12BitDisplay), 'InitialMagnification', 500);
 
 %% Reconstruction with different retina
-load('./sparsePrior.mat');
-load('./inputImage.mat');
-load('./retina_render.mat');
+% Load prior, image dataset, and retina array
+parpool(4);
 
 outputArray = cell(1, length(mosaicArray));
 regPara = 5e-4;
