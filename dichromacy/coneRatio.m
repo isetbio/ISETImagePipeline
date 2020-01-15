@@ -108,7 +108,6 @@ imshow(invGammaCorrection(reconTest, display.CRT12BitDisplay), 'InitialMagnifica
 
 %% Reconstruction with different retina
 % Load prior, image dataset, and retina array
-parpool(4);
 
 outputArray = cell(1, length(mosaicArray));
 regPara = 5e-4;
