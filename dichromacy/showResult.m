@@ -54,6 +54,7 @@ for idr = 1
     end
 end
 
+% Brettel
 baseIdx = 20;
 for idx = 1:nRecon
     axes(plotAxis(baseIdx + idx));
@@ -61,11 +62,12 @@ for idx = 1:nRecon
     imshow(lmsVis(rgbImage, 2), 'InitialMagnification', 400);
 end
 
+% Linear Transformation
 baseIdx = 30;
 for idx = 1:nRecon
     axes(plotAxis(baseIdx + idx));
     rgbImage = reshape(inputImage(idx, :, :, :), imageSize);
-    imshow(lmsVis(rgbImage, 3), 'InitialMagnification', 400);
+    imshow(lmsVis(rgbImage, -2), 'InitialMagnification', 400);
 end
 
 %% Difference between original image and reconstruction with different preceptual metric
