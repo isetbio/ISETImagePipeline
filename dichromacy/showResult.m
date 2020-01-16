@@ -1,6 +1,3 @@
-%% Setup
-tbUse({'Psychtoolbox-3','isetcam', 'ISETPipelineToolbox'});
-
 %% Load constant variables
 dataBaseDir = getpref('ISETImagePipeline', 'dataDir');
 display = load(fullfile(dataBaseDir, 'CRT12BitDisplay.mat'));
@@ -59,7 +56,7 @@ baseIdx = 20;
 for idx = 1:nRecon
     axes(plotAxis(baseIdx + idx));
     rgbImage = reshape(inputImage(idx, :, :, :), imageSize);
-    imshow(lmsVis(rgbImage, 2), 'InitialMagnification', 400);
+    imshow(lmsVis(rgbImage, 2, 'brettel'), 'InitialMagnification', 400);
 end
 
 % Linear Transformation
@@ -67,7 +64,7 @@ baseIdx = 30;
 for idx = 1:nRecon
     axes(plotAxis(baseIdx + idx));
     rgbImage = reshape(inputImage(idx, :, :, :), imageSize);
-    imshow(lmsVis(rgbImage, 0), 'InitialMagnification', 400);
+    imshow(lmsVis(rgbImage, 2, 'linear'), 'InitialMagnification', 400);
 end
 
 %% Difference between original image and reconstruction with different preceptual metric

@@ -1,4 +1,4 @@
-function converted = lmsVis(rgbImage, type)
+function converted = lmsVis(rgbImage, type, methodStr)
 % RGB -> XYZ
 [image_Cal, mPixels, nPixels] = ImageToCalFormat(SRGBGammaCorrect(rgbImage));
 imageXYZ_Cal = SRGBPrimaryToXYZ(SRGBGammaUncorrect(image_Cal));
@@ -8,11 +8,13 @@ imageXYZ = CalFormatToImage(imageXYZ_Cal, mPixels, nPixels);
 
 % Convert
 whiteXYZ = SRGBPrimaryToXYZ([1 1 1]');
-if type > 0
-    imageLMS = xyz2lms(imageXYZ, type, whiteXYZ);
+
+if strcmp(methodStr, 'brettel')
+    imageLMS = xyz2lms(imageXYZ, type, methodStr, whiteXYZ);
 else
-     imageLMS = xyz2lms(imageXYZ, type);
+    imageLMS = xyz2lms(imageXYZ, type, methodStr);
 end
+
 imageXYZ = lms2xyz(imageLMS);
 
 % Image to Cal
