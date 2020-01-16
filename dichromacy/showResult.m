@@ -40,7 +40,7 @@ for idx = 1:nRecon
     imshow(invGammaCorrection(rgbImage, display.CRT12BitDisplay), 'InitialMagnification', 400);
 end
 
-mapArray = [8];
+mapArray = 8;
 for idr = 1
     output = outputArray{mapArray(idr)};
     baseIdx = idr * 10;
@@ -67,7 +67,7 @@ baseIdx = 30;
 for idx = 1:nRecon
     axes(plotAxis(baseIdx + idx));
     rgbImage = reshape(inputImage(idx, :, :, :), imageSize);
-    imshow(lmsVis(rgbImage, -2), 'InitialMagnification', 400);
+    imshow(lmsVis(rgbImage, 0), 'InitialMagnification', 400);
 end
 
 %% Difference between original image and reconstruction with different preceptual metric
