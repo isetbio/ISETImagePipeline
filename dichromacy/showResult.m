@@ -1,15 +1,11 @@
-%% Load constant variables
-dataBaseDir = getpref('ISETImagePipeline', 'dataDir');
-display = load(fullfile(dataBaseDir, 'CRT12BitDisplay.mat'));
-load('reconResult_S.mat');
-
-nRecon = 10;
-nRetina = 8;
-ratio = [0.32, 0.25, 0.2, 0.15, 0.1, 0.05, 0.01, 0];
-imageSize = [100, 100, 3];
+%% Load array of retina and input image, and reconstruction
+nRecon = size(outputArray_M1{1}, 1);
+nRetina = length(mosaicArray);
+inputImage = inputLinear;
+outputArray = outputArray_M1;
 
 %% Show results
-plotAxis = tight_subplot(9, 10 , [.01 .03], [.1 .01], [.01 .01]);
+plotAxis = tight_subplot(nRetina + 1, nRecon, [.01 .03], [.1 .01], [.01 .01]);
 for idx = 1:nRecon
     axes(plotAxis(idx));
     rgbImage = reshape(inputImage(idx, :, :, :), imageSize);
@@ -18,7 +14,7 @@ end
 
 for idr = 1:nRetina
     output = outputArray{idr};
-    baseIdx = idr * 10;
+    baseIdx = idr * nRecon;
     
     for idi = 1:nRecon
         rgbImage = reshape(output(idi, :, :, :), imageSize);
@@ -30,17 +26,18 @@ for idr = 1:nRetina
 end
 
 %% Compare two visualization method
-plotAxis = tight_subplot(4, 10 , [.01 .03], [.1 .01], [.01 .01]);
+tbUseProject('ISETImagePipeline');
+plotAxis = tight_subplot(4, nRecon , [.01 .03], [.1 .01], [.01 .01]);
 for idx = 1:nRecon
     axes(plotAxis(idx));
     rgbImage = reshape(inputImage(idx, :, :, :), imageSize);
     imshow(invGammaCorrection(rgbImage, display.CRT12BitDisplay), 'InitialMagnification', 400);
 end
 
-mapArray = 8;
+dichrArray = 8;
 for idr = 1
-    output = outputArray{mapArray(idr)};
-    baseIdx = idr * 10;
+    output = outputArray{dichrArray(idr)};
+    baseIdx = idr * nRecon;
     
     for idi = 1:nRecon
         rgbImage = reshape(output(idi, :, :, :), imageSize);
@@ -52,7 +49,7 @@ for idr = 1
 end
 
 % Brettel
-baseIdx = 20;
+baseIdx = nRecon * 2;
 for idx = 1:nRecon
     axes(plotAxis(baseIdx + idx));
     rgbImage = reshape(inputImage(idx, :, :, :), imageSize);
@@ -60,7 +57,7 @@ for idx = 1:nRecon
 end
 
 % Linear Transformation
-baseIdx = 30;
+baseIdx = nRecon * 3;
 for idx = 1:nRecon
     axes(plotAxis(baseIdx + idx));
     rgbImage = reshape(inputImage(idx, :, :, :), imageSize);
@@ -68,6 +65,8 @@ for idx = 1:nRecon
 end
 
 %% Difference between original image and reconstruction with different preceptual metric
+tbUse({'Psychtoolbox-3','isetcam', 'ISETPipelineToolbox'});
+
 errorMSE = zeros(nRecon, nRetina);
 errorLAB = zeros(nRecon, nRetina);
 errorSLAB = zeros(nRecon, nRetina);
@@ -80,6 +79,17 @@ end
 plotError(ratio, errorMSE, nRecon, '-ok', 'MSE Distance');
 plotError(ratio, errorLAB, nRecon, '-or', 'LAB Distance');
 plotError(ratio, errorSLAB, nRecon, '-ob', 'SLAB Distance');
+
+%% Show plot: S cone ratio
+figure(); subplot(1, 2, 1);
+errorbar(ratio, mean(errorMSE), std(errorMSE) / sqrt(nRecon), '-ok', 'LineWidth', 1.5);
+xlabel('Ratio of L cone');
+ylabel('RMSE');
+
+subplot(1, 2, 2);
+errorbar(ratio, mean(errorLAB), std(errorLAB) / sqrt(nRecon), '-or', 'LineWidth', 1.5);
+xlabel('Ratio of L cone');
+ylabel('LAB');
 
 %% Helper function: preceptual error metric
 function [errorMSE, errorLAB, errorSLAB] = reconError(original, recon, imageSize, nRecon, display)
@@ -100,7 +110,7 @@ end
 
 end
 
-%% Plot error metric as a function of M cone ratio
+%% Plot error metric as a function of L cone ratio
 function plotError(ratio, error, nRecon, formatStr, ylabelText)
 
 figure(); subplot(1, 2, 1);
