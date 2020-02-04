@@ -26,7 +26,7 @@ for idr = 1:nRetina
 end
 
 %% Compare two visualization method
-tbUseProject('ISETImagePipeline');
+% tbUseProject('ISETImagePipeline');
 plotAxis = tight_subplot(4, nRecon , [.01 .03], [.1 .01], [.01 .01]);
 for idx = 1:nRecon
     axes(plotAxis(idx));
