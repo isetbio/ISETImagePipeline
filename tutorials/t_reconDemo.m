@@ -91,3 +91,121 @@ set(gca,'TickDir','out');
 
 xticks(log(regPara));
 xticklabels(regPara);
+
+%% Different images on prior - likelihood axis
+estimator = PoissonSparseEstimator(render, inv(regBasis), MU', 0.05, 4, imageSize);
+figure(1); hold on;
+% Optimal
+xPos = -estimator.prior(reconImage);
+yPos = -estimator.likelihood(response, reconImage(:));
+scatter(xPos, yPos, 100, 'k', 'filled');
+
+total = xPos + yPos;
+
+% Original
+scatter(-estimator.prior(patchLinear), -estimator.likelihood(response, patchLinear(:)), 100, 'r', 'filled');
+
+%% Null space analysis 
+basisMtx = null(render);
+
+%% Show image with null 1
+image = 0.25 * rand(imageSize);
+[vectRow, vectNull] = linearDecomp(render, basisMtx, image(:));
+visualizeImage(vectRow, vectNull, imageSize);
+
+imageNull = reshape(vectNull, imageSize);
+
+addNull = reconImage + imageNull;
+figure();
+imshow(invGammaCorrection(addNull, display.CRT12BitDisplay), 'InitialMagnification', 400); 
+
+figure(1);
+scatter(-estimator.prior(addNull), -estimator.likelihood(response, addNull(:)), 100, 'y', 'filled');
+
+%% Show image with null 2
+image = 0.25 * rand(imageSize);
+[vectRow, vectNull] = linearDecomp(render, basisMtx, image(:));
+visualizeImage(vectRow, vectNull, imageSize);
+
+imageNull = reshape(vectNull, imageSize);
+
+addNull = reconImage - imageNull;
+figure();
+imshow(invGammaCorrection(addNull, display.CRT12BitDisplay), 'InitialMagnification', 400); 
+
+figure(1);
+scatter(-estimator.prior(addNull), -estimator.likelihood(response, addNull(:)), 100, 'y', 'filled');
+
+%% Rand Image 
+figure(2);
+rndPatch = reconImage + 0.2 * rand(imageSize);
+imshow(invGammaCorrection(rndPatch, display.CRT12BitDisplay), 'InitialMagnification', 400);
+
+figure(1);
+scatter(-estimator.prior(rndPatch), -estimator.likelihood(response,rndPatch(:)), 100, 'b', 'filled');
+
+%% BW image
+figure();
+grayPatch = rgb2gray(patch);
+imshow(grayPatch);
+
+grayImage = zeros(imageSize);
+grayImage(:, :, 1) = grayPatch;
+grayImage(:, :, 2) = grayPatch;
+grayImage(:, :, 3) = grayPatch;
+imshow(grayImage, 'InitialMagnification', 400);
+
+figure(1);
+[~, ~, grayLinear, ~] = retina.compute(grayImage);
+scatter(-estimator.prior(grayLinear), -estimator.likelihood(response, grayLinear(:)), 100, 'b', 'filled');
+
+%% No Prior Recon
+estimator = PoissonSparseEstimator(render, inv(regBasis), MU', 0.0, 4, imageSize);
+reconImageNoise = estimator.estimate(response, 1.5e3, rand([prod(imageSize), 1]), true);
+
+%% Add image to the plot
+figure();
+imshow(invGammaCorrection(reconImageNoise, display.CRT12BitDisplay), 'InitialMagnification', 400);
+
+figure(1); hold on;
+scatter(-estimator.prior(reconImageNoise), -estimator.likelihood(response,reconImageNoise(:)), 100, 'g', 'filled');
+
+xaxisLim = xlim();
+yaxisLim = ylim();
+plot([xaxisLim(1), xaxisLim(2)], [total - xaxisLim(1), total - xaxisLim(2)], '-k', 'LineWidth', 1.5);
+plot([xPos, xPos], [yaxisLim(1), yPos], '--k', 'LineWidth', 1.5);
+plot([xaxisLim(1), xPos], [yPos, yPos], '--k', 'LineWidth', 1.5);
+
+set(gca, 'TickDir', 'out');
+set(gca, 'box', 'off');
+
+%% Helper function
+function [vectRow, vectNull] = linearDecomp(render, nullBasis, imageVec)
+% Projection onto Null Space
+coeffNull = nullBasis' * imageVec;
+vectNull  = nullBasis * coeffNull;
+
+% Orthogonal Complement
+vectRow = imageVec - vectNull;
+
+% Check
+fprintf('Vector norm for row image: %.4f \n', norm(render * vectRow));
+fprintf('Vector norm for null image: %.4f \n', norm(render * vectNull));
+fprintf('Vector dot product: %.4f \n', vectRow' * vectNull);
+
+end
+
+function visualizeImage(vectRow, vectNull, imageSize)
+figure();
+subplot(1, 3, 1);
+imshow(reshape(vectRow + vectNull, imageSize), 'InitialMagnification', 500);
+title('Image');
+
+subplot(1, 3, 2);
+imshow(reshape(vectRow, imageSize), 'InitialMagnification', 500);
+title('Row Space');
+
+subplot(1, 3, 3);
+imshow(reshape(vectNull, imageSize), 'InitialMagnification', 500);
+title('Null Space');
+end
