@@ -7,15 +7,15 @@ render = double(renderFov);
 
 regPara = 1e-3;
 estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara, 4, imageSize);
-outputImage = zeros(size(inputImage));
+outputImage = zeros(size(inputLinear));
 
-parfor idx = 1:size(inputImage, 1)
+parfor idx = 1:size(inputLinear, 1)
     
-    input = inputImage(idx, :, :, :);
+    input = inputLinear(idx, :, :, :);
     coneVec = render * input(:);
     
     outputImage(idx, :, :, :) = estimator.estimate(coneVec, 1.5e3, rand([prod(imageSize), 1]), true);
     
 end
 
-save('output.mat', 'outputImage', '-v7.3');
+save('reconOutput.mat', 'outputImage', '-v7.3');
