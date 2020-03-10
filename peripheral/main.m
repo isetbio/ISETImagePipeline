@@ -6,7 +6,6 @@ load('retinaRenderFov.mat');
 render = double(renderFov);
 
 regPara = 1e-3;
-
 estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara, 4, imageSize);
 outputImage = zeros(size(inputImage));
 
