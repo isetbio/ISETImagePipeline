@@ -16,7 +16,7 @@ classdef MarkovPrior
         function [mu, covMtx, regBasis] = colorSignal(dimension, rhoS, rhoC, showPlot)
             if(~exist('showPlot', 'var'))
                 showPlot = true;
-            end            
+            end
             
             mtx = MarkovPrior.covMtxMarkov(dimension, 0.2, rhoS);
             spatial = kron(mtx, mtx);
@@ -26,12 +26,13 @@ classdef MarkovPrior
             
             mu = 0.5 * ones(1, dimension * dimension * 3);
             
-            [U, S, ~] = svd(covMtx);
-            if showPlot
-                visualizeBasis(U, dimension, dimension^2 * 3, false);
+            if nargout > 2
+                [U, S, ~] = svd(covMtx);
+                if showPlot
+                    visualizeBasis(U, dimension, dimension^2 * 3, false);
+                end
+                regBasis = U * diag(sqrt(diag(S)));
             end
-            regBasis = U * diag(sqrt(diag(S)));
-            
         end
         
         function errorMtx = reconFunc(renderArray, nDim, corrSpatial, corrChromat, nRecon, showPlot)

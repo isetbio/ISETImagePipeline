@@ -20,7 +20,7 @@ figure();
 imshow(reshape(sample, [dimension, dimension]), 'InitialMagnification', 800);
 
 %% Color channel
-mtx = MarkovPrior.covMtxMarkov(3, 0.25, rho);
+mtx = MarkovPrior.covMtxMarkov(3, 0.3, rho);
 chromatic = kron(mtx, spatial);
 
 mu = 0.5 * ones(1, dimension * dimension * 3);
@@ -169,20 +169,69 @@ for i = 1:length(spatial)
 end
 
 %% Plot results
-plotAxis = tight_subplot(nCorr, nCorr, [.05 .05], [.05 .05], [.05 .05]);
+nCorr = length(spatial);
+exclude = [3, 9];
+plotAxis = tight_subplot(nCorr - length(exclude), nCorr - length(exclude), [.05 .05], 0.05, 0.05);
 plotIdx = 1;
 for i = 1:nCorr
     for j = 1:nCorr
-        [~, ~, nMosaic, nRecon] = size(allError);
-        errorMtx = reshape(allError(i, j, :, :), [nMosaic, nRecon]);
-        errorMean = mean(errorMtx, 2);
-        errorSD   = std(errorMtx, 0, 2);
-        
-        axes(plotAxis(plotIdx));
-        plotIdx = plotIdx + 1;
-        
-        errorbar(allRatio, errorMean, errorSD / sqrt(nRecon) * 2, '-ok', 'LineWidth', 1.5);
-        set(gca, 'box', 'off');
-        set(gca, 'TickDir', 'out');
+        if(sum(i == exclude) == 0 && sum(j == exclude) == 0)
+            [~, ~, nMosaic, nRecon] = size(allError);
+            errorMtx = reshape(allError(i, j, :, :), [nMosaic, nRecon]);
+            errorMean = mean(errorMtx, 2);
+            errorSD   = std(errorMtx, 0, 2);
+            
+            axes(plotAxis(plotIdx));
+            plotIdx = plotIdx + 1;
+            
+            % errorbar(allRatio, errorMean, errorSD / sqrt(nRecon) * 2, '-k', 'LineWidth', 1.5);
+            plot(allRatio, errorMean, '-ok', 'LineWidth', 1.5);
+            set(gca, 'box', 'off');
+            set(gca, 'TickDir', 'out');
+            
+            labelIDX = [4, 6:8, 10, 13];
+            xticks(allRatio(labelIDX));
+            
+            yaxisLim = ylim();
+            yaxisLim = [floor(yaxisLim(1) * 2) / 2, ceil(yaxisLim(2) * 2) / 2];
+            
+            ylim(yaxisLim);
+            ytickPos = yaxisLim(1) : 0.5 : yaxisLim(2);
+            if length(ytickPos) >= 5
+                ytickPos = yaxisLim(1) : 1.0 : yaxisLim(2);
+            end
+            yticks(ytickPos);
+            set(gca, 'linewidth', 0.75)
+            set(gca, 'TickLength', [0.03, 0.025])
+            
+            if(~(i == 8))
+                xticklabels([]);
+            else
+                xticklabels(allRatio(labelIDX) * 100);
+            end
+            
+        end
     end
 end
+
+%% Example signal sample
+dimension = 36;
+imageSize = [dimension, dimension, 3];
+
+visCorr = [0, 0.2, 0.4, 0.6, 0.9, 0.95, 0.99];
+for idx = 1:length(visCorr)
+    
+%     corrSpatial = visCorr(idx);
+%     corrChromat = 0;
+    
+    corrSpatial = 0.9;
+    corrChromat = visCorr(idx);
+    
+    [mu, covMtx] = MarkovPrior.colorSignal(dimension, corrSpatial, corrChromat, false);
+    
+    sample = mvnrnd(mu, covMtx, 1);
+    figure();
+    imshow(reshape(sample, imageSize), 'InitialMagnification', 800);
+    
+end
+

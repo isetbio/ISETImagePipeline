@@ -51,4 +51,4 @@ retina10.visualizeExcitation();
 %% Reconstruction Computation - render matrix
 renderFov = retinaFov.forwardRender(imageSize);
 render5   = retina5.forwardRender(imageSize);
-render10  = retina10.forwardRender(imageSize); 
+render10  = retina10.forwardRender(imageSize);
