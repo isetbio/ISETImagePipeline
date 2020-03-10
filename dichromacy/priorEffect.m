@@ -140,7 +140,7 @@ errorMean = mean(errorMtx, 2);
 errorSD   = std(errorMtx, 0, 2);
 
 figure();
-errorbar(allRatio, errorMean, errorSD, '-ok', 'LineWidth', 1);
+errorbar(allRatio, errorMean, errorSD / sqrt(nRecon) * 2, '-ok', 'LineWidth', 1);
 set(gca, 'box', 'off');
 set(gca, 'TickDir', 'out');
 
