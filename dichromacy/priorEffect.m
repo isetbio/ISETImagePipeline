@@ -148,11 +148,11 @@ xlabel('L Cone Ratio');
 ylabel('Reconstruction RMSE');
 
 %% Different parameter for spatial and chromatic correlation
-spatial = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1];
+spatial = [0, 0.1, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9, 1];
 chromat = spatial;
 
 nDim = 36;
-nRecon  = 20;
+nRecon  = 10;
 
 nCorr = length(spatial);
 allError = zeros(nCorr, nCorr, length(allRender), nRecon);
@@ -164,6 +164,25 @@ for i = 1:length(spatial)
         errorMtx = MarkovPrior.reconFunc(allRender, nDim, corrSpatial, corrChromat, nRecon, false);
         
         allError(i, j, :, :) = errorMtx;
-        printf('Recon Set ID: %d, %d \n', i, j);
+        fprintf('Recon Set ID: %d, %d; Total: %d * %d \n', i, j, nCorr, nCorr);
+    end
+end
+
+%% Plot results
+plotAxis = tight_subplot(nCorr, nCorr, [.05 .05], [.05 .05], [.05 .05]);
+plotIdx = 1;
+for i = 1:nCorr
+    for j = 1:nCorr
+        [~, ~, nMosaic, nRecon] = size(allError);
+        errorMtx = reshape(allError(i, j, :, :), [nMosaic, nRecon]);
+        errorMean = mean(errorMtx, 2);
+        errorSD   = std(errorMtx, 0, 2);
+        
+        axes(plotAxis(plotIdx));
+        plotIdx = plotIdx + 1;
+        
+        errorbar(allRatio, errorMean, errorSD / sqrt(nRecon) * 2, '-ok', 'LineWidth', 1.5);
+        set(gca, 'box', 'off');
+        set(gca, 'TickDir', 'out');
     end
 end
