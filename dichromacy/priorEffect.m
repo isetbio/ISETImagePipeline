@@ -129,9 +129,9 @@ imshow(reshape(recon, imageSize), 'InitialMagnification', 800);
 
 %% Run analysis (with different spatial and chromatic correlation)
 nDim = 36;
-corrSpatial = 0.0;
-corrChromat = 0.0;
-nRecon = 20;
+corrSpatial = 0.6;
+corrChromat = 0.6;
+nRecon = 10;
 
 errorMtx = MarkovPrior.reconFunc(allRender, nDim, corrSpatial, corrChromat, nRecon, false);
 
