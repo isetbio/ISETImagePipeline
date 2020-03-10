@@ -3,7 +3,7 @@ dimension = 36;
 rho = 0.9;
 
 mu = 0.5 * ones(1, dimension);
-mtx = covMtxMarkov(dimension, 0.3, rho);
+mtx = MarkovPrior.covMtxMarkov(dimension, 0.3, rho);
 sample = mvnrnd(mu, mtx, 1);
 
 figure();
@@ -20,7 +20,7 @@ figure();
 imshow(reshape(sample, [dimension, dimension]), 'InitialMagnification', 800);
 
 %% Color channel
-mtx = covMtxMarkov(3, 0.25, rho);
+mtx = MarkovPrior.covMtxMarkov(3, 0.25, rho);
 chromatic = kron(mtx, spatial);
 
 mu = 0.5 * ones(1, dimension * dimension * 3);
@@ -85,6 +85,8 @@ end
 %% All mosaic and render matrix
 allMosaic = cat(2, flip(mosaicArray_L), mosaicArray);
 allRender = cat(2, flip(renderArray_L), renderArray);
+allRatio  = cat(2, flip([0.6, 0.4, 0.2, 0.1, 0.05, 0.01, 0.001, 0]), ...
+    1 - [0.3, 0.2, 0.15, 0.10, 0.05, 0.01, 0.001, 0]);
 
 for idx = 1:length(allMosaic)
     retina.Mosaic.pattern = allMosaic{idx};
@@ -93,7 +95,10 @@ end
 
 %% Gaussian model of signal
 dimension = 36;
-[mu, covMtx, regBasis] = colorSignal(dimension, 0.9, 0.9);
+
+corrSpatial = 0.9;
+corrChromat = 0.9;
+[mu, covMtx, regBasis] = MarkovPrior.colorSignal(dimension, corrSpatial, corrChromat);
 
 %% Sample from distribution
 sample = mvnrnd(mu, covMtx, 1);
@@ -102,7 +107,7 @@ figure();
 subplot(1, 2, 1);
 imshow(reshape(sample, imageSize), 'InitialMagnification', 800);
 
-sample = regBasis * normrnd(0, 1, [prod(imageSize), 1]) + 0.5;
+sample = regBasis * normrnd(0, 1, [prod(imageSize), 1]) + mu';
 subplot(1, 2, 2);
 imshow(reshape(sample, imageSize), 'InitialMagnification', 800);
 
@@ -122,31 +127,43 @@ imshow(reshape(sample, imageSize), 'InitialMagnification', 800);
 subplot(1, 2, 2);
 imshow(reshape(recon, imageSize), 'InitialMagnification', 800);
 
-%% Helper functions
-function [mu, covMtx, regBasis] = colorSignal(dimension, rhoS, rhoC)
+%% Run analysis
+nDim = 36;
+corrSpatial = 0.9;
+corrChromat = 0.9;
+nRecon = 20;
 
-mtx = covMtxMarkov(dimension, 0.3, rhoS);
-spatial = kron(mtx, mtx);
+errorMtx = MarkovPrior.reconFunc(allRender, nDim, corrSpatial, corrChromat, nRecon, false);
 
-mtx = covMtxMarkov(3, 0.2, rhoC);
-covMtx = kron(mtx, spatial);
+%% Plot curve
+errorMean = mean(errorMtx, 2);
+errorSD   = std(errorMtx, 0, 2);
 
-mu = 0.5 * ones(1, dimension * dimension * 3);
+figure();
+errorbar(allRatio, errorMean, errorSD, '-ok', 'LineWidth', 1);
+set(gca, 'box', 'off');
+set(gca, 'TickDir', 'out');
 
-[U, S, ~] = svd(covMtx);
-visualizeBasis(U, dimension, dimension^2 * 3, false);
+xlabel('L Cone Ratio');
+ylabel('Reconstruction RMSE');
 
-regBasis = U * diag(sqrt(diag(S)));
-end
+%% Different parameter for spatial and chromatic correlation
+spatial = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1];
+chromat = spatial;
 
-function mtx = covMtxMarkov(dimension, var, rho)
+nDim = 36;
+nRecon  = 20;
 
-mtx = zeros(dimension, dimension);
-for i = 1:dimension
-    for j = 1:dimension
-        mtx(i, j) = rho ^ abs(i - j);
+nCorr = length(spatial);
+allError = zeros(nCorr, nCorr, length(allRender), nRecon);
+
+for i = 1:length(spatial)
+    for j = 1:length(chromat)
+        corrSpatial = spatial(i);
+        corrChromat = chromat(j);
+        errorMtx = MarkovPrior.reconFunc(allRender, nDim, corrSpatial, corrChromat, nRecon, false);
+        
+        allError(i, j, :, :) = errorMtx;
+        printf('Recon Set ID: %d, %d \n', i, j);
     end
-end
-mtx = mtx * var;
-
 end
