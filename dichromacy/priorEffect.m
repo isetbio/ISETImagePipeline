@@ -129,11 +129,19 @@ imshow(reshape(recon, imageSize), 'InitialMagnification', 800);
 
 %% Run analysis
 nDim = 36;
-corrSpatial = 0.9;
-corrChromat = 0.9;
+corrSpatial = 0.0;
+corrChromat = 0.0;
 nRecon = 20;
 
 errorMtx = MarkovPrior.reconFunc(allRender, nDim, corrSpatial, corrChromat, nRecon, false);
+
+%% Show signal
+imageSize = [nDim, nDim, 3];
+[mu, ~, regBasis] = MarkovPrior.colorSignal(nDim, corrSpatial, corrChromat, true);
+sample = regBasis * normrnd(0, 1, [prod(imageSize), 1]) + mu';
+
+figure();
+imshow(reshape(sample, imageSize), 'InitialMagnification', 800);
 
 %% Plot curve
 errorMean = mean(errorMtx, 2);
