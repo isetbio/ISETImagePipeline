@@ -17,7 +17,7 @@ for regIdx = 1:length(regParas)
         input = inputLinear(idx, :, :, :);
         coneVec = render * input(:);
         
-        outputImage(regIdx, idx, :, :, :) = estimator.estimate(coneVec, 10, rand([prod(imageSize), 1]), true);
+        outputImage(regIdx, idx, :, :, :) = estimator.estimate(coneVec, 2e3, rand([prod(imageSize), 1]), true);
         
     end
 end

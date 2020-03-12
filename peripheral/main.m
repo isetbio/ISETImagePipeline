@@ -14,7 +14,7 @@ parfor idx = 1:size(inputLinear, 1)
     input = inputLinear(idx, :, :, :);
     coneVec = render * input(:);
     
-    outputImage(idx, :, :, :) = estimator.estimate(coneVec, 1.5e3, rand([prod(imageSize), 1]), true);
+    outputImage(idx, :, :, :) = estimator.estimate(coneVec, 2e3, rand([prod(imageSize), 1]), true);
     
 end
 
@@ -71,8 +71,8 @@ for i = 1 : size(colors, 1)
         render = renderArray{j};
         estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara, 4, imageSize);
         
-        coneVec = render * patch(:);
-        output(i, j, :, :, :) = estimator.estimate(coneVec, 20, rand([prod(imageSize), 1]), true);
+        coneVec = render * linear(:);
+        output(i, j, :, :, :) = estimator.estimate(coneVec, 5e3, rand([prod(imageSize), 1]), true);
     end
 end
 
@@ -92,6 +92,23 @@ for i = 1 : size(colors, 1)
         imshow(invGammaCorrection(image, display.CRT12BitDisplay), 'InitialMagnification', 400);
         
         plotID = plotID + 1;
+    end
+end
+
+%% Eval
+regPara = 1e-3;
+for i = 1 : size(colors, 1)
+    patch = patchMaker(imageSize, colors(i, :));
+    [~, ~, linear] = retinaFov.compute(patch);
+    for j = 1 : nMosaic
+        render = renderArray{j};
+        response = render * linear(:);
+        estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara, 4, imageSize);
+                
+        reconImage = reshape(output(i, j, :, :), imageSize);
+        
+        retina = mosaicArray{j};        
+        retina.reconValidation(patch, reconImage, imageSize(1), response, estimator);
     end
 end
 
