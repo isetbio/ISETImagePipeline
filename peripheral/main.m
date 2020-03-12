@@ -1,4 +1,4 @@
-% Saved variable
+%% Run reconstruction for one retina/mosaic
 load('sparsePrior.mat');
 load('inputImage_128.mat');
 
