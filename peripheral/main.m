@@ -95,7 +95,7 @@ for i = 1 : size(colors, 1)
     end
 end
 
-%% Eval
+%% Evaluation of Uniform Reconstruction
 regPara = 1e-3;
 for i = 1 : size(colors, 1)
     patch = patchMaker(imageSize, colors(i, :));
@@ -103,12 +103,16 @@ for i = 1 : size(colors, 1)
     for j = 1 : nMosaic
         render = renderArray{j};
         response = render * linear(:);
+        
+        % response = render * patch(:);
         estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara, 4, imageSize);
                 
         reconImage = reshape(output(i, j, :, :), imageSize);
         
         retina = mosaicArray{j};        
         retina.reconValidation(patch, reconImage, imageSize(1), response, estimator);
+        
+        % retina.reconValidation(invGammaCorrection(patch, display.CRT12BitDisplay), reconImage, imageSize(1), response, estimator);
     end
 end
 
