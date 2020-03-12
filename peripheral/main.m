@@ -53,7 +53,7 @@ renderArray(5) = {double(render40)};
 %     retina.visualizeMosaic();
 % end
 
-%% Reconstruction of uniform patches
+%% Reconstruction of uniform patches: Stimulus
 color1 = ([252, 123, 20] ./ 255);
 color2 = ([20, 144, 252] ./ 255);
 colors = [color1; color2];
@@ -61,6 +61,7 @@ colors = [color1; color2];
 % imshow(patchMaker(imageSize, color1));
 % imshow(patchMaker(imageSize, color2));
 
+%% Reconstruction of uniform patches: Reconstruction
 regPara = 1e-3;
 output = zeros([size(colors, 1), nMosaic, imageSize]);
 for i = 1 : size(colors, 1)
