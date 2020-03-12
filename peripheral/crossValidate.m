@@ -6,7 +6,7 @@ load('retinaRender10.mat');
 render = double(render10);
 
 regParas = [1e-5, 1e-4, 1e-3, 1e-2, 0.1, 1];
-outputImage = zeros([length(regPara), size(inputLinear)]);
+outputImage = zeros([length(regParas), size(inputLinear)]);
 
 for regIdx = 1:length(regParas)
     regPara = regParas(regIdx);
@@ -16,7 +16,7 @@ for regIdx = 1:length(regParas)
         input = inputLinear(idx, :, :, :);
         coneVec = render * input(:);
         
-        outputImage(regIdx, idx, :, :, :) = estimator.estimate(coneVec, 1.0e3, rand([prod(imageSize), 1]), true);
+        outputImage(regIdx, idx, :, :, :) = estimator.estimate(coneVec, 10, rand([prod(imageSize), 1]), true);
         
     end
 end
