@@ -107,6 +107,28 @@ plotID = plotRecon(plotAxis, plotID, display, imageSize, outputImage);
 load('reconOutput_40deg.mat');
 plotID = plotRecon(plotAxis, plotID, display, imageSize, outputImage);
 
+%% Validate
+load('inputImage_128.mat');
+load('sparsePrior.mat');
+
+load('retinaRender10.mat');
+render = double(render10);
+
+dataBaseDir = getpref('ISETImagePipeline', 'dataDir');
+display = load(fullfile(dataBaseDir, 'CRT12BitDisplay.mat'));
+
+regPara = 1e-3;
+estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara, 4, imageSize);
+
+load('reconOutput_10deg.mat');
+for idx = 1:size(inputLinear, 1)
+    input = reshape(inputLinear(idx, :, :, :), imageSize);    
+    recon = reshape(outputImage(idx, :, :, :), imageSize);
+    response = render * input(:);
+    
+    retina10.reconValidation(invGammaCorrection(input, display.CRT12BitDisplay), recon, imageSize(1), response, estimator);        
+end
+
 %% Helper function
 function plotID = plotRecon(plotAxis, plotID, display, imageSize, outputImage)
 for idx = 1:size(outputImage)
