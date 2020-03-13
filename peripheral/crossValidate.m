@@ -5,7 +5,7 @@ load('inputImage_128.mat');
 load('retinaRender10.mat');
 render = double(render10);
 
-regParas = [1e-5, 1e-4, 5e-4, 1e-3, 1e-2, 5e-2, 0.1, 1];
+regParas = [1e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 0.1, 1];
 outputImage = zeros([length(regParas), size(inputLinear)]);
 
 %% Run reconstruction
@@ -28,6 +28,8 @@ save('cvOutput.mat', 'outputImage', '-v7.3');
 dataBaseDir = getpref('ISETImagePipeline', 'dataDir');
 display = load(fullfile(dataBaseDir, 'CRT12BitDisplay.mat'));
 
+reconError = zeros(length(regParas), 12);
+
 figure();
 plotAxis = tight_subplot(length(regParas), 12, [0.01, 0.01], 0.01, 0.01);
 
@@ -39,5 +41,25 @@ for i = 1:length(regParas)
         imshow(invGammaCorrection(image, display.CRT12BitDisplay), 'InitialMagnification', 400);
         
         plotID = plotID + 1;
+        
+        input = reshape(inputLinear(j, :, :, :), imageSize);        
+        reconError(i, j) = norm(input(:) - image(:));
     end
 end
+
+%% Error as a function of cv iteration
+figure(); hold on;
+nImage = 12;
+for idx = 1:nImage
+    plot(log(regParas), reconError(:, idx) - min(reconError(:, idx)), '--o', 'LineWidth', 1.5);
+end
+xticks(log(regParas));
+xticklabels(regParas);
+
+figure();
+plot(log(regParas), mean(reconError, 2), '--ok', 'LineWidth', 2);
+xticks(log(regParas));
+xticklabels(regParas);
+
+set(gca, 'box', 'off');
+set(gca, 'TickDir', 'out');

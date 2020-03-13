@@ -70,12 +70,25 @@ retina40.visualizeOI();
 retina40.visualizeMosaic();
 retina40.visualizeExcitation();
 
+%% Generate cone mosaic - (-20, 20) deg ecc
+eccX = -20; eccY = 20;
+retina_m40 = ConeResponsePeripheral(eccX, eccY, 'fovealDegree', 1.0, 'display', display.CRT12BitDisplay, 'pupilSize', 2.0);
+
+%% Visualization
+[~, ~, linear, coneVec] = retina_m40.compute(patch);
+
+retina_m40.visualizeOI();
+retina_m40.visualizeMosaic();
+retina_m40.visualizeExcitation();
+
 %% Reconstruction Computation - render matrix
 renderFov = retinaFov.forwardRender(imageSize);
 render5   = retina5.forwardRender(imageSize);
 render10  = retina10.forwardRender(imageSize);
 render20  = retina20.forwardRender(imageSize);
 render40  = retina40.forwardRender(imageSize);
+
+render_m40 = retina_m40.forwardRender(imageSize);
 
 %% Reconstruction computation: main.m
 
@@ -85,11 +98,11 @@ display = load(fullfile(dataBaseDir, 'CRT12BitDisplay.mat'));
 imageSize = [128, 128, 3];
 
 figure();
-plotAxis = tight_subplot(6, 12, [0.01, 0.01], 0.01, 0.01);
+plotAxis = tight_subplot(7, 12, [0.01, 0.01], 0.01, 0.01);
 
 plotID = 1;
 
-% load('inputImage_128.mat');
+load('inputImage_128.mat');
 plotID = plotRecon(plotAxis, plotID, display, imageSize, inputLinear);
 
 load('reconOutput_fov.mat');
@@ -105,6 +118,9 @@ load('reconOutput_20deg.mat');
 plotID = plotRecon(plotAxis, plotID, display, imageSize, outputImage);
 
 load('reconOutput_40deg.mat');
+plotID = plotRecon(plotAxis, plotID, display, imageSize, outputImage);
+
+load('reconOutput_m40deg.mat');
 plotID = plotRecon(plotAxis, plotID, display, imageSize, outputImage);
 
 %% Validate
