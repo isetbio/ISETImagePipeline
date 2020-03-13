@@ -106,11 +106,11 @@ for i = 1 : size(colors, 1)
         response = render * linear(:);
         % response = render * patch(:);
         
-        estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara, 4, imageSize);        
-        reconImage = reshape(output(i, j, :, :), imageSize);        
+        estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara, 4, imageSize);
+        reconImage = reshape(output(i, j, :, :), imageSize);
         retina = mosaicArray{j};
         
-        retina.reconValidation(patch, reconImage, imageSize(1), response, estimator);       
+        retina.reconValidation(patch, reconImage, imageSize(1), response, estimator);
         % retina.reconValidation(invGammaCorrection(patch, display.CRT12BitDisplay), reconImage, imageSize(1), response, estimator);
     end
 end
