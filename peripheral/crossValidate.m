@@ -2,10 +2,10 @@
 load('sparsePrior.mat');
 load('inputImage_128.mat');
 
-load('retinaRender10.mat');
-render = double(render10);
+load('retinaRender_m40.mat');
+render = double(render_m40);
 
-regParas = [1e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 0.1, 1];
+regParas = [1e-6, 1e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 0.1, 1];
 outputImage = zeros([length(regParas), size(inputLinear)]);
 
 %% Run reconstruction
