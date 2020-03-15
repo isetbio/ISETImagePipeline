@@ -5,7 +5,7 @@ load('inputImage_128.mat');
 load('retinaRenderFov.mat');
 render = double(renderFov);
 
-regPara = 1e-3;
+regPara = 1e-2;
 estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara, 4, imageSize);
 outputImage = zeros(size(inputLinear));
 
@@ -18,6 +18,7 @@ parfor idx = 1:size(inputLinear, 1)
     
 end
 
+fprintf('Reconstruction finished, save results... Done \n');
 save('reconOutput.mat', 'outputImage', '-v7.3');
 
 %% Analysis across retina: load data

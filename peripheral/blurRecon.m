@@ -33,6 +33,8 @@ retinaBlur.visualizeExcitation();
 %% Render matrix
 renderBlur = retinaBlur.forwardRender(imageSize);
 
+%% Run reconstruction: main.m
+
 %% Show results
 for idx = 1:size(inputLinear, 1)
     image = reshape(inputLinear(idx, :, :, :), imageSize);
