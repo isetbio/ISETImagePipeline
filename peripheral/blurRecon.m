@@ -1,29 +1,37 @@
 %% Saved variable
 load('sparsePrior.mat');
 load('inputImage_128.mat');
-load('retinaRender10.mat');
-render = double(render10);
 
 dataBaseDir = getpref('ISETImagePipeline', 'dataDir');
 display = load(fullfile(dataBaseDir, 'CRT12BitDisplay.mat'));
 
-regPara = 1e-2;
-estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara, 4, imageSize);
-outputImage = zeros(size(inputLinear));
+%% Load display setup & constant
+imageSize = [128, 128, 3];
 
-%% Reconstruction
-parfor idx = 1:size(inputLinear, 1)
-    image = reshape(inputLinear(idx, :, :, :), imageSize);
-    
-    fltSD = 5;
-    image = imgaussfilt(image, fltSD);
-    
-    coneVec = render * image(:);
-    outputImage(idx, :, :, :) = estimator.estimate(coneVec, 10, rand([prod(imageSize), 1]), true);
-end
+thisImageSet = 'ILSVRC';
+imageName    = 'ILSVRC2017_test_00000021.JPEG';
 
-fprintf('Finish reconstruction, save results... Done! \n');
-save('blurRecon.mat', 'outputImage', '-v7.3');
+fileDir = fullfile(dataBaseDir, thisImageSet, imageName);
+image   = imresize(im2double(imread(fileDir)), 0.4);
+
+patch = sampleImage(image, imageSize(1));
+patch(patch < 0) = 0;
+patch(patch > 1) = 1;
+imshow(patch, 'InitialMagnification', 400);
+
+%% Combine blur into render matrix
+eccX = 10; eccY = 10;
+retinaBlur = BlurConeResponse(eccX, eccY, 5, 'fovealDegree', 1.0, 'display', display.CRT12BitDisplay, 'pupilSize', 2.0);
+
+%% Visualization
+[~, ~, linear, coneVec] = retinaBlur.compute(patch);
+
+retinaBlur.visualizeOI();
+retinaBlur.visualizeMosaic();
+retinaBlur.visualizeExcitation();
+
+%% Render matrix
+renderBlur = retinaBlur.forwardRender(imageSize);
 
 %% Show results
 for idx = 1:size(inputLinear, 1)
