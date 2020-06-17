@@ -235,3 +235,4 @@ for idx = 1:length(visCorr)
     
 end
 
+%% NEW Analysis: Regular vs. Random Mosaic
