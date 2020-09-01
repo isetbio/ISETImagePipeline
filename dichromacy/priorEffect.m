@@ -29,14 +29,15 @@ sample = mvnrnd(mu, chromatic, 1);
 figure();
 imshow(reshape(sample, [dimension, dimension, 3]), 'InitialMagnification', 800);
 
-%% Load display file
+%% Load display file & Generate retinal mosaic
 dataBaseDir = getpref('ISETImagePipeline', 'dataDir');
 display = load(fullfile(dataBaseDir, 'CRT12BitDisplay.mat'));
 
-%% Retinal mosaic
 imageSize = [36, 36, 3];
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.4, 'display', display.CRT12BitDisplay, 'pupilSize', 2.0);
+    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', 2.0);
+
+retina.visualizeMosaic();
 
 %% Cone ratio manipulation
 retina.resetCone();
@@ -129,8 +130,8 @@ imshow(reshape(recon, imageSize), 'InitialMagnification', 800);
 
 %% Run analysis (with different spatial and chromatic correlation)
 nDim = 36;
-corrSpatial = 0.6;
-corrChromat = 0.6;
+corrSpatial = 0.9;
+corrChromat = 0.9;
 nRecon = 10;
 
 errorMtx = MarkovPrior.reconFunc(allRender, nDim, corrSpatial, corrChromat, nRecon, false);
@@ -235,4 +236,6 @@ for idx = 1:length(visCorr)
     
 end
 
-%% NEW Analysis: Regular vs. Random Mosaic
+%% NEW Analysis:
+% 1) overall SNR level: Gaussian Noise with difference Sigma
+% 2) degree of overlap in spectral sensitivity
