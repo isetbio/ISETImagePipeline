@@ -96,6 +96,7 @@ end
 
 %% Gaussian model of signal
 dimension = 36;
+imageSize = [36, 36, 3];
 
 corrSpatial = 0.9;
 corrChromat = 0.9;
@@ -215,27 +216,31 @@ for i = 1:nCorr
     end
 end
 
-%% Example signal sample
-dimension = 36;
-imageSize = [dimension, dimension, 3];
+%% Add noise
+nDim = 36;
+corrSpatial = 0.9;
+corrChromat = 0.9;
+nRecon = 10;
 
-visCorr = [0, 0.2, 0.4, 0.6, 0.9, 0.95, 0.99];
-for idx = 1:length(visCorr)
-    
-%     corrSpatial = visCorr(idx);
-%     corrChromat = 0;
-    
-    corrSpatial = 0.9;
-    corrChromat = visCorr(idx);
-    
-    [mu, covMtx] = MarkovPrior.colorSignal(dimension, corrSpatial, corrChromat, false);
-    
-    sample = mvnrnd(mu, covMtx, 1);
-    figure();
-    imshow(reshape(sample, imageSize), 'InitialMagnification', 800);
-    
+errorMtxNoise = MarkovPrior.reconFuncNoise(allRender, nDim, corrSpatial, corrChromat, nRecon, false, 1e3, 0.01);
+
+%% Plotting function
+figure();
+plotError(errorMtx, allRatio, nRecon);
+plotError(errorMtxNoise, allRatio, nRecon);
+
+%% plotting helper function
+function plotError(errorMtx, allRatio, nRecon)
+
+errorMean = mean(errorMtx, 2);
+errorSD   = std(errorMtx, 0, 2);
+
+hold on;
+errorbar(allRatio, errorMean, errorSD / sqrt(nRecon) * 2, '-ok', 'LineWidth', 1);
+set(gca, 'box', 'off');
+set(gca, 'TickDir', 'out');
+
+xlabel('L Cone Ratio');
+ylabel('Reconstruction RMSE');
+
 end
-
-%% NEW Analysis:
-% 1) overall SNR level: Gaussian Noise with difference Sigma
-% 2) degree of overlap in spectral sensitivity

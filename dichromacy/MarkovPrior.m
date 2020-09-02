@@ -36,6 +36,10 @@ classdef MarkovPrior
         end
         
         function errorMtx = reconFunc(renderArray, nDim, corrSpatial, corrChromat, nRecon, showPlot)
+            errorMtx = MarkovPrior.reconFuncNoise(renderArray, nDim, corrSpatial, corrChromat, nRecon, showPlot, 1e-4, 0);
+        end
+        
+        function errorMtx = reconFuncNoise(renderArray, nDim, corrSpatial, corrChromat, nRecon, showPlot, lambda, noiseRatio)
             [mu, ~, regBasis] = MarkovPrior.colorSignal(nDim, corrSpatial, corrChromat, false);
             nMosaic = length(renderArray);
             imageSize = [nDim, nDim, 3];
@@ -48,9 +52,13 @@ classdef MarkovPrior
                     render = double(renderArray{mosaicID});
                     
                     estimator = RidgeGaussianEstimator(render, regBasis, mu');
-                    estimator.setLambda(1e-4);
+                    estimator.setLambda(lambda);
                     
-                    recon = (estimator.estimate((render * sample)'))';
+                    sensorRes = render * sample;
+                    if noiseRatio > 0
+                        sensorRes = sensorRes + normrnd(0, mean(sensorRes) * noiseRatio, size(sensorRes));
+                    end                    
+                    recon = (estimator.estimate(sensorRes'))';
                     errorMtx(mosaicID, reconID) = norm(sample(:) - recon(:));
                     
                     if showPlot
