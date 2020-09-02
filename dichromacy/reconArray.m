@@ -18,8 +18,8 @@ estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara, 4, image
 outputImage = zeros(size(inputImage));
 
 % alternatively, parfor for each image
-% parfor idx = 1:size(inputImage, 1)
-for idx = 1:size(inputImage, 1)
+% for idx = 1:size(inputImage, 1)
+parfor idx = 1:size(inputImage, 1)
     fprintf('Reconstruction for Image %d \n', idx);
     
     input = inputImage(idx, :, :, :);

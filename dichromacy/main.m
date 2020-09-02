@@ -18,8 +18,13 @@ load('inputImage_128.mat');
 % 
 % save('output_m2.mat', 'outputArray_M2', '-v7.3');
 
+load('render_normal.mat');
 load('render_anomalous.mat');
+
 regPara = 0.05;
-outputArray = reconArray(inputLinear, {renderAnomalous}, regBasis, MU, regPara, imageSize);
+renderNormal = 5 * double(renderNormal);
+renderAnomalous = 5 * double(renderAnomalous);
+
+outputArray = reconArray(inputLinear, {renderNormal, renderAnomalous}, regBasis, MU, regPara, imageSize);
 
 save('output_noise.mat', 'outputArray', '-v7.3');
