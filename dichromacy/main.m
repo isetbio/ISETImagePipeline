@@ -2,6 +2,20 @@
 load('sparsePrior.mat');
 load('inputImage_128.mat');
 
+load('render_normal.mat');
+load('render_anomalous.mat');
+
+% render mtx for dim light
+renderNormal = 0.2 * double(renderNormal);
+renderAnomalous = 0.2 * double(renderAnomalous);
+
+% 0.0075 for dim light, 0.01 for regular light, 0.05 for bright light
+regPara = 0.0075;
+outputArray = reconArray(inputLinear, {renderNormal, renderAnomalous}, regBasis, MU, regPara, imageSize);
+
+save('output_noise_dimlight.mat', 'outputArray', '-v7.3');
+
+%% archive
 % % M1
 % load('retina_render_M1.mat');
 % 
@@ -17,16 +31,3 @@ load('inputImage_128.mat');
 % outputArray_M2 = reconArray(inputLinear, renderArray, regBasis, MU, regPara, imageSize);
 % 
 % save('output_m2.mat', 'outputArray_M2', '-v7.3');
-
-load('render_normal.mat');
-% load('render_anomalous.mat');
-
-% 0.01 (dim light), 0.05, 
-% renderNormal = 0.2 * double(renderNormal);
-% renderAnomalous = 0.2 * double(renderAnomalous);
-
-regPara = 0.05;
-renderNormal = double(renderNormal);
-outputArray = reconArray(inputLinear, {renderNormal}, regBasis, MU, regPara, imageSize);
-
-save('output_noise_low_normal.mat', 'outputArray', '-v7.3');
