@@ -27,6 +27,6 @@ load('render_normal.mat');
 
 regPara = 0.05;
 renderNormal = double(renderNormal);
-outputArray = reconArray(inputLinear, {renderNormal, renderAnomalous}, regBasis, MU, regPara, imageSize);
+outputArray = reconArray(inputLinear, {renderNormal}, regBasis, MU, regPara, imageSize);
 
 save('output_noise_low_normal.mat', 'outputArray', '-v7.3');
