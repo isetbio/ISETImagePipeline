@@ -22,9 +22,10 @@ load('render_normal.mat');
 % load('render_anomalous.mat');
 
 % 0.01 (dim light), 0.05, 
-regPara = 0.05;
 % renderNormal = 0.2 * double(renderNormal);
 % renderAnomalous = 0.2 * double(renderAnomalous);
+
+regPara = 0.05;
 renderNormal = double(renderNormal);
 outputArray = reconArray(inputLinear, {renderNormal, renderAnomalous}, regBasis, MU, regPara, imageSize);
 
