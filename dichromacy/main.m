@@ -9,7 +9,8 @@ load('render_anomalous.mat');
 renderNormal = 0.01 * double(renderNormal);
 renderAnomalous = 0.01 * double(renderAnomalous);
 
-% 0.001 for night light, 0.0075 for dim light, 0.01 for regular light, 0.05 for bright light
+% 0.001 for night light (0.01 render), 0.0075 for dim light (0.2 render),
+% 0.01 for regular light (render), 0.05 for bright light (5 render)
 regPara = 0.001;
 outputArray = reconArray(inputLinear, {renderNormal, renderAnomalous}, regBasis, MU, regPara, imageSize);
 
