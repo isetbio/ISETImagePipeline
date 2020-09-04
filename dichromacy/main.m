@@ -6,14 +6,14 @@ load('render_normal.mat');
 load('render_anomalous.mat');
 
 % render mtx for dim light
-renderNormal = 0.2 * double(renderNormal);
-renderAnomalous = 0.2 * double(renderAnomalous);
+renderNormal = 0.01 * double(renderNormal);
+renderAnomalous = 0.01 * double(renderAnomalous);
 
-% 0.0075 for dim light, 0.01 for regular light, 0.05 for bright light
-regPara = 0.0075;
+% 0.001 for night light, 0.0075 for dim light, 0.01 for regular light, 0.05 for bright light
+regPara = 0.001;
 outputArray = reconArray(inputLinear, {renderNormal, renderAnomalous}, regBasis, MU, regPara, imageSize);
 
-save('output_noise_dimlight.mat', 'outputArray', '-v7.3');
+save('output_noise_nightlight.mat', 'outputArray', '-v7.3');
 
 %% archive
 % % M1
