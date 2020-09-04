@@ -10,6 +10,8 @@ results = zeros(3, 128, 128, 3);
 
 regPara = 0.04;
 parfor idx = 1 : 3
+    fprintf('Reconstruction for Render %d \n', idx);
+    
     render  = renders{idx};
     estimator = PoissonSparseEstimator(render, inv(regBasis), MU', regPara, 4, imageSize);
     
