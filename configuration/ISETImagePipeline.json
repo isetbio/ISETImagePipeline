@@ -6,7 +6,7 @@
 		"localHookTemplate": "configuration/ISETImagePipelineLocalHookTemplate.m",
 		"name": "ISETImagePipeline",
 		"pathPlacement": "append",
-		"subfolder": ["toolbox", "tutorials", "compute", "dichromacy", "validations"],
+		"subfolder": ["toolbox", "tutorials", "compute", "dichromacy", "validations", "csf"],
 		"toolboxRoot": "",
 		"type": "git",
 		"update": "",
@@ -38,5 +38,21 @@
 		"type": "include",
 		"update": "",
 		"url": ""
+	},
+
+
+    {
+		"flavor": "",
+		"hook": "",
+		"importance": "",
+		"localHookTemplate": "",
+		"name": "mQUESTPlus",
+		"pathPlacement": "append",
+		"subfolder": "",
+		"toolboxRoot": "",
+		"type": "include",
+		"update": "",
+		"url": ""
 	}
+
 ]

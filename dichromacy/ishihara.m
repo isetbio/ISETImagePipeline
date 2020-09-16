@@ -20,3 +20,19 @@ parfor idx = 1 : 3
 end
 
 save('ishihara_9.mat', 'results', '-v7.3');
+
+%% Show result
+dataBaseDir = getpref('ISETImagePipeline', 'dataDir');
+display = load(fullfile(dataBaseDir, 'CRT12BitDisplay.mat'));
+
+imageSize = [128, 128, 3];
+
+figure();
+subplot(1, 4, 1);
+imshow(invGammaCorrection(patchLinear, display.CRT12BitDisplay), 'InitialMagnification', 400);
+
+for idx = 1:3
+    image = reshape(results(idx, :, :, :), imageSize);
+    subplot(1, 4, 1 + idx);
+    imshow(invGammaCorrection(image, display.CRT12BitDisplay), 'InitialMagnification', 400);
+end
