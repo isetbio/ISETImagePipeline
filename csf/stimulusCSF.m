@@ -11,17 +11,16 @@ function imageStim = stimulusCSF(stimType, stimCrst, stimFreq)
 %    Plotlab is freely available at: https://github.com/npcottaris/plotlab
 %
 % Inputs:
-%    None.
+%    stimType: direction of chromatic modulation for the stimulus
+%    {'S-(L+M)', 'L-M', 'L+M', 'L+M+S', 'all-different'}  
+%    stimCrst: stimulus contrast
+%    stimFreq: stimulus frequency
 %
 % Outputs:
 %    None.
-%
-% Optional key/value pairs:
-%    None.
-%
-
 % History:
 %    03/28/20  npc  Wrote it.
+%    09/16/20  lq   Changed it to a function
 
     %% Specify the desired mean (x,y) chromaticity and luminance (background)
     % Horizon light - see https://en.wikipedia.org/wiki/Standard_illuminant
@@ -32,11 +31,6 @@ function imageStim = stimulusCSF(stimType, stimCrst, stimFreq)
     background.xyY = [background.xyChroma(1) background.xyChroma(2) background.luminance];
     
     %% Specify stimulus type
-%     stimType = 'S-(L+M)';
-%     stimType = 'L-M';
-%     stimType = 'L+M';
-%     stimType = 'L+M+S';
-%     stimType = 'all-different';
     test.spatialModulationParams = getModulationParamsForStimType(stimType, stimCrst, stimFreq);
             
     %% Stimulus field of view

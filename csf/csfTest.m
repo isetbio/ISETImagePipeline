@@ -14,8 +14,8 @@ retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, 
 retina.visualizeMosaic();
 
 %% Stimulus generation test
-background = stimulusCSF('L+M+S', 0, 5);
-target = stimulusCSF('L+M+S', 0.5, 1);
+background = stimulusCSF('L+M+S', 0, 1);
+target = stimulusCSF('L+M+S', 0.25, 1);
 
 background = invGammaCorrection(background, display.CRT12BitDisplay);
 target = invGammaCorrection(target, display.CRT12BitDisplay);
