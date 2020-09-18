@@ -1,4 +1,35 @@
-function imageStim = stimulusCSF(stimType, stimCrst, stimFreq) 
+classdef (Abstract) Observer < handle
+    % base class for observer
+    properties
+        stimType;
+        stimFreq;
+    end
+    
+    methods
+        
+        function this = Observer(stimType, stimFreq)
+            this.stimType = stimType;
+            this.stimFreq = stimFreq;
+        end
+        
+        % generate the stimulus
+        function stim = getStimulus(this, stimCrst)
+            stim = getStimulusCSF(this.stimType, stimCrst, this.stimFreq);
+            stim = gammaCorrection(stim, this.display);
+        end
+        
+    end
+    
+    methods (Abstract)
+       
+        % simulate a single trial response
+        response = singleTrial(this, stimCrst)                
+            
+    end
+end
+
+% Stimulus generation routine (NC)
+function imageStim = getStimulusCSF(stimType, stimCrst, stimFreq) 
 % Illustrate how to generate scenes depicting various cone-specific stimuli
 %
 % Syntax:
@@ -22,7 +53,7 @@ function imageStim = stimulusCSF(stimType, stimCrst, stimFreq)
 %    03/28/20  npc  Wrote it.
 %    09/16/20  lq   Changed it to a function
 
-    %% Specify the desired mean (x,y) chromaticity and luminance (background)
+    % Specify the desired mean (x,y) chromaticity and luminance (background)
     % Horizon light - see https://en.wikipedia.org/wiki/Standard_illuminant
     background.xyChroma = [0.345 0.358];
     % 40 cd/m2
@@ -30,39 +61,39 @@ function imageStim = stimulusCSF(stimType, stimCrst, stimFreq)
     % In vector form
     background.xyY = [background.xyChroma(1) background.xyChroma(2) background.luminance];
     
-    %% Specify stimulus type
+    % Specify stimulus type
     test.spatialModulationParams = getModulationParamsForStimType(stimType, stimCrst, stimFreq);
             
-    %% Stimulus field of view
+    % Stimulus field of view
     fieldOfViewDegs = 4;
     
-    %% Presentation display
+    % Presentation display
     presentationDisplay = generatePresentationDisplay(); 
     
-    %% Background XYZ tri-stimulus values
+    % Background XYZ tri-stimulus values
     background.XYZ = (xyYToXYZ(background.xyY(:)))';
     
-    %% Background linear RGB primary values for the presentation display
+    % Background linear RGB primary values for the presentation display
     background.RGB = imageLinearTransform(background.XYZ, inv(displayGet(presentationDisplay, 'rgb2xyz')));
     
-    %% Background LMS excitations
+    %%Background LMS excitations
     background.LMS = imageLinearTransform(background.RGB, displayGet(presentationDisplay, 'rgb2lms'));
     
-    %% Stimulus spatial modulation of the L-, M-, and S-cone contrast
+    % Stimulus spatial modulation of the L-, M-, and S-cone contrast
     test.LMScontrastImage = generateSpatialContrastPatterns(fieldOfViewDegs, test.spatialModulationParams);
     
-    %% Stimulus LMS excitations image for the given background and spatial modulation
+    % Stimulus LMS excitations image for the given background and spatial modulation
     test.LMSexcitationImage = bsxfun(@times, (1+test.LMScontrastImage), reshape(background.LMS, [1 1 3]));
     
-    %% Stimulus linear RGB primaries image
+    % Stimulus linear RGB primaries image
     test.RGBimage = imageLinearTransform(test.LMSexcitationImage, inv(displayGet(presentationDisplay, 'rgb2lms')));
     
-    %% Make sure we are in gamut (no subpixels with primary values outside of [0 1]
+    % Make sure we are in gamut (no subpixels with primary values outside of [0 1]
     assert((numel(find(test.RGBimage>1))==0)&&(numel(find(test.RGBimage<0))==0), ...
         sprintf('%d subpixels with primary values > 1; %d subpixels with primary values < 0', ...
         numel(find(test.RGBimage>1)), numel(find(test.RGBimage<0))));
     
-    %% Gamma correction
+    % Gamma correction
     % Gamma correct linear RGB values (primaries) through the display's
     % gamma table to get RGB settings values
     test.RGBimageGammaCorrected = ieLUTLinear(test.RGBimage, ...
@@ -70,18 +101,18 @@ function imageStim = stimulusCSF(stimType, stimCrst, stimFreq)
     
     test.RGBimageGammaCorrected = test.RGBimageGammaCorrected / max(test.RGBimageGammaCorrected(:));
 
-    %% Generate scene corresponding to the test stimulus on the presentation display
+    % Generate scene corresponding to the test stimulus on the presentation display
     theScene = sceneFromFile(test.RGBimageGammaCorrected,'rgb',background.luminance, presentationDisplay);
     theScene = sceneSet(theScene, 'h fov', fieldOfViewDegs);
 
-    %% Verify that we have the desired cone contrast profiles
+    % Verify that we have the desired cone contrast profiles
     % Get the emitted radiance image
     emittedRadianceImage = sceneGet(theScene, 'energy');
     
-    %% Load the 2-deg Stockman cone fundamentals on a wavelength support matching the display
+    % Load the 2-deg Stockman cone fundamentals on a wavelength support matching the display
     coneFundamentals = ieReadSpectra(fullfile(isetbioDataPath,'human','stockman'), displayGet(presentationDisplay, 'wave'));
     
-    %% Compute the LMS cone contrasts of the emitted radiance image
+    % Compute the LMS cone contrasts of the emitted radiance image
     test.achievedLMScontrastImage = computeLMScontrastImage(emittedRadianceImage, coneFundamentals);
 
     % Return RGM image of the stimulus

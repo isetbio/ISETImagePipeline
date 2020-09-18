@@ -15,7 +15,7 @@ retina.visualizeMosaic();
 
 %% Stimulus generation test
 background = stimulusCSF('L+M+S', 0, 1);
-target = stimulusCSF('L+M+S', 0.25, 1);
+target = stimulusCSF('L+M+S', 0.05, 1);
 
 background = invGammaCorrection(background, display.CRT12BitDisplay);
 target = invGammaCorrection(target, display.CRT12BitDisplay);
@@ -26,7 +26,7 @@ imshow(background, 'initialMagnification', 200);
 subplot(1, 2, 2);
 imshow(target, 'initialMagnification', 200);
 
-% AFC(retina, background, target)
+AFC(retina, background, target)
 
 %% Plot CSF
 crst = 1e-4 : 2e-4 : 5e-2;
