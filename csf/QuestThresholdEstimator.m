@@ -59,7 +59,7 @@ classdef QuestThresholdEstimator < ContrastThresholdEstimator
     
     
     % Class properties
-    properties (Access = private)
+    properties %(Access = private)
         
         estimators;
         numEstimator;
@@ -120,7 +120,7 @@ classdef QuestThresholdEstimator < ContrastThresholdEstimator
             this.estimators{this.estIdx} = qpUpdate(this.estimators{this.estIdx}, stim, response);
             
             this.nTrial = this.nTrial + 1;
-            this.estIdx = mod(this.estIdx, this.numEstimator) + 1;
+            this.estIdx = mod(this.estIdx, this.numEstimator) + 1;            
             
             if this.nTrial >= this.maxTrial
                 this.nextFlag = false;
@@ -153,7 +153,7 @@ classdef QuestThresholdEstimator < ContrastThresholdEstimator
             % For now, hard code the number of parameter to be 4
             estimates = zeros(this.numEstimator, 4);
             
-            for idx = 1:length(this.numEstimator)
+            for idx = 1 : this.numEstimator
                 estimator = this.estimators{idx};
                 psiParamsIndex = qpListMaxArg(estimator.posterior);
                 estimates(idx, :) = estimator.psiParamsDomain(psiParamsIndex, :);
@@ -174,7 +174,7 @@ classdef QuestThresholdEstimator < ContrastThresholdEstimator
         function [stimVec, responseVec, structVec] = combineData(this)
             
             structVec = [];
-            for idx = 1 : length(this.numEstimator)
+            for idx = 1 : this.numEstimator
                 questData = this.estimators{idx};
                 structVec = [structVec; questData.trialData];
             end
