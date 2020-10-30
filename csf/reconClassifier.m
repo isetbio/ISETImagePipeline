@@ -42,7 +42,7 @@ if (strcmp(operationMode, 'predict'))
     
     nIteration = 200;
     response = zeros(1, nTrials);
-    for idx = 1:nTrials
+    parfor idx = 1:nTrials
         testRecon = (reconObj.estimate(testResponses(:, idx), nIteration, rand([imageLength, 1]), true, 1.0, 'off')) .* mask;
         
         distCr = norm(testRecon(:) - testTemplate);
