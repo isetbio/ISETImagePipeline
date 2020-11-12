@@ -1,13 +1,12 @@
-% List of spatial frequencies to be tested.
-spatialFreqs = [1, 2, 4, 8, 12, 15];
-
+% List of spatial frequencies to be tested
+spatialFreqs = [1, 2, 4, 8, 16, 25];
 % Choose stimulus chromatic direction specified as a 1-by-3 vector
 % of L, M, S cone contrast.  These vectors get normalized below, so only
-% their direction matters in the specification.
-stimType = 'luminance';
+% their direction matters in the specification
+stimType = 'red-green';
 switch (stimType)
     case 'luminance'
-        chromaDir = [1.0, 1.0, 1.0]';
+        chromaDir = [1.0, 1.0, 0.0]';
     case 'red-green'
         chromaDir = [1.0, -1.0, 0.0]';
 end
@@ -22,7 +21,7 @@ chromaDir = chromaDir / norm(chromaDir) * rmsContrast;
 assert(abs(norm(chromaDir) - rmsContrast) <= 1e-10);
 
 %% Create neural response engine
-%
+
 % This calculations isomerizations in a patch of cone mosaic with Poisson
 % noise, and includes optical blur.
 fovDegs = 0.50;
@@ -33,21 +32,21 @@ neuralParams.coneMosaicParams.eccBased = true;
 theNeuralEngine = neuralResponseEngine(@nreConeResponse, neuralParams);
 
 %% Instantiate the PoissonTAFC responseClassifierEngine
-%
+
 % PoissonTAFC makes decision by performing the Poisson likelihood ratio test
 % Also set up parameters associated with use of this classifier.
 classifierEngine = responseClassifierEngine(@rcePoissonTAFC);
 classifierPara = struct('trainFlag', 'none', ...
     'testFlag', 'random', ...
-    'nTrain', 1, 'nTest', 256);
+    'nTrain', 1, 'nTest', 128);
 
 %% Parameters for threshold estimation/quest engine
 % The actual threshold varies enough with the different engines that we
 % need to adjust the contrast range that Quest+ searches over, as well as
 % the range of psychometric function slopes.
-thresholdPara = struct('logThreshLimitLow', 3.0, ...
+thresholdPara = struct('logThreshLimitLow', 3.4, ...
     'logThreshLimitHigh', 0.0, ...
-    'logThreshLimitDelta', 0.0125, ...
+    'logThreshLimitDelta', 0.02, ...
     'slopeRangeLow', 1, ...
     'slopeRangeHigh', 100, ...
     'slopeDelta', 2.5);
