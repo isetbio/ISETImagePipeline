@@ -15,20 +15,24 @@ imageSize = reconObj.Size;
 mask = makeMast(imageSize);
 
 [~, coneVec] = coneRespObj.computeWithScene(sceneSequence{:});
-init = ones([prod(imageSize), 1]) * 0.5;
+init = rand([prod(imageSize), 1]);
 
 reconResponses = containers.Map();
 for idx = 1:length(noiseFlags)
-    if strcmp(noiseFlags{idx}, 'none')                
-        recon = (reconObj.estimate(coneVec, 400, init, true, 1.0, 'final-detailed')) .* mask;
+    if strcmp(noiseFlags{idx}, 'none')
+        
+        recon = (reconObj.estimate(coneVec, 400, init, true, 1.0, 'iter')) .* mask;
         reconResponses(noiseFlags{idx}) = recon(:);
         
     elseif strcmp(noiseFlags{idx}, 'random')
+        
         recon = zeros([prod(imageSize), instancesNum]);
         parfor itr = 1:instancesNum
-            recon(:, itr) = (reconObj.estimate(poissrnd(coneVec), 150, init, true, 1.0, 'final-detailed')) .* mask;
+            output = (reconObj.estimate(poissrnd(coneVec), 200, init, true, 1.0, 'final-detailed')) .* mask;
+            recon(:, itr) = output(:);
         end
         reconResponses(noiseFlags{idx}) = recon;
+        
     end
 end
 % coneVec = repmat(coneVec, 1, instancesNum);
