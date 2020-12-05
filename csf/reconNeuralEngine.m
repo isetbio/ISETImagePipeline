@@ -20,13 +20,13 @@ init = ones([prod(imageSize), 1]) * 0.5;
 reconResponses = containers.Map();
 for idx = 1:length(noiseFlags)
     if strcmp(noiseFlags{idx}, 'none')                
-        recon = (reconObj.estimate(coneVec, 400, init, true, 1.0, 'off')) .* mask;
+        recon = (reconObj.estimate(coneVec, 400, init, true, 1.0, 'final-detailed')) .* mask;
         reconResponses(noiseFlags{idx}) = recon(:);
         
     elseif strcmp(noiseFlags{idx}, 'random')
         recon = zeros([prod(imageSize), instancesNum]);
         parfor itr = 1:instancesNum
-            recon(:, itr) = (reconObj.estimate(poissrnd(coneVec), 150, init, true, 1.0, 'off')) .* mask;
+            recon(:, itr) = (reconObj.estimate(poissrnd(coneVec), 150, init, true, 1.0, 'final-detailed')) .* mask;
         end
         reconResponses(noiseFlags{idx}) = recon;
     end

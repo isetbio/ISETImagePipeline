@@ -43,7 +43,7 @@ testContrast = 1.0;
 [testScene, ~] = gratingScene.compute(testContrast);
 gratingScene.visualizeStaticFrame(testScene);
 
-[prediction, ~] = computePerformanceTAFC...
+[prediction, ~, responses] = computePerformanceTAFC...
         (nullScene, testScene, temporalSupport, nTrain, nTest, neuralEngine, classifierEngine, trainFlag, testFlag, true, false);
 
 %% Compute performance
