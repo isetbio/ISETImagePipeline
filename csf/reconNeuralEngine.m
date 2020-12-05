@@ -1,4 +1,4 @@
-function dataOut = reconNeuralEngine(coneRespObj, ~, ~, sceneSequence, ~, instancesNum, varargin)
+function dataOut = reconNeuralEngine(reconObj, coneRespObj, ~, ~, sceneSequence, ~, instancesNum, varargin)
 
 if (nargin == 0)
     dataOut = struct();
@@ -11,21 +11,47 @@ varargin = ieParamFormat(varargin);
 p.parse(varargin{:});
 
 noiseFlags = p.Results.noiseFlags;
+imageSize = reconObj.Size;
+mask = makeMast(imageSize);
 
 [~, coneVec] = coneRespObj.computeWithScene(sceneSequence{:});
-coneVec = repmat(coneVec, 1, instancesNum);
+init = ones([prod(imageSize), 1]) * 0.5;
 
-coneResponses = containers.Map();
+reconResponses = containers.Map();
 for idx = 1:length(noiseFlags)
-    if strcmp(noiseFlags{idx}, 'none')
-        coneResponses(noiseFlags{idx}) = coneVec;
+    if strcmp(noiseFlags{idx}, 'none')                
+        recon = (reconObj.estimate(coneVec, 400, init, true, 1.0, 'off')) .* mask;
+        reconResponses(noiseFlags{idx}) = recon(:);
+        
     elseif strcmp(noiseFlags{idx}, 'random')
-        coneResponses(noiseFlags{idx}) = poissrnd(coneVec);
+        recon = zeros([prod(imageSize), instancesNum]);
+        parfor itr = 1:instancesNum
+            recon(:, itr) = (reconObj.estimate(poissrnd(coneVec), 150, init, true, 1.0, 'off')) .* mask;
+        end
+        reconResponses(noiseFlags{idx}) = recon;
     end
 end
-
+% coneVec = repmat(coneVec, 1, instancesNum);
 dataOut = struct(...
-    'neuralResponses', coneResponses, ...
+    'neuralResponses', reconResponses, ...
     'temporalSupport', []);
+
+end
+
+function maskImage = makeMast(imageSize)
+
+maskImage = ones(imageSize);
+
+center = imageSize(1) * 0.5;
+radius = imageSize(1) * 0.45;
+
+for i = 1:imageSize(1)
+    for j = 1:imageSize(1)
+        dist = sqrt((i - center) ^ 2 + (j - center) ^ 2);
+        if (dist > radius)
+            maskImage(i, j, :) = 0;
+        end
+    end
+end
 
 end

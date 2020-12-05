@@ -40,10 +40,7 @@ neuralParams = nrePhotopigmentExcitationsWithNoEyeMovements;
 neuralEngine = neuralResponseEngine(computeFunction, neuralParams);
 
 %% Recon Classifier Engine
-load('../sparsePrior.mat');
-estimator = PoissonSparseEstimator(double(render), inv(regBasis), mu', 0.05, 1, imageSize);
-classifierFunction = @(obj, operationMode, classifierParamsStruct, nullResponses, testResponses) ...
-    reconClassifier(estimator, obj, operationMode, classifierParamsStruct, nullResponses, testResponses);
+classifierFunction = reconClassifier(obj, operationMode, classifierParamsStruct, nullResponses, testResponses);
 
 classifierEngine = responseClassifierEngine(classifierFunction, struct());
 classifierPara = struct('trainFlag', 'none', ...

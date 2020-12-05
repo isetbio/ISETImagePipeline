@@ -1,8 +1,7 @@
 %% Scene engine for static grating
 spatialFreq = 4;
 
-rmsContrast = 0.09;
-% chromaDir = [1.0, 1.0, 1.0]';
+rmsContrast = 0.1;
 chromaDir = [1.0, -1.0, 0.0]';
 chromaDir = chromaDir / norm(chromaDir) * rmsContrast;
 
@@ -13,27 +12,25 @@ gratingScene = createGratingScene(chromaDir, spatialFreq, 'fovDegs', fovDegs);
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
     'fovealDegree', fovDegs, 'integrationTime', 1.0);
 
-imageSize = [32, 32, 3];
+imageSize = [50, 50, 3];
 render = retina.forwardRender(imageSize, false);
 render = double(render);
 
 %% Neural engine with ConeResponse class
+load('../sparsePrior.mat');
+estimator = PoissonSparseEstimator(double(render), inv(regBasis), mu', 0.1, 1, imageSize);
+
 computeFunction = @(neuralEngineOBJ, neuralResponseParamsStruct, sceneSequence, ...
     sceneSequenceTemporalSupport, instancesNum, varargin) ...
     ...
-    reconNeuralEngine(retina, neuralEngineOBJ, neuralResponseParamsStruct, sceneSequence, ...
+    reconNeuralEngine(estimator, retina, neuralEngineOBJ, neuralResponseParamsStruct, sceneSequence, ...
     sceneSequenceTemporalSupport, instancesNum, varargin{:});
 
 neuralParams = nrePhotopigmentExcitationsWithNoEyeMovements;
 neuralEngine = neuralResponseEngine(computeFunction, neuralParams);
 
 %% Recon Classifier engine
-load('../sparsePrior.mat');
-estimator = PoissonSparseEstimator(double(render), inv(regBasis), mu', 0.1, 1, imageSize);
-classifierFunction = @(obj, operationMode, classifierParamsStruct, nullResponses, testResponses) ...
-    reconClassifier(estimator, obj, operationMode, classifierParamsStruct, nullResponses, testResponses);
-
-classifierEngine = responseClassifierEngine(classifierFunction, struct());
+classifierEngine = responseClassifierEngine(@reconClassifier, struct());
 
 trainFlag = 'none'; testFlag = 'random';
 nTrain = 1; nTest = 32;
@@ -44,10 +41,10 @@ nullContrast = 0.0;
 
 testContrast = 1.0;
 [testScene, ~] = gratingScene.compute(testContrast);
-% gratingScene.visualizeStaticFrame(testScene);
+gratingScene.visualizeStaticFrame(testScene);
 
 [prediction, ~] = computePerformanceTAFC...
-        (nullScene, testScene, temporalSupport, nTrain, nTest, neuralEngine, classifierEngine, trainFlag, testFlag);
+        (nullScene, testScene, temporalSupport, nTrain, nTest, neuralEngine, classifierEngine, trainFlag, testFlag, true, false);
 
 %% Compute performance
 nullContrast = 0.0;
