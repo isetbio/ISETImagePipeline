@@ -1,5 +1,5 @@
 % List of spatial frequencies to be tested.
-spatialFreqs = [2, 4, 8, 16];
+spatialFreqs = [2, 4, 8, 16, 25];
 
 % Choose stimulus chromatic direction specified as a 1-by-3 vector
 % of L, M, S cone contrast.  These vectors get normalized below, so only
@@ -45,7 +45,7 @@ classifierFunction = reconClassifier(obj, operationMode, classifierParamsStruct,
 classifierEngine = responseClassifierEngine(classifierFunction, struct());
 classifierPara = struct('trainFlag', 'none', ...
                         'testFlag', 'random', ...
-                        'nTrain', 1, 'nTest', 32);
+                        'nTrain', 1, 'nTest', 48);
 
 %% Parameters for threshold estimation/quest engine
 % The actual threshold varies enough with the different engines that we
@@ -79,7 +79,7 @@ for idx = 1:length(spatialFreqs)
     % work, see t_tresholdEngine and the function itself, as well as
     % function computePerformanceTAFC.
     [logThreshold(idx), questObj] = ...
-        computeThresholdTAFC(gratingScene, neuralEngine, classifierEngine, classifierPara, thresholdPara, questEnginePara);
+        computeThresholdRecon(gratingScene, neuralEngine, classifierEngine, classifierPara, thresholdPara, questEnginePara);
     
     % Plot stimulus
     figure(dataFig);
