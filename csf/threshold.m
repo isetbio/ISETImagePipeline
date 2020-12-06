@@ -39,7 +39,7 @@ nTrain = 1; nTest = 36;
 nullContrast = 0.0;
 [nullScene, temporalSupport] = gratingScene.compute(nullContrast);
 
-testContrast = 0.0;
+testContrast = 1.0;
 [testScene, ~] = gratingScene.compute(testContrast);
 gratingScene.visualizeStaticFrame(testScene);
 
