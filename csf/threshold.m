@@ -1,5 +1,5 @@
 %% Scene engine for static grating
-spatialFreq = 4;
+spatialFreq = 2;
 
 rmsContrast = 0.1;
 chromaDir = [1.0, -1.0, 0.0]';
@@ -33,7 +33,7 @@ neuralEngine = neuralResponseEngine(computeFunction, neuralParams);
 classifierEngine = responseClassifierEngine(@reconClassifier, struct());
 
 trainFlag = 'none'; testFlag = 'random';
-nTrain = 1; nTest = 48;
+nTrain = 1; nTest = 36;
 
 %% Test single stimulus
 nullContrast = 0.0;

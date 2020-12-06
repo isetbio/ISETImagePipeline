@@ -21,7 +21,7 @@ reconResponses = containers.Map();
 for idx = 1:length(noiseFlags)
     if strcmp(noiseFlags{idx}, 'none')
         
-        recon = (reconObj.estimate(coneVec, 400, init, true, 1.0, 'iter')) .* mask;
+        recon = (reconObj.estimate(coneVec, 200, init, true, 1.0, 'iter')) .* mask;
         reconResponses(noiseFlags{idx}) = recon(:);
         
     elseif strcmp(noiseFlags{idx}, 'random')
@@ -47,7 +47,7 @@ function maskImage = makeMast(imageSize)
 maskImage = ones(imageSize);
 
 center = imageSize(1) * 0.5;
-radius = imageSize(1) * 0.45;
+radius = imageSize(1) * 0.425;
 
 for i = 1:imageSize(1)
     for j = 1:imageSize(1)

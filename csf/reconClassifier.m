@@ -33,9 +33,10 @@ if (strcmp(operationMode, 'predict'))
     response = zeros(1, nTrials);
     parfor idx = 1:nTrials
         testRecon = testResponses(:, idx);
+        nullRecon = nullResponses(:, idx);
         
-        distCr = norm(testRecon(:) - testTemplate);
-        distIr = norm(testRecon(:) - nullTemplate);
+        distCr = norm([testRecon - testTemplate; nullRecon - nullTemplate]);
+        distIr = norm([testRecon - nullTemplate; nullRecon - testTemplate]);
         
         % For DV really close to 0, do a coin flip
         threshold = 1e-5;
