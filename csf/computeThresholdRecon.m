@@ -1,4 +1,4 @@
-function [threshold, questObj, responses] = computeThresholdRecon...
+function [threshold, questObj, allResponse] = computeThresholdRecon...
     (theSceneEngine, theNeuralEngine, classifierEngine, classifierPara, thresholdPara, questEnginePara)
 
 estDomain  = -thresholdPara.logThreshLimitLow : thresholdPara.logThreshLimitDelta : -thresholdPara.logThreshLimitHigh;
@@ -41,5 +41,3 @@ fprintf('Maximum likelihood fit parameters: %0.2f, %0.2f, %0.2f, %0.2f\n', ...
 questObj = estimator;
 
 end
-
-
