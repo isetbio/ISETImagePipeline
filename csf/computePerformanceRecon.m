@@ -122,7 +122,8 @@ end
 % prediction.  Typically 'random'.
 if oneSided
     
-    outOfSampleNullStimResponses = [];
+    outOfSampleNullStimResponses = containers.Map();
+    outOfSampleNullStimResponses('random') = [];
     
 else
     
