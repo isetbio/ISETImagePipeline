@@ -28,7 +28,7 @@ if (strcmp(operationMode, 'predict'))
     
     nTrials = size(testResponses, 2);    
     response = zeros(1, nTrials);
-    parfor idx = 1:nTrials
+    for idx = 1:nTrials
         oneSided = true;
         
         testRecon = testResponses(:, idx);

@@ -148,10 +148,8 @@ dataOut = theClassifierEngine.compute('predict', ...
     outOfSampleTestStimResponses(testNoiseFlag));
 
 % Save computed response instances
-if (saveResponses)
-    responses.outOfSampleNullStimResponses = outOfSampleNullStimResponses;
-    responses.outOfSampleTestStimResponses = outOfSampleTestStimResponses;
-end
+responses.outOfSampleNullStimResponses = outOfSampleNullStimResponses;
+responses.outOfSampleTestStimResponses = outOfSampleTestStimResponses;
 
 % Set return variable.  For each trial 0 means wrong and 1 means right.
 % Taking mean(response) gives fraction correct.
