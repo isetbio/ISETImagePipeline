@@ -15,7 +15,7 @@ imageSize = reconObj.Size;
 mask = makeMast(imageSize);
 
 [~, coneVec] = coneRespObj.computeWithScene(sceneSequence{:});
-init = rand([prod(imageSize), 1]);
+init = ones([prod(imageSize), 1]) * 0.5;
 
 reconResponses = containers.Map();
 for idx = 1:length(noiseFlags)
