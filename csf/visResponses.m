@@ -42,8 +42,8 @@ function [DV_CR, DV_IR, DV] = decisionVar(stimTemp, nullTemp, stimNoise, nullNoi
 DV_CR = zeros(1, size(nullNoise, 2));
 DV_IR = zeros(1, size(nullNoise, 2));
 for idx = 1:size(nullNoise, 2)
-    DV_CR(idx) = norm([stimNoise(:, idx) - stimTemp; nullNoise(:, idx) - nullTemp]);
-    DV_IR(idx) = norm([stimNoise(:, idx) - nullTemp; nullNoise(:, idx) - stimTemp]);
+    DV_CR(idx) = norm([stimNoise(:, idx) - stimTemp]); %nullNoise(:, idx) - nullTemp]);
+    DV_IR(idx) = norm([stimNoise(:, idx) - nullTemp]); %nullNoise(:, idx) - stimTemp]);
     DV = DV_CR - DV_IR;
 end
 

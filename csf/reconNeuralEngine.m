@@ -20,12 +20,14 @@ reconResponses = containers.Map();
 for idx = 1:length(noiseFlags)
     if strcmp(noiseFlags{idx}, 'none')
         
-        init = ones([prod(imageSize), 1]) * 0.5;
+        rng('default');
+        init = rand([prod(imageSize), 1]);
         recon = (reconObj.estimate(coneVec, 200, init, true, 1.0, 'iter')) .* mask;
         reconResponses(noiseFlags{idx}) = recon(:);
         
     elseif strcmp(noiseFlags{idx}, 'random')
         
+        rng('default');
         init = rand([prod(imageSize), 1]);
         recon = zeros([prod(imageSize), instancesNum]);
         parfor itr = 1:instancesNum
