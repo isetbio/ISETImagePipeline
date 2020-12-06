@@ -24,19 +24,29 @@ end
 if (strcmp(operationMode, 'predict'))
     % Get template we tucked away at training time.
     nullTemplate = obj.preProcessingConstants.nullTemplate;
-    testTemplate = obj.preProcessingConstants.testTemplate;    
+    testTemplate = obj.preProcessingConstants.testTemplate;
     
     % Make sure number of null and test instances matches.
     nTrials = size(nullResponses, 2);
     assert(nTrials == size(testResponses, 2));
-        
+    
     response = zeros(1, nTrials);
     parfor idx = 1:nTrials
-        testRecon = testResponses(:, idx);
-        nullRecon = nullResponses(:, idx);
+        oneSided = true;
         
-        distCr = norm([testRecon - testTemplate; nullRecon - nullTemplate]);
-        distIr = norm([testRecon - nullTemplate; nullRecon - testTemplate]);
+        testRecon = testResponses(:, idx);
+        if ~ oneSided
+            nullRecon = nullResponses(:, idx);
+        end
+        
+        oneSided = true;
+        if oneSided
+            distCr = norm(testRecon - testTemplate);
+            distIr = norm(testRecon - nullTemplate);
+        else
+            distCr = norm([testRecon - testTemplate; nullRecon - nullTemplate]);
+            distIr = norm([testRecon - nullTemplate; nullRecon - testTemplate]);
+        end
         
         % For DV really close to 0, do a coin flip
         threshold = 1e-5;

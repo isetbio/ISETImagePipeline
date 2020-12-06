@@ -20,10 +20,11 @@ while (nextFlag)
     testContrast = 10 ^ logContrast;
     [thTestSceneSequence, ~] = theSceneEngine.compute(testContrast);
     
-    [predictions, ~, responses] = computePerformanceTAFC(...
+    oneSided = true;
+    [predictions, ~, responses] = computePerformanceRecon(...
         theNullSceneSequence, thTestSceneSequence, theSceneTemporalSupportSeconds, ...
         classifierPara.nTrain, classifierPara.nTest, theNeuralEngine, classifierEngine, ...
-        classifierPara.trainFlag, classifierPara.testFlag, true, false);
+        classifierPara.trainFlag, classifierPara.testFlag, oneSided);
     
     responses.logContrast = logContrast;
     allResponse{end + 1} = responses;
