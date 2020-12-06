@@ -26,10 +26,7 @@ if (strcmp(operationMode, 'predict'))
     nullTemplate = obj.preProcessingConstants.nullTemplate;
     testTemplate = obj.preProcessingConstants.testTemplate;
     
-    % Make sure number of null and test instances matches.
-    nTrials = size(nullResponses, 2);
-    assert(nTrials == size(testResponses, 2));
-    
+    nTrials = size(testResponses, 2);    
     response = zeros(1, nTrials);
     parfor idx = 1:nTrials
         oneSided = true;
