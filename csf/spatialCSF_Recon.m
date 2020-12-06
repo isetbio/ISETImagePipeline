@@ -42,9 +42,7 @@ neuralEngine = neuralResponseEngine(computeFunction, neuralParams);
 
 %% Recon Classifier engine
 classifierEngine = responseClassifierEngine(@reconClassifier, struct());
-
-trainFlag = 'none'; testFlag = 'random';
-nTrain = 1; nTest = 48;
+classifierPara = struct('trainFlag', 'none', 'testFlag', 'random', 'nTrain', 1, 'nTest', 48);
 
 %% Parameters for threshold estimation/quest engine
 % The actual threshold varies enough with the different engines that we
@@ -55,7 +53,7 @@ thresholdPara = struct('logThreshLimitLow', 2.0, ...
     'logThreshLimitDelta', 0.005, ...
     'slopeRangeLow', 1, ...
     'slopeRangeHigh', 100, ...
-    'slopeDelta', 5);
+    'slopeDelta', 2.5);
 
 % Parameter for running the QUEST+
 % See t_thresholdEngine.m for more on options of the two different mode of
@@ -95,7 +93,7 @@ for idx = 1:length(spatialFreqs)
     % Plot data and psychometric curve
     % with a marker size of 5.0
     subplot(2, 4, idx * 2);
-    questObj.plotMLE(5.0);
+    questObj{idx}.plotMLE(5.0);
 end
 set(dataFig, 'Position',  [0, 0, 800, 800]);
 
