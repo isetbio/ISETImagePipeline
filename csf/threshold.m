@@ -18,7 +18,7 @@ render = double(render);
 
 %% Neural engine with ConeResponse class
 load('../sparsePrior.mat');
-estimator = PoissonSparseEstimator(double(render), inv(regBasis), mu', 0.1, 1, imageSize);
+estimator = PoissonSparseEstimator(double(render), inv(regBasis), mu', 0.1, 2, imageSize);
 
 computeFunction = @(neuralEngineOBJ, neuralResponseParamsStruct, sceneSequence, ...
     sceneSequenceTemporalSupport, instancesNum, varargin) ...
