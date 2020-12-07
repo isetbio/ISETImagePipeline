@@ -10,7 +10,7 @@ gratingScene = createGratingScene(chromaDir, spatialFreq, 'fovDegs', fovDegs);
 
 %% Setup a cone mosaic & generate its corresponding render matrix
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', fovDegs, 'integrationTime', 1.0);
+    'fovealDegree', fovDegs, 'integrationTime', 0.5);
 
 imageSize = [50, 50, 3];
 render = retina.forwardRender(imageSize, false);
@@ -39,7 +39,7 @@ nTrain = 1; nTest = 48;
 nullContrast = 0.0;
 [nullScene, temporalSupport] = gratingScene.compute(nullContrast);
 
-testContrast = 0.02;
+testContrast = 0.0;
 [testScene, ~] = gratingScene.compute(testContrast);
 gratingScene.visualizeStaticFrame(testScene);
 
