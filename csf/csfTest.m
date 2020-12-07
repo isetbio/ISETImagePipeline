@@ -21,7 +21,7 @@ chromaDir = chromaDir / norm(chromaDir) * rmsContrast;
 
 gratingScene = createGratingScene(chromaDir, spatialFreq, 'fovDegs', fovDegs);
 
-crst = 1.0;
+crst = 0.25;
 [theSceneSequence, temporalSupport] = gratingScene.compute(crst);
 
 figure();
@@ -32,10 +32,10 @@ gratingScene.visualizeStaticFrame(theSceneSequence);
 
 %% Reconstruction
 load('../sparsePrior.mat');
-estimator = PoissonSparseEstimator(double(render), inv(regBasis), mu', 0.1, 2, imageSize);
+estimator = PoissonSparseEstimator(double(render), inv(regBasis), mu', 0.1, 3, imageSize);
 
 %% Single reconstruction
-reconTest = estimator.estimate(allCone, 250, rand([prod(imageSize), 1]), true);
+reconTest = estimator.estimate(poissrnd(allCone), 200, rand([prod(imageSize), 1]), true);
 
 figure();
 imshow(reshape(reconTest, imageSize), 'InitialMagnification', 1000);
