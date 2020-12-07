@@ -21,6 +21,7 @@ reconResponses = containers.Map();
 for idx = 1:length(noiseFlags)
     if strcmp(noiseFlags{idx}, 'none')
         
+        % reset random number generator for template
         rng('default');
         init = rand([prod(imageSize), 1]);
         recon = (reconObj.estimate(coneVec, nIter, init, true, 1.0, 'iter')) .* mask;
@@ -28,7 +29,6 @@ for idx = 1:length(noiseFlags)
         
     elseif strcmp(noiseFlags{idx}, 'random')
         
-        rng('default');
         init = rand([prod(imageSize), 1]);
         recon = zeros([prod(imageSize), instancesNum]);
         parfor itr = 1:instancesNum

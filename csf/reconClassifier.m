@@ -29,14 +29,13 @@ if (strcmp(operationMode, 'predict'))
     nTrials = size(testResponses, 2);    
     response = zeros(1, nTrials);
     for idx = 1:nTrials
-        oneSided = true;
+        oneSided = false;
         
         testRecon = testResponses(:, idx);
         if ~ oneSided
             nullRecon = nullResponses(:, idx);
         end
-        
-        oneSided = true;
+                
         if oneSided
             distCr = norm(testRecon - testTemplate);
             distIr = norm(testRecon - nullTemplate);

@@ -33,31 +33,33 @@ neuralEngine = neuralResponseEngine(computeFunction, neuralParams);
 classifierEngine = responseClassifierEngine(@reconClassifier, struct());
 
 trainFlag = 'none'; testFlag = 'random';
-nTrain = 1; nTest = 36;
+nTrain = 1; nTest = 48;
 
 %% Test single stimulus
 nullContrast = 0.0;
 [nullScene, temporalSupport] = gratingScene.compute(nullContrast);
 
-testContrast = 0.1;
+testContrast = 0.02;
 [testScene, ~] = gratingScene.compute(testContrast);
 gratingScene.visualizeStaticFrame(testScene);
 
-[prediction, ~, responses] = computePerformanceTAFC...
-        (nullScene, testScene, temporalSupport, nTrain, nTest, neuralEngine, classifierEngine, trainFlag, testFlag, true, false);
+[prediction, ~, responses] = computePerformanceRecon...
+    (nullScene, testScene, temporalSupport, nTrain, nTest, neuralEngine, classifierEngine, trainFlag, testFlag, false);
 
 %% Compute performance
 nullContrast = 0.0;
 [nullScene, temporalSupport] = gratingScene.compute(nullContrast);
 
-testContrast = [0.0, 0.25, 0.50, 0.75, 1.0];
+testContrast = [0.0, 0.01, 0.05, 0.1, 0.2, 0.5];
+
 pCorrect = zeros(size(testContrast));
+responses = {};
 for idx = 1:length(testContrast)
     
     [testScene, ~] = gratingScene.compute(testContrast(idx));
     
-    [prediction, ~] = computePerformanceTAFC...
-        (nullScene, testScene, temporalSupport, nTrain, nTest, neuralEngine, classifierEngine, trainFlag, testFlag);
+    [prediction, ~, responses{end + 1}] = computePerformanceRecon...
+        (nullScene, testScene, temporalSupport, nTrain, nTest, neuralEngine, classifierEngine, trainFlag, testFlag, true);
     
     pCorrect(idx) = mean(prediction);
     

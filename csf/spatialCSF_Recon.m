@@ -21,7 +21,7 @@ assert(abs(norm(chromaDir) - rmsContrast) <= 1e-10);
 %% Setup a cone mosaic & generate its corresponding render matrix
 fovDegs = 0.50;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', fovDegs, 'integrationTime', 1.0);
+    'fovealDegree', fovDegs, 'integrationTime', 0.5);
 
 imageSize = [50, 50, 3];
 render = retina.forwardRender(imageSize, false);
@@ -42,15 +42,15 @@ neuralEngine = neuralResponseEngine(computeFunction, neuralParams);
 
 %% Recon Classifier engine
 classifierEngine = responseClassifierEngine(@reconClassifier, struct());
-classifierPara = struct('trainFlag', 'none', 'testFlag', 'random', 'nTrain', 1, 'nTest', 48);
+classifierPara = struct('trainFlag', 'none', 'testFlag', 'random', 'nTrain', 1, 'nTest', 32);
 
 %% Parameters for threshold estimation/quest engine
 % The actual threshold varies enough with the different engines that we
 % need to adjust the contrast range that Quest+ searches over, as well as
 % the range of psychometric function slopes.
-thresholdPara = struct('logThreshLimitLow', 2.0, ...
+thresholdPara = struct('logThreshLimitLow', 2.5, ...
     'logThreshLimitHigh', 0.0, ...
-    'logThreshLimitDelta', 0.01, ...
+    'logThreshLimitDelta', 0.0125, ...
     'slopeRangeLow', 1, ...
     'slopeRangeHigh', 200, ...
     'slopeDelta', 5.0);
