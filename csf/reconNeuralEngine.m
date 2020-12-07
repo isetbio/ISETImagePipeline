@@ -29,9 +29,9 @@ for idx = 1:length(noiseFlags)
         
     elseif strcmp(noiseFlags{idx}, 'random')
         
-        init = rand([prod(imageSize), 1]);
         recon = zeros([prod(imageSize), instancesNum]);
         parfor itr = 1:instancesNum
+            init = rand([prod(imageSize), 1]);
             output = (reconObj.estimate(poissrnd(coneVec), nIter, init, true, 1.0, dispOption)) .* mask;
             recon(:, itr) = output(:);
         end
