@@ -1,4 +1,4 @@
-function dataOut = reconNeuralEngine(reconObj, coneRespObj, ~, ~, sceneSequence, ~, instancesNum, varargin)
+function dataOut = reconNeuralEngine(reconObj, coneRespObj, dispOption, ~, ~, sceneSequence, ~, instancesNum, varargin)
 
 if (nargin == 0)
     dataOut = struct();
@@ -24,7 +24,7 @@ for idx = 1:length(noiseFlags)
         % reset random number generator for template
         rng('default');
         init = rand([prod(imageSize), 1]);
-        recon = (reconObj.estimate(coneVec, nIter, init, true, 1.0, 'iter')) .* mask;
+        recon = (reconObj.estimate(coneVec, nIter, init, true, 1.0, dispOption)) .* mask;
         reconResponses(noiseFlags{idx}) = recon(:);
         
     elseif strcmp(noiseFlags{idx}, 'random')
@@ -32,7 +32,7 @@ for idx = 1:length(noiseFlags)
         init = rand([prod(imageSize), 1]);
         recon = zeros([prod(imageSize), instancesNum]);
         parfor itr = 1:instancesNum
-            output = (reconObj.estimate(poissrnd(coneVec), nIter, init, true, 1.0, 'iter')) .* mask;
+            output = (reconObj.estimate(poissrnd(coneVec), nIter, init, true, 1.0, dispOption)) .* mask;
             recon(:, itr) = output(:);
         end
         reconResponses(noiseFlags{idx}) = recon;

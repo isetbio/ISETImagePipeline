@@ -24,7 +24,7 @@ retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, 
     'fovealDegree', fovDegs, 'integrationTime', 0.5);
 
 imageSize = [50, 50, 3];
-render = retina.forwardRender(imageSize, false);
+render = retina.forwardRender(imageSize, false, true, false);
 render = double(render);
 
 %% Neural engine with ConeResponse class
@@ -32,8 +32,8 @@ load('../sparsePrior.mat');
 estimator = PoissonSparseEstimator(double(render), inv(regBasis), mu', 0.1, 3, imageSize);
 
 computeFunction = @(neuralEngineOBJ, neuralResponseParamsStruct, sceneSequence, ...
-    sceneSequenceTemporalSupport, instancesNum, varargin) ...    
-    reconNeuralEngine(estimator, retina, neuralEngineOBJ, neuralResponseParamsStruct, sceneSequence, ...
+    sceneSequenceTemporalSupport, instancesNum, varargin) ...
+    reconNeuralEngine(estimator, retina, 'off', neuralEngineOBJ, neuralResponseParamsStruct, sceneSequence, ...
     sceneSequenceTemporalSupport, instancesNum, varargin{:});
 
 neuralParams = nrePhotopigmentExcitationsWithNoEyeMovements;
@@ -57,18 +57,20 @@ thresholdPara = struct('logThreshLimitLow', 2.5, ...
 % Parameter for running the QUEST+
 % See t_thresholdEngine.m for more on options of the two different mode of
 % operation (fixed numer of trials vs. adaptive)
-questEnginePara = struct('minTrial', 480, 'maxTrial', 480, ...
+questEnginePara = struct('minTrial', 640, 'maxTrial', 640, ...
     'numEstimator', 1, 'stopCriterion', 0.05);
 
 %% Compute threshold for each spatial frequency
-
 % See toolbox/helpers for functions createGratingScene computeThresholdTAFC
+showPlot = false;
 
 logThreshold = zeros(1, length(spatialFreqs));
 questObj = {};
 responseObj = {};
 
-dataFig = figure();
+if showPlot
+    dataFig = figure();
+end
 for idx = 1:length(spatialFreqs)
     % Create a static grating scene with a particular chromatic direction,
     % spatial frequency, and temporal duration
@@ -81,20 +83,28 @@ for idx = 1:length(spatialFreqs)
     [logThreshold(idx), questObj{end + 1}, responseObj{end + 1}] = ...
         computeThresholdRecon(gratingScene, neuralEngine, classifierEngine, classifierPara, thresholdPara, questEnginePara);
     
-    % Plot stimulus
-    figure(dataFig);
-    subplot(3, 4, idx * 2 - 1);
+    if showPlot
+        % Plot stimulus
+        figure(dataFig);
+        subplot(3, 4, idx * 2 - 1);
+        
+        visualizationContrast = 1.0;
+        [theSceneSequence] = gratingScene.compute(visualizationContrast);
+        gratingScene.visualizeStaticFrame(theSceneSequence);
+        
+        % Plot data and psychometric curve
+        % with a marker size of 5.0
+        subplot(3, 4, idx * 2);
+        questObj{idx}.plotMLE(5.0);
+    end
     
-    visualizationContrast = 1.0;
-    [theSceneSequence] = gratingScene.compute(visualizationContrast);
-    gratingScene.visualizeStaticFrame(theSceneSequence);
-    
-    % Plot data and psychometric curve
-    % with a marker size of 5.0
-    subplot(3, 4, idx * 2);
-    questObj{idx}.plotMLE(5.0);
+    save();
 end
-set(dataFig, 'Position',  [0, 0, 800, 800]);
+
+if showPlot
+    set(dataFig, 'Position',  [0, 0, 800, 800]);
+end
 
 % Convert returned log threshold to linear threshold
 threshold = 10 .^ logThreshold;
+save();

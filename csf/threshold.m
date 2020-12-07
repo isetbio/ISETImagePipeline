@@ -22,7 +22,7 @@ estimator = PoissonSparseEstimator(double(render), inv(regBasis), mu', 0.1, 3, i
 
 computeFunction = @(neuralEngineOBJ, neuralResponseParamsStruct, sceneSequence, ...
     sceneSequenceTemporalSupport, instancesNum, varargin) ...    
-    reconNeuralEngine(estimator, retina, neuralEngineOBJ, neuralResponseParamsStruct, sceneSequence, ...
+    reconNeuralEngine(estimator, retina, 'final', neuralEngineOBJ, neuralResponseParamsStruct, sceneSequence, ...
     sceneSequenceTemporalSupport, instancesNum, varargin{:});
 
 neuralParams = nrePhotopigmentExcitationsWithNoEyeMovements;
@@ -38,7 +38,7 @@ nTrain = 1; nTest = 48;
 nullContrast = 0.0;
 [nullScene, temporalSupport] = gratingScene.compute(nullContrast);
 
-testContrast = 0.0;
+testContrast = 0.001;
 [testScene, ~] = gratingScene.compute(testContrast);
 gratingScene.visualizeStaticFrame(testScene);
 

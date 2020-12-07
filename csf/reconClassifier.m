@@ -45,7 +45,7 @@ if (strcmp(operationMode, 'predict'))
         end
         
         % For DV really close to 0, do a coin flip
-        threshold = 1e-5;
+        threshold = 1e-2;
         if (abs(distCr - distIr) <= threshold)
             response(idx) = (rand() > 0.5);
         else
