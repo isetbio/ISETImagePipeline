@@ -26,6 +26,7 @@ retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, 
 imageSize = [50, 50, 3];
 render = retina.forwardRender(imageSize, false, true, false);
 render = double(render);
+fprintf('Compute Render Matrix... Done \n');
 
 %% Neural engine with ConeResponse class
 load('../sparsePrior.mat');
@@ -71,6 +72,8 @@ responseObj = {};
 if showPlot
     dataFig = figure();
 end
+
+fprintf('Start CSF Calculation \n');
 for idx = 1:length(spatialFreqs)
     % Create a static grating scene with a particular chromatic direction,
     % spatial frequency, and temporal duration
