@@ -6,7 +6,7 @@
 		"localHookTemplate": "configuration/ISETImagePipelineLocalHookTemplate.m",
 		"name": "ISETImagePipeline",
 		"pathPlacement": "append",
-		"subfolder": ["toolbox", "tutorials", "compute", "dichromacy", "csf", "validations"],
+		"subfolder": ["toolbox", "tutorials", "compute", "dichromacy", "csf", "validations", "recon_2020"],
 		"toolboxRoot": "",
 		"type": "git",
 		"update": "",
