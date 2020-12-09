@@ -1,3 +1,5 @@
+% Construct Sparse-Coding Based Prior of Natural Color Images
+
 %% Sample from the ILSVRC image dataset
 % Path to the dataset
 dataBaseDir = getpref('ISETImagePipeline', 'dataDir');
