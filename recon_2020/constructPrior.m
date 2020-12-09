@@ -48,14 +48,15 @@ parfor idx = 1:size(imageData, 1)
 end
 
 %% RICA Analysis to learn basis function
-% Whitening, SVD
+% Whitening, with PCA/SVD
 imageSet = imageDataLinear;
 [Z, U, SIG, mu] = whitening(imageSet, 'svd');
 
 % RICA analysis
+% RICA: Reconstruction Independent Component Analysis
 nBasis = 16 * 16 * 3;
 result = rica(Z, nBasis, 'IterationLimit', 1e4, 'VerbosityLevel', 1, 'GradientTolerance', 1e-8, 'StepTolerance', 1e-8);
 regBasis = U * diag(sqrt(SIG)) * result.TransformWeights;
 
-%% Visualization
+%% Visualization of basis function
 [~] = visualizeBasis(regBasis, 16, size(regBasis, 2), false);
