@@ -1,8 +1,9 @@
-%% generate a cone mosaic
+%% define constant
 imageSize = [64, 64, 3];
 display = load('display.mat');
 prior   = load('sparsePrior.mat');
 
+%% generate a cone mosaic
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
     'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', 2.5);
 
@@ -24,4 +25,41 @@ for idx = 1:length(ratio)
     renderArray(idx) = {double(renderMtx)};
 end
 
+%% load images
+nImage = 8;
+input = zeros([nImage, imageSize]);
+
+fileType = '.jpeg';
+for idx = 1:nImage
+    fileName = strcat(num2str(idx), fileType);
+    filePath = fullfile('.', 'images', fileName);
+    image = imresize(im2double(imread(filePath)), 0.25);
+    
+    image = sampleImage(image, imageSize(1));
+    image = image - min(image(:));
+    image = image ./ max(image(:));
+    
+    [~, ~, linearImage] = retina.compute(image);
+    input(idx, :, :, :) = linearImage;
+end
+
+%% reconstruction
+output = zeros([length(ratio), nImage, imageSize]);
+parfor i = 1:length(ratio)
+    render = renderArray{i};
+    estimator = ...
+        PoissonSparseEstimator(render, inv(prior.regBasis), prior.mu', 1e-4, 4, imageSize);
+    
+    for j = 1:nImage
+        image = input(j, :, :, :);
+        resp  = render * image(:);
+        
+        recon = estimator.estimate(resp, 500, rand([prod(imageSize), 1]), true, 1.0, 'final');
+        output(i, j, :, :, :) = recon;
+    end
+end
+
+%% RMSE and visualization
+
 %% analysis without chromatic abberation
+
