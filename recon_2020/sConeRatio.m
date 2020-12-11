@@ -105,7 +105,7 @@ parfor i = 1:length(renderArray)
         resp  = render * image(:);
         
         nIter = 500;
-        recon = estimator.estimate(resp, nIter, rand([prod(imageSize), 1]), true, 1.0, 'iter');
+        recon = estimator.estimate(resp, nIter, rand([prod(imageSize), 1]), true, 1.0, 'final');
         output(i, j, :, :, :) = recon;
     end
 end
@@ -124,15 +124,14 @@ for i = 1:length(ratio)
 end
 
 % plot RMSE
-figure();
+figure(1);
 xAxis = ratio;
 xAxis(1) = 0.005;
 errorbar(xAxis, mean(rmse, 2), std(rmse, 0, 2) / sqrt(nImage), '--ok', 'LineWidth', 2);
 
-set(gca,'xscale','log')
 xticks(ratio);
-grid off;
-box off;
+set(gca,'xscale','log')
+grid off; box off; hold on;
 
 % show original images
 figure();
