@@ -95,7 +95,7 @@ output = zeros([length(renderArray), nImage, imageSize]);
 parfor i = 1:length(renderArray)
     render = renderArray{i};
     estimator = ...
-        PoissonSparseEstimator(render, inv(prior.regBasis), prior.mu', 1e-4, 4, imageSize);
+        PoissonSparseEstimator(render, inv(prior.regBasis), prior.mu', 1e-5, 4, imageSize);
     
     for j = 1:nImage
         image = input(j, :, :, :);
