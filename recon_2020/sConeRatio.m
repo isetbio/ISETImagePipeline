@@ -91,8 +91,8 @@ end
 
 function output = computeRecon(input, renderArray, prior, imageSize)
 nImage = size(input, 1);
-output = zeros([length(ratio), nImage, imageSize]);
-parfor i = 1:length(ratio)
+output = zeros([length(renderArray), nImage, imageSize]);
+parfor i = 1:length(renderArray)
     render = renderArray{i};
     estimator = ...
         PoissonSparseEstimator(render, inv(prior.regBasis), prior.mu', 1e-4, 4, imageSize);
@@ -102,7 +102,7 @@ parfor i = 1:length(ratio)
         resp  = render * image(:);
         
         nIter = 500;
-        recon = estimator.estimate(resp, nIter, rand([prod(imageSize), 1]), true, 1.0, 'final');
+        recon = estimator.estimate(resp, nIter, rand([prod(imageSize), 1]), true, 1.0, 'iter');
         output(i, j, :, :, :) = recon;
     end
 end
