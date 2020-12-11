@@ -1,4 +1,4 @@
-% Effect of S cone proportion on image reconstruction 
+% Effect of S Cone Proportion on Image Reconstruction 
 
 %% define constant
 imageSize = [64, 64, 3];
