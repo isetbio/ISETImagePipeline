@@ -26,7 +26,7 @@ end
 %% generate a cone mosaic
 % analysis with normal optics
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', 2.5);
+    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', 3.0);
 
 %% change the S cone proportion
 % and generate the corresponding render matrix
@@ -42,16 +42,20 @@ plotResults(input, output, ratio, display, imageSize);
 %% analysis without chromatic abberation
 % compute optics with 'no lca' flag
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', 2.5);
+    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', 3.0);
 
 testImage = gammaCorrection(reshape(input(1, :, :, :), imageSize), display.CRT12BitDisplay);
 
+% compute OI and excitation
 retina.compute(testImage);
 retina.visualizeOI();
 retina.visualizeExcitation();
 
 %% change optics, turn off LCA
-retina.PSF = ConeResponse.psfNoLCA();
+pupilSize = 3.0;
+retina.PSF = ConeResponse.psfNoLCA(pupilSize);
+
+% compute OI and excitation
 retina.compute(testImage);
 retina.visualizeOI();
 retina.visualizeExcitation();
