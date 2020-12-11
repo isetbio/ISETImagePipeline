@@ -124,7 +124,7 @@ for i = 1:length(ratio)
 end
 
 % plot RMSE
-figure(1);
+figure();
 xAxis = ratio;
 xAxis(1) = 0.005;
 errorbar(xAxis, mean(rmse, 2), std(rmse, 0, 2) / sqrt(nImage), '--ok', 'LineWidth', 2);
