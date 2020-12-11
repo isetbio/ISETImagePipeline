@@ -4,6 +4,7 @@
 imageSize = [64, 64, 3];
 display = load('display.mat');
 prior   = load('sparsePrior.mat');
+ratio   = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
 
 %% load images
 nImage = 8;
@@ -34,7 +35,8 @@ ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
 [~, renderArray] = computeRender(ratio, retina);
 
 %% reconstruction
-output = computeRecon(input, renderArray, prior, imageSize);
+regPara = 5e-4;
+output = computeRecon(input, renderArray, prior, regPara, imageSize);
 
 %% show results
 plotResults(input, output, ratio, display, imageSize);
@@ -66,7 +68,8 @@ ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
 [mosaicArray, renderArray] = computeRender(ratio, retina, imageSize);
 
 %% reconstruction
-output = computeRecon(input, renderArray, prior, imageSize);
+regPara = 5e-4;
+output = computeRecon(input, renderArray, prior, regPara, imageSize);
 
 %% show results
 plotResults(input, output, ratio, display, imageSize);
@@ -89,13 +92,13 @@ for idx = 1:length(ratio)
 end
 end
 
-function output = computeRecon(input, renderArray, prior, imageSize)
+function output = computeRecon(input, renderArray, prior, regPara, imageSize)
 nImage = size(input, 1);
 output = zeros([length(renderArray), nImage, imageSize]);
 parfor i = 1:length(renderArray)
     render = renderArray{i};
     estimator = ...
-        PoissonSparseEstimator(render, inv(prior.regBasis), prior.mu', 1e-5, 4, imageSize);
+        PoissonSparseEstimator(render, inv(prior.regBasis), prior.mu', regPara, 4, imageSize);
     
     for j = 1:nImage
         image = input(j, :, :, :);
