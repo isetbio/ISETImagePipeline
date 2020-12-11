@@ -1,3 +1,5 @@
+% Effect of S cone proportion on image reconstruction 
+
 %% define constant
 imageSize = [64, 64, 3];
 display = load('display.mat');
