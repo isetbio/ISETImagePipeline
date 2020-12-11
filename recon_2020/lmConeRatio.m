@@ -1,15 +1,15 @@
-% Effect of S Cone Proportion on Image Reconstruction
+% Effect of L/M Cone Proportion on Image Reconstruction
 
 %% define constant
 imageSize = [64, 64, 3];
 display = load('display.mat');
 prior   = load('sparsePrior.mat');
-ratio   = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
+ratio   = [0, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95, 0.99, 1.0];
 
 %% generate a cone mosaic
 % analysis with normal optics
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', 3.0);
+    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', 2.5);
 
 %% load images
 nImage = 8;
@@ -29,70 +29,33 @@ for idx = 1:nImage
     input(idx, :, :, :) = linearImage;
 end
 
-%% change the S cone proportion
+%% manipulate the number of cones
 % and generate the corresponding render matrix
-ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
-[~, renderArray] = computeRender(ratio, retina);
-
-%% reconstruction
-regPara = 5e-4;
-output = computeRecon(input, renderArray, prior, regPara, imageSize);
-
-%% show results
-plotResults(input, output, ratio, display, imageSize);
-
-%% analysis without chromatic abberation
-% compute optics with 'no lca' flag
-retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', 3.0);
-
-testImage = gammaCorrection(reshape(input(1, :, :, :), imageSize), display.CRT12BitDisplay);
-
-% compute OI and excitation
-retina.compute(testImage);
-retina.visualizeOI();
-retina.visualizeExcitation();
-
-%% change optics, turn off LCA
-pupilSize = 3.0;
-retina.PSF = ConeResponse.psfNoLCA(pupilSize);
-
-% compute OI and excitation
-retina.compute(testImage);
-retina.visualizeOI();
-retina.visualizeExcitation();
-
-%% change the S cone proportion
-% and generate the corresponding render matrix
-ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
-[mosaicArray, renderArray] = computeRender(ratio, retina, imageSize);
-
-%% reconstruction
-regPara = 5e-4;
-output = computeRecon(input, renderArray, prior, regPara, imageSize);
-
-%% show results
-plotResults(input, output, ratio, display, imageSize);
-
-%% helper function for plotting
-% compute render matrix for different cone mosaic
-function [mosaicArray, renderArray] = computeRender(ratio, retina, imageSize)
-retina.resetSCone();
 mosaicArray = cell(1, length(ratio));
 renderArray = cell(1, length(ratio));
 
 for idx = 1:length(ratio)
-    % manipulate the number of S cone in the mosaic
-    retina.resetSCone();
-    retina.reassignSCone(ratio(idx));
+    if ratio(idx) < 0.95
+        retina.reassignLCone(0.0, false);
+        retina.reassignMCone(ratio(idx), true);
+    else
+        retina.reassignLCone(1 - ratio(idx), true);
+    end
+    
     mosaicArray(idx) = {retina.Mosaic.pattern};
     
-    % generate render matrix for each cone mosaic
     renderMtx = retina.forwardRender(imageSize, false, true, false);
     renderArray(idx) = {double(renderMtx)};
 end
-end
 
+%% run reconstruction
+regPara = 5e-4;
+output = computeRecon(input, renderArray, prior, regPara, imageSize);
+
+%% show results
+plotResults(input, output, ratio, display, imageSize);
+
+%% helper function
 % compute image reconstruction for each mosaic
 function output = computeRecon(input, renderArray, prior, regPara, imageSize)
 nImage = size(input, 1);
@@ -130,12 +93,9 @@ end
 
 % plot RMSE
 figure();
-xAxis = ratio;
-xAxis(1) = 0.005;
-errorbar(xAxis, mean(rmse, 2), std(rmse, 0, 2) / sqrt(nImage), '--ok', 'LineWidth', 2);
+errorbar(ratio, mean(rmse, 2), std(rmse, 0, 2) / sqrt(nImage), '--ok', 'LineWidth', 2);
 
 xticks(ratio);
-set(gca,'xscale','log')
 grid off; box off; hold on;
 
 % show original images
