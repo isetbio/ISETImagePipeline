@@ -59,7 +59,7 @@ retina.visualizeExcitation();
 %% change the S cone proportion
 % and generate the corresponding render matrix
 ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
-[mosaicArray, renderArray] = computeRender(ratio, retina);
+[mosaicArray, renderArray] = computeRender(ratio, retina, imageSize);
 
 %% reconstruction
 output = computeRecon(input, renderArray, prior, imageSize);
@@ -68,7 +68,7 @@ output = computeRecon(input, renderArray, prior, imageSize);
 plotResults(input, output, ratio, display, imageSize);
 
 %% helper function for plotting
-function [mosaicArray, renderArray] = computeRender(ratio, retina)
+function [mosaicArray, renderArray] = computeRender(ratio, retina, imageSize)
 retina.resetSCone();
 mosaicArray = cell(1, length(ratio));
 renderArray = cell(1, length(ratio));
