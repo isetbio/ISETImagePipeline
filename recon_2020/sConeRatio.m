@@ -8,11 +8,12 @@ ratio   = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
 
 %% generate a cone mosaic
 % analysis with normal optics
+pupilSize = 3.0;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', 3.0);
+    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', pupilSize);
 
 %% load images
-nImage = 8;
+nImage = 10;
 input = zeros([nImage, imageSize]);
 
 fileType = '.jpeg';
@@ -42,9 +43,10 @@ output = computeRecon(input, renderArray, prior, regPara, imageSize);
 plotResults(input, output, ratio, display, imageSize);
 
 %% analysis without chromatic abberation
-% compute optics with 'no lca' flag
+% compute optics with 'no lca' / 'diffraction-limit' flag
+pupilSize = 3.0;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', 3.0);
+    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', pupilSize);
 
 testImage = gammaCorrection(reshape(input(1, :, :, :), imageSize), display.CRT12BitDisplay);
 
@@ -53,9 +55,16 @@ retina.compute(testImage);
 retina.visualizeOI();
 retina.visualizeExcitation();
 
-%% change optics, turn off LCA
-pupilSize = 3.0;
-retina.PSF = ConeResponse.psfNoLCA(pupilSize);
+%% change optics, turn off LCA / use diffraction limited optics
+option = 'diffraction-limit';
+switch option
+    case 'no-lca'
+        retina.PSF = ConeResponse.psfNoLCA(pupilSize);
+    case 'diffraction-limit'
+        retina.PSF = ConeResponse.psfDiffLmt(pupilSize);
+    otherwise
+        error('optics option not valid');
+end
 
 % compute OI and excitation
 retina.compute(testImage);

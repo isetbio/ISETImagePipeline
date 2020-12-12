@@ -12,7 +12,7 @@ retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, 
     'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', 2.5);
 
 %% load images
-nImage = 8;
+nImage = 10;
 input = zeros([nImage, imageSize]);
 
 fileType = '.jpeg';
