@@ -138,9 +138,7 @@ end
 
 % plot RMSE
 figure();
-xAxis = ratio;
-xAxis(1) = 0.005;
-errorbar(xAxis, mean(rmse, 2), std(rmse, 0, 2) / sqrt(nImage), '--ok', 'LineWidth', 2);
+errorbar(ratio, mean(rmse, 2), std(rmse, 0, 2) / sqrt(nImage), '--ok', 'LineWidth', 2);
 grid off; box off; hold on;
 
 % show original images
