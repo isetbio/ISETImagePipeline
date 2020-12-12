@@ -1,4 +1,5 @@
-% Effect of S Cone Proportion on Image Reconstruction
+%% Effect of S Cone Proportion on Image Reconstruction
+% Analysis 1: With regular optics
 
 %% define constant
 imageSize = [64, 64, 3];
@@ -34,7 +35,7 @@ end
 %% change the S cone proportion
 % and generate the corresponding render matrix
 ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9, 0.95, 1.0];
-[~, renderArray] = computeRender(ratio, retina);
+[~, renderArray] = computeRender(ratio, retina, imageSize);
 
 %% reconstruction
 regPara = 5e-3;
@@ -43,7 +44,7 @@ output = computeRecon(input, renderArray, prior, regPara, imageSize);
 %% show results
 plotResults(input, output, ratio, display, imageSize);
 
-%% analysis without chromatic abberation
+%% Analysis 2: Turn off LCA or use diffraction-limited optics
 % compute optics with 'no lca' / 'diffraction-limit' flag
 pupilSize = 2.0;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
