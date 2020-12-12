@@ -4,11 +4,10 @@
 imageSize = [64, 64, 3];
 display = load('display.mat');
 prior   = load('sparsePrior.mat');
-ratio   = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
 
 %% generate a cone mosaic
 % analysis with normal optics
-pupilSize = 3.0;
+pupilSize = 2.0;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
     'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', pupilSize);
 
@@ -44,7 +43,7 @@ plotResults(input, output, ratio, display, imageSize);
 
 %% analysis without chromatic abberation
 % compute optics with 'no lca' / 'diffraction-limit' flag
-pupilSize = 3.0;
+pupilSize = 2.0;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
     'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', pupilSize);
 
@@ -73,11 +72,11 @@ retina.visualizeExcitation();
 
 %% change the S cone proportion
 % and generate the corresponding render matrix
-ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
+ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9, 0.95, 1.0];
 [mosaicArray, renderArray] = computeRender(ratio, retina, imageSize);
 
 %% reconstruction
-regPara = 5e-4;
+regPara = 5e-3;
 output = computeRecon(input, renderArray, prior, regPara, imageSize);
 
 %% show results
@@ -142,9 +141,6 @@ figure();
 xAxis = ratio;
 xAxis(1) = 0.005;
 errorbar(xAxis, mean(rmse, 2), std(rmse, 0, 2) / sqrt(nImage), '--ok', 'LineWidth', 2);
-
-xticks(ratio);
-set(gca,'xscale','log')
 grid off; box off; hold on;
 
 % show original images
