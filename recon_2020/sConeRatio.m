@@ -4,12 +4,14 @@
 imageSize = [64, 64, 3];
 display = load('display.mat');
 prior   = load('sparsePrior.mat');
+ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
 
 %% generate a cone mosaic
 % analysis with normal optics
 pupilSize = 2.0;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', pupilSize);
+    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', pupilSize, ...
+    'integrationTime', 1.0);
 
 %% load images
 nImage = 10;
@@ -31,11 +33,11 @@ end
 
 %% change the S cone proportion
 % and generate the corresponding render matrix
-ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
+ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9, 0.95, 1.0];
 [~, renderArray] = computeRender(ratio, retina);
 
 %% reconstruction
-regPara = 5e-4;
+regPara = 5e-3;
 output = computeRecon(input, renderArray, prior, regPara, imageSize);
 
 %% show results
@@ -45,7 +47,8 @@ plotResults(input, output, ratio, display, imageSize);
 % compute optics with 'no lca' / 'diffraction-limit' flag
 pupilSize = 2.0;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', pupilSize);
+    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', pupilSize, ...
+    'integrationTime', 1.0);
 
 testImage = gammaCorrection(reshape(input(1, :, :, :), imageSize), display.CRT12BitDisplay);
 
@@ -114,7 +117,7 @@ parfor i = 1:length(renderArray)
         image = input(j, :, :, :);
         resp  = render * image(:);
         
-        nIter = 500;
+        nIter = 800;
         recon = estimator.estimate(resp, nIter, rand([prod(imageSize), 1]), true, 1.0, 'final');
         output(i, j, :, :, :) = recon;
     end
