@@ -1,5 +1,5 @@
 % List of spatial frequencies to be tested
-spatialFreqs = [1, 2, 4, 8, 16, 25];
+spatialFreqs = [1, 2, 4, 8, 16];
 % Choose stimulus chromatic direction specified as a 1-by-3 vector
 % of L, M, S cone contrast.  These vectors get normalized below, so only
 % their direction matters in the specification
@@ -44,9 +44,9 @@ classifierPara = struct('trainFlag', 'none', ...
 % The actual threshold varies enough with the different engines that we
 % need to adjust the contrast range that Quest+ searches over, as well as
 % the range of psychometric function slopes.
-thresholdPara = struct('logThreshLimitLow', 3.4, ...
+thresholdPara = struct('logThreshLimitLow', 2.0, ...
     'logThreshLimitHigh', 0.0, ...
-    'logThreshLimitDelta', 0.02, ...
+    'logThreshLimitDelta', 0.0125, ...
     'slopeRangeLow', 1, ...
     'slopeRangeHigh', 100, ...
     'slopeDelta', 2.5);
@@ -54,10 +54,20 @@ thresholdPara = struct('logThreshLimitLow', 3.4, ...
 % Parameter for running the QUEST+
 % See t_thresholdEngine.m for more on options of the two different mode of
 % operation (fixed numer of trials vs. adaptive)
-questEnginePara = struct('minTrial', 2560, 'maxTrial', 2560, ...
-    'numEstimator', 1, 'stopCriterion', 0.05);
+mode = 'validation';
+switch mode
+    case 'adaptive'
+        questEnginePara = struct('minTrial', 2560, 'maxTrial', 2560, ...
+            'numEstimator', 1, 'stopCriterion', 0.05);
+        
+    case 'validation'
+        questEnginePara = struct('employMethodOfConstantStimuli', true, ...
+            'nRepeat', classifierPara.nTest);
+end
 
 %% Compute threshold for each spatial frequency
+visPara = struct('visualizeStimulus', false, 'visualizeAllComponents', false);
+dataPara = struct('saveMRGCResponses', false);
 
 % See toolbox/helpers for functions createGratingScene computeThresholdTAFC
 dataFig = figure();
@@ -67,8 +77,8 @@ for idx = 1:length(spatialFreqs)
     % spatial frequency, and temporal duration
     gratingScene = createGratingScene(chromaDir, spatialFreqs(idx), 'fovDegs', fovDegs, 'spatialPhase', 90);
     
-    [logThreshold(idx), questObj] = ...
-     computeThresholdTAFC(gratingScene, theNeuralEngine, classifierEngine, classifierPara, thresholdPara, questEnginePara);
+    [logThreshold(idx), questObj] = computeThresholdTAFC(gratingScene, theNeuralEngine, ...
+        classifierEngine, classifierPara, thresholdPara, questEnginePara, visPara, dataPara);
     
     % Plot stimulus
     figure(dataFig);
@@ -79,7 +89,7 @@ for idx = 1:length(spatialFreqs)
     gratingScene.visualizeStaticFrame(theSceneSequence);
     
     subplot(3, 4, idx * 2);
-    questObj.plotMLE(7.5);
+    questObj.plotMLE(10.0);
 end
 % set(dataFig, 'Position',  [50, 50, 400, 1050]);
 
