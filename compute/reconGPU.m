@@ -35,14 +35,13 @@ profile on
 
 regConst = 5e-4; stride = 4;
 estimator = ...
-    PoissonSparseEstimator(render, inv(prior.regBasis), ...
+    PoissonSparseEstimator(double(render), inv(prior.regBasis), ...
     prior.mu', regConst, stride, imageSize);
 
-nIter = 100; bounded = true; optDisp = 'iter';
 output = zeros([nImage, imageSize]);
 for idx = 1:nImage
     [~, ~, ~, coneRespVec] = retina.compute(reshape(input(idx, :, :, :), imageSize));
-    recon = estimator.estimate(coneRespVec, nIter, rand([prod(imageSize), 1]), bounded, 1.0, optDisp);
+    recon = estimator.runEstimate(coneRespVec, 'maxIter', 100, 'display', 'iter');
     output(idx, :, :, :) = gammaCorrection(recon, display.CRT12BitDisplay);
 end
 
@@ -67,11 +66,10 @@ estimator = ...
     PoissonSparseEstimator(gpuArray(single(render)), inv(prior.regBasis), ...
     prior.mu', regConst, stride, imageSize);
 
-nIter = 100; bounded = true; optDisp = 'iter'; gpu = true;
 output = zeros([nImage, imageSize]);
 for idx = 1:nImage
     [~, ~, ~, coneRespVec] = retina.compute(reshape(input(idx, :, :, :), imageSize));
-    recon = estimator.estimate(coneRespVec, nIter, rand([prod(imageSize), 1]), bounded, 1.0, optDisp, gpu);
+    recon = estimator.runEstimate(coneRespVec, 'maxIter', 100, 'display', 'iter', 'gpu', true);
     output(idx, :, :, :) = gammaCorrection(recon, display.CRT12BitDisplay);
 end
 
