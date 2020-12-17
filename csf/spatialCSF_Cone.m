@@ -1,5 +1,5 @@
 % List of spatial frequencies to be tested
-spatialFreqs = [1, 2, 4, 8, 16];
+spatialFreqs = [1, 2, 4, 8, 12, 16];
 % Choose stimulus chromatic direction specified as a 1-by-3 vector
 % of L, M, S cone contrast.  These vectors get normalized below, so only
 % their direction matters in the specification
@@ -27,7 +27,7 @@ assert(abs(norm(chromaDir) - rmsContrast) <= 1e-10);
 fovDegs = 0.50;
 neuralParams = nreConeResponse;
 neuralParams.coneMosaicParams.fovDegs = fovDegs;
-neuralParams.coneMosaicParams.timeIntegrationSeconds = 0.01;
+neuralParams.coneMosaicParams.timeIntegrationSeconds = 0.025;
 neuralParams.coneMosaicParams.eccBased = true;
 theNeuralEngine = neuralResponseEngine(@nreConeResponse, neuralParams);
 
@@ -38,7 +38,7 @@ theNeuralEngine = neuralResponseEngine(@nreConeResponse, neuralParams);
 classifierEngine = responseClassifierEngine(@rcePoissonTAFC);
 classifierPara = struct('trainFlag', 'none', ...
     'testFlag', 'random', ...
-    'nTrain', 1, 'nTest', 128);
+    'nTrain', 1, 'nTest', 256);
 
 %% Parameters for threshold estimation/quest engine
 % The actual threshold varies enough with the different engines that we
@@ -49,7 +49,7 @@ thresholdPara = struct('logThreshLimitLow', 2.0, ...
     'logThreshLimitDelta', 0.0125, ...
     'slopeRangeLow', 1, ...
     'slopeRangeHigh', 100, ...
-    'slopeDelta', 2.5);
+    'slopeDelta', 10);
 
 % Parameter for running the QUEST+
 % See t_thresholdEngine.m for more on options of the two different mode of
@@ -75,7 +75,7 @@ logThreshold = zeros(1, length(spatialFreqs));
 for idx = 1:length(spatialFreqs)
     % Create a static grating scene with a particular chromatic direction,
     % spatial frequency, and temporal duration
-    gratingScene = createGratingScene(chromaDir, spatialFreqs(idx), 'fovDegs', fovDegs, 'spatialPhase', 90);
+    gratingScene = createGratingScene(chromaDir, spatialFreqs(idx), 'fovDegs', 0.5, 'spatialPhase', 90);
     
     [logThreshold(idx), questObj] = computeThresholdTAFC(gratingScene, theNeuralEngine, ...
         classifierEngine, classifierPara, thresholdPara, questEnginePara, visPara, dataPara);
@@ -91,7 +91,6 @@ for idx = 1:length(spatialFreqs)
     subplot(3, 4, idx * 2);
     questObj.plotMLE(10.0);
 end
-% set(dataFig, 'Position',  [50, 50, 400, 1050]);
 
 % Convert returned log threshold to linear threshold
 threshold = 10 .^ logThreshold;
@@ -101,4 +100,3 @@ theCsfFig = figure();
 loglog(spatialFreqs, 1 ./ threshold, '-ok', 'LineWidth', 2);
 xlabel('Spatial Frequency (cyc/deg)');
 ylabel('Sensitivity');
-% set(theCsfFig, 'Position',  [500, 50, 600, 650]);
