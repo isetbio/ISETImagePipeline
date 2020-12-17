@@ -1,7 +1,7 @@
 %% Run Reconstruction with GPU Array
 
 %% generate human cone mosaic with optics
-imageSize = [100, 100, 3];
+imageSize = [128, 128, 3];
 display = load('display.mat');
 prior   = load('sparsePrior.mat');
 
@@ -19,7 +19,7 @@ fileType = '.jpeg';
 for idx = 1:nImage
     fileName = strcat(num2str(idx), fileType);
     filePath = fullfile('.', 'images', fileName);
-    image = imresize(im2double(imread(filePath)), 0.30);
+    image = imresize(im2double(imread(filePath)), 0.5);
     
     image = sampleImage(image, imageSize(1));
     image = image - min(image(:));
@@ -27,9 +27,8 @@ for idx = 1:nImage
     input(idx, :, :, :) = image;
     
     subplot(2, 4, idx);
-    imshow(image, 'InitialMagnification', 400);
+    imshow(image, 'InitialMagnification', 500);
 end
-set(gcf,'position',[0, 0, 800, 400]);
 
 %% reconstruction without GPU
 profile on
@@ -39,7 +38,7 @@ estimator = ...
     PoissonSparseEstimator(render, inv(prior.regBasis), ...
     prior.mu', regConst, stride, imageSize);
 
-nIter = 500; bounded = true; optDisp = 'final';
+nIter = 100; bounded = true; optDisp = 'iter';
 output = zeros([nImage, imageSize]);
 for idx = 1:nImage
     [~, ~, ~, coneRespVec] = retina.compute(reshape(input(idx, :, :, :), imageSize));
@@ -49,18 +48,26 @@ end
 
 profile viewer
 
+%% show reconstructed images
+figure();
+for idx = 1:nImage
+    subplot(2, 4, idx);
+    imshow(reshape(output(idx, :, :, :), imageSize), 'InitialMagnification', 500);
+end
+
 %% reconstruction with GPU array
 profile on
 
 regConst = 5e-4; stride = 4;
 
 % transfer the render matrix to GPU (gpuArray)
+% use single precision for better performance 
 % call estimate function with gpu = true
 estimator = ...
-    PoissonSparseEstimator(gpuArray(render), inv(prior.regBasis), ...
+    PoissonSparseEstimator(gpuArray(single(render)), inv(prior.regBasis), ...
     prior.mu', regConst, stride, imageSize);
 
-nIter = 500; bounded = true; optDisp = 'final'; gpu = true;
+nIter = 100; bounded = true; optDisp = 'iter'; gpu = true;
 output = zeros([nImage, imageSize]);
 for idx = 1:nImage
     [~, ~, ~, coneRespVec] = retina.compute(reshape(input(idx, :, :, :), imageSize));
@@ -74,6 +81,5 @@ profile viewer
 figure();
 for idx = 1:nImage
     subplot(2, 4, idx);
-    imshow(reshape(output(idx, :, :, :), imageSize), 'InitialMagnification', 400);
+    imshow(reshape(output(idx, :, :, :), imageSize), 'InitialMagnification', 500);
 end
-set(gcf,'position',[0, 0, 800, 400]);
