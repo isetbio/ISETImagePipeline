@@ -62,7 +62,7 @@ switch mode
         
     case 'validation'
         questEnginePara = struct('employMethodOfConstantStimuli', true, ...
-            'nRepeat', classifierPara.nTest);
+            'nTest', classifierPara.nTest);
 end
 
 %% Compute threshold for each spatial frequency
