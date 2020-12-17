@@ -65,7 +65,7 @@ logThreshold = zeros(1, length(spatialFreqs));
 for idx = 1:length(spatialFreqs)
     % Create a static grating scene with a particular chromatic direction,
     % spatial frequency, and temporal duration
-    gratingScene = createGratingScene(chromaDir, spatialFreqs(idx), 'fovDegs', fovDegs);
+    gratingScene = createGratingScene(chromaDir, spatialFreqs(idx), 'fovDegs', fovDegs, 'spatialPhase', 90);
     
     [logThreshold(idx), questObj] = ...
      computeThresholdTAFC(gratingScene, theNeuralEngine, classifierEngine, classifierPara, thresholdPara, questEnginePara);
