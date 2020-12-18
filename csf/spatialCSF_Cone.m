@@ -1,5 +1,5 @@
 %% List of spatial frequencies to be tested
-spatialFreqs = [0.5, 2, 4, 8, 16];
+spatialFreqs = [1, 2, 4, 8, 16, 32];
 % Choose stimulus chromatic direction specified as a 1-by-3 vector
 % of L, M, S cone contrast.  These vectors get normalized below, so only
 % their direction matters in the specification
@@ -23,10 +23,10 @@ assert(abs(norm(chromaDir) - rmsContrast) <= 1e-10);
 
 % This calculations isomerizations in a patch of cone mosaic with Poisson
 % noise, and includes optical blur.
-fovDegs = 0.50;
+fovDegs = 1.0;
 neuralParams = nreConeResponse;
 neuralParams.coneMosaicParams.fovDegs = fovDegs;
-neuralParams.coneMosaicParams.timeIntegrationSeconds = 0.025;
+neuralParams.coneMosaicParams.timeIntegrationSeconds = 0.01;
 neuralParams.coneMosaicParams.eccBased = true;
 theNeuralEngine = neuralResponseEngine(@nreConeResponse, neuralParams);
 
@@ -43,9 +43,9 @@ classifierPara = struct('trainFlag', 'none', ...
 % The actual threshold varies enough with the different engines that we
 % need to adjust the contrast range that Quest+ searches over, as well as
 % the range of psychometric function slopes.
-thresholdPara = struct('logThreshLimitLow', 2.0, ...
+thresholdPara = struct('logThreshLimitLow', 2.5, ...
     'logThreshLimitHigh', 0.0, ...
-    'logThreshLimitDelta', 0.0125, ...
+    'logThreshLimitDelta', 0.025, ...
     'slopeRangeLow', 1, ...
     'slopeRangeHigh', 100, ...
     'slopeDelta', 10);
@@ -74,7 +74,7 @@ questObj = cell(1, length(spatialFreqs));
 for idx = 1:length(spatialFreqs)
     % Create a static grating scene with a particular chromatic direction,
     % spatial frequency, and temporal duration
-    gratingScene = createGratingScene(chromaDir, spatialFreqs(idx), 'fovDegs', 0.5, 'spatialPhase', 90);
+    gratingScene = createGratingScene(chromaDir, spatialFreqs(idx), 'fovDegs', fovDegs, 'spatialPhase', 90);
     
     [logThreshold(idx), questObj{idx}] = computeThresholdTAFC(gratingScene, theNeuralEngine, ...
         classifierEngine, classifierPara, thresholdPara, questEnginePara, visPara, dataPara);
@@ -83,7 +83,7 @@ end
 %% Make plots
 dataFig = figure();
 for idx = 1:length(spatialFreqs)
-    gratingScene = createGratingScene(chromaDir, spatialFreqs(idx), 'fovDegs', 0.5, 'spatialPhase', 90);
+    gratingScene = createGratingScene(chromaDir, spatialFreqs(idx), 'fovDegs', fovDegs, 'spatialPhase', 90);
     
     % Plot stimulus
     figure(dataFig);
