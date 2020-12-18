@@ -1,9 +1,9 @@
-% List of spatial frequencies to be tested
-spatialFreqs = [1, 2, 4, 8, 12, 16];
+%% List of spatial frequencies to be tested
+spatialFreqs = [0.5, 2, 4, 8, 16];
 % Choose stimulus chromatic direction specified as a 1-by-3 vector
 % of L, M, S cone contrast.  These vectors get normalized below, so only
 % their direction matters in the specification
-stimType = 'red-green';
+stimType = 'luminance';
 switch (stimType)
     case 'luminance'
         chromaDir = [1.0, 1.0, 0.0]';
@@ -15,7 +15,6 @@ end
 % exceed the gamut of the monitor, so we are conservative and set this at a
 % value that is within gamut of typical monitors and don't worry about it
 % further for this tutorial.  Vector length contrast of 0.09 should be fine
-
 rmsContrast = 0.10;
 chromaDir = chromaDir / norm(chromaDir) * rmsContrast;
 assert(abs(norm(chromaDir) - rmsContrast) <= 1e-10);
@@ -70,15 +69,21 @@ visPara = struct('visualizeStimulus', false, 'visualizeAllComponents', false);
 dataPara = struct('saveMRGCResponses', false);
 
 % See toolbox/helpers for functions createGratingScene computeThresholdTAFC
-dataFig = figure();
 logThreshold = zeros(1, length(spatialFreqs));
+questObj = cell(1, length(spatialFreqs));
 for idx = 1:length(spatialFreqs)
     % Create a static grating scene with a particular chromatic direction,
     % spatial frequency, and temporal duration
     gratingScene = createGratingScene(chromaDir, spatialFreqs(idx), 'fovDegs', 0.5, 'spatialPhase', 90);
     
-    [logThreshold(idx), questObj] = computeThresholdTAFC(gratingScene, theNeuralEngine, ...
+    [logThreshold(idx), questObj{idx}] = computeThresholdTAFC(gratingScene, theNeuralEngine, ...
         classifierEngine, classifierPara, thresholdPara, questEnginePara, visPara, dataPara);
+end
+
+%% Make plots
+dataFig = figure();
+for idx = 1:length(spatialFreqs)
+    gratingScene = createGratingScene(chromaDir, spatialFreqs(idx), 'fovDegs', 0.5, 'spatialPhase', 90);
     
     % Plot stimulus
     figure(dataFig);
@@ -89,7 +94,7 @@ for idx = 1:length(spatialFreqs)
     gratingScene.visualizeStaticFrame(theSceneSequence);
     
     subplot(3, 4, idx * 2);
-    questObj.plotMLE(10.0);
+    questObj{idx}.plotMLE(10.0);
 end
 
 % Convert returned log threshold to linear threshold
