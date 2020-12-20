@@ -34,9 +34,9 @@ imageData = imageData(1:count - 1, :);
 
 %% Generate linear images (pixel values after display gamma function)
 % Load specs for a CRT display
-display = load(fullfile(dataBaseDir, 'CRT12BitDisplay.mat'));
+display = displayCreate('CRT12BitDisplay');
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-                      'fovealDegree', 0.1, 'display', display.CRT12BitDisplay);
+                      'fovealDegree', 0.1, 'display', display);
 
 imageSize = [16, 16, 3];
 imageDataLinear = zeros(size(imageData));

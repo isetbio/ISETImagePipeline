@@ -2,14 +2,14 @@
 
 %% define constant
 imageSize = [64, 64, 3];
-display = load('display.mat');
+display = displayCreate('CRT12BitDisplay');
 prior   = load('sparsePrior.mat');
 ratio   = [0, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95, 0.99, 1.0];
 
 %% generate a cone mosaic
 % analysis with normal optics
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', 2.5);
+    'fovealDegree', 0.5, 'display', display, 'pupilSize', 2.5);
 
 %% load images
 nImage = 10;
@@ -78,7 +78,6 @@ end
 
 % compute reconstruct error and show reconstructed images
 function plotResults(input, output, ratio, display, imageSize)
-display = display.CRT12BitDisplay;
 
 % compute RMSE
 nImage = size(input, 1);

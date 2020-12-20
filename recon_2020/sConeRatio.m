@@ -3,7 +3,7 @@
 
 %% define constant
 imageSize = [64, 64, 3];
-display = load('display.mat');
+display = displayCreate('CRT12BitDisplay');
 prior   = load('sparsePrior.mat');
 ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
 
@@ -11,7 +11,7 @@ ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
 % analysis with normal optics
 pupilSize = 2.0;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', pupilSize, ...
+    'fovealDegree', 0.5, 'display', display, 'pupilSize', pupilSize, ...
     'integrationTime', 1.0);
 
 %% load images
@@ -48,10 +48,10 @@ plotResults(input, output, ratio, display, imageSize);
 % compute optics with 'no lca' / 'diffraction-limit' flag
 pupilSize = 2.0;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.5, 'display', display.CRT12BitDisplay, 'pupilSize', pupilSize, ...
+    'fovealDegree', 0.5, 'display', display, 'pupilSize', pupilSize, ...
     'integrationTime', 1.0);
 
-testImage = gammaCorrection(reshape(input(1, :, :, :), imageSize), display.CRT12BitDisplay);
+testImage = gammaCorrection(reshape(input(1, :, :, :), imageSize), display);
 
 % compute OI and excitation
 retina.compute(testImage);
@@ -127,7 +127,6 @@ end
 
 % compute reconstruct error and show reconstructed images
 function plotResults(input, output, ratio, display, imageSize)
-display = display.CRT12BitDisplay;
 
 % compute RMSE
 nImage = size(input, 1);
