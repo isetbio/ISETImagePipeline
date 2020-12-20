@@ -97,11 +97,11 @@ for idx = 1:length(spatialFreqs)
     questObj{idx}.plotMLE(10.0);
 end
 
+%% Plot Contrast Sensitivity Function
 % Convert returned log threshold to linear threshold
 threshold = 10 .^ logThreshold;
 
-%% Plot Contrast Sensitivity Function
 theCsfFig = figure();
-loglog(spatialFreqs, 1 ./ threshold, '-ok', 'LineWidth', 2);
+loglog(spatialFreqs, 1 ./ threshold, '-ok', 'LineWidth', 2); hold on;
 xlabel('Spatial Frequency (cyc/deg)');
 ylabel('Sensitivity');
