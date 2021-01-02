@@ -22,6 +22,7 @@ assert(abs(norm(chromaDir) - rmsContrast) <= 1e-10);
 fovDegs = 0.50;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
     'fovealDegree', fovDegs, 'integrationTime', 0.5);
+retina.PSF = ConeResponse.psfDiffLmt();
 
 imageSize = [50, 50, 3];
 render = retina.forwardRender(imageSize, false, true, false);
@@ -63,15 +64,9 @@ questEnginePara = struct('minTrial', 640, 'maxTrial', 640, ...
 
 %% Compute threshold for each spatial frequency
 % See toolbox/helpers for functions createGratingScene computeThresholdTAFC
-showPlot = false;
-
 logThreshold = zeros(1, length(spatialFreqs));
 questObj = {};
 responseObj = {};
-
-if showPlot
-    dataFig = figure();
-end
 
 fprintf('Start CSF Calculation \n');
 for idx = 1:length(spatialFreqs)
@@ -99,15 +94,31 @@ for idx = 1:length(spatialFreqs)
         % with a marker size of 5.0
         subplot(3, 4, idx * 2);
         questObj{idx}.plotMLE(5.0);
-    end
-    
-    save();
-end
-
-if showPlot
-    set(dataFig, 'Position',  [0, 0, 800, 800]);
+    end       
 end
 
 % Convert returned log threshold to linear threshold
 threshold = 10 .^ logThreshold;
-save();
+
+%% Show result
+dataFig = figure();
+
+fprintf('Start CSF Calculation \n');
+for idx = 1:length(spatialFreqs)    
+    gratingScene = createGratingScene(chromaDir, spatialFreqs(idx), 'fovDegs', fovDegs);
+    
+    % Plot stimulus
+    figure(dataFig);
+    subplot(3, 4, idx * 2 - 1);
+
+    visualizationContrast = 1.0;
+    [theSceneSequence] = gratingScene.compute(visualizationContrast);
+    gratingScene.visualizeStaticFrame(theSceneSequence);
+
+    % Plot data and psychometric curve
+    % with a marker size of 5.0
+    subplot(3, 4, idx * 2);
+    questObj{idx}.plotMLE(10.0);
+end
+
+set(dataFig, 'Position',  [0, 0, 800, 800]);
