@@ -5,7 +5,6 @@
 imageSize = [64, 64, 3];
 display = displayCreate('CRT12BitDisplay');
 prior   = load('sparsePrior.mat');
-ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9];
 
 %% generate a cone mosaic
 % analysis with normal optics
@@ -34,7 +33,7 @@ end
 
 %% change the S cone proportion
 % and generate the corresponding render matrix
-ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9, 0.95, 1.0];
+ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.40, 0.50, 0.60, 0.75, 0.9];
 [~, renderArray] = computeRender(ratio, retina, imageSize);
 
 %% reconstruction
@@ -76,7 +75,7 @@ retina.visualizeExcitation();
 
 %% change the S cone proportion
 % and generate the corresponding render matrix
-ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9, 0.95, 1.0];
+ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.40, 0.50, 0.60, 0.75, 0.9];
 [~, renderArray] = computeRender(ratio, retina, imageSize);
 
 %% reconstruction
@@ -148,7 +147,7 @@ pigment.opticalDensity = [0.2, 0.2, 0.5];
 %% change the S cone proportion
 % and generate the corresponding render matrix
 ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.40, 0.50, 0.60, 0.75, 0.9];
-[mosaicArray, renderArray] = computeRender(ratio, retina, imageSize);
+[~, renderArray] = computeRender(ratio, retina, imageSize);
 
 %% reconstruction
 regPara = 5e-3;
