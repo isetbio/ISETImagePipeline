@@ -77,6 +77,77 @@ retina.visualizeExcitation();
 %% change the S cone proportion
 % and generate the corresponding render matrix
 ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9, 0.95, 1.0];
+[~, renderArray] = computeRender(ratio, retina, imageSize);
+
+%% reconstruction
+regPara = 5e-3;
+output = computeRecon(input, renderArray, prior, regPara, imageSize);
+
+%% show results
+plotResults(input, output, ratio, display, imageSize);
+
+%% Analysis 3: Turn off LCA, Lens and Macular pigment
+% define constant & cone mosaic & load images
+imageSize = [64, 64, 3];
+display = displayCreate('CRT12BitDisplay');
+prior   = load('sparsePrior.mat');
+
+pupilSize = 2.0;
+retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
+    'fovealDegree', 0.5, 'display', display, 'pupilSize', pupilSize, ...
+    'integrationTime', 1.0);
+
+nImage = 10;
+input = zeros([nImage, imageSize]);
+
+fileType = '.jpeg';
+for idx = 1:nImage
+    fileName = strcat(num2str(idx), fileType);
+    filePath = fullfile('.', 'images', fileName);
+    image = imresize(im2double(imread(filePath)), 0.25);
+    
+    image = sampleImage(image, imageSize(1));
+    image = image - min(image(:));
+    image = image ./ max(image(:));
+    
+    [~, ~, linearImage] = retina.compute(image);
+    input(idx, :, :, :) = linearImage;
+end
+
+%% Turn off optics
+retina.PSF = ConeResponse.psfDiffLmt(pupilSize);
+
+%% change the optical density of the lens
+optics = retina.PSF;
+
+lens0 = oiGet(optics, 'lens');
+wls = lens0.wave;
+
+lensUnitDensity1 = lens0.unitDensity;
+lensUnitDensity1 = zeros(size(lensUnitDensity1));
+lensPeakDensity1 = 1;
+
+lens1 = Lens('wave', wls, ...
+    'unitDensity', lensUnitDensity1, 'density', lensPeakDensity1);
+retina.PSF = oiSet(optics, 'lens', lens1);
+
+%% change the macular density
+macular0 = retina.Mosaic.macular;
+wls = macular0.wave;
+
+macularUnitDensity1 = zeros(size(macular0.unitDensity));
+macularDensity1 = macular0.density;
+
+macular1 = Macular('wave', wls, 'unitDensity', macularUnitDensity1, 'density', macularDensity1);
+retina.Mosaic.macular = macular1;
+
+% change pigment
+pigment = retina.Mosaic.pigment;
+pigment.opticalDensity = [0.2, 0.2, 0.5];
+
+%% change the S cone proportion
+% and generate the corresponding render matrix
+ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.40, 0.50, 0.60, 0.75, 0.9];
 [mosaicArray, renderArray] = computeRender(ratio, retina, imageSize);
 
 %% reconstruction
