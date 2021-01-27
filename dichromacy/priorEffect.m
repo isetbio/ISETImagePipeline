@@ -175,6 +175,7 @@ nCorr = length(spatial);
 exclude = [3, 9];
 plotAxis = tight_subplot(nCorr - length(exclude), nCorr - length(exclude), [.05 .05], 0.05, 0.05);
 plotIdx = 1;
+limits = [1.25, 4.5; 1.25, 4.5; 1, 4.5; 1, 4.5; 1, 4.5; 1, 4; 0.5, 3.75; 0.25, 3.25; 0.25, 3.25];
 for i = 1:nCorr
     for j = 1:nCorr
         if(sum(i == exclude) == 0 && sum(j == exclude) == 0)
@@ -194,15 +195,20 @@ for i = 1:nCorr
             labelIDX = [4, 6:8, 10, 13];
             xticks(allRatio(labelIDX));
             
-            yaxisLim = ylim();
-            yaxisLim = [floor(yaxisLim(1) * 2) / 2, ceil(yaxisLim(2) * 2) / 2];
+            % Matched Y-axis
+            % ylim(limits(i, :));
+            % yticks(ceil(limits(i, 1)) : 0.5 : floor(limits(i, 2)));
             
+            % Scaled Y-axis
+            yaxisLim = ylim();
+            yaxisLim = [floor(yaxisLim(1) * 2) / 2, ceil(yaxisLim(2) * 2) / 2];            
             ylim(yaxisLim);
             ytickPos = yaxisLim(1) : 0.5 : yaxisLim(2);
             if length(ytickPos) >= 5
                 ytickPos = yaxisLim(1) : 1.0 : yaxisLim(2);
             end
             yticks(ytickPos);
+            
             set(gca, 'linewidth', 0.75)
             set(gca, 'TickLength', [0.03, 0.025])
             
