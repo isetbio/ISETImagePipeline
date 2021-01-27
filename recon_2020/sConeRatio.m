@@ -156,6 +156,52 @@ output = computeRecon(input, renderArray, prior, regPara, imageSize);
 %% show results
 plotResults(input, output, ratio, display, imageSize);
 
+%% Analysis 4: With two class of cone type
+% define constant
+imageSize = [64, 64, 3];
+display = displayCreate('CRT12BitDisplay');
+prior   = load('sparsePrior.mat');
+
+% generate a cone mosaic
+% analysis with normal optics
+pupilSize = 3.0;
+retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
+    'fovealDegree', 0.5, 'display', display, 'pupilSize', pupilSize, ...
+    'integrationTime', 1.0);
+
+%% Turn off optics
+% retina.PSF = ConeResponse.psfDiffLmt(pupilSize);
+
+%% load images
+nImage = 10;
+input = zeros([nImage, imageSize]);
+
+fileType = '.jpeg';
+for idx = 1:nImage
+    fileName = strcat(num2str(idx), fileType);
+    filePath = fullfile('.', 'images', fileName);
+    image = imresize(im2double(imread(filePath)), 0.25);
+    
+    image = sampleImage(image, imageSize(1));
+    image = image - min(image(:));
+    image = image ./ max(image(:));
+    
+    [~, ~, linearImage] = retina.compute(image);
+    input(idx, :, :, :) = linearImage;
+end
+
+%% change the S cone proportion
+% and generate the corresponding render matrix
+ratio = [0.0, 0.01, 0.05, 0.1, 0.25, 0.40, 0.50, 0.60, 0.75, 0.9, 0.95];
+[~, renderArray] = computeRenderDichroma(ratio, retina, imageSize, 'noMCone');
+
+% reconstruction
+regPara = 5e-3;
+output = computeRecon(input, renderArray, prior, regPara, imageSize);
+
+%% show results
+plotResults(input, output, ratio, display, imageSize);
+
 %% helper function for plotting
 % compute render matrix for different cone mosaic
 function [mosaicArray, renderArray] = computeRender(ratio, retina, imageSize)
@@ -171,6 +217,33 @@ for idx = 1:length(ratio)
     
     % generate render matrix for each cone mosaic
     renderMtx = retina.forwardRender(imageSize, false, true, false);
+    renderArray(idx) = {double(renderMtx)};
+end
+end
+
+function [mosaicArray, renderArray] = computeRenderDichroma(ratio, retina, imageSize, flag)
+retina.resetSCone();
+mosaicArray = cell(1, length(ratio));
+renderArray = cell(1, length(ratio));
+
+for idx = 1:length(ratio)
+    % manipulate the number of S cone in the mosaic
+    retina.resetCone();
+    retina.resetSCone();
+    retina.reassignSCone(ratio(idx));
+    
+    switch (flag)
+        case 'noLCone'
+            retina.reassignLCone(0.0, false);
+        case 'noMCone'
+            retina.reassignMCone(0.0, false);
+        otherwise
+            error('Invalid Option');
+    end    
+    mosaicArray(idx) = {retina.Mosaic.pattern};
+    
+    % generate render matrix for each cone mosaic
+    renderMtx = retina.forwardRender(imageSize, false, true, false);    
     renderArray(idx) = {double(renderMtx)};
 end
 end
