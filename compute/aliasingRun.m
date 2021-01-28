@@ -58,7 +58,7 @@ retina.PSF = ConeResponse.psfDiffLmt(diffPupil);
 %% Run image reconstruction
 figure();
 inputSize = [1024, 1024, 3];
-outputImageDiflmt = zeros([6, imageSize]);
+outputDiflmt = zeros([6, imageSize]);
 for idx = 1:size(inputImage, 1)
     input = reshape(inputImage(idx, :, :, :), inputSize);
     
@@ -68,7 +68,7 @@ for idx = 1:size(inputImage, 1)
     [~, ~, ~, allCone] = retina.compute(input);
     reconImage = estimator.runEstimate(allCone, 'maxIter', 150, ...
         'display', 'iter', 'gpu', useGPU);
-    outputImageDiflmt(idx, :, :, :) = reconImage;
+    outputDiflmt(idx, :, :, :) = reconImage;
     
     subplot(2, 6, 6 + idx);
     imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);    
