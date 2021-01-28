@@ -22,12 +22,19 @@ render = double(render);
 %% Run image reconstruction
 % construct image estimator
 regPara = 1e-3; stride = 4;
-estimator = PoissonSparseEstimator(render, inv(prior.regBasis), ...
-    prior.mu', regPara, stride, imageSize);
+useGPU = true;
+try
+    estimator = PoissonSparseEstimator(gpuArray(single(render)), ...
+        inv(prior.regBasis), prior.mu', regPara, stride, imageSize);
+catch NoGPU
+    estimator = PoissonSparseEstimator(render, ...
+        inv(prior.regBasis), prior.mu', regPara, stride, imageSize);
+    useGPU = false;
+end
 
 figure();
 inputSize = [1024, 1024, 3];
-outputImage = zeros([6, imageSize]);
+outputOptics = zeros([6, imageSize]);
 for idx = 1:size(inputImage, 1)
     input = reshape(inputImage(idx, :, :, :), inputSize);
     
@@ -35,8 +42,9 @@ for idx = 1:size(inputImage, 1)
     imshow(input, 'InitialMagnification', 500);
     
     [~, ~, ~, allCone] = retina.compute(input);
-    reconImage = estimator.runEstimate(allCone, 'maxIter', 100, 'display', 'iter');    
-    outputImage(idx, :, :, :) = reconImage;
+    reconImage = estimator.runEstimate(allCone, 'maxIter', 150, ...
+        'display', 'iter', 'gpu', useGPU);
+    outputOptics(idx, :, :, :) = reconImage;
     
     subplot(2, 6, 6 + idx);
     imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);    
@@ -48,14 +56,9 @@ diffPupil = 10.0;
 retina.PSF = ConeResponse.psfDiffLmt(diffPupil);
 
 %% Run image reconstruction
-% construct image estimator
-regPara = 1e-3; stride = 4;
-estimator = PoissonSparseEstimator(render, inv(prior.regBasis), ...
-    prior.mu', regPara, stride, imageSize);
-
 figure();
 inputSize = [1024, 1024, 3];
-outputImage = zeros([6, imageSize]);
+outputImageDiflmt = zeros([6, imageSize]);
 for idx = 1:size(inputImage, 1)
     input = reshape(inputImage(idx, :, :, :), inputSize);
     
@@ -63,8 +66,9 @@ for idx = 1:size(inputImage, 1)
     imshow(input, 'InitialMagnification', 500);
     
     [~, ~, ~, allCone] = retina.compute(input);
-    reconImage = estimator.runEstimate(allCone, 'maxIter', 100, 'display', 'iter');    
-    outputImage(idx, :, :, :) = reconImage;
+    reconImage = estimator.runEstimate(allCone, 'maxIter', 150, ...
+        'display', 'iter', 'gpu', useGPU);
+    outputImageDiflmt(idx, :, :, :) = reconImage;
     
     subplot(2, 6, 6 + idx);
     imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);    
