@@ -19,8 +19,7 @@ retina.PSF = oiCreate('human', pupilSize);
 render = retina.forwardRender(imageSize, true, true, false);
 render = double(render);
 
-%% Run image reconstruction
-% construct image estimator
+%% construct image estimator
 regPara = 1e-3; stride = 4;
 useGPU = true;
 try
@@ -32,6 +31,7 @@ catch NoGPU
     useGPU = false;
 end
 
+%% Run image reconstruction
 figure();
 inputSize = [1024, 1024, 3];
 outputOptics = zeros([6, imageSize]);
@@ -47,7 +47,7 @@ for idx = 1:size(inputImage, 1)
     outputOptics(idx, :, :, :) = reconImage;
     
     subplot(2, 6, 6 + idx);
-    imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);    
+    imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
 end
 
 %% Turn off optics
@@ -71,5 +71,5 @@ for idx = 1:size(inputImage, 1)
     outputDiflmt(idx, :, :, :) = reconImage;
     
     subplot(2, 6, 6 + idx);
-    imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);    
+    imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
 end
