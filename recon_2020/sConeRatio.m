@@ -202,6 +202,9 @@ output = computeRecon(input, renderArray, prior, regPara, imageSize);
 %% show results
 plotResults(input, output, ratio, display, imageSize);
 
+%% Plot RMSE for R/G/B
+rmsePlot(input, output, ratio);
+
 %% helper function for plotting
 % compute render matrix for different cone mosaic
 function [mosaicArray, renderArray] = computeRender(ratio, retina, imageSize)
@@ -306,4 +309,44 @@ for i = 1:length(ratio)
         imshow(image, 'InitialMagnification', 200);
     end
 end
+end
+
+% compute reconstruct error and show reconstructed images
+function rmsePlot(input, output, ratio)
+
+% compute RMSE
+nImage = size(input, 1);
+rmse = zeros([3, length(ratio), nImage]);
+for i = 1:length(ratio)
+    for j = 1:nImage
+        for k = 1:3            
+            inputImage  = input(j, :, :, k);
+            outputImage = output(i, j, :, :, k);
+            rmse(k, i, j) = norm(inputImage(:) - outputImage(:));
+        end
+    end
+end
+
+% plot RMSE
+figure(1);
+for k = 1:3
+    subplot(1, 3, k);
+    errorbar(ratio, ...
+        mean(reshape(rmse(k, :, :), [length(ratio), nImage]), 2), ...
+        std(reshape(rmse(k, :, :), [length(ratio), nImage]), 0, 2) / sqrt(nImage), ...
+        '--o', 'LineWidth', 2);
+    
+    grid off; box off; hold on;
+    xlabel('S Cone Ratio');
+    
+    switch k
+        case 1
+            ylabel('RMSE-R');
+        case 2
+            ylabel('RMSE-G');
+        case 3
+            ylabel('RMSE-B');
+    end    
+end
+
 end
