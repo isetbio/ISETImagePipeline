@@ -3,7 +3,7 @@ imageSize = [128, 128, 3];
 display = displayCreate('CRT12BitDisplay');
 prior   = load('sparsePrior.mat');
 
-fovDegs = 0.2;
+fovDegs = 0.20;
 pupilSize = 3.0;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
     'fovealDegree', fovDegs, 'display', display, 'pupilSize', pupilSize, ...
@@ -74,12 +74,29 @@ for idx = 1:size(inputImage, 1)
     imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
 end
 
-%% Analysis with special peripheral mosaic
-% Load retina mosaic and render matrix first
+%% Generate special cone mosaic
+imageSize = [128, 128, 3];
+display = displayCreate('CRT12BitDisplay');
+prior   = load('sparsePrior.mat');
+
+fovDegs = 1.0;
+pupilSize = 3.0;
+retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
+    'fovealDegree', fovDegs, 'display', display, 'pupilSize', pupilSize, ...
+    'integrationTime', 0.1);
+
+retina.resetSCone();
+retina.reassignSCone(0.1);
 retina.visualizeMosaic();
 
-retina.Mosaic.integrationTime = 0.1;
-render = render * 0.1;
+eccDeg = 10.0;
+[~, psf] = PeripheralModel.eyeModelEcc(eccDeg, eccDeg, fovDegs, pupilSize);
+
+retina.PSF = psf;
+
+%% Generate render matrix
+render = retina.forwardRender(imageSize, true, true, false);
+render = double(render);
 
 %% Test with regular optics
 spatialFreq = 6;
