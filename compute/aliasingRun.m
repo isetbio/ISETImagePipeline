@@ -3,7 +3,7 @@ imageSize = [128, 128, 3];
 display = displayCreate('CRT12BitDisplay');
 prior   = load('sparsePrior.mat');
 
-fovDegs = 0.20;
+fovDegs = 0.2;
 pupilSize = 3.0;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
     'fovealDegree', fovDegs, 'display', display, 'pupilSize', pupilSize, ...
@@ -82,7 +82,7 @@ retina.Mosaic.integrationTime = 0.1;
 render = render * 0.1;
 
 %% Test with regular optics
-spatialFreq = 2;
+spatialFreq = 6;
 
 rmsContrast = 1.0;
 chromaDir = [1.0, 1.0, 1.0]';
@@ -91,7 +91,7 @@ chromaDir = chromaDir / norm(chromaDir) * rmsContrast;
 gratingScene = ...
     createGratingScene(chromaDir, spatialFreq, 'fovDegs', fovDegs, 'pixelsNum', 1024);
 
-crst = 1.0;
+crst = 0.50;
 [theSceneSequence, ~] = gratingScene.compute(crst);
 
 % Compute response from scene
@@ -158,7 +158,7 @@ diffPupil = 10.0;
 retina.PSF = ConeResponse.psfDiffLmt(diffPupil);
 
 %% Run reconstruction
-stimFreq = [2, 8, 16, 32, 64, 96, 128, 160];
+stimFreq = [2, 6, 12, 16, 20, 25, 32, 64, 96, 128];
 rmsContrast = 1.0;
 chromaDir = [1.0, 1.0, 1.0]';
 chromaDir = chromaDir / norm(chromaDir) * rmsContrast;
