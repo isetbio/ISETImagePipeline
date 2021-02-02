@@ -73,3 +73,118 @@ for idx = 1:size(inputImage, 1)
     subplot(2, 6, 6 + idx);
     imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
 end
+
+%% Analysis with special peripheral mosaic
+% Load retina mosaic and render matrix first
+retina.visualizeMosaic();
+
+retina.Mosaic.integrationTime = 0.1;
+render = render * 0.1;
+
+%% Test with regular optics
+spatialFreq = 2;
+
+rmsContrast = 1.0;
+chromaDir = [1.0, 1.0, 1.0]';
+chromaDir = chromaDir / norm(chromaDir) * rmsContrast;
+
+gratingScene = ...
+    createGratingScene(chromaDir, spatialFreq, 'fovDegs', fovDegs, 'pixelsNum', 1024);
+
+crst = 1.0;
+[theSceneSequence, ~] = gratingScene.compute(crst);
+
+% Compute response from scene
+[~, allCone] = retina.computeWithScene(theSceneSequence{:});
+visualizeOpticalImage(retina.LastOI, 'displayRadianceMaps', true, ...
+    'displayRetinalContrastProfiles', true);
+
+retina.visualizeExcitation();
+
+%% construct image estimator
+regPara = 1e-3; stride = 4;
+useGPU = true;
+try
+    estimator = PoissonSparseEstimator(gpuArray(single(render)), ...
+        inv(prior.regBasis), prior.mu', regPara, stride, imageSize);
+catch NoGPU
+    estimator = PoissonSparseEstimator(render, ...
+        inv(prior.regBasis), prior.mu', regPara, stride, imageSize);
+    useGPU = false;
+end
+
+%% Reconstruction
+% estimate images
+reconImage = ...
+    estimator.runEstimate(allCone, 'maxIter', 150, ...
+    'display', 'iter', 'gpu', useGPU);
+
+figure();
+imshow(gammaCorrection(reconImage, display), ...
+    'InitialMagnification', 500);
+
+%% Run reconstruction
+stimFreq = [2, 8, 16, 32, 64, 128];
+rmsContrast = 1.0;
+chromaDir = [1.0, 1.0, 1.0]';
+chromaDir = chromaDir / norm(chromaDir) * rmsContrast;
+
+outputOptics = zeros([length(stimFreq), imageSize]);
+
+figure();
+for idx = 1:length(stimFreq)
+    gratingScene = ...
+        createGratingScene(chromaDir, stimFreq(idx), 'fovDegs', fovDegs, 'pixelsNum', 2048);
+    
+    crst = 1.0;
+    [theSceneSequence, ~] = gratingScene.compute(crst);
+    
+    % Compute response from scene
+    [~, allCone] = retina.computeWithScene(theSceneSequence{:});
+    
+    reconImage = ...
+        estimator.runEstimate(allCone, 'maxIter', 150, ...
+        'display', 'iter', 'gpu', useGPU);
+    
+    outputOptics(idx, :, :, :) = reconImage;
+    
+    subplot(2, 3, idx);
+    imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
+    
+end
+
+%% Diffraction-limited Optics
+diffPupil = 10.0;
+retina.PSF = ConeResponse.psfDiffLmt(diffPupil);
+
+%% Run reconstruction
+stimFreq = [2, 8, 16, 32, 64, 96, 128, 160];
+rmsContrast = 1.0;
+chromaDir = [1.0, 1.0, 1.0]';
+chromaDir = chromaDir / norm(chromaDir) * rmsContrast;
+
+outputDiflmt = zeros([length(stimFreq), imageSize]);
+
+figure();
+for idx = 1:length(stimFreq)
+    gratingScene = ...
+        createGratingScene(chromaDir, stimFreq(idx), 'fovDegs', fovDegs, 'pixelsNum', 2048);
+    
+    crst = 0.50;
+    [theSceneSequence, ~] = gratingScene.compute(crst);
+    
+    % Compute response from scene
+    [~, allCone] = retina.computeWithScene(theSceneSequence{:});
+    % visualizeOpticalImage(retina.LastOI, 'displayRadianceMaps', true, ...
+    %    'displayRetinalContrastProfiles', true);
+    
+    reconImage = ...
+        estimator.runEstimate(allCone, 'maxIter', 150, ...
+        'display', 'iter', 'gpu', useGPU);
+    
+    outputDiflmt(idx, :, :, :) = reconImage;
+    
+    subplot(2, 4, idx);
+    imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
+    
+end

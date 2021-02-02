@@ -1,8 +1,12 @@
 %% Load array of retina and input image, and reconstruction
-nRecon = size(outputArray_M1{1}, 1);
-nRetina = length(mosaicArray);
-inputImage = inputLinear;
-outputArray = outputArray_M1;
+% inputImage = inputLinear;
+% outputArray = outputArray_M3;
+% nRecon = size(outputArray{1}, 1);
+% nRetina = length(outputArray);
+
+%% Load results directly
+load('lmRatio.mat');
+load('sRatio.mat');
 
 %% Show results
 plotAxis = tight_subplot(nRetina + 1, nRecon, [.01 .03], [.1 .01], [.01 .01]);
@@ -115,7 +119,7 @@ function plotError(ratio, error, nRecon, formatStr, ylabelText)
 
 figure(); subplot(1, 2, 1);
 errorbar(ratio, mean(error), std(error) / sqrt(nRecon), formatStr, 'LineWidth', 1);
-set(gca, 'XDir','reverse');
+% set(gca, 'XDir','reverse');
 xlabel('M cone ratio');
 ylabel(ylabelText);
 
@@ -128,19 +132,15 @@ plot(log(ratio), log(mean(error)), formatStr, 'LineWidth', 1); hold on;
 infPoint = 1e-3;
 plot(log(infPoint), log(mean(error(:, end))), formatStr, 'LineWidth', 1);
 
-xlabel(strcat('log M cone ratio'));
-ylabel(strcat('log', ylabelText));
-
-xticks(log(flip(ratio)));
-xticklabels(arrayfun(@(x) num2str(x), flip(ratio), 'UniformOutput', false));
-
-error = mean(error);
-yticks(log(error));
-yticklabels(arrayfun(@(x) num2str(x), error, 'UniformOutput', false));
+% xlabel(strcat('log M cone ratio'));
+% ylabel(strcat('log', ylabelText));
+ 
+% xticks(log(flip(ratio)));
+% xticklabels(arrayfun(@(x) num2str(x), flip(ratio), 'UniformOutput', false));
 
 set(gca, 'box', 'off')
 set(gca, 'TickDir', 'out');
-set(gca, 'XDir','reverse');
+% set(gca, 'XDir','reverse');
 set(gcf,'Position',[0, 0, 900, 300])
 end
 
