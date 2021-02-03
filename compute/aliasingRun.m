@@ -141,7 +141,7 @@ imshow(gammaCorrection(reconImage, display), ...
     'InitialMagnification', 500);
 
 %% Run reconstruction
-stimFreq = [2, 8, 16, 32, 64, 128];
+stimFreq = [2, 6, 16, 32, 64, 128];
 rmsContrast = 1.0;
 chromaDir = [1.0, 1.0, 1.0]';
 chromaDir = chromaDir / norm(chromaDir) * rmsContrast;
@@ -201,7 +201,7 @@ for idx = 1:length(stimFreq)
     
     outputDiflmt(idx, :, :, :) = reconImage;
     
-    subplot(2, 4, idx);
+    subplot(2, 5, idx);
     imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
     
 end
