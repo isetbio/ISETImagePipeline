@@ -19,7 +19,7 @@ retina.PSF = oiCreate('human', pupilSize);
 render = retina.forwardRender(imageSize, true, true, false);
 render = double(render);
 
-%% construct image estimator
+%% Construct image estimator
 regPara = 1e-3; stride = 4;
 useGPU = true;
 try
@@ -118,7 +118,7 @@ visualizeOpticalImage(retina.LastOI, 'displayRadianceMaps', true, ...
 
 retina.visualizeExcitation();
 
-%% construct image estimator
+%% Construct image estimator
 regPara = 1e-3; stride = 4;
 useGPU = true;
 try
@@ -170,7 +170,7 @@ for idx = 1:length(stimFreq)
     
 end
 
-%% Diffraction-limited Optics
+%% Diffraction-limited optics
 diffPupil = 10.0;
 retina.PSF = ConeResponse.psfDiffLmt(diffPupil);
 
@@ -204,4 +204,15 @@ for idx = 1:length(stimFreq)
     subplot(2, 5, idx);
     imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
     
+end
+
+%% Visualization of reconstructed images
+output = outputDiflmt;
+
+figure();
+for idx = 1:size(output, 1)
+    subplot(2, ceil(size(output, 1)/2), idx);
+    
+    reconImage = reshape(output(idx, :, :, :), imageSize);
+    imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
 end
