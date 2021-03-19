@@ -1,5 +1,5 @@
 ## ISETImagePipeline
-This repository contains all the analysis code used in our paper: LQ Zhang, NP Cottaris, and DH Brainard (2021). An Image Reconstruction Framework for Characterizing Early Vision.  
+This repository contains all the analysis code used in our paper: **LQ Zhang, NP Cottaris, and DH Brainard (2021). An Image Reconstruction Framework for Characterizing Early Vision.** 
 
 For a 10 minutes introduction of our project, here is our [V-VSS 2020 Talk](https://youtu.be/d5qI0FNCAv4).  
 
@@ -37,20 +37,20 @@ There are many other scripts and functions in this repo, most of them are either
 ```
 ...
 ├── compute
-│   ├── reconGPU.m          # Yes, if you have a NVIDIA GPU, you should run the reconstruction on it
-│   ├── ...                 # It is much faster since most of the computation is matrix related
+    ├── reconGPU.m          # Yes, if you have a NVIDIA GPU, you should run the reconstruction on it
+    ├── ...                 # It is much faster since most of the computation is matrix related
 ├── csf                     # Code related to the simulation of contrast sensitivity function (CSF)
-│   ├── spatialCSF_Cone.m   # CSF simulation for Poisson ideal observer based on cone excitation 
-│   ├── spatialCSF_Recon.m  # CSF simulation for our image reconstruction based observer
-│   ├── ...
+    ├── spatialCSF_Cone.m   # CSF simulation for Poisson ideal observer based on cone excitation 
+    ├── spatialCSF_Recon.m  # CSF simulation for our image reconstruction based observer
+    ├── ...
 ├── dichromacy
-│   ├── MarkovPrior.m       # Gaussian prior for which we have control over its spatial and chromatic correlation
-│   ├── priorEffect.m       # The effect of prior on optimal mosaic design (cone ratio)  
-│   ├── labDistance.m       # The Spatial CIELAB loss function
-│   ├── ...
+    ├── MarkovPrior.m       # Gaussian prior for which we have control over its spatial and chromatic correlation
+    ├── priorEffect.m       # The effect of prior on optimal mosaic design (cone ratio)  
+    ├── labDistance.m       # The Spatial CIELAB loss function
+    ├── ...
 ├── peripheral
-│   ├── computePeripheral.m # Image reconstruction at different visual eccentricity
-│   ├── ...
+    ├── computePeripheral.m # Image reconstruction at different visual eccentricity
+    ├── ...
 ...
 ```
 
