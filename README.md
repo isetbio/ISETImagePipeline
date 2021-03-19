@@ -1,4 +1,4 @@
-## ISETImagePipeline
+## Bayesian Image Reconstruction from Cone Sosaic Signal
 This repository contains all the analysis code used in our paper: **LQ Zhang, NP Cottaris, and DH Brainard (2021). An Image Reconstruction Framework for Characterizing Early Vision.** 
 
 For a 10-minute introduction to our project, please see our [V-VSS 2020 Talk](https://youtu.be/d5qI0FNCAv4).  
