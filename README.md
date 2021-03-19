@@ -14,17 +14,17 @@ This project is written in MATLAB, and is built upon two other repositories:
 - Alternatively, you can also manually download the other two dependencies, just make sure everything is on MATLAB's search path before running the code in here!
 
 ## Getting started
-We have written a set of tutorial/live script that are designed to demonstrate the basic usage of our code. You can find them under `recon_2020`. We suggust you go through them in the order as listed.
+We have written a set of tutorial/live script that are designed to demonstrate the basic usage of our code. You can find them under `recon_2020`. We suggust you go through them in the order as we listed.
 
 ```
 ...
 └── recon_2020
-    ├── constructPrior.m    Construct sparse-coding based prior of natural color images
-    ├── imageRecon.mlx      Basic routine for image reconstruction from cone excitation
-    ├── dichromacy.mlx      Image reconstruction from a dichromatic retinal mosaic
-    ├── anomTrichroma.mlx   Image reconstruction from an anomalous trichromacy retinal mosaic
-    ├── aliasing.mlx        Simulate the experiment of Williams, 1985: Aliasing in human foveal vision
-    ├── lmConeRatio.m       Manipulate the L/M cone ratio and how it influences image reconstruction
-    ├── sConeRatio.m        Manipulate the S cone ratio, chromatic aberration, and lens/pigment density 
+    ├── constructPrior.m    # Construct sparse-coding based prior of natural color images
+    ├── imageRecon.mlx      # Basic routine for image reconstruction from cone excitation
+    ├── dichromacy.mlx      # Image reconstruction from a dichromatic retinal mosaic
+    ├── anomTrichroma.mlx   # Image reconstruction from an anomalous trichromacy retinal mosaic
+    ├── aliasing.mlx        # Simulate the experiment of Williams, 1985: Aliasing in human foveal vision
+    ├── lmConeRatio.m       # Manipulate the L/M cone ratio and how it influences image reconstruction
+    ├── sConeRatio.m        # Manipulate the S cone ratio, chromatic aberration, and lens/pigment density 
 ...
 ```
