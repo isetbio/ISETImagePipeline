@@ -1,5 +1,5 @@
 ## ISETImagePipeline
-This repository contains all the analysis code used in our paper: LQ Zhang, NP Cottaris, and DH Brainard (2021). An image reconstruction framework for characterizing early vision.  
+This repository contains all the analysis code used in our paper: LQ Zhang, NP Cottaris, and DH Brainard (2021). An Image Reconstruction Framework for Characterizing Early Vision.  
 
 For a 10 minutes introduction of our project, here is our [V-VSS 2020 Talk](https://youtu.be/d5qI0FNCAv4).  
 
@@ -10,7 +10,7 @@ This project is written in MATLAB, and is built upon three other repositories:
 - [CSFGenerator](https://github.com/isetbio/ISETBioCSFGenerator), which is a generic and flexible codebase for simulating Contrast Sensitivity Function (CSF).
 
 ## Getting started
-- The best way to set up all the dependencies is to use [ToolboxToolbox](https://github.com/ToolboxHub/ToolboxToolbox), which is a MATLAB package manager developed by other wonderful people in our lab. Once you set everything up, you can clone (or download) this repo to `Matlab-User-Path/projects/ISETImagePipeline`. Type `tbUseProject(ISETImagePipeline)` in MATLAB, and `ToolboxToolbox` will set everything up for you!
+- The best way to set up all the dependencies is to use [ToolboxToolbox](https://github.com/ToolboxHub/ToolboxToolbox), which is a MATLAB package manager developed by other wonderful people in our lab. Once you set everything up, you can clone (or download) this repo to `Matlab-User-Path/projects/ISETImagePipeline`. Simply type `tbUseProject('ISETImagePipeline')` in MATLAB, and `ToolboxToolbox` will set everything up for you!
 
 - Alternatively, you can also manually download the other three dependencies, just make sure everything is on MATLAB's search path before running the code in here!
 
@@ -29,10 +29,10 @@ We have written a set of tutorial/live scripts that are designed to demonstrate 
 ...
 ```
 
-If you are interested in the details of how we constructed our simulation and reconstruction (i.e., you are reading the Methods section), you should also take a look at [ISETBio](https://github.com/isetbio/isetbio) and [Reconstruction Toolbox](https://github.com/isetbio/ISETPipelineToolbox).
+If you are interested in the details of our simulation and reconstruction (i.e., you are reading the Methods section), you should also take a look at [ISETBio](https://github.com/isetbio/isetbio) and [Reconstruction Toolbox](https://github.com/isetbio/ISETPipelineToolbox).
 
 ## Additional 
-There are many other scripts and functions in this repo, most of them are either things we used to run our analysis at scale, or other things that we have done but did nit go into this paper. Here are some of which you might find useful:
+There are many other scripts and functions in this repo, most of them are either things we used to run our analysis at scale, or other things that we have done but didn't go into this paper. Here are some of them you might find useful:
 
 ```
 ...
@@ -56,4 +56,4 @@ There are many other scripts and functions in this repo, most of them are either
 
 ## Contact
 Feel free to contact me if you any questions or comments at   
-*lingqiz at sas dot upenn dot edu*
+**lingqiz at sas dot upenn dot edu**
