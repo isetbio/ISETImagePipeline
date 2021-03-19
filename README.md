@@ -12,9 +12,9 @@ This project is written in MATLAB, and is built upon three other repositories:
 ## Getting started
 - The best way to set up all the dependencies is to use [ToolboxToolbox](https://github.com/ToolboxHub/ToolboxToolbox), which is a MATLAB package manager developed by other wonderful people in our lab. Once you set everything up, you can clone (or download) this repo to `Matlab-User-Path/projects/ISETImagePipeline`. Type `tbUseProject(ISETImagePipeline)` in MATLAB, and `ToolboxToolbox` will set everything up for you!
 
-- Alternatively, you can also manually download the other two dependencies, just make sure everything is on MATLAB's search path before running the code in here!
+- Alternatively, you can also manually download the other three dependencies, just make sure everything is on MATLAB's search path before running the code in here!
 
-We have written a set of tutorial/live script that are designed to demonstrate the basic usage of our code. You can find them under `recon_2020`. These code are well commented and contains (hopefully) the details on how to reproduce our analysis reported in the paper. We suggust you go through them in the order as we listed.
+We have written a set of tutorial/live scripts that are designed to demonstrate the basic usage of our code. You can find them under `recon_2020`. These code are well commented and contains (hopefully) the details on how to reproduce the analysis reported in the paper. We suggust you go through them in the order as we listed.
 
 ```
 ...
@@ -31,7 +31,8 @@ We have written a set of tutorial/live script that are designed to demonstrate t
 
 If you are interested in the details of how we constructed our simulation and reconstruction (i.e., you are reading the Methods section), you should also take a look at [ISETBio](https://github.com/isetbio/isetbio) and [Reconstruction Toolbox](https://github.com/isetbio/ISETPipelineToolbox).
 
-There are many other scripts and functions in this repo, most of them are either things that we have done that did not go into this paper, our other things we used to run our analysis at scale. Here are some of them that you might find useful:
+## Additional 
+There are many other scripts and functions in this repo, most of them are either things we used to run our analysis at scale, or other things that we have done but did nit go into this paper. Here are some of which you might find useful:
 
 ```
 ...
@@ -47,12 +48,12 @@ There are many other scripts and functions in this repo, most of them are either
 │   ├── priorEffect.m       # The effect of prior on optimal mosaic design (cone ratio)  
 │   ├── labDistance.m       # The Spatial CIELAB loss function
 │   ├── ...
-├── dichromacy
+├── peripheral
 │   ├── computePeripheral.m # Image reconstruction at different visual eccentricity
 │   ├── ...
 ...
 ```
 
 ## Contact
-Feel free to contact me if you any questions or comments at 
-lingqiz at sas dot upenn dot edu
+Feel free to contact me if you any questions or comments at   
+*lingqiz at sas dot upenn dot edu*
