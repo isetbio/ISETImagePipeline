@@ -3,18 +3,17 @@ This repository contains all the analysis code used in our paper: LQ Zhang, NP C
 
 For a 10 minutes introduction of our project, here is our [V-VSS 2020 Talk](https://youtu.be/d5qI0FNCAv4).  
 
-Feel free to contact me if you any questions or comments!
-
 ## Dependencies
 This project is written in MATLAB, and is built upon two other repositories: 
 - [ISETBio](https://github.com/isetbio/isetbio), which is an open-source, accurate computational model for the early visual system
 - [Reconstruction Toolbox](https://github.com/isetbio/ISETPipelineToolbox), which is a set of routine for our Bayesian image reconstruction algorithm.
+- [CSFGenerator](https://github.com/isetbio/ISETBioCSFGenerator), which is a generic and flexible codebase for simulating Contrast Sensitivity Function (CSF). 
 - The best way to set up all the dependencies is to use [ToolboxToolbox](https://github.com/ToolboxHub/ToolboxToolbox), which is a MATLAB package manager developed by other wonderful people in our lab. Once you set everything up, you can clone (or download) this repo to `Matlab-User-Path/projects/ISETImagePipeline`. Type `tbUseProject(ISETImagePipeline)` in MATLAB, and `ToolboxToolbox` will set everything up for you!
 
 - Alternatively, you can also manually download the other two dependencies, just make sure everything is on MATLAB's search path before running the code in here!
 
 ## Getting started
-We have written a set of tutorial/live script that are designed to demonstrate the basic usage of our code. You can find them under `recon_2020`. We suggust you go through them in the order as we listed.
+We have written a set of tutorial/live script that are designed to demonstrate the basic usage of our code. You can find them under `recon_2020`. These code are well commented and contains (hopefully) the details on how to reproduce our analysis reported in the paper. We suggust you go through them in the order as we listed.
 
 ```
 ...
@@ -28,3 +27,27 @@ We have written a set of tutorial/live script that are designed to demonstrate t
     ├── sConeRatio.m        # Manipulate the S cone ratio, chromatic aberration, and lens/pigment density 
 ...
 ```
+
+If you are interested in the details of how we constructed our simulation and reconstruction (i.e., you are reading the Methods section), you should also take a look at [ISETBio](https://github.com/isetbio/isetbio) and [Reconstruction Toolbox](https://github.com/isetbio/ISETPipelineToolbox).
+
+There are many other scripts and functions in this repo, most of them are either things that we have done that did not go into this paper, our other things we used to run our analysis at scale. Here are some of them that you might find useful:
+
+```
+...
+├── compute
+│   ├── reconGPU.m          # Yes, if you have a NVIDIA GPU, you should run the reconstruction on it
+│                           # It is much faster since most of the computation is matrix related
+├── csf                     # Code related to the simulation of contrast sensitivity function (CSF)
+│   ├── spatialCSF_Cone.m   # CSF simulation for Poisson ideal observer based on cone excitation 
+│   ├── spatialCSF_Recon.m  # CSF simulation for our image reconstruction based observer
+├── dichromacy
+│   ├── MarkovPrior.m       # Gaussian prior for which we have control over its spatial and chromatic correlation
+│   ├── priorEffect.m       # The effect of prior on optimal mosaic design (cone ratio)  
+│   ├── labDistance.m       # The Spatial CIELAB loss function
+├── dichromacy
+│   ├── computePeripheral.m # Image reconstruction at different visual eccentricity.
+...
+```
+
+## Contact
+Feel free to contact me if you any questions or comments at lingqiz at sas dot upenn dot edu
