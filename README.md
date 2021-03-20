@@ -37,7 +37,7 @@ We have written a set of tutorial/live scripts that are designed to demonstrate 
 
 \[2\] if you are mainly interested in quickly playing with our code, remember to use a **small** parameter for everything so it runs fast (e.g., 0.25 visual degree mosaic, 32 by 32 image size).  
 
-\[3\] These analysis can be computationally intensive (i.e., couple of days). We have saved a lot results from the intermediate steps (e.g., render matrix). They are too large for GitHub but feel free to ask me for them.  
+\[3\] These analysis can be computationally intensive (i.e., couple of days). We have saved many results of the intermediate steps (e.g., render matrix). They are too large for GitHub but feel free to ask me for them.  
 
 \[4\] Running the prior learning routine also requires a large dataset of natural images. We used [ILSVRC](http://www.image-net.org/challenges/LSVRC/2017/index) in our analysis. We have stored a learned prior `sparsePrior.mat` in case you don't want to repeat this step.  
 
