@@ -25,7 +25,9 @@ We have written a set of tutorial/live scripts that are designed to demonstrate 
     ├── dichromacy.mlx      # Image reconstruction from a dichromatic retinal mosaic
     ├── anomTrichroma.mlx   # Image reconstruction from an anomalous trichromacy retinal mosaic
     ├── lmConeRatio.m       # Manipulate the L/M cone ratio and how it influences image reconstruction
-    ├── sConeRatio.m        # Manipulate the S cone ratio, chromatic aberration, and lens/pigment density 
+    ├── sConeRatio.m        # Manipulate the S cone ratio, chromatic aberration, and lens/pigment density
+    ├── priorEffect.m       # Effect of prior on optimal mosaic design (cone ratio)
+    ├── reconPeripheral.m   # Image reconstruction at different visual eccentricity 
     ├── aliasing.mlx        # Simulate the experiment of Williams, 1985: Aliasing in human foveal vision
     ├── constructPrior.m    # Construct sparse-coding based prior of natural color images
 ...
@@ -36,7 +38,7 @@ Note that running the prior learning routine also requires a large dataset of na
 If you are interested in the details of our simulation and reconstruction (i.e., you are reading the Methods section), you should also take a look at [ISETBio](https://github.com/isetbio/isetbio/wiki) and [Reconstruction Toolbox](https://github.com/isetbio/ISETPipelineToolbox).
 
 ## Others Code & Script
-There are many other scripts and functions in this repo, most of them are either things we used to run our analysis at scale, or other things that we have done but didn't go into this paper. Here are some of them you might find useful:
+There are many other scripts and functions in this repo, most of them are either things we used to run our analysis at scale, or other things that we have done but didn't go into this paper (e.g., regression-based reconstruction method). Here are some of them you might find useful:
 
 ```
 ...
@@ -46,14 +48,6 @@ There are many other scripts and functions in this repo, most of them are either
 ├── csf                     # Code related to the simulation of contrast sensitivity function (CSF)
     ├── spatialCSF_Cone.m   # CSF simulation for Poisson ideal observer based on cone excitation 
     ├── spatialCSF_Recon.m  # CSF simulation for our image reconstruction based observer
-    ├── ...
-├── dichromacy
-    ├── MarkovPrior.m       # Gaussian prior for which we have control over its spatial and chromatic correlation
-    ├── priorEffect.m       # The effect of prior on optimal mosaic design (cone ratio)  
-    ├── labDistance.m       # The Spatial CIELAB loss function
-    ├── ...
-├── peripheral
-    ├── computePeripheral.m # Image reconstruction at different visual eccentricity
     ├── ...
 ...
 ```
