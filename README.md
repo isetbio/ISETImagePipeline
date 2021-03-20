@@ -35,7 +35,7 @@ We have written a set of tutorial/live scripts that are designed to demonstrate 
 
 Note that running the prior learning routine also requires a large dataset of natural images. We used [ILSVRC](http://www.image-net.org/challenges/LSVRC/2017/index) in our analysis. We have stored a learned prior `sparsePrior.mat` in case you don't want to repeat this step. In addition, if you are mainly interested in quickly playing with our code, remember to use a **small** parameter for everything so it runs fast (e.g., 0.25 visual degree mosaic, 32 by 32 image size).
 
-If you are interested in the details of our simulation and reconstruction (i.e., you are reading the Methods section), you should also take a look at [ISETBio](https://github.com/isetbio/isetbio/wiki) and [Reconstruction Toolbox](https://github.com/isetbio/ISETPipelineToolbox).
+Note that our project is organized in a way that if you are interested in the details of our simulation and reconstruction (i.e., you are reading the Methods section), you should also take a look at [Reconstruction Toolbox](https://github.com/isetbio/ISETPipelineToolbox), which is the actually "library" for most of our analysis. 
 
 ## Others Code & Script
 There are many other scripts and functions in this repo, most of them are either things we used to run our analysis at scale, or other things that we have done but didn't go into this paper (e.g., regression-based reconstruction method). Here are some of them you might find useful:
