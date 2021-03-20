@@ -14,28 +14,32 @@ This project is written in MATLAB, and is built upon three other repositories:
 
 - Alternatively, you can also manually download the other three dependencies, just make sure everything is on MATLAB's search path before running the code in here!
 
-We have written a set of tutorial/live scripts that are designed to demonstrate the basic usage of our code. You can find them under `recon_2020`. These code are well commented and contains the details on how to reproduce the analysis reported in the paper. We suggust you go through them in the order as we listed.
+We have written a set of tutorial/live scripts that are designed to demonstrate the basic usage of our code. You can find them under `recon_2020`. These code are well commented and contains the details on how to reproduce the analysis reported in the paper. We suggust you go through them in the order as we listed \[1\].
 
 ```
 ...
 ├── display.mat             # Parameters for the display we are using in the simulation
 ├── sparsePrior.mat         # A pre-trained sparse coding prior (the basis function)
 └── recon_2020
-    ├── imageRecon.mlx      # Basic routine for image reconstruction from cone excitation
-    ├── dichromacy.mlx      # Image reconstruction from a dichromatic retinal mosaic
-    ├── anomTrichroma.mlx   # Image reconstruction from an anomalous trichromacy retinal mosaic
-    ├── lmConeRatio.m       # Manipulate the L/M cone ratio and how it influences image reconstruction
-    ├── sConeRatio.m        # Manipulate the S cone ratio, chromatic aberration, and lens/pigment density
-    ├── priorEffect.m       # Effect of prior on optimal mosaic design (cone ratio)
+    ├── imageRecon.mlx      # Basic routine for image reconstruction from cone excitation [2]
+    ├── dichromacy.mlx      # Image reconstruction from a dichromatic retinal mosaic [2]
+    ├── anomTrichroma.mlx   # Image reconstruction from an anomalous trichromacy retinal mosaic [2]
+    ├── lmConeRatio.m       # Manipulate the L/M cone ratio and how it influences image reconstruction [3]
+    ├── sConeRatio.m        # Manipulate the S cone ratio, chromatic aberration, and lens/pigment density [3]
+    ├── priorEffect.m       # Effect of prior on optimal mosaic design (cone ratio) [3]
     ├── reconPeripheral.m   # Image reconstruction at different visual eccentricity 
     ├── aliasing.mlx        # Simulate the experiment of Williams, 1985: Aliasing in human foveal vision
-    ├── constructPrior.m    # Construct sparse-coding based prior of natural color images
+    ├── constructPrior.m    # Construct sparse-coding based prior of natural color images [4]
 ...
 ```
 
-Note that running the prior learning routine also requires a large dataset of natural images. We used [ILSVRC](http://www.image-net.org/challenges/LSVRC/2017/index) in our analysis. We have stored a learned prior `sparsePrior.mat` in case you don't want to repeat this step. In addition, if you are mainly interested in quickly playing with our code, remember to use a **small** parameter for everything so it runs fast (e.g., 0.25 visual degree mosaic, 32 by 32 image size).
+\[1\] Our project is organized in a way that if you are interested in the details of our simulation and reconstruction (i.e., you are reading the Methods section), you should also take a look at [Reconstruction Toolbox](https://github.com/isetbio/ISETPipelineToolbox), which is the actual "library" for most of our analysis.  
 
-Also note that our project is organized in a way that if you are interested in the details of our simulation and reconstruction (i.e., you are reading the Methods section), you should also take a look at [Reconstruction Toolbox](https://github.com/isetbio/ISETPipelineToolbox), which is the actually "library" for most of our analysis. 
+\[2\] if you are mainly interested in quickly playing with our code, remember to use a **small** parameter for everything so it runs fast (e.g., 0.25 visual degree mosaic, 32 by 32 image size).  
+
+\[3\] These analysis can be computationally intensive (i.e., couple of days). We have saved a lot results from the intermediate steps (e.g., render matrix). They are too large for GitHub but feel free to ask me for them.  
+
+\[4\] Running the prior learning routine also requires a large dataset of natural images. We used [ILSVRC](http://www.image-net.org/challenges/LSVRC/2017/index) in our analysis. We have stored a learned prior `sparsePrior.mat` in case you don't want to repeat this step.  
 
 ## Others Code & Script
 There are many other scripts and functions in this repo, most of them are either things we used to run our analysis at scale, or other things that we have done but didn't go into this paper (e.g., regression-based reconstruction method). Here are some of them you might find useful:
