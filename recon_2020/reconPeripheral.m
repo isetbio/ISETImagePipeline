@@ -1,14 +1,16 @@
-%% load the display setup
+%% Load the display setup and create mosaic object
 display = displayCreate('CRT12BitDisplay');
 
-% Generate cone mosaic - 10,10 deg ecc
-eccX = 10; eccY = 10;
-retina = ConeResponsePeripheral(eccX, eccY, ...
-    'fovealDegree', 1.0, 'display', display, 'pupilSize', 3.0);
+% Generate cone mosaic - [eccX, eccY] deg ecc
+eccX = 18.0; eccY = 18.0;
+retina = ConeResponseCmosaic...
+    (eccX, eccY, 'fovealDegree', 1.0, 'pupilSize', 3.0, 'subjectID', 6);
 
+%% Show mosaic and optical PSF
 retina.visualizeMosaic();
+retina.visualizePSF();
 
-%% load an example image
+%% Load an example image
 imageSize = [128, 128, 3];
 image = im2double(imread('images/2.jpeg'));
 image = imresize(image, imageSize(1) / size(image, 1));
@@ -23,39 +25,41 @@ assert(max(image(:)) <= 1);
 figure();
 imshow(image, 'InitialMagnification', 500);
 
-%% compute cone response example
-[~, ~, linear, coneVec] = retina.compute(image);
-retina.visualizeExcitation();
-retina.visualizeOI();
+%% Test on example image
+[allCone, linear] = retina.compute(image);
 
-%% render matrix
-render = retina.forwardRender(imageSize);
+retina.visualizeOI();
+retina.visualizeExcitation();
+
+%% Render matrix
+render = retina.forwardRender(imageSize, true, false);
 render = double(render);
 
-%% image reconstruction: cone response
+%% Image reconstruction: Compute cone response
 % compute (noise-free) avearge cone response
 response = render * linear(:);
 
 % cone response with added Poisson noise
-response = poissrnd(response);
+% response = poissrnd(response);
 
-%% reconstruction: running the estimator
-% construct image estimator
+%% Reconstruction: Running the estimator
+% Construct image estimator
 prior = load('sparsePrior.mat');
-regPara = 0.05; stride = 4; 
+regPara = 2e-3; stride = 4; 
 
-estimator = PoissonSparseEstimator(render, inv(prior.regBasis), prior.mu', regPara, stride, imageSize);
-reconImage = estimator.runEstimate(response, 'maxIter', 1000, 'display', 'iter');
+estimator = PoissonSparseEstimator...
+    (render, inv(prior.regBasis), prior.mu', regPara, stride, imageSize);
+reconImage = estimator.runEstimate(response, 'maxIter', 500, 'display', 'iter');
 
-%% show results
-% compare the original and reconstructed images
+%% Show results
+% Compare the original and reconstructed images
 figure();
 subplot(1, 2, 1);
 imshow(image, 'InitialMagnification', 500);
 title('Original')
 
-% reconstructed image is in linear pixel space
-% convert it back to RGB space
+% Reconstructed image is in linear pixel space
+% Convert it back to RGB space
 recon = gammaCorrection(reconImage, display);
 
 subplot(1, 2, 2);
