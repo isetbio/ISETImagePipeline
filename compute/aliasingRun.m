@@ -74,28 +74,18 @@ for idx = 1:size(inputImage, 1)
     imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
 end
 
-%% Generate special cone mosaic
+%% Generate cone mosaic at peripheral
 imageSize = [128, 128, 3];
 display = displayCreate('CRT12BitDisplay');
 prior   = load('sparsePrior.mat');
 
-fovDegs = 1.0;
-pupilSize = 3.0;
-retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', fovDegs, 'display', display, 'pupilSize', pupilSize, ...
-    'integrationTime', 0.1);
-
-retina.resetSCone();
-retina.reassignSCone(0.1);
-retina.visualizeMosaic();
-
-eccDeg = 10.0;
-[~, psf] = PeripheralModel.eyeModelEcc(eccDeg, eccDeg, fovDegs, pupilSize);
-
-retina.PSF = psf;
+% Generate cone mosaic - [eccX, eccY] deg ecc
+eccX = 18.0; eccY = 18.0;
+retina = ConeResponseCmosaic...
+    (eccX, eccY, 'fovealDegree', 1.0, 'pupilSize', 3.0, 'subjectID', 6);
 
 %% Generate render matrix
-render = retina.forwardRender(imageSize, true, true, false);
+render = retina.forwardRender(imageSize, true, false);
 render = double(render);
 
 %% Test with regular optics
