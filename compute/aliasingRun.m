@@ -131,7 +131,8 @@ imshow(gammaCorrection(reconImage, display), ...
     'InitialMagnification', 500);
 
 %% Run reconstruction
-stimFreq = [2, 6, 16, 32, 64, 128];
+% stimFreq = [2, 6, 16, 32, 64, 128];
+stimFreq = [6, 16, 20, 25, 32];
 rmsContrast = 1.0;
 chromaDir = [1.0, 1.0, 1.0]';
 chromaDir = chromaDir / norm(chromaDir) * rmsContrast;
@@ -143,7 +144,7 @@ for idx = 1:length(stimFreq)
     gratingScene = ...
         createGratingScene(chromaDir, stimFreq(idx), 'fovDegs', fovDegs, 'pixelsNum', 2048);
     
-    crst = 1.0;
+    crst = 0.75;
     [theSceneSequence, ~] = gratingScene.compute(crst);
     
     % Compute response from scene
@@ -155,7 +156,7 @@ for idx = 1:length(stimFreq)
     
     outputOptics(idx, :, :, :) = reconImage;
     
-    subplot(2, 3, idx);
+    subplot(2, ceil(length(stimFreq)/2), idx);
     imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
     
 end
@@ -165,7 +166,8 @@ diffPupil = 10.0;
 retina.PSF = ConeResponse.psfDiffLmt(diffPupil);
 
 %% Run reconstruction
-stimFreq = [2, 6, 12, 16, 20, 25, 32, 64, 96, 128];
+% stimFreq = [2, 6, 12, 16, 20, 25, 32, 64, 96, 128];
+stimFreq = [6, 16, 20, 25, 32];
 rmsContrast = 1.0;
 chromaDir = [1.0, 1.0, 1.0]';
 chromaDir = chromaDir / norm(chromaDir) * rmsContrast;
@@ -177,11 +179,11 @@ for idx = 1:length(stimFreq)
     gratingScene = ...
         createGratingScene(chromaDir, stimFreq(idx), 'fovDegs', fovDegs, 'pixelsNum', 2048);
     
-    crst = 0.50;
+    crst = 0.20;
     [theSceneSequence, ~] = gratingScene.compute(crst);
     
     % Compute response from scene
-    [~, allCone] = retina.computeWithScene(theSceneSequence{:});
+    allCone = retina.computeWithScene(theSceneSequence{:});
     % visualizeOpticalImage(retina.LastOI, 'displayRadianceMaps', true, ...
     %    'displayRetinalContrastProfiles', true);
     
@@ -191,7 +193,7 @@ for idx = 1:length(stimFreq)
     
     outputDiflmt(idx, :, :, :) = reconImage;
     
-    subplot(2, 5, idx);
+    subplot(2, ceil(length(stimFreq)/2), idx);
     imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
     
 end
