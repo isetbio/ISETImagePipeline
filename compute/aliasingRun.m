@@ -75,6 +75,7 @@ for idx = 1:size(inputImage, 1)
 end
 
 %% Generate cone mosaic at peripheral
+% Calculation with the new mosaic
 imageSize = [128, 128, 3];
 display = displayCreate('CRT12BitDisplay');
 prior   = load('sparsePrior.mat');
@@ -148,7 +149,7 @@ for idx = 1:length(stimFreq)
     [theSceneSequence, ~] = gratingScene.compute(crst);
     
     % Compute response from scene
-    [~, allCone] = retina.computeWithScene(theSceneSequence{:});
+    allCone = retina.computeWithScene(theSceneSequence{:});
     
     reconImage = ...
         estimator.runEstimate(allCone, 'maxIter', 150, ...
