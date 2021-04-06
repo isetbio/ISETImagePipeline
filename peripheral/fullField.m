@@ -12,9 +12,10 @@ display = displayCreate('CRT12BitDisplay');
 prior = load('../sparsePrior.mat');
 
 input = im2double(imread('./imgLarge.jpeg'));
-input = sampleImage(input, nStep * imageSize(1));
-output = zeros(size(input));
+input = input(:, floor(size(input, 2) * 0.2) : ceil(size(input, 2) * 0.8), :);
+input = sampleImage(input, nStep * imageSize(1)); 
 
+output = zeros(size(input));
 for idx = 1 : nStep
     for idy = 1 : nStep
         retina = ConeResponseCmosaic...
