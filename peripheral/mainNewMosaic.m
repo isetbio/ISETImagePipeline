@@ -1,12 +1,12 @@
 %% Load the display setup and create mosaic object
 display = displayCreate('CRT12BitDisplay');
 prior = load('sparsePrior.mat');
-imageSize = [100, 100. 3];
+imageSize = [100, 100, 3];
 
 retinaEccs = [1, 0; 5, 0; 10, 0; 10, 10; 18, 0; 18, 18];
 nRetina = size(retinaEccs, 1);
 
-output = zeros([nRetina, size(inputLinear)]);
+output = zeros([nRetina, size(inputLinear, 1), imageSize]);
 
 %% Run reconstructions
 for retinaID = 1 : nRetina
@@ -18,7 +18,7 @@ for retinaID = 1 : nRetina
     retina = ConeResponseCmosaic...
         (eccX, eccY, 'fovealDegree', 1.0, 'pupilSize', 3.0, 'subjectID', 9);
     
-    render = retina.forwardRender(imageSize, false, false);
+    render = retina.forwardRender(imageSize, false, false);    
     render = double(render);
     
     regPara = 2e-3; stride = 4;
@@ -30,7 +30,7 @@ for retinaID = 1 : nRetina
         input = imresize(input, imageSize(1) / size(input, 1));
         
         response = render * input(:);
-        recon = estimator.runEstimate(response, 'maxIter', 500, 'display', 'iter');
+        recon = estimator.runEstimate(response, 'maxIter', 500, 'display', 'iter');        
         
         output(retinaID, idx, :, :, :) = recon;
     end
