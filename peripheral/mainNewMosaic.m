@@ -1,6 +1,8 @@
 %% Load the display setup and create mosaic object
+load('inputLinear.mat');
+
 display = displayCreate('CRT12BitDisplay');
-prior = load('sparsePrior.mat');
+prior = load('../sparsePrior.mat');
 imageSize = [100, 100, 3];
 
 retinaEccs = [1, 0; 5, 0; 10, 0; 10, 10; 18, 0; 18, 18];
@@ -9,8 +11,7 @@ nRetina = size(retinaEccs, 1);
 output = zeros([nRetina, size(inputLinear, 1), imageSize]);
 
 %% Run reconstructions
-for retinaID = 1 : nRetina
-    
+for retinaID = 1 : nRetina    
     % Generate cone mosaic - [eccX, eccY] deg ecc
     eccX = retinaEccs(retinaID, 1);
     eccY = retinaEccs(retinaID, 2);
