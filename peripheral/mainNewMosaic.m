@@ -82,3 +82,34 @@ xlim([0.5, 6.5]);
 xticks(1:size(rmsePixel, 1));
 xticklabels({'1, 0', '5, 0', '10, 0', '10, 10', '18, 0', '18, 18'});
 xlabel('Visual Eccentricity');
+
+%% Plot PSF
+for retinaID = 1 : nRetina
+    % Generate cone mosaic - [eccX, eccY] deg ecc
+    eccX = retinaEccs(retinaID, 1);
+    eccY = retinaEccs(retinaID, 2);
+    
+    retina = ConeResponseCmosaic...
+        (eccX, eccY, 'fovealDegree', 1.0, 'pupilSize', 3.0, 'subjectID', 9);
+    
+    mosaic = ConeResponsePeripheral(eccX, eccY, 'fovealDegree', 0.20);
+    cmStruct = mosaic.Mosaic.geometryStructAlignedWithSerializedConeMosaicResponse();
+    
+    coneData.conePositionsArcMin = cmStruct.coneLocs * 60;
+    coneData.coneAperturesArcMin = cmStruct.coneApertures * 60;
+    
+    [~, wIdx] = min(abs(retina.psfData.supportWavelength-550));
+    wavePSF = squeeze(retina.psfData.data(:,:,wIdx));
+    zLevels = 0.1:0.2:0.9;
+    xyRangeArcMin = 8 * [-1, 1];
+    
+    figure();
+    PolansOptics.renderPSF(gca(), ...
+        retina.psfData.supportX, retina.psfData.supportY, wavePSF/max(wavePSF(:)), ...
+        xyRangeArcMin, zLevels,  gray(1024), [0.5 0.5 0.5], 'withConeData', coneData);
+    
+    pause(1); grid off;
+    xlim(xlim() * 0.60); ylim(ylim() * 0.60);
+    xlabel(''); ylabel('');
+    xticks(''); yticks('');
+end
