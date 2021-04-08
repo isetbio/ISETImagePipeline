@@ -1,4 +1,5 @@
 %% Load the display setup and create mosaic object
+% See "imageRecon.mlx" for the basic reconstruction routine
 display = displayCreate('CRT12BitDisplay');
 
 % Generate cone mosaic - [eccX, eccY] deg ecc

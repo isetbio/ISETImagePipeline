@@ -311,7 +311,7 @@ for i = 1:length(ratio)
 end
 end
 
-% compute reconstruct error and show reconstructed images
+% Compute reconstruct error and show reconstructed images
 function rmsePlot(input, output, ratio)
 
 % compute RMSE
