@@ -55,7 +55,7 @@ imageSet = imageDataLinear;
 [Z, U, SIG, mu] = whitening(imageSet, 'svd');
 
 % RICA analysis
-% RICA: Reconstruction Independent Component Analysis
+% RICA: Reconstruction Independent Component Analysis Algorithm
 nBasis = 16 * 16 * 3;
 result = rica(Z, nBasis, 'IterationLimit', 1e4, 'VerbosityLevel', 1, 'GradientTolerance', 1e-8, 'StepTolerance', 1e-8);
 regBasis = U * diag(sqrt(SIG)) * result.TransformWeights;

@@ -1,19 +1,19 @@
 %% Effect of S Cone Proportion on Image Reconstruction
 % Analysis 1: With regular optics
 
-%% define constant
+%% Define constant
 imageSize = [64, 64, 3];
 display = displayCreate('CRT12BitDisplay');
 prior   = load('sparsePrior.mat');
 
-%% generate a cone mosaic
-% analysis with normal optics
+%% Generate a cone mosaic
+% Analysis with normal optics
 pupilSize = 2.0;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
     'fovealDegree', 0.5, 'display', display, 'pupilSize', pupilSize, ...
     'integrationTime', 1.0);
 
-%% load images
+%% Load images
 nImage = 10;
 input = zeros([nImage, imageSize]);
 
@@ -31,20 +31,20 @@ for idx = 1:nImage
     input(idx, :, :, :) = linearImage;
 end
 
-%% change the S cone proportion
+%% Change the S cone proportion
 % and generate the corresponding render matrix
 ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.40, 0.50, 0.60, 0.75, 0.9];
 [~, renderArray] = computeRender(ratio, retina, imageSize);
 
-%% reconstruction
+%% Reconstruction
 regPara = 5e-3;
 output = computeRecon(input, renderArray, prior, regPara, imageSize);
 
-%% show results
+%% Show results
 plotResults(input, output, ratio, display, imageSize);
 
 %% Analysis 2: Turn off LCA or use diffraction-limited optics
-% compute optics with 'no lca' / 'diffraction-limit' flag
+% Compute optics with 'no lca' / 'diffraction-limit' flag
 pupilSize = 2.0;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
     'fovealDegree', 0.5, 'display', display, 'pupilSize', pupilSize, ...
@@ -52,12 +52,12 @@ retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, 
 
 testImage = gammaCorrection(reshape(input(1, :, :, :), imageSize), display);
 
-% compute OI and excitation
+% Compute OI and excitation
 retina.compute(testImage);
 retina.visualizeOI();
 retina.visualizeExcitation();
 
-%% change optics, turn off LCA / use diffraction limited optics
+%% Change optics, turn off LCA / use diffraction limited optics
 option = 'diffraction-limit';
 switch option
     case 'no-lca'
@@ -68,21 +68,21 @@ switch option
         error('optics option not valid');
 end
 
-% compute OI and excitation
+% Compute OI and excitation
 retina.compute(testImage);
 retina.visualizeOI();
 retina.visualizeExcitation();
 
-%% change the S cone proportion
+%% Change the S cone proportion
 % and generate the corresponding render matrix
 ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.40, 0.50, 0.60, 0.75, 0.9];
 [~, renderArray] = computeRender(ratio, retina, imageSize);
 
-%% reconstruction
+%% Reconstruction
 regPara = 5e-3;
 output = computeRecon(input, renderArray, prior, regPara, imageSize);
 
-%% show results
+%% Show results
 plotResults(input, output, ratio, display, imageSize);
 
 %% Analysis 3: Turn off LCA, Lens and Macular pigment
@@ -116,7 +116,7 @@ end
 %% Turn off optics
 retina.PSF = ConeResponse.psfDiffLmt(pupilSize);
 
-%% change the optical density of the lens
+%% Change the optical density of the lens
 optics = retina.PSF;
 
 lens0 = oiGet(optics, 'lens');
@@ -130,7 +130,7 @@ lens1 = Lens('wave', wls, ...
     'unitDensity', lensUnitDensity1, 'density', lensPeakDensity1);
 retina.PSF = oiSet(optics, 'lens', lens1);
 
-%% change the macular density
+%% Change the macular density
 macular0 = retina.Mosaic.macular;
 wls = macular0.wave;
 
@@ -144,16 +144,16 @@ retina.Mosaic.macular = macular1;
 pigment = retina.Mosaic.pigment;
 pigment.opticalDensity = [0.2, 0.2, 0.5];
 
-%% change the S cone proportion
+%% Change the S cone proportion
 % and generate the corresponding render matrix
 ratio = [0, 0.01, 0.05, 0.1, 0.25, 0.40, 0.50, 0.60, 0.75, 0.9];
 [~, renderArray] = computeRender(ratio, retina, imageSize);
 
-%% reconstruction
+%% Reconstruction
 regPara = 5e-3;
 output = computeRecon(input, renderArray, prior, regPara, imageSize);
 
-%% show results
+%% Show results
 plotResults(input, output, ratio, display, imageSize);
 
 %% Analysis 4: With two class of cone type
@@ -162,7 +162,7 @@ imageSize = [64, 64, 3];
 display = displayCreate('CRT12BitDisplay');
 prior   = load('sparsePrior.mat');
 
-% generate a cone mosaic
+% Generate a cone mosaic
 % analysis with normal optics
 pupilSize = 3.0;
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
@@ -172,7 +172,7 @@ retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, 
 %% Turn off optics
 % retina.PSF = ConeResponse.psfDiffLmt(pupilSize);
 
-%% load images
+%% Load images
 nImage = 10;
 input = zeros([nImage, imageSize]);
 
@@ -190,22 +190,22 @@ for idx = 1:nImage
     input(idx, :, :, :) = linearImage;
 end
 
-%% change the S cone proportion
+%% Change the S cone proportion
 % and generate the corresponding render matrix
 ratio = [0.0, 0.01, 0.05, 0.1, 0.25, 0.40, 0.50, 0.60, 0.75, 0.9, 0.95];
 [~, renderArray] = computeRenderDichroma(ratio, retina, imageSize, 'noMCone');
 
-% reconstruction
+% Reconstruction
 regPara = 5e-3;
 output = computeRecon(input, renderArray, prior, regPara, imageSize);
 
-%% show results
+%% Show results
 plotResults(input, output, ratio, display, imageSize);
 
 %% Plot RMSE for R/G/B
 rmsePlot(input, output, ratio);
 
-%% helper function for plotting
+%% Helper function for plotting
 % compute render matrix for different cone mosaic
 function [mosaicArray, renderArray] = computeRender(ratio, retina, imageSize)
 retina.resetSCone();
@@ -213,12 +213,12 @@ mosaicArray = cell(1, length(ratio));
 renderArray = cell(1, length(ratio));
 
 for idx = 1:length(ratio)
-    % manipulate the number of S cone in the mosaic
+    % Manipulate the number of S cone in the mosaic
     retina.resetSCone();
     retina.reassignSCone(ratio(idx));
     mosaicArray(idx) = {retina.Mosaic.pattern};
     
-    % generate render matrix for each cone mosaic
+    % Generate render matrix for each cone mosaic
     renderMtx = retina.forwardRender(imageSize, false, true, false);
     renderArray(idx) = {double(renderMtx)};
 end
@@ -230,7 +230,7 @@ mosaicArray = cell(1, length(ratio));
 renderArray = cell(1, length(ratio));
 
 for idx = 1:length(ratio)
-    % manipulate the number of S cone in the mosaic
+    % Manipulate the number of S cone in the mosaic
     retina.resetCone();
     retina.resetSCone();
     retina.reassignSCone(ratio(idx));
@@ -245,13 +245,13 @@ for idx = 1:length(ratio)
     end    
     mosaicArray(idx) = {retina.Mosaic.pattern};
     
-    % generate render matrix for each cone mosaic
+    % Generate render matrix for each cone mosaic
     renderMtx = retina.forwardRender(imageSize, false, true, false);    
     renderArray(idx) = {double(renderMtx)};
 end
 end
 
-% compute image reconstruction for each mosaic
+% Compute image reconstruction for each mosaic
 function output = computeRecon(input, renderArray, prior, regPara, imageSize)
 nImage = size(input, 1);
 output = zeros([length(renderArray), nImage, imageSize]);
@@ -271,10 +271,10 @@ parfor i = 1:length(renderArray)
 end
 end
 
-% compute reconstruct error and show reconstructed images
+% Compute reconstruct error and show reconstructed images
 function plotResults(input, output, ratio, display, imageSize)
 
-% compute RMSE
+% Compute RMSE
 nImage = size(input, 1);
 rmse = zeros([length(ratio), nImage]);
 for i = 1:length(ratio)
@@ -285,12 +285,12 @@ for i = 1:length(ratio)
     end
 end
 
-% plot RMSE
+% Plot RMSE
 figure();
 errorbar(ratio, mean(rmse, 2), std(rmse, 0, 2) / sqrt(nImage), '--ok', 'LineWidth', 2);
 grid off; box off; hold on;
 
-% show original images
+% Show original images
 figure();
 plotAxis = tight_subplot(length(ratio) + 1, nImage, [.01 .01], [.01 .01], [.01 .01]);
 for idx = 1:nImage
@@ -300,7 +300,7 @@ for idx = 1:nImage
     imshow(image, 'InitialMagnification', 200);
 end
 
-% show reconstructed images
+% Show reconstructed images
 for i = 1:length(ratio)
     for j = 1:nImage
         image = reshape(output(i, j, :, :, :), imageSize);

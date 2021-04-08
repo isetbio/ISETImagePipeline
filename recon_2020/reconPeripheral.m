@@ -2,6 +2,7 @@
 display = displayCreate('CRT12BitDisplay');
 
 % Generate cone mosaic - [eccX, eccY] deg ecc
+% with the new cone mosaic (cMosaic class)
 eccX = 18.0; eccY = 18.0;
 retina = ConeResponseCmosaic...
     (eccX, eccY, 'fovealDegree', 1.0, 'pupilSize', 3.0, 'subjectID', 6);
@@ -15,7 +16,7 @@ imageSize = [128, 128, 3];
 image = im2double(imread('images/2.jpeg'));
 image = imresize(image, imageSize(1) / size(image, 1));
 
-% normalize to insure pixels are in the range of [0, 1]
+% Normalize to insure pixels are in the range of [0, 1]
 image = (image - min(image(:)));
 image = image ./ max(image(:));
 

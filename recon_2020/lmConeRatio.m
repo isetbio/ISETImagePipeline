@@ -1,17 +1,17 @@
 % Effect of L/M Cone Proportion on Image Reconstruction
 
-%% define constant
+%% Define constant
 imageSize = [64, 64, 3];
 display = displayCreate('CRT12BitDisplay');
 prior   = load('sparsePrior.mat');
 ratio   = [0, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95, 0.99, 1.0];
 
-%% generate a cone mosaic
-% analysis with normal optics
+%% Generate a cone mosaic
+% Analysis with normal optics
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
     'fovealDegree', 0.5, 'display', display, 'pupilSize', 2.5);
 
-%% load images
+%% Load images
 nImage = 10;
 input = zeros([nImage, imageSize]);
 
@@ -29,12 +29,13 @@ for idx = 1:nImage
     input(idx, :, :, :) = linearImage;
 end
 
-%% manipulate the number of cones
+%% Manipulate the number of cones
 % and generate the corresponding render matrix
 mosaicArray = cell(1, length(ratio));
 renderArray = cell(1, length(ratio));
 
 for idx = 1:length(ratio)
+    % Change the cone ratio of the mosaic using "reassign_" function
     if ratio(idx) < 0.95
         retina.reassignLCone(0.0, false);
         retina.reassignMCone(ratio(idx), true);
@@ -48,15 +49,16 @@ for idx = 1:length(ratio)
     renderArray(idx) = {double(renderMtx)};
 end
 
-%% run reconstruction
+%% Run reconstruction
 regPara = 5e-4;
 output = computeRecon(input, renderArray, prior, regPara, imageSize);
 
-%% show results
+%% Show results
 plotResults(input, output, ratio, display, imageSize);
 
-%% helper function
-% compute image reconstruction for each mosaic
+%% Helper function
+% Compute image reconstruction for each mosaic
+% See "imageRecon.mlx" for basics of reconstruction
 function output = computeRecon(input, renderArray, prior, regPara, imageSize)
 nImage = size(input, 1);
 output = zeros([length(renderArray), nImage, imageSize]);
@@ -76,10 +78,10 @@ parfor i = 1:length(renderArray)
 end
 end
 
-% compute reconstruct error and show reconstructed images
+% Compute reconstruct error and show reconstructed images
 function plotResults(input, output, ratio, display, imageSize)
 
-% compute RMSE
+% Compute RMSE
 nImage = size(input, 1);
 rmse = zeros([length(ratio), nImage]);
 for i = 1:length(ratio)
@@ -90,24 +92,25 @@ for i = 1:length(ratio)
     end
 end
 
-% plot RMSE
+% Plot RMSE
 figure();
 errorbar(ratio, mean(rmse, 2), std(rmse, 0, 2) / sqrt(nImage), '--ok', 'LineWidth', 2);
 
 xticks(ratio);
 grid off; box off; hold on;
 
-% show original images
+% Show original images
 figure();
 plotAxis = tight_subplot(length(ratio) + 1, nImage, [.01 .01], [.01 .01], [.01 .01]);
 for idx = 1:nImage
+    
     image = reshape(input(idx, :, :, :), imageSize);
     image = gammaCorrection(image, display);
     axes(plotAxis(idx));
     imshow(image, 'InitialMagnification', 200);
 end
 
-% show reconstructed images
+% Show reconstructed images
 for i = 1:length(ratio)
     for j = 1:nImage
         image = reshape(output(i, j, :, :, :), imageSize);
