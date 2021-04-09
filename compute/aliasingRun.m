@@ -56,7 +56,6 @@ diffPupil = 10.0;
 retina.PSF = ConeResponse.psfDiffLmt(diffPupil);
 
 %% Run reconstruction with special scene
-% stimFreq = [2, 6, 12, 16, 20, 25, 32, 64, 96, 128];
 stimFreq = [8, 16, 32, 64, 96, 128];
 rmsContrast = 1.0;
 chromaDir = [1.0, 1.0, 1.0]';
@@ -69,7 +68,7 @@ for idx = 1:length(stimFreq)
     gratingScene = ...
         createGratingScene(chromaDir, stimFreq(idx), 'fovDegs', fovDegs, 'pixelsNum', 2048);
     
-    crst = 0.50;
+    crst = 1.0;
     [theSceneSequence, ~] = gratingScene.compute(crst);
     scene = theSceneSequence{:};
     
@@ -77,9 +76,7 @@ for idx = 1:length(stimFreq)
     scene.data.photons(:, :, (scene.spectrum.wave ~= 620 & scene.spectrum.wave ~= 640)) = 0.0;
     
     % Compute response from scene
-    allCone = retina.computeWithScene(scene);
-    % visualizeOpticalImage(retina.LastOI, 'displayRadianceMaps', true, ...
-    %    'displayRetinalContrastProfiles', true);
+    [~, allCone] = retina.computeWithScene(scene);
     
     reconImage = ...
         estimator.runEstimate(allCone, 'maxIter', 150, ...
@@ -223,7 +220,7 @@ for idx = 1:length(stimFreq)
     crst = 0.20;
     [theSceneSequence, ~] = gratingScene.compute(crst);
     scene = theSceneSequence{:};
-            
+    
     % Compute response from scene
     allCone = retina.computeWithScene(scene);
     % visualizeOpticalImage(retina.LastOI, 'displayRadianceMaps', true, ...
