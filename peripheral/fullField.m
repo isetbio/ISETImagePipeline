@@ -1,6 +1,6 @@
 %% Compute reconstruction from a LARGE field
-eccX = -1.5 : 1 : 15.5;
-eccY = 9.5 : -1 : -1.5;
+eccX = 0.5 : 1 : 14.5;
+eccY = 14.5 : -1 : 0.5;
 
 imgEdge = 100;
 imageSize = [imgEdge, imgEdge, 3];
@@ -9,45 +9,43 @@ numX = length(eccX);
 numY = length(eccY);
 
 display = displayCreate('CRT12BitDisplay');
-prior = load('../sparsePrior.mat');
+prior = load('./sparsePrior.mat');
 
-input = imresize(im2double(imread('./imgLarge.jpg')), 1/3);
-input = input(1:numY * imgEdge, 1:numX * imgEdge, :);
+input = load('./largeLinear.mat');
+input = input.inputLinear;
 
 output = zeros(size(input));
-
-for idx = 1 : numX
-    for idy = 1 : numY       
-        inputPatch = input(cvtIdx(idy, imgEdge), cvtIdx(idx, imgEdge), :);
-        imshow(inputPatch, 'InitialMagnification', 600);
-        pause(1);
+for idx = 1 : nStep
+    renderArray = cell(1, numY);
+    outputArray = cell(1, numY);
+    
+    for idy = 1 : nStep
+        retina = ConeResponseCmosaic...
+            (eccX(idx), eccY(idy), 'fovealDegree', 1.0, 'pupilSize', 3.0, 'subjectID', 9);
+        
+        render = retina.forwardRender(imageSize, false, false);
+        renderArray{idy} = double(render);
     end
+    
+    parfor idy = 1 : nStep        
+        regPara = 1.5e-3; stride = 4;
+        estimator = PoissonSparseEstimator...
+            (renderArray{idy}, inv(prior.regBasis), prior.mu', regPara, stride, imageSize);
+        
+        inputPatch = input(cvtIdx(idy, imgEdge), cvtIdx(idx, imgEdge), :);
+        
+        response = render * inputPatch(:);
+        recon = estimator.runEstimate(response, 'maxIter', 500, 'display', 'off');
+        
+        outputArray{idy} = gammaCorrection(recon, display);
+    end
+    
+    for idy = 1 : nStep
+        output(cvtIdx(idy, imgEdge), cvtIdx(idx, imgEdge), :) = outputArray{idy};
+    end
+    
+    fprintf('x: %d \n', idx);
 end
-
-% output = zeros(size(input));
-% for idx = 1 : nStep
-%     for idy = 1 : nStep
-%         retina = ConeResponseCmosaic...
-%             (eccX(idx), eccY(idy), 'fovealDegree', 1.0, 'pupilSize', 3.0, 'subjectID', 9);
-%         
-%         render = retina.forwardRender(imageSize, false, false);        
-%         render = double(render);
-%         
-%         regPara = 2e-3; stride = 4;
-%         estimator = PoissonSparseEstimator...
-%             (render, inv(prior.regBasis), prior.mu', regPara, stride, imageSize);
-%         
-%         inputPatch = input(cvtIdx(idx, imgEdge), cvtIdx(idy, imgEdge), :);
-%         
-%         response = render * inputPatch(:);
-%         recon = estimator.runEstimate(response, 'maxIter', 500, 'display', 'off');        
-%         
-%         output(cvtIdx(idx, imgEdge), cvtIdx(idy, imgEdge), :) = ...
-%             gammaCorrection(recon, display);
-%         
-%         fprintf('x: %d, y: %d \n', idx, idy);
-%     end
-% end
 
 %% Helper function
 function index = cvtIdx(index, step)
