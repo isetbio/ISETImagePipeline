@@ -46,7 +46,7 @@ for idx = 1 : numX
         output(cvtIdx(idy, imgEdge), cvtIdx(idx, imgEdge), :) = outputArray{idy};
     end
     
-    fprintf('x: %d / %d \n', idx, numX);
+    fprintf('Current x: %d / %d \n', idx, numX);
 end
 
 %% Helper function
