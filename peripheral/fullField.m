@@ -57,7 +57,7 @@ for idx = 1 : numX
     
     fprintf('Finished render matrix calculation \n');
     
-    for idy = 1 : numY
+    parfor idy = 1 : numY
         regPara = 1.5e-3; stride = 4; render = renderArray{idy};
         estimator = PoissonSparseEstimator...
             (render, inv(prior.regBasis), prior.mu', regPara, stride, imageSize);
