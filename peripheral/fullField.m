@@ -49,18 +49,18 @@ for idx = 1 : numX
             retina = ConeResponseCmosaic...
                 (eccX(idx), eccY(idy), 'fovealDegree', fovDegs, 'pupilSize', 3.0, 'subjectID', 9);
             
-            render = retina.forwardRender(imageSize, false, false);            
+            render = retina.forwardRender(imageSize, false, false);
             renderArray{idy} = double(render);
         end
-        save(fileName, 'renderArray');
+        save(fileName, 'renderArray', '-v7.3');
     end
-        
+    
     fprintf('Finished render matrix calculation \n');
     
     for idy = 1 : numY
-        regPara = 1.5e-3; stride = 4;
+        regPara = 1.5e-3; stride = 4; render = renderArray{idy};
         estimator = PoissonSparseEstimator...
-            (renderArray{idy}, inv(prior.regBasis), prior.mu', regPara, stride, imageSize);
+            (render, inv(prior.regBasis), prior.mu', regPara, stride, imageSize);
         
         startY = (idy - 1) * imgEdge + 1;
         endY = startY + imgEdge - 1;
@@ -68,7 +68,7 @@ for idx = 1 : numX
         inputPatch = input(startY:endY, startX:endX, :);
         
         response = render * inputPatch(:);
-        recon = estimator.runEstimate(response, 'maxIter', 500, 'display', 'off');        
+        recon = estimator.runEstimate(response, 'maxIter', 500, 'display', 'off');
         
         outputArray{idy} = gammaCorrection(recon, display);
     end
@@ -78,7 +78,7 @@ for idx = 1 : numX
         endY = startY + imgEdge - 1;
         
         output(startY:endY, startX:endX, :) = outputArray{idy};
-    end    
+    end
     fprintf('Current x: %d / %d \n', idx, numX);
 end
 
