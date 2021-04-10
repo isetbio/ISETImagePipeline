@@ -1,9 +1,25 @@
 %% Compute reconstruction from a LARGE field
+% Setup constants
 tbUseProject('ISETImagePipeline');
 cd ./peripheral;
 
-eccX = 0.5 : 1 : 14.5;
-eccY = 14.5 : -1 : 0.5;
+cond = 2;
+switch cond
+    case 1
+        
+        eccX = 0.5 : 1 : 14.5;
+        eccY = 14.5 : -1 : 0.5;
+        fovDegs = 1.0;
+        
+    case 2
+        
+        eccX = 5 : 2 : 15;
+        eccY = 15 : -2 : 5;
+        fovDegs = 2.0;
+        
+    otherwise
+        error('Invalid Condition');
+end
 
 imgEdge = 100;
 imageSize = [imgEdge, imgEdge, 3];
@@ -16,7 +32,9 @@ prior = load('./sparsePrior.mat');
 
 input = load('./largeLinear.mat');
 input = input.inputLinear;
+input = imresize(input, imgEdge * numX / size(input, 1));
 
+%% Run computation
 output = zeros(size(input));
 for idx = 1 : numX
     renderArray = cell(1, numY);
@@ -27,7 +45,7 @@ for idx = 1 : numX
     
     for idy = 1 : numY
         retina = ConeResponseCmosaic...
-            (eccX(idx), eccY(idy), 'fovealDegree', 1.0, 'pupilSize', 3.0, 'subjectID', 9);
+            (eccX(idx), eccY(idy), 'fovealDegree', fovDegs, 'pupilSize', 3.0, 'subjectID', 9);
         
         render = retina.forwardRender(imageSize, false, false);
         renderArray{idy} = double(render);
