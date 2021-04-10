@@ -15,11 +15,11 @@ input = load('./largeLinear.mat');
 input = input.inputLinear;
 
 output = zeros(size(input));
-for idx = 1 : nStep
+for idx = 1 : numX
     renderArray = cell(1, numY);
     outputArray = cell(1, numY);
     
-    for idy = 1 : nStep
+    for idy = 1 : numY
         retina = ConeResponseCmosaic...
             (eccX(idx), eccY(idy), 'fovealDegree', 1.0, 'pupilSize', 3.0, 'subjectID', 9);
         
@@ -27,7 +27,9 @@ for idx = 1 : nStep
         renderArray{idy} = double(render);
     end
     
-    parfor idy = 1 : nStep        
+    fprintf('Finished render matrix calculation \n');
+    
+    parfor idy = 1 : numY        
         regPara = 1.5e-3; stride = 4;
         estimator = PoissonSparseEstimator...
             (renderArray{idy}, inv(prior.regBasis), prior.mu', regPara, stride, imageSize);
@@ -40,11 +42,11 @@ for idx = 1 : nStep
         outputArray{idy} = gammaCorrection(recon, display);
     end
     
-    for idy = 1 : nStep
+    for idy = 1 : numY
         output(cvtIdx(idy, imgEdge), cvtIdx(idx, imgEdge), :) = outputArray{idy};
     end
     
-    fprintf('x: %d \n', idx);
+    fprintf('x: %d / %d \n', idx, numX);
 end
 
 %% Helper function
