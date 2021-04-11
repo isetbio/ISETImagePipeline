@@ -1,4 +1,6 @@
-%% Compute reconstruction from a LARGE field
+function fullField(inputID)
+
+% Compute reconstruction from a LARGE field
 % Setup constants
 tbUseProject('ISETImagePipeline');
 cd ./peripheral;
@@ -26,11 +28,14 @@ numY = length(eccY);
 display = displayCreate('CRT12BitDisplay');
 prior = load('./sparsePrior.mat');
 
-input = load('./largeLinear0.mat');
+inName = strcat('./largeLinear', num2str(inputID), '.mat');
+fprintf(inName); fprint('\n');
+
+input = load(inName);
 input = input.input;
 input = imresize(input, imgEdge * numX / size(input, 1));
 
-%% Run computation
+% Run computation
 output = zeros(size(input));
 for idx = 1 : numX
     renderArray = cell(1, numY);
@@ -82,4 +87,7 @@ for idx = 1 : numX
     fprintf('Current x: %d / %d \n', idx, numX);
 end
 
-save result.mat input output;
+saveName = strcat('result', num2str(inputID), '.mat');
+save(saveName, 'input', 'output');
+
+end
