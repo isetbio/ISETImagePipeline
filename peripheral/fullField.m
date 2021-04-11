@@ -29,7 +29,7 @@ display = displayCreate('CRT12BitDisplay');
 prior = load('./sparsePrior.mat');
 
 inName = strcat('./largeLinear', num2str(inputID), '.mat');
-fprintf(inName); fprint('\n');
+fprintf(inName); fprintf('\n');
 
 input = load(inName);
 input = input.input;
