@@ -6,8 +6,8 @@
 wave = manData.wave;
 assert(sum(wave ~= harData.wave) == 0);
 
-imageSize = [18, 18, length(wave)];
-edge = imageSize(1);
+imageSize = [128, 128, length(wave)];
+edge = imageSize(1); target = 18;
 nImage = 1e4;
 
 count = 1;
@@ -35,7 +35,7 @@ for idx = 1 : length(harData.image)
     [h, w, d] = size(image);
     
     assert(d == length(wave));
-    nSample = floor(sqrt(h * w / (edge ^ 2)));
+    nSample = floor(sqrt(h * w / (target ^ 2)));
     
     for idj = 1 : nSample
         hIdx = randi(h - edge + 1);
@@ -47,7 +47,27 @@ for idx = 1 : length(harData.image)
     end
 end
 
+normFactor = max(samples(:));
 samples = samples(1:count-1, :, :, :);
+samples = samples ./ normFactor;
+
+%% Resize
+newSample = zeros([count - 1, target, target, length(wave)]);
+
+for idx = 1:size(samples, 1)
+    image = reshape(samples(idx, :, :, :), imageSize);
+    resized = zeros([target, target, length(wave)]);
+    for idj = 1:length(wave)
+        plane = reshape(image(:, :, idj), imageSize(1:2));
+        resized(:, :, idj) = imresize(plane, target / imageSize(1));
+    end
+    newSample(idx, :, :, :) = resized;
+end
+
+samples = newSample * normFactor;
+
+%% Process samples
+imageSize = [target, target, length(wave)];
 meanLevel = mean(samples(:)) * 2;
 
 % Histogram equalization
@@ -61,13 +81,15 @@ scene = sceneCreate('whitenoise');
 scene.spectrum.wave = wave;
 figure();
 
-nShow = 50;
+nShow = 200;
 for idx = 1 : nShow
     image = equalized(randi(count - 1), :, : , :);
     image = reshape(image, imageSize);
     
     scene.data.photons = image * meanLevel;
     imshow(sceneGet(scene, 'rgbimage'), 'InitialMagnification', 1e3);
+    
+    pause(0.25);
 end
 
 %% PCA Analysis
@@ -260,7 +282,7 @@ xlabel('L Cone Ratio'); ylabel('RSS, Hyperspectral');
 %% IV. S Cone ratio
 ratio = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95];
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.50, 'display', displayCreate('CRT12BitDisplay'));
+    'fovealDegree', 0.25, 'display', displayCreate('CRT12BitDisplay'));
 
 retina.resetSCone();
 mosaicArray = cell(1, length(ratio));
