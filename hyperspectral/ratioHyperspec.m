@@ -80,7 +80,7 @@ regBasis    = pcaBasis * scaleMatrix;
 %% I. Test run with basic reconstruction
 % Create mosaic
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.5, 'display', displayCreate('CRT12BitDisplay'));
+    'fovealDegree', 0.25, 'display', displayCreate('CRT12BitDisplay'));
 
 retina.visualizeMosaic();
 
@@ -146,6 +146,10 @@ figure();
 plot(log10(regPara), rss, '-ok');
 
 %% II. Render matrix for different cone mosaic
+% Create mosaic
+retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
+    'fovealDegree', 0.25, 'display', displayCreate('CRT12BitDisplay'));
+
 % Cone ratio manipulation
 retina.resetCone();
 retina.resetSCone();
@@ -217,7 +221,7 @@ for idx = 1 : nMosaic
     estimator = RidgeGaussianEstimator(render, regBasis, mu');
     estimator.setLambda(1e-3);
     
-    for idj = 1 : nImage
+    parfor idj = 1 : nImage
         input  = inputSet(idj, :);
         cone   = input * render';
         output = estimator.estimate(cone);
@@ -227,6 +231,17 @@ for idx = 1 : nMosaic
 end
 
 %% Plot RSS and SEM
+% Figure format
+try 
+    plotlabOBJ = plotlab();
+    plotlabOBJ.applyRecipe(...
+        'figureWidthInches', 15, ...
+        'figureHeightInches', 10);
+catch EXP
+    fprintf('plotlab not available, use default MATLAB style \n');
+end
+
+%% Plot
 figure();
 meanRSS = mean(rss, 2);
 stdRSS  = std(rss, 0, 2);
