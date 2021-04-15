@@ -48,7 +48,7 @@ for idx = 1 : length(harData.image)
 end
 
 samples = samples(1:count-1, :, :, :);
-meanLevel = mean(samples(:));
+meanLevel = mean(samples(:)) * 2;
 
 % Histogram equalization
 [f, x] = ecdf(samples(:)); [x, ia] = unique(x); f = f(ia);
@@ -61,7 +61,7 @@ scene = sceneCreate('whitenoise');
 scene.spectrum.wave = wave;
 figure();
 
-nShow = 5e2;
+nShow = 50;
 for idx = 1 : nShow
     image = equalized(randi(count - 1), :, : , :);
     image = reshape(image, imageSize);
@@ -77,15 +77,17 @@ imgData = reshape(equalized, [size(samples, 1), prod(imageSize)]);
 scaleMatrix = diag(sqrt(pcaVar));
 regBasis    = pcaBasis * scaleMatrix;
 
-%% Create mosaic
+%% I. Test run with basic reconstruction
+% Create mosaic
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
     'fovealDegree', 0.5, 'display', displayCreate('CRT12BitDisplay'));
 
 retina.visualizeMosaic();
 
-% Test Run
+%% Test Run
+imageID = randi(count - 1);
 allCone = retina.computeHyperspectral...
-    (wave, meanLevel, reshape(equalized(1, :, :, :), imageSize));
+    (wave, meanLevel, reshape(equalized(imageID, :, :, :), imageSize));
 retina.visualizeExcitation();
 
 %% Compute render matrix
@@ -93,8 +95,140 @@ renderMtx = retina.hyperRender(imageSize, wave, meanLevel, true);
 renderMtx = double(renderMtx);
 
 %% Validate render matrix
-input = equalized(1, :, :, :);
+input = equalized(imageID, :, :, :);
 coneVec = renderMtx * input(:);
 
 scatter(coneVec, allCone);
 axis equal; axis square;
+
+%% Reconstruction routine
+estimator = RidgeGaussianEstimator(renderMtx, regBasis, mu');
+estimator.setLambda(1e-3);
+
+recon = estimator.estimate(coneVec');
+
+%% Show results
+scene = sceneCreate('whitenoise');
+scene.spectrum.wave = wave;
+
+figure(); subplot(1, 2, 1);
+scene.data.photons = reshape(input, imageSize) * meanLevel;
+imshow(sceneGet(scene, 'rgbimage'), 'InitialMagnification', 1e3);
+
+scene.data.photons = reshape(input, imageSize) * meanLevel;
+
+subplot(1, 2, 2);
+scene.data.photons = reshape(recon, imageSize) * meanLevel;
+imshow(sceneGet(scene, 'rgbimage'), 'InitialMagnification', 1e3);
+
+%% Cross validation
+nTest = 20;
+imageID = randi(count - 1, [50, 1]);
+testInput = equalized(imageID, :, :, :);
+
+regPara = [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10];
+rss = zeros(size(regPara));
+
+estimator = RidgeGaussianEstimator(renderMtx, regBasis, mu');
+for idx = 1:length(regPara)
+    estimator.setLambda(regPara(idx));
+    
+    for idj = 1:nTest
+        input = testInput(idj, :);
+        cone  = input * renderMtx';
+        output = estimator.estimate(cone);
+        
+        rss(idx) = rss(idx) + norm(input - output);
+    end
+end
+
+figure();
+plot(log10(regPara), rss, '-ok');
+
+%% II. Render matrix for different cone mosaic
+% Cone ratio manipulation
+retina.resetCone();
+retina.resetSCone();
+retina.reassignSCone(0.05);
+[L, M, S] = retina.coneCount();
+fprintf('Number of cones: L - %d, M - %d, S - %d \n', L, M, S);
+
+% Manipulation of M cone ratio
+ratio = [0.3, 0.2, 0.15, 0.10, 0.05, 0.01, 0.001, 0];
+mosaicArray = cell(1, length(ratio));
+renderArray = cell(1, length(ratio));
+
+for idx = 1:length(ratio)
+    fprintf('M Cone Ratio: %.4f \n', ratio(idx));
+    retina.reassignMCone(ratio(idx));
+    mosaicArray(idx) = {retina.Mosaic.pattern};
+    
+    % Generate render matrix for each cone mosaic
+    renderMtx = retina.hyperRender(imageSize, wave, meanLevel, false);
+    renderArray(idx) = {renderMtx};
+end
+
+% Reset cone ratio
+retina.resetCone();
+retina.resetSCone();
+retina.reassignSCone(0.05);
+[L, M, S] = retina.coneCount();
+fprintf('Number of cones: L - %d, M - %d, S - %d \n', L, M, S);
+
+% Manipulation of L cone ratio
+ratio = [0.6, 0.4, 0.2, 0.1, 0.05, 0.01, 0.001, 0];
+mosaicArray_L = cell(1, length(ratio));
+renderArray_L = cell(1, length(ratio));
+
+for idx = 1:length(ratio)
+    fprintf('L Cone Ratio: %.4f \n', ratio(idx));
+    retina.reassignLCone(ratio(idx));
+    mosaicArray_L(idx) = {retina.Mosaic.pattern};
+    
+    % Generate render matrix for each cone mosaic
+    renderMtx = retina.hyperRender(imageSize, wave, meanLevel, false);
+    renderArray_L(idx) = {renderMtx};
+end
+
+% All mosaic and render matrix
+allMosaic = cat(2, flip(mosaicArray_L), mosaicArray);
+allRender = cat(2, flip(renderArray_L), renderArray);
+allRatio  = cat(2, flip([0.6, 0.4, 0.2, 0.1, 0.05, 0.01, 0.001, 0]), ...
+    1 - [0.3, 0.2, 0.15, 0.10, 0.05, 0.01, 0.001, 0]);
+
+for idx = 1:length(allMosaic)
+    retina.Mosaic.pattern = allMosaic{idx};
+    retina.visualizeMosaic();
+end
+
+%% III. RSS as function of cone ratio
+nMosaic = length(allRatio);
+nImage  = 100;
+
+imageID = randi(count - 1, [nImage, 1]);
+inputSet = equalized(imageID, :, :, :);
+
+rss = zeros(nMosaic, nImage);
+
+for idx = 1 : nMosaic
+    fprintf('Run ID %d \n', idx);
+    render = double(allRender{idx});
+    
+    estimator = RidgeGaussianEstimator(render, regBasis, mu');
+    estimator.setLambda(1e-3);
+    
+    for idj = 1 : nImage
+        input  = inputSet(idj, :);
+        cone   = input * render';
+        output = estimator.estimate(cone);
+        
+        rss(idx, idj) = norm(input - output);
+    end
+end
+
+%% Plot RSS and SEM
+figure();
+meanRSS = mean(rss, 2);
+stdRSS  = std(rss, 0, 2);
+
+errorbar(allRatio, meanRSS, stdRSS / sqrt(nImage), '-ok', 'LineWidth', 2);
