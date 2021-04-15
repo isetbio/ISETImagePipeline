@@ -53,6 +53,8 @@ There are many other scripts and functions in this repo, most of them are either
     ├── spatialCSF_Cone.m   # CSF simulation for Poisson ideal observer based on cone excitation 
     ├── spatialCSF_Recon.m  # CSF simulation for our image reconstruction based observer
     ├── ...
+├── hyperspectral
+    ├── ratioHyperspec.m    # Image reconstruction and cone ratio analysis with hyperspectral images
 ...
 ```
 
