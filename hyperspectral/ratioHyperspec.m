@@ -77,16 +77,24 @@ imgData = reshape(equalized, [size(samples, 1), prod(imageSize)]);
 scaleMatrix = diag(sqrt(pcaVar));
 regBasis    = pcaBasis * scaleMatrix;
 
-%% Compute render matrix
+%% Create mosaic
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
     'fovealDegree', 0.5, 'display', displayCreate('CRT12BitDisplay'));
 
 retina.visualizeMosaic();
 
 % Test Run
-% allCone = retina.computeHyperspectral...
-%     (reshape(equalized(1, :, :, :) * meanLevel, imageSize), wave);
-% retina.visualizeExcitation();
+allCone = retina.computeHyperspectral...
+    (wave, meanLevel, reshape(equalized(1, :, :, :), imageSize));
+retina.visualizeExcitation();
 
+%% Compute render matrix
+renderMtx = retina.hyperRender(imageSize, wave, meanLevel, true);
+renderMtx = double(renderMtx);
 
+%% Validate render matrix
+input = equalized(1, :, :, :);
+coneVec = renderMtx * input(:);
 
+scatter(coneVec, allCone);
+axis equal; axis square;
