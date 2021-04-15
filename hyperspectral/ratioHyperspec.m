@@ -320,7 +320,7 @@ figure();
 meanRSS = mean(rss, 2);
 stdRSS  = std(rss, 0, 2);
 
-errorbar(allRatio(plotIdx), meanRSS(plotIdx), ...
+errorbar(ratio(plotIdx), meanRSS(plotIdx), ...
     stdRSS(plotIdx) / sqrt(nImage), '-ok', 'LineWidth', 2);
 
 box off; grid off;
