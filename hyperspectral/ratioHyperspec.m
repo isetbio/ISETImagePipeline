@@ -219,7 +219,7 @@ for idx = 1 : nMosaic
     render = double(allRender{idx});
     
     estimator = RidgeGaussianEstimator(render, regBasis, mu');
-    estimator.setLambda(1e-3);
+    estimator.setLambda(1e-2);
     
     parfor idj = 1 : nImage
         input  = inputSet(idj, :);
@@ -242,8 +242,89 @@ catch EXP
 end
 
 %% Plot
+plotIdx = [1, 5:10, 12, 16];
+
 figure();
 meanRSS = mean(rss, 2);
 stdRSS  = std(rss, 0, 2);
 
-errorbar(allRatio, meanRSS, stdRSS / sqrt(nImage), '-ok', 'LineWidth', 2);
+errorbar(allRatio(plotIdx), meanRSS(plotIdx), ...
+    stdRSS(plotIdx) / sqrt(nImage), '-ok', 'LineWidth', 2);
+
+box off; grid off;
+yticks(2 : 0.5 : 4);
+ylim([2, 4]);
+
+xlabel('L Cone Ratio'); ylabel('RSS, Hyperspectral');
+
+%% IV. S Cone ratio
+ratio = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95];
+retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
+    'fovealDegree', 0.50, 'display', displayCreate('CRT12BitDisplay'));
+
+retina.resetSCone();
+mosaicArray = cell(1, length(ratio));
+renderArray = cell(1, length(ratio));
+
+for idx = 1:length(ratio)
+    % Manipulate the number of S cone in the mosaic
+    retina.resetSCone();
+    retina.reassignSCone(ratio(idx));
+    mosaicArray(idx) = {retina.Mosaic.pattern};
+    
+    % Generate render matrix for each cone mosaic
+    renderMtx = retina.hyperRender(imageSize, wave, meanLevel, false);    
+    renderArray(idx) = {double(renderMtx)};
+end
+
+%% Run reconstruction
+nMosaic = length(ratio);
+nImage  = 100;
+
+imageID = randi(count - 1, [nImage, 1]);
+inputSet = equalized(imageID, :, :, :);
+
+rss = zeros(nMosaic, nImage);
+
+for idx = 1 : nMosaic
+    fprintf('Run ID %d \n', idx);
+    render = double(renderArray{idx});
+    
+    estimator = RidgeGaussianEstimator(render, regBasis, mu');
+    estimator.setLambda(1e-2);
+    
+    parfor idj = 1 : nImage
+        input  = inputSet(idj, :);
+        cone   = input * render';
+        output = estimator.estimate(cone);
+        
+        rss(idx, idj) = norm(input - output);
+    end
+end
+
+%% Plot RSS and SEM
+% Figure format
+try 
+    plotlabOBJ = plotlab();
+    plotlabOBJ.applyRecipe(...
+        'figureWidthInches', 15, ...
+        'figureHeightInches', 10);
+catch EXP
+    fprintf('plotlab not available, use default MATLAB style \n');
+end
+
+%% Plot
+plotIdx = 1 : nMosaic;
+
+figure();
+meanRSS = mean(rss, 2);
+stdRSS  = std(rss, 0, 2);
+
+errorbar(allRatio(plotIdx), meanRSS(plotIdx), ...
+    stdRSS(plotIdx) / sqrt(nImage), '-ok', 'LineWidth', 2);
+
+box off; grid off;
+yticks(2 : 0.5 : 4);
+ylim([2, 4]);
+
+xlabel('S Cone Ratio'); ylabel('RSS, Hyperspectral');
