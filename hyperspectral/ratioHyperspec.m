@@ -6,7 +6,7 @@
 wave = manData.wave;
 assert(sum(wave ~= harData.wave) == 0);
 
-imageSize = [16, 16, length(wave)];
+imageSize = [18, 18, length(wave)];
 edge = imageSize(1);
 nImage = 1e4;
 
@@ -78,4 +78,15 @@ scaleMatrix = diag(sqrt(pcaVar));
 regBasis    = pcaBasis * scaleMatrix;
 
 %% Compute render matrix
+retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
+    'fovealDegree', 0.5, 'display', displayCreate('CRT12BitDisplay'));
+
+retina.visualizeMosaic();
+
+% Test Run
+% allCone = retina.computeHyperspectral...
+%     (reshape(equalized(1, :, :, :) * meanLevel, imageSize), wave);
+% retina.visualizeExcitation();
+
+
 
