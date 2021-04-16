@@ -170,7 +170,7 @@ plot(log10(regPara), rss, '-ok');
 %% II. Render matrix for different cone mosaic
 % Create mosaic
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.25, 'display', displayCreate('CRT12BitDisplay'));
+    'fovealDegree', 0.15, 'display', displayCreate('CRT12BitDisplay'));
 
 % Cone ratio manipulation
 retina.resetCone();
@@ -229,7 +229,7 @@ end
 
 %% III. RSS as function of cone ratio
 nMosaic = length(allRatio);
-nImage  = 100;
+nImage  = 320;
 
 imageID = randi(count - 1, [nImage, 1]);
 inputSet = equalized(imageID, :, :, :);
@@ -264,7 +264,7 @@ catch EXP
 end
 
 %% Plot
-plotIdx = [1, 5:10, 12, 16];
+plotIdx = 1:16;
 
 figure();
 meanRSS = mean(rss, 2);
@@ -274,15 +274,14 @@ errorbar(allRatio(plotIdx), meanRSS(plotIdx), ...
     stdRSS(plotIdx) / sqrt(nImage), '-ok', 'LineWidth', 2);
 
 box off; grid off;
-yticks(2 : 0.5 : 4);
-ylim([2, 4]);
+yticks(2.5 : 0.5 : 5);
 
 xlabel('L Cone Ratio'); ylabel('RSS, Hyperspectral');
 
 %% IV. S Cone ratio
-ratio = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95];
+ratio = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99];
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.25, 'display', displayCreate('CRT12BitDisplay'));
+    'fovealDegree', 0.15, 'display', displayCreate('CRT12BitDisplay'));
 
 retina.resetSCone();
 mosaicArray = cell(1, length(ratio));
@@ -301,7 +300,7 @@ end
 
 %% Run reconstruction
 nMosaic = length(ratio);
-nImage  = 100;
+nImage  = 320;
 
 imageID = randi(count - 1, [nImage, 1]);
 inputSet = equalized(imageID, :, :, :);
@@ -336,7 +335,7 @@ catch EXP
 end
 
 %% Plot
-plotIdx = 1 : nMosaic;
+plotIdx = 1:length(ratio);
 
 figure();
 meanRSS = mean(rss, 2);
