@@ -345,7 +345,7 @@ errorbar(ratio(plotIdx), meanRSS(plotIdx), ...
     stdRSS(plotIdx) / sqrt(nImage), '-ok', 'LineWidth', 2);
 
 box off; grid off;
-yticks(2 : 0.5 : 4);
-ylim([2, 4]);
+yticks(2.5 : 0.5 : 4.5);
+ylim([2.5, 4.5]);
 
 xlabel('S Cone Ratio'); ylabel('RSS, Hyperspectral');
