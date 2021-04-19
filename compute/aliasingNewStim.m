@@ -2,12 +2,12 @@
 display = displayCreate('CRT12BitDisplay');
 
 stimPixel = 1024;
-spatialFreq = 300;
-ratio = 5;
+spatialFreq = 6;
+ratio = 1;
 nCycle = spatialFreq / ratio;
 
 average = 0.5;
-amplitude = 0.25;
+amplitude = 0.5;
 
 stim = createStim(nCycle, average, amplitude, stimPixel, display);
 imshow(stim, 'InitialMagnification', 100);
@@ -23,8 +23,8 @@ retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, 
     'fovealDegree', fovDegs, 'display', display, 'pupilSize', pupilSize, ...
     'integrationTime', 1.0);
 
-retina.resetSCone();
-retina.reassignSCone(0.1);
+% retina.resetSCone();
+% retina.reassignSCone(0.1);
 retina.visualizeMosaic();
 
 %% Generate render matrix
@@ -34,7 +34,7 @@ render = retina.forwardRender(imageSize, true, true, false);
 render = double(render);
 
 %% Construct estimator
-regPara = 5e-2; stride = 4;
+regPara = 1e-3; stride = 4;
 useGPU = true;
 try
     estimator = PoissonSparseEstimator(gpuArray(single(render)), ...
@@ -45,7 +45,7 @@ catch NoGPU
     useGPU = false;
 end
 
-% Run reconstruction
+%% Run reconstruction
 retina.PSF = oiCreate('human', pupilSize);
 
 stimFreq = [0, 16, 32, 64, 96, 110, 128, 150];
@@ -80,11 +80,11 @@ diffPupil = 10.0;
 retina.PSF = ConeResponse.psfDiffLmt(diffPupil);
 
 % Run reconstruction
-stimFreq = [100, 110, 120, 130, 140, 150, 160, 170, 180, 200, 225, 250];
+stimFreq = [0, 16, 32, 64, 96, 110, 128, 150];
 stimPixel = 2048;
 
-average = 0.04;
-amplitude = 0.0025;
+average = 0.05;
+amplitude = 0.04;
 
 outputDiflmt = zeros([length(stimFreq), imageSize]);
 
@@ -128,7 +128,7 @@ stimPixel = 2048;
 ratio = 1;
 
 average = 0.5;
-amplitude = 0.4;
+amplitude = 0.5;
 
 regPara = 1e-3; stride = 4;
 useGPU = true;
@@ -163,7 +163,7 @@ for idx = 1:length(stimFreq)
     imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
 end
 
-%% Turn off optics
+% Turn off optics
 % Use a large pupil size to reduce the effect of diffraction
 diffPupil = 10.0;
 retina.PSF = ConeResponse.psfDiffLmt(diffPupil);
@@ -171,8 +171,8 @@ retina.PSF = ConeResponse.psfDiffLmt(diffPupil);
 % Run reconstruction
 stimFreq = [0, 6, 10, 16, 20, 22, 25, 32];
 
-average = 0.04;
-amplitude = 0.005;
+average = 0.05;
+amplitude = 0.035;
 
 outputDiflmt = zeros([length(stimFreq), imageSize]);
 
@@ -198,7 +198,10 @@ end
 function stim = createStim(nCycle, average, amplitude, stimPixel, display)
 
 signal = sin(linspace(0, 2 * pi, stimPixel) * nCycle) * amplitude + average;
-stim = repmat(repmat(signal, [stimPixel, 1]), [1, 1, 3]);
+% stim = repmat(repmat(signal, [stimPixel, 1]), [1, 1, 3]);
+
+stim = zeros([stimPixel, stimPixel, 3]);
+stim(:, :, 1) = repmat(signal, [stimPixel, 1]);
 
 stim = gammaCorrection(stim, display);
 
