@@ -238,6 +238,17 @@ for idx = 1:length(stimFreq)
 end
 
 %% Visualization of reconstructed images
+output = outputOptics;
+
+figure();
+for idx = 1:size(output, 1)
+    subplot(2, ceil(size(output, 1)/2), idx);
+    
+    reconImage = reshape(output(idx, :, :, :), imageSize);
+    imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
+end
+
+%% Visualization of reconstructed images
 output = outputDiflmt;
 
 figure();
