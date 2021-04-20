@@ -127,8 +127,8 @@ display = displayCreate('CRT12BitDisplay');
 stimPixel = 2048;
 ratio = 1;
 
-average = 0.5;
-amplitude = 0.5;
+average = 0.25;
+amplitude = 0.25;
 
 regPara = 1e-3; stride = 4;
 useGPU = true;
@@ -142,7 +142,7 @@ catch NoGPU
 end
 
 %% Run reconstruction
-stimFreq = [0, 6, 10, 16, 20, 22, 25, 32];
+stimFreq = [5, 25];
 outputOptics = zeros([length(stimFreq), imageSize]);
 
 figure();
@@ -163,16 +163,16 @@ for idx = 1:length(stimFreq)
     imshow(gammaCorrection(reconImage, display), 'InitialMagnification', 500);
 end
 
-% Turn off optics
+%% Turn off optics
 % Use a large pupil size to reduce the effect of diffraction
 diffPupil = 10.0;
 retina.PSF = ConeResponse.psfDiffLmt(diffPupil);
 
 % Run reconstruction
-stimFreq = [0, 6, 10, 16, 20, 22, 25, 32];
+stimFreq = [5, 15, 20, 22, 25];
 
-average = 0.05;
-amplitude = 0.035;
+average = 0.03;
+amplitude = 0.015;
 
 outputDiflmt = zeros([length(stimFreq), imageSize]);
 
@@ -197,7 +197,7 @@ end
 %% Helper function
 function stim = createStim(nCycle, average, amplitude, stimPixel, display)
 
-signal = sin(linspace(0, 2 * pi, stimPixel) * nCycle) * amplitude + average;
+signal = cos(linspace(0, 2 * pi, stimPixel) * nCycle) * amplitude + average;
 % stim = repmat(repmat(signal, [stimPixel, 1]), [1, 1, 3]);
 
 stim = zeros([stimPixel, stimPixel, 3]);
