@@ -39,7 +39,7 @@ We have written a set of tutorial/live scripts that are designed to demonstrate 
 
 \[3\] These analysis can be computationally intensive (i.e., couple of days). We have saved many results of the intermediate steps (e.g., render matrix). They are too large for GitHub but feel free to ask me for them.  
 
-\[4\] Running the prior learning routine also requires a large dataset of natural images. We used [ILSVRC](http://www.image-net.org/challenges/LSVRC/2017/index) in our analysis. We have stored a learned prior `sparsePrior.mat` in case you don't want to repeat this step.  
+\[4\] Running the prior learning routine also requires a large dataset of natural images. We used [ILSVRC](http://www.image-net.org/challenges/LSVRC) in our analysis. We have stored a learned prior `sparsePrior.mat` in case you don't want to repeat this step.  
 
 ## Others Code & Script
 There are many other scripts and functions in this repo, most of them are either things we used to run our analysis at scale, or other things that we have done but didn't go into this paper (e.g., regression-based reconstruction method). Here are some of them you might find useful:
