@@ -3,7 +3,7 @@
 %% Sample from the ILSVRC image dataset
 % Path to the dataset
 dataBaseDir = getpref('ISETImagePipeline', 'dataDir');
-files = dir(fullfile(dataBaseDir, 'ILSVRC', '*.JPEG'));
+files = dir(fullfile(dataBaseDir, 'ILSVRC_eval', '*.JPEG'));
 
 % There are 5500 high resolulation natural images
 % We will sample 20 small patches of size 16-by-16 from each of them
