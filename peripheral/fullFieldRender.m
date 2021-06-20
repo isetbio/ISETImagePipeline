@@ -17,6 +17,7 @@ renderArray = cell(numX, numY);
 % Loop through cone mosaics
 for idx = 1:numX
     for idy = 1:numY
+        fprintf("%d, %d \n", idx, idy);
         retina = ConeResponseCmosaic...
             (eccX(idx), eccY(idy), 'fovealDegree', fovDegs, 'pupilSize', 3.0, 'subjectID', 6);
         
