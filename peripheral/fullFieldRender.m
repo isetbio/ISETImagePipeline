@@ -1,20 +1,18 @@
+function fullFieldRender(ecc, saveName, runRender, showPSF)
 % Generate render matrix across eccentricity
 
 % Parameters
-eccX = -1.5 : 1 : 9.5;
+eccX = ecc;
 eccY = flip(eccX);
 fovDegs = 1.0;
 
 imgEdge = 128;
 imageSize = [imgEdge, imgEdge, 3];
 
-display = displayCreate('CRT12BitDisplay');
-
 numX = length(eccX);
 numY = length(eccY);
 renderArray = cell(numX, numY);
 
-showPSF = false; runRender = true;
 if showPSF
     plotAxis = tight_subplot(numX, numY, ...
         [.01 .01], [.01 .01], [.01 .01]);
@@ -47,5 +45,6 @@ for idx = 1:numX
 end
 
 % Save results
-save('renderArray.mat', 'renderArray', ...
+save(saveName, 'renderArray', ...
     'eccX', 'eccY', 'imageSize', '-v7.3');
+end
