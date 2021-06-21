@@ -1,8 +1,8 @@
 % Generate render matrix across eccentricity
 
 % Parameters
-eccX = -2.5 : 1 : 14.5;
-eccY = 14.5 : -1 : -2.5;
+eccX = -1.5 : 1 : 9.5;
+eccY = flip(eccX);
 fovDegs = 1.0;
 
 imgEdge = 128;
@@ -14,6 +14,12 @@ numX = length(eccX);
 numY = length(eccY);
 renderArray = cell(numX, numY);
 
+showPSF = false; runRender = true;
+if showPSF
+    plotAxis = tight_subplot(numX, numY, ...
+        [.01 .01], [.01 .01], [.01 .01]);
+end
+
 % Loop through cone mosaics
 for idx = 1:numX
     for idy = 1:numY
@@ -21,12 +27,22 @@ for idx = 1:numX
         
         % Use subject 1, 2, 4, 7 for more reliable measurement
         retina = ConeResponseCmosaic...
-            (eccX(idx), eccY(idy), 'fovealDegree', fovDegs, 'pupilSize', 3.0, 'subjectID', 4);
+            (eccX(idx), eccY(idy), 'fovealDegree', fovDegs, 'pupilSize', 3.0, 'subjectID', 6);
         
-        render = retina.forwardRender(imageSize, false, false);
-        [~, ~, v] = svd(render, 'econ');
+        if showPSF
+            axes(plotAxis((idy - 1) * numY + idx));
+            retina.visualizePSF();
+            
+            xlabel(''); ylabel('');
+            xticklabels([]); yticklabels([]);
+        end
         
-        renderArray{idx, idy} = single(v);
+        if runRender
+            render = retina.forwardRender(imageSize, false, false);
+            [~, ~, v] = svd(render, 'econ');
+            
+            renderArray{idx, idy} = single(v);
+        end
     end
 end
 
