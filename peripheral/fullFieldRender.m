@@ -18,8 +18,10 @@ renderArray = cell(numX, numY);
 for idx = 1:numX
     for idy = 1:numY
         fprintf("%d, %d \n", idx, idy);
+        
+        % Use subject 1, 2, 4, 7 for more reliable measurement
         retina = ConeResponseCmosaic...
-            (eccX(idx), eccY(idy), 'fovealDegree', fovDegs, 'pupilSize', 3.0, 'subjectID', 6);
+            (eccX(idx), eccY(idy), 'fovealDegree', fovDegs, 'pupilSize', 3.0, 'subjectID', 4);
         
         render = retina.forwardRender(imageSize, false, false);
         [~, ~, v] = svd(render, 'econ');
