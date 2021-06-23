@@ -1,10 +1,9 @@
-function fullFieldRender(ecc, saveName, runRender, showPSF)
+function fullFieldRender(ecc, fovDegs, saveName, runRender, showPSF)
 % Generate render matrix across eccentricity
 
 % Parameters
 eccX = ecc;
 eccY = flip(eccX);
-fovDegs = 1.0;
 
 imgEdge = 128;
 imageSize = [imgEdge, imgEdge, 3];
@@ -25,7 +24,7 @@ for idx = 1:numX
         
         % Use subject 1, 2, 4, 7 for more reliable measurement
         retina = ConeResponseCmosaic...
-            (eccX(idx), eccY(idy), 'fovealDegree', fovDegs, 'pupilSize', 3.0, 'subjectID', 6);
+            (eccX(idx), eccY(idy), 'fovealDegree', fovDegs, 'pupilSize', 3.0, 'subjectID', 9);
         
         if showPSF
             axes(plotAxis((idy - 1) * numY + idx));
