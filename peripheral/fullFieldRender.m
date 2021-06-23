@@ -20,7 +20,7 @@ end
 % Loop through cone mosaics
 for idx = 1:numX
     for idy = 1:numY
-        fprintf("%d, %d \n", idx, idy);
+        fprintf("%d deg, %d deg \n", eccX(idx), eccY(idy));
         
         % Use subject 1, 2, 4, 7 for more reliable measurement
         retina = ConeResponseCmosaic...
