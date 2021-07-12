@@ -2,7 +2,7 @@
 load('inputLinear.mat');
 
 display = displayCreate('CRT12BitDisplay');
-prior = load('../sparsePrior.mat');
+prior = load('./sparsePrior.mat');
 imageSize = [100, 100, 3];
 
 retinaEccs = [1, 0; 5, 0; 10, 0; 10, 10; 18, 0; 18, 18];
