@@ -11,7 +11,7 @@ for idx = 1:nIter
     cm = ConeResponseCmosaic(1.0, 1.0, ...
         'fovealDegree', 0.25, 'pupilSize', 3.0, 'subjectID', 9, 'randomMesh', true);
     
-    mtx = retina.forwardRender(imageSize, false, false);
+    mtx = cm.forwardRender(imageSize, false, false);
     
     retina{idx} = cm;
     render{idx} = mtx;
