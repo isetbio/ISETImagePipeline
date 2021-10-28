@@ -55,7 +55,7 @@ for idx = 1:length(ratio)
     fprintf('M Cone Ratio: %.4f \n', ratio(idx));
     retina.reassignMCone(ratio(idx));
     mosaicArray(idx) = {retina.Mosaic.pattern};
-    
+
     % Generate render matrix for each cone mosaic
     renderMtx = retina.forwardRender(imageSize);
     renderArray(idx) = {renderMtx};
@@ -77,7 +77,7 @@ for idx = 1:length(ratio)
     fprintf('L Cone Ratio: %.4f \n', ratio(idx));
     retina.reassignLCone(ratio(idx));
     mosaicArray_L(idx) = {retina.Mosaic.pattern};
-    
+
     % Generate render matrix for each cone mosaic
     renderMtx = retina.forwardRender(imageSize);
     renderArray_L(idx) = {renderMtx};
@@ -164,18 +164,21 @@ for i = 1:length(spatial)
         corrSpatial = spatial(i);
         corrChromat = chromat(j);
         errorMtx = MarkovPrior.reconFunc(allRender, nDim, corrSpatial, corrChromat, nRecon, false);
-        
+
         allError(i, j, :, :) = errorMtx;
         fprintf('Recon Set ID: %d, %d; Total: %d * %d \n', i, j, nCorr, nCorr);
     end
 end
 
 %% Plot results
+% load priorEffect.mat & retinaRenderTiny.mat
 nCorr = length(spatial);
 exclude = [3, 9];
 plotAxis = tight_subplot(nCorr - length(exclude), nCorr - length(exclude), [.05 .05], 0.05, 0.05);
 plotIdx = 1;
 limits = [1.25, 4.5; 1.25, 4.5; 1, 4.5; 1, 4.5; 1, 4.5; 1, 4; 0.5, 3.75; 0.25, 3.25; 0.25, 3.25];
+
+matchedY = false;
 for i = 1:nCorr
     for j = 1:nCorr
         if(sum(i == exclude) == 0 && sum(j == exclude) == 0)
@@ -183,41 +186,53 @@ for i = 1:nCorr
             errorMtx = reshape(allError(i, j, :, :), [nMosaic, nRecon]);
             errorMean = mean(errorMtx, 2);
             errorSD   = std(errorMtx, 0, 2);
-            
+
             axes(plotAxis(plotIdx));
             plotIdx = plotIdx + 1;
+
+            minError = min(errorMean);
+            marginIdx = allRatio((errorMean <= minError + 0.1));
             
             % errorbar(allRatio, errorMean, errorSD / sqrt(nRecon) * 2, '-k', 'LineWidth', 1.5);
-            plot(allRatio, errorMean, '-ok', 'LineWidth', 1.5);
+            plot(allRatio, errorMean, '-k', 'LineWidth', 1.5); hold on;
+            scatter(allRatio, errorMean, 40, 'k', 'filled', 'LineWidth', 1.0);
+
             set(gca, 'box', 'off');
             set(gca, 'TickDir', 'out');
-            
+
             labelIDX = [4, 6:8, 10, 13];
             xticks(allRatio(labelIDX));
-            
-            % Matched Y-axis
-            % ylim(limits(i, :));
-            % yticks(ceil(limits(i, 1)) : 0.5 : floor(limits(i, 2)));
-            
-            % Scaled Y-axis
-            yaxisLim = ylim();
-            yaxisLim = [floor(yaxisLim(1) * 2) / 2, ceil(yaxisLim(2) * 2) / 2];            
-            ylim(yaxisLim);
-            ytickPos = yaxisLim(1) : 0.5 : yaxisLim(2);
-            if length(ytickPos) >= 5
-                ytickPos = yaxisLim(1) : 1.0 : yaxisLim(2);
+
+            if matchedY
+                % Matched Y-axis
+                ylim([0, 4.5]);
+            else
+                % Scaled Y-axis
+                yaxisLim = ylim();
+                yaxisLim = [floor(yaxisLim(1) * 2) / 2, ceil(yaxisLim(2) * 2) / 2];
+                ylim(yaxisLim);
+                ytickPos = yaxisLim(1) : 0.5 : yaxisLim(2);
+                if length(ytickPos) >= 5
+                    ytickPos = yaxisLim(1) : 1.0 : yaxisLim(2);
+                end
+                yticks(ytickPos);
+
             end
-            yticks(ytickPos);
-            
+
+            yaxisLim = ylim();
+            shade = area([marginIdx(1), marginIdx(end)], [yaxisLim(end), yaxisLim(end)], ...
+                'FaceColor', ones(1, 3) * 0.8, 'LineStyle','none'); hold on;
+            uistack(shade,'bottom');
+
             set(gca, 'linewidth', 0.75)
             set(gca, 'TickLength', [0.03, 0.025])
-            
+
             if(~(i == 8))
                 xticklabels([]);
             else
                 xticklabels(allRatio(labelIDX) * 100);
             end
-            
+
         end
     end
 end
