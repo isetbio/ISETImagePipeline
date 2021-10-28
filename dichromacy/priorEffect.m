@@ -205,7 +205,7 @@ for i = 1:nCorr
 
             if matchedY
                 % Matched Y-axis
-                ylim([0, 4.5]);
+                ylim([0.25, 4.5]);
             else
                 % Scaled Y-axis
                 yaxisLim = ylim();
