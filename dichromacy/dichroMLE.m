@@ -43,7 +43,7 @@ estimator = ...
 % Run reconstruction on cone response to each images
 % reconstructed images are in linear pixel space, need to 
 % gamma correct them before visulization
-nIter = 750; optDisp = 'final';
+nIter = 800; optDisp = 'final';
 output = zeros(size(inputLinear));
 for idx = 1:nImage
     input = reshape(inputLinear(idx, :, :, :), imageSize);
