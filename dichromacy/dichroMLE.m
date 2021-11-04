@@ -6,9 +6,6 @@ prior   = load('sparsePrior.mat');
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
     'fovealDegree', 1.0, 'display', display, 'pupilSize', 2.5);
 
-% Cond switch
-cond = 0;
-
 %% Change all M cone to L cone
 if cond == 0
     retina.reassignCone(0.0, retina.M_Cone_Idx, retina.L_Cone_Idx, false);
