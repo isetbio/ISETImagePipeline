@@ -38,7 +38,8 @@ estimator = ...
 % gamma correct them before visulization
 nIter = 800; optDisp = 'final';
 output = zeros(size(inputLinear));
-for idx = 1:nImage
+
+parfor idx = 1 : size(inputLinear, 1)
     input = reshape(inputLinear(idx, :, :, :), imageSize);
     coneResp = render * input(:);
     recon = estimator.runEstimate(coneResp, 'maxIter', nIter, 'display', optDisp);
