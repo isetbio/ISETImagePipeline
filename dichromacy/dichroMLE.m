@@ -14,6 +14,14 @@ fprintf('Number of cones: L - %d, M - %d, S - %d \n', L, M, S);
 
 retina.visualizeMosaic();
 
+%% Change all L cone to M cone
+retina.reassignCone(0.0, retina.L_Cone_Idx, retina.M_Cone_Idx, false);
+
+[L, M, S] = retina.coneCount();
+fprintf('Number of cones: L - %d, M - %d, S - %d \n', L, M, S);
+
+retina.visualizeMosaic();
+
 %% No S cone condition
 retina.resetSCone();
 
