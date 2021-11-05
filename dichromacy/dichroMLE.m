@@ -46,3 +46,11 @@ parfor idx = 1 : size(inputLinear, 1)
     recon = estimator.runEstimate(coneResp, 'maxIter', nIter, 'display', optDisp);
     output(idx, :, :, :) = gammaCorrection(recon, display);
 end
+
+%% Show results
+figure();
+for idx = 1 : size(output, 1)
+    subplot(2, 5, idx);
+    reconImage = reshape(output(idx, :, :, :), imageSize);
+    imshow(reconImage, 'InitialMagnification', 200);
+end
