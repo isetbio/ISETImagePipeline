@@ -24,6 +24,7 @@ retina.visualizeMosaic();
 
 %% Render matrix
 render = retina.forwardRender(imageSize);
+render = double(render);
 
 %% Reconstruction
 load('./dichromacy/inputImage_100.mat');
