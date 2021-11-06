@@ -20,10 +20,9 @@ outputImage = zeros(size(inputImage));
 % alternatively, parfor for each image
 % for idx = 1:size(inputImage, 1)
 parfor idx = 1:size(inputImage, 1)
-    fprintf('Reconstruction for Image %d \n', idx);
-    
     input = inputImage(idx, :, :, :);
     coneVec = render * input(:);
-    outputImage(idx, :, :, :) = estimator.estimate(poissrnd(coneVec), 1e3, rand([prod(imageSize), 1]), true);
+    outputImage(idx, :, :, :) = estimator.estimate(poissrnd(coneVec), 1e3, ...
+                                rand([prod(imageSize), 1]), true, 1.0, 'final', false);
 end
 end

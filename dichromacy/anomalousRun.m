@@ -20,6 +20,7 @@ regPara = [0.001, 0.0025, 0.005, 0.0075, 0.01, 0.05, 0.075, 0.1];
 outputArray = cell(1, length(regPara));
 
 for idx = 1:length(regPara)
+    fprintf('\n \n Iteration %d \n \n', idx);
     outputArray{idx} = reconArray(inputLinear, {renderNormal, renderAnoma}, ...
                                     regBasis, mu, regPara(idx), imageSize);
 end
