@@ -16,8 +16,6 @@ renderNormal = lightLevel * renderNormal.renderNormal;
 renderAnoma = load('render_anomalous.mat');
 renderAnoma = lightLevel * renderAnoma.renderAnomalous;
 
-% 0.001 for night light (0.01 render), 0.0075 for dim light (0.2 render),
-% 0.01 for regular light (render), 0.05 for bright light (5 render)
 regPara = [0.001, 0.0025, 0.005, 0.0075, 0.01, 0.05, 0.075, 0.1];
 outputArray = cell(1, length(regPara));
 
