@@ -24,6 +24,6 @@ parfor idx = 1:size(inputImage, 1)
     
     input = inputImage(idx, :, :, :);
     coneVec = render * input(:);
-    outputImage(idx, :, :, :) = estimator.estimate(poissrnd(coneVec), 1.5e3, rand([prod(imageSize), 1]), true);
+    outputImage(idx, :, :, :) = estimator.estimate(poissrnd(coneVec), 1e3, rand([prod(imageSize), 1]), true);
 end
 end
