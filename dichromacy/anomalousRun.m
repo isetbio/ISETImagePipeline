@@ -1,4 +1,7 @@
 function anomalousRun(lightLevel, outName)
+% light level:
+% night light (0.01 render), dim light (0.2 render),
+% regular light (render), bright light (5 render)
 
 imageSize = [128, 128, 3];
 
