@@ -22,7 +22,7 @@ disp('FOV w/ Optics');
 diffPupil = 10.0;
 retina.PSF = ConeResponse.psfDiffLmt(diffPupil);
 
-renderFovDflmt = retina.forwardRender(imageSize, true, true, false);
+renderFovDflmt = retina.forwardRender(imageSize, false, true, false);
 save('renderFovDflmt.mat', 'renderFovDflmt', '-v7.3');
 disp('FOV without Optics');
 
