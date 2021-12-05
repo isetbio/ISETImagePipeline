@@ -24,14 +24,14 @@ retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, 
     'fovealDegree', fovDegs, 'integrationTime', 0.5);
 retina.PSF = ConeResponse.psfDiffLmt();
 
-imageSize = [50, 50, 3];
+imageSize = [100, 100, 3];
 render = retina.forwardRender(imageSize, false, true, false);
 render = double(render);
 fprintf('Compute Render Matrix... Done \n');
 
 %% Neural engine with ConeResponse class
 load('../sparsePrior.mat');
-estimator = PoissonSparseEstimator(double(render), inv(regBasis), mu', 0.1, 3, imageSize);
+estimator = PoissonSparseEstimator(double(render), inv(regBasis), mu', 0.01, 3, imageSize);
 
 computeFunction = @(neuralEngineOBJ, neuralResponseParamsStruct, sceneSequence, ...
     sceneSequenceTemporalSupport, instancesNum, varargin) ...

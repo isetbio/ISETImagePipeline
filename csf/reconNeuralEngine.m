@@ -16,7 +16,7 @@ mask = makeMast(imageSize);
 
 [~, coneVec] = coneRespObj.computeWithScene(sceneSequence{:});
 
-nIter = 250;
+nIter = 600;
 reconResponses = containers.Map();
 for idx = 1:length(noiseFlags)
     if strcmp(noiseFlags{idx}, 'none')
