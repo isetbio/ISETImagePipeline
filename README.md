@@ -14,7 +14,7 @@ This project is written in MATLAB, and is built upon three other repositories:
 
 - Alternatively, you can also manually download the other three dependencies, just make sure everything is on MATLAB's search path before running the code in here!
 
-We have written a set of tutorial/live scripts that are designed to demonstrate the basic usage of our code. You can find them under `recon_2020`. These code are well commented and contains the details on how to reproduce the analysis reported in the paper. We suggust you go through them in the order as we listed \[1\].
+We have written a set of tutorial/live scripts that are designed to demonstrate the basic usage of our code. You can find them under `recon_2020`. We have tried to comment these well, and they provide detail on how to reproduce the analysis reported in the paper. We suggust you go through them in the order as we listed \[1\].
 
 ```
 ...
