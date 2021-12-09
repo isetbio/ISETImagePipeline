@@ -50,7 +50,7 @@ for idx = 1:length(ratio)
 end
 
 %% Run reconstruction
-regPara = 5e-4;
+regPara = 1e-3;
 output = computeRecon(input, renderArray, prior, regPara, imageSize);
 
 %% Show results
@@ -68,8 +68,9 @@ parfor i = 1:length(renderArray)
         PoissonSparseEstimator(render, inv(prior.regBasis), prior.mu', regPara, 4, imageSize);
     
     for j = 1:nImage
+        % compute cone response to the images
         image = input(j, :, :, :);
-        resp  = render * image(:);
+        resp  = poissrnd(render * image(:));
         
         nIter = 500;
         recon = estimator.estimate(resp, nIter, rand([prod(imageSize), 1]), true, 1.0, 'final');
