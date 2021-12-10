@@ -92,12 +92,22 @@ for idx = 1 : nShow
     pause(0.25);
 end
 
-%% PCA Analysis
+%% 1. PCA Analysis
 imgData = reshape(equalized, [size(samples, 1), prod(imageSize)]);
 
 [pcaBasis, ~, pcaVar, ~, ~, mu] = pca(imgData);
 scaleMatrix = diag(sqrt(pcaVar));
 regBasis    = pcaBasis * scaleMatrix;
+
+%% 2. RICA Analysis to learn basis function
+% Whitening, with PCA/SVD
+[Z, U, SIG, mu] = whitening(imgData, 'svd');
+
+% RICA analysis
+% RICA: Reconstruction Independent Component Analysis Algorithm
+nBasis = 16 * 16 * 3;
+result = rica(Z, nBasis, 'IterationLimit', 1e4, 'VerbosityLevel', 1, 'GradientTolerance', 1e-8, 'StepTolerance', 1e-8);
+regBasis = U * diag(sqrt(SIG)) * result.TransformWeights;
 
 %% I. Test run with basic reconstruction
 % Create mosaic
@@ -124,7 +134,10 @@ scatter(coneVec, allCone);
 axis equal; axis square;
 
 %% Reconstruction routine
-estimator = RidgeGaussianEstimator(renderMtx, regBasis, mu');
+
+% Gaussian or sparse basis
+% estimator = RidgeGaussianEstimator(renderMtx, regBasis, mu');
+estimator = LassoGaussianEstimator(renderMtx, inv(regBasis), mu');
 estimator.setLambda(1e-3);
 
 recon = estimator.estimate(coneVec');
@@ -151,7 +164,10 @@ testInput = equalized(imageID, :, :, :);
 regPara = [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10];
 rss = zeros(size(regPara));
 
-estimator = RidgeGaussianEstimator(renderMtx, regBasis, mu');
+% either the Gaussian or Sparse basis
+% estimator = RidgeGaussianEstimator(renderMtx, regBasis, mu');
+estimator = LassoGaussianEstimator(renderMtx, inv(regBasis), mu');
+
 for idx = 1:length(regPara)
     estimator.setLambda(regPara(idx));
     
@@ -240,7 +256,9 @@ for idx = 1 : nMosaic
     fprintf('Run ID %d \n', idx);
     render = double(allRender{idx});
     
-    estimator = RidgeGaussianEstimator(render, regBasis, mu');
+    % Gaussian or Sparse prior
+    % estimator = RidgeGaussianEstimator(render, regBasis, mu');
+    estimator = LassoGaussianEstimator(renderMtx, inv(regBasis), mu');
     estimator.setLambda(1e-2);
     
     parfor idj = 1 : nImage
@@ -311,7 +329,9 @@ for idx = 1 : nMosaic
     fprintf('Run ID %d \n', idx);
     render = double(renderArray{idx});
     
-    estimator = RidgeGaussianEstimator(render, regBasis, mu');
+    % Gaussian or sparse basis
+    % estimator = RidgeGaussianEstimator(render, regBasis, mu');
+    estimator = LassoGaussianEstimator(renderMtx, inv(regBasis), mu');
     estimator.setLambda(1e-2);
     
     parfor idj = 1 : nImage
