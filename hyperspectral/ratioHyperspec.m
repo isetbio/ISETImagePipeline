@@ -92,9 +92,9 @@ for idx = 1 : nShow
     pause(0.25);
 end
 
-%% 1. PCA Analysis
 imgData = reshape(equalized, [size(samples, 1), prod(imageSize)]);
 
+%% 1. PCA Analysis
 [pcaBasis, ~, pcaVar, ~, ~, mu] = pca(imgData);
 scaleMatrix = diag(sqrt(pcaVar));
 regBasis    = pcaBasis * scaleMatrix;
