@@ -58,6 +58,8 @@ There are many other scripts and functions in this repo, most of them are either
     ├── ...
 ├── hyperspectral
     ├── ratioHyperspec.m    # Image reconstruction and cone ratio analysis with hyperspectral images
+├── dichromacy
+    ├── dichroCompare.m     # Implementation and comparison of two other methods for visualizing dichromacy
 ...
 ```
 
