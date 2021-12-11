@@ -1,27 +1,67 @@
-%% Compute the matrix from RGB -> LMS
+% Compute comparison methods for dichromatic visualization
+%
+% 
+
+% History:
+%   12/10/21  dhb  Read it and added comments.
+
+%% Clear and close
+clear; close all;
+
+%% Compute the matrix from linear RGB -> LMS
 display = displayCreate('CRT12BitDisplay');
 
-% Matrix that takes RGB to LMS
-matrix = zeros(3, 3);
+% Allocate
+matrix_LinRGBToLMS = zeros(3, 3);
 
-% R, G, B
-for idx = 1:3
-    image = zeros([1, 1, 3]);
-    image(:, :, idx) = 1;
+% Loop over RGB and create a one pixel image that
+% with R, G, or B set to max value, and pull out 
+% the corresponding LMS coordinates. 
+for channelIdx = 1:3
+    oneChannelImg = zeros([1, 1, 3]);
+    oneChannelImg(:, :, channelIdx) = 1;
 
-    [scene, ~, ~] = sceneFromFile(image, 'rgb', [], display);
+    % Create a scene from the displayed iamge.  Although we think
+    % this method gamma corrects, gamma correction maps 1 to 1.
+    [scene, ~, ~] = sceneFromFile(oneChannelImg, 'rgb', [], display);
+
+    % Get LMS values using sceneGet and fill in the column of the matrix
     val = sceneGet(scene, 'lms');
+    matrix_LinRGBToLMS(:, channelIdx) = val;
+end
+wave = sceneGet(scene, 'wave');
 
-    % fill in the column
-    matrix(:, idx) = val;
+% Let's make sure we understand what the above is doing, by
+% computing the matrix directly from the display channel spd
+% and the PTB Stockman-Sharpe 2-deg fundamentals.  Agreement
+% is OK enough to make us think it's just a numerical choice
+% somewhere, probably in the tabulated values of the fundamentals
+% between PTB and ISET which are different.
+CHECK = false;
+if (CHECK)
+    T_cones = WlsToS(wave);
+    condData = load('T_cones_ss2.mat');
+    T_cones = SplineCmf(condData.S_cones_ss2,condData.T_cones_ss2,T_cones);
+    matrix_Check = T_cones*display.spd*T_cones(2);
+    for ii = 1:3
+        for jj = 1:3
+            matrix_Check2(ii,jj) = trapz(display.wave,T_cones(ii,:)' .* display.spd(:,jj));
+        end
+    end
+    (matrix_LinRGBToLMS-matrix_Check)./matrix_Check;
+    (matrix_LinRGBToLMS-matrix_Check2)./matrix_Check;
+    T_cones_iset = ieReadSpectra('stockman', wave)';
+    figure; hold on;
+    plot(wave,T_cones_iset,'r');
+    plot(wave,T_cones,'k');
 end
 
-% White point of the display
-image = ones([1, 1, 3]);
-[scene, ~, ~] = sceneFromFile(image, 'rgb', [], display);
-whitePt = sceneGet(scene, 'lms');
+%% White point of the display in LMS
+whiteImg = ones([1, 1, 3]);
+[scene, ~, ~] = sceneFromFile(whiteImg, 'rgb', [], display);
+whiteLMS = sceneGet(scene, 'lms');
 
-%% Visulization, Brettel method
+%% Visulization, Brettel (aka 'brettel') method
 imSize = [128, 128, 3];
 load('inputImage_128.mat');
 
@@ -30,29 +70,29 @@ plotAxis = tight_subplot(3, size(inputLinear, 1), ...
     [.01 .01], [.01 .01], [.01 .01]);
 
 method = 'brettel';
-for type = 1:3
-    for idx = 1:size(inputLinear, 1)
+for dichromType = 1:3
+    for imageIdx = 1:size(inputLinear, 1)
         % linear RGB
-        image = reshape(inputLinear(idx, ...
+        image = reshape(inputLinear(imageIdx, ...
             :, :, :), imSize);
 
         % linear RGB -> LMS
-        lms = linearTrans(image, imSize, matrix);
+        lms = linearTrans(image, imSize, matrix_LinRGBToLMS);
 
         % LMS -> dichromatic LMS, Brettel method
-        lmsDichma = lms2lmsDichromat(lms, type, method, whitePt);
+        lmsDichma = lms2lmsDichromat(lms, dichromType, method, whiteLMS);
 
         % LMS -> Linear RGB
-        rgb = linearTrans(lmsDichma, imSize, inv(matrix));
+        rgb = linearTrans(lmsDichma, imSize, inv(matrix_LinRGBToLMS));
 
         % plot image
-        plotIdx = (type - 1) * size(inputLinear, 1) + idx;
+        plotIdx = (dichromType - 1) * size(inputLinear, 1) + imageIdx;
         axes(plotAxis(plotIdx));
         imshow(gammaCorrection(rgb, display));
     end
 end
 
-%% Visulization, linear method
+%% Visulization, Jiang et al. (aka 'linear') method
 imSize = [128, 128, 3];
 load('inputImage_128.mat');
 
@@ -61,23 +101,23 @@ plotAxis = tight_subplot(3, size(inputLinear, 1), ...
     [.01 .01], [.01 .01], [.01 .01]);
 
 method = 'linear';
-for type = 1:3
-    for idx = 1:size(inputLinear, 1)
+for dichromType = 1:3
+    for imageIdx = 1:size(inputLinear, 1)
         % linear RGB
-        image = reshape(inputLinear(idx, ...
+        image = reshape(inputLinear(imageIdx, ...
             :, :, :), imSize);
     
         % linear RGB -> LMS
-        lms = linearTrans(image, imSize, matrix);
+        lms = linearTrans(image, imSize, matrix_LinRGBToLMS);
         
         % LMS -> dichromatic LMS, linear method, Jiang et al., 2015
-        lmsDichma = lms2lmsDichromat(lms, type, method);
+        lmsDichma = lms2lmsDichromat(lms, dichromType, method);
 
         % LMS -> Linear RGB
-        rgb = linearTrans(lmsDichma, imSize, inv(matrix));
+        rgb = linearTrans(lmsDichma, imSize, inv(matrix_LinRGBToLMS));
 
         % plot image
-        plotIdx = (type - 1) * size(inputLinear, 1) + idx;
+        plotIdx = (dichromType - 1) * size(inputLinear, 1) + imageIdx;
         axes(plotAxis(plotIdx));
         imshow(gammaCorrection(rgb, display));
     end
