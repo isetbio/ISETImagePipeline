@@ -1,5 +1,8 @@
 ## Bayesian Image Reconstruction from Cone Mosaic Signal
-This repository contains all the analysis code used in our paper: **LQ Zhang, NP Cottaris, and DH Brainard (2021). An Image Reconstruction Framework for Characterizing Early Vision.** 
+[![DOI:10.7554/eLife.71132](https://zenodo.org/badge/DOI/10.7554/eLife.71132.svg)](https://doi.org/10.7554/eLife.71132)  
+This repository contains all the analysis code used in our paper:   
+**An image reconstruction framework forcharacterizing initial visual encoding**   
+LQ Zhang, NP Cottaris, and DH Brainard, eLife (2021).
 
 For a 10-minute introduction to our project, please see our [V-VSS 2020 Talk](https://youtu.be/d5qI0FNCAv4).  
 
