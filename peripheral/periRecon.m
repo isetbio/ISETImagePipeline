@@ -1,3 +1,8 @@
+% Reconstruction with a set of peripheral mosaic
+% for comparison with the denoiser prior reconstruction
+
+% LQZ, Jan 25, 2022
+
 %% setup
 imageSize = [100, 100, 3];
 display = displayCreate('CRT12BitDisplay');
@@ -29,7 +34,7 @@ for rid = 1:5
     % Run reconstruction on cone response to each images
     % reconstructed images are in linear pixel space, need to
     % gamma correct them before visulization
-    nIter = 800; optDisp = 'final';
+    nIter = 1e3; optDisp = 'final';
     output = zeros(size(inputLinear));
 
     parfor idx = 1 : size(inputLinear, 1)
@@ -43,15 +48,3 @@ for rid = 1:5
 end
 
 save('reconOut.mat', 'imageSize', 'allOutput', '-v7.3');
-
-%% show image
-for rid = 1:5
-    output = allOutput{rid};
-
-    figure();
-    for idx = 1 : size(output, 1)
-        subplot(2, 5, idx);
-        image = reshape(output(idx, :, :, :), imageSize);
-        imshow(image, 'InitialMagnification', 200);
-    end
-end
