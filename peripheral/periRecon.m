@@ -11,19 +11,12 @@ prior = load('sparsePrior.mat');
 renderMtx = load('periRender.mat');
 renderMtx = renderMtx.renderMtx;
 
-%% show image
 load('inputLinear.mat');
-
-figure();
-for idx = 1 : size(inputLinear, 1)
-    subplot(2, 5, idx);
-    image = reshape(inputLinear(idx, :, :, :), imageSize);
-    imshow(gammaCorrection(image, display), 'InitialMagnification', 200);
-end
 
 %% run reconstruction
 allOutput = cell(5, 1);
 for rid = 1:5
+    fprintf('rid %d / 5 \n', rid);
     render = double(renderMtx{rid});
 
     % Build an image reconstruction object with sparse prior
@@ -34,7 +27,7 @@ for rid = 1:5
     % Run reconstruction on cone response to each images
     % reconstructed images are in linear pixel space, need to
     % gamma correct them before visulization
-    nIter = 1e3; optDisp = 'final';
+    nIter = 1e3; optDisp = 'off';
     output = zeros(size(inputLinear));
 
     parfor idx = 1 : size(inputLinear, 1)
