@@ -1,6 +1,7 @@
 % Optimality analysis of L/M/S cone ratio across the 2D plane
 
 % LQZ, Jan 27, 2022
+% Feb 3, Minor Changes
 
 %% Set up retinal mosaic
 display = displayCreate('CRT12BitDisplay');
@@ -42,26 +43,34 @@ mrs = zeros(1, length(s) * length(l));
 
 figure();
 for i = 1:length(s)
-    for j = 1:length(l)        
+    for j = 1:length(l)
         idx = (i - 1) * length(l) + j;
         lrs(idx) = l(j) * (1 - s(i));
-        mrs(idx) = (1 - l(j)) * (1 - s(i));        
+        mrs(idx) = (1 - l(j)) * (1 - s(i));
     end
 end
 
 scatter(lrs, mrs, 'r*');
 
 %% Image reconstruction error
-load('input_cone_ratio.mat');
-load('cone_ratio_plane.mat');
+
+% load input and output images
+%load('input_cone_ratio.mat');
+%load('cone_ratio_plane.mat');
+
 inputSet = double(input_cone_ratio);
 
 error = zeros(1, length(s) * length(l));
 
 for i = 1:length(s)
-    for j = 1:length(l)        
+    for j = 1:length(l)
         idx = (i - 1) * length(l) + j;
-        reconSet = squeeze(all_recon(idx, :, :, :, :));
+
+        % denoiser set
+        %reconSet = squeeze(all_recon(idx, :, :, :, :));
+
+        % sparse prior set
+        reconSet = allOutput{i, j};
 
         rss = 0;
         for imgIdx = 1:size(inputSet, 1)
@@ -82,6 +91,7 @@ for idx = 1 : length(s)
     id_start = (idx - 1) * length(l) + 1;
     sub_error = error(id_start : (id_start + length(l) - 1));
 
+    % plot slices through the data
     % figure();
     % plot(l, sub_error);
     % plot(l_extend, interp1(l, sub_error, l_extend));
@@ -100,10 +110,10 @@ mrs = zeros(1, length(s) * length(l));
 
 figure();
 for i = 1:length(s)
-    for j = 1:length(l)        
+    for j = 1:length(l)
         idx = (i - 1) * length(l) + j;
         lrs(idx) = l(j) * (1 - s(i));
-        mrs(idx) = (1 - l(j)) * (1 - s(i));        
+        mrs(idx) = (1 - l(j)) * (1 - s(i));
     end
 end
 
@@ -111,7 +121,11 @@ scatter(lrs, mrs, 'r*');
 error = error_extend;
 
 %% Error plot
-plotIdx = error < 1e3;
+% denoiser
+% plotIdx = error < 1e3;
+
+% sparse prior
+plotIdx = error < 2e3;
 
 lv = 0 : 0.02 : 1;
 mv = 0 : 0.02 : 1;
@@ -125,10 +139,19 @@ surf(L, M, Z);
 subplot(1, 2, 2);
 contour(L, M, Z); box off;
 
-%% contour plot
+%% contour plot (denoiser)
 figure();
 
 levels = [519, 520:4:535, 538, 550:50:700];
+contour(L, M, Z, levels, 'ShowText', 'off');
+hold on; box off; axis equal;
+
+scatter(0.45, 0.45, '*r');
+set(gca,'TickDir','out');
+
+%% contour plot (sparse)
+figure();
+levels = [835, 840, 850:50:1600];
 contour(L, M, Z, levels, 'ShowText', 'off'); 
 hold on; box off; axis equal;
 
