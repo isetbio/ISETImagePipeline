@@ -42,6 +42,7 @@ end
 % Full path to data
 %   Get path to data in project code with getpref('ISETImagePipeline','dataDir');
 setpref(projectName,'dataDir',fullfile(baseDir,'IBIO_Analysis',projectName));
+setpref(projectName,'aoReconDir',fullfile(baseDir,'IBIO_Analysis1',projectName,'aoRecon'));
 
 
 
