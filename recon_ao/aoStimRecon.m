@@ -61,7 +61,7 @@ pupilDiameterMm = 7.0;
 theConeMosaic.PSF = ConeResponse.psfDiffLmt(pupilDiameterMm);
 
 %% Need new render if we want to reconstruct with respect to the AO stimulus
-reconstructWrtAO = true;
+reconstructWrtAO = false;
 if (reconstructWrtAO)
     render = theConeMosaic.forwardRender([nPixels nPixels 3], ...
         'validation', false);
