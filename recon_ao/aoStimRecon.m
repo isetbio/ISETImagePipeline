@@ -9,13 +9,16 @@ fieldSizeDegs = fieldSizeMinutes/60;
 eccX = 2.0; % In degs
 eccY = 0.0; % In degs
 
+%% Point at directory with data files for this subproject
+aoReconDir = getpref('ISETImagePipeline','aoReconDir');
+
 %% Load in some important variables
 % monoDisplay: special monochromatic display with narrow primaries
 % theConeMosaic: Wrapper object that contains a pre-generated,
 % half-degree cone mosaic at eccX = 2.0 and eccY = 0.0
 % render: Linear transformation between input pixel and cone response,
 % for the pre-generated cone mosaic. Used as the likelihood function.
-load('./monoDispRender.mat');
+load(fullfile(aoReconDir,'monoDispRender.mat'));
 
 %% Code for building new render matrix
 % Run this code segement if you would like to
@@ -78,7 +81,7 @@ theConeMosaic.Mosaic.visualize(...
 
 %% Run reconstruction
 % with special prior built for the display
-prior = load('./sparsePrior.mat');
+prior = load(fullfile(aoReconDir,'sparsePrior.mat'));
 
 % Run image reconstruction
 % construct image estimator
