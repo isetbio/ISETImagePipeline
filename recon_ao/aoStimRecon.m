@@ -34,6 +34,9 @@ eccYDegs = 0.0;
 %       half-degree cone mosaic at eccX = 2.0 and eccY = 0.0
 %    render: Linear transformation between input pixel and cone response,
 %       for the pre-generated cone mosaic. Used as the likelihood function.
+
+% Should change our loads to this format throughout
+%theMonoDisplayRender = load(fullfile(aoReconDir,'monoDispRender.mat'));
 load(fullfile(aoReconDir,'monoDispRender.mat'));
 
 % If we were clever, we'd add code here to make sure what we loaded matched
@@ -61,11 +64,16 @@ pupilDiameterMm = 7.0;
 theConeMosaic.PSF = ConeResponse.psfDiffLmt(pupilDiameterMm);
 
 %% Need new render if we want to reconstruct with respect to the AO stimulus
-reconstructWrtAO = false;
+reconstructWrtAO = true;
+buildNewAO = false;
 if (reconstructWrtAO)
-    render = theConeMosaic.forwardRender([nPixels nPixels 3], ...
-        'validation', false);
-    render = double(render);
+    if (buildNewAO)
+        render = theConeMosaic.forwardRender([nPixels nPixels 3], ...
+            'validation', false);
+        render = double(render);
+    else
+        load(fullfile(aoReconDir,'aoOpticsRenderMatrix.mat'));
+    end
 end
 
 %% Show cone mosaic
@@ -74,7 +82,7 @@ theConeMosaic.visualizeMosaic();
 %% Generate an image stimulus
 % stimulus in the size of retinal degree
 % should not exceed 'fieldSizeDegs'
-stimSizeDegs = 0.1;
+stimSizeDegs = 0.4;
 size = stimSizeDegs / fieldSizeDegs;
 idxLB = round(nPixels * (0.5 - size / 2));
 idxUB = round(nPixels * (0.5 + size / 2));
