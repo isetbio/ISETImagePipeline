@@ -60,8 +60,11 @@ end
 % 
 % This allows us to simulate the conditions we have in AO experiment,
 % and reconstruct from those conditions
-pupilDiameterMm = 7.0;
-theConeMosaic.PSF = ConeResponse.psfDiffLmt(pupilDiameterMm);
+simulateAO = true;
+if (simulateAO)
+    pupilDiameterMm = 7.0;
+    theConeMosaic.PSF = ConeResponse.psfDiffLmt(pupilDiameterMm);
+end
 
 %% Need new render if we want to reconstruct with respect to the AO stimulus
 reconstructWrtAO = true;
