@@ -60,11 +60,15 @@ end
 % 
 % This allows us to simulate the conditions we have in AO experiment,
 % and reconstruct from those conditions
-simulateAO = true;
+simulateAO = false;
 if (simulateAO)
     pupilDiameterMm = 7.0;
     theConeMosaic.PSF = ConeResponse.psfDiffLmt(pupilDiameterMm);
 end
+
+% Get the optical image structures
+OIRegular = theConeMosaic.PSF;
+OIAO = ConeResponse.psfDiffLmt;
 
 %% Need new render if we want to reconstruct with respect to the AO stimulus
 reconstructWrtAO = true;
@@ -100,7 +104,26 @@ testImage(idxRange, idxRange, 2) = 0.65;
 meanLuminanceCdPerM2 = [];
 [stimScene, ~, linear] = sceneFromFile(testImage, 'rgb', ...
                 meanLuminanceCdPerM2, theConeMosaic.Display);
+stimScene = sceneSet(stimScene, 'fov', stimSizeDegs);
 visualizeScene(stimScene, 'displayRadianceMaps', false);
+
+% Compute and visual retinal images
+OIRegular = oiCompute(stimScene,OIRegular);
+visualizeOpticalImage(OIRegular);
+theResponseRegular = theConeMosaic.Mosaic.compute(OIRegular, 'opticalImagePositionDegs', 'mosaic-centered');
+coneExcitationsCheckRegular = theResponseRegular(:);
+
+OIAO = oiCompute(stimScene,OIAO);
+visualizeOpticalImage(OIAO);
+theResponseAO = theConeMosaic.Mosaic.compute(OIAO, 'opticalImagePositionDegs', 'mosaic-centered');
+coneExcitationsCheckAO = theResponseAO(:);
+
+for ii = 1:101
+    temp = OIAO.data.photons(:,:,ii);
+    if (any(max(temp(:)) >= 1e12))
+        fprintf('Plane %d has non-zero photons, max %g, mean %g, center %g\n',ii,max(temp(:)),mean(temp(:)),temp(40,40));
+    end
+end
 
 %% Compute cone response
 coneExcitations = theConeMosaic.compute(testImage);
