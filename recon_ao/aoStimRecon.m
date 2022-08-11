@@ -119,7 +119,7 @@ if (buildNewForward)
 
     % Generate render matrix
     forwardRenderMatrix = theConeMosaic.forwardRender([nPixels nPixels 3], ...
-        'validation', false, 'useDoublePrecison', true);
+        true, true, 'useDoublePrecision', true);
     forwardRenderMatrix = double(forwardRenderMatrix);
 
     % Push new info back into structure and save
