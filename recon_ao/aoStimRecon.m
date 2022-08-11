@@ -24,47 +24,105 @@ nPixels = 64;
 fieldSizeMinutes = 30;
 fieldSizeDegs = fieldSizeMinutes/60;
 eccXDegs = 2.0;
-eccYDegs = 0.0; 
+eccYDegs = 0.0;
+AOForwardRender = true;
+displayName = 'mono';
+if (AOForwardRender)
+    forwardPupilDiamMM = 7;
+else
+    forwardPupilDiamMM = 3;
+end
+forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,AOForwardRender);
+
+% Build and save control
+buildNewForward = true;
 
 %% Load in some important variables
 % 
-% The file monoDispRender.mat contains (at least)
-%    monoDisplay: special monochromatic display with narrow primaries
+% The file monoDisplayRender_FieldSize_EccX_EccY_Pix_PupilDiam.mat contains
+%    theDisplay: Special monochromatic display with narrow-band primaries
 %    theConeMosaic: Wrapper object that contains a pre-generated,
 %       half-degree cone mosaic at eccX = 2.0 and eccY = 0.0
-%    render: Linear transformation between input pixel and cone response,
+%    renderMatrix: Linear transformation between input pixel and cone response,
 %       for the pre-generated cone mosaic. Used as the likelihood function.
+% The name has numbers filed in for the various parameters, to help keep
+% versions for different parameters separate.
 
-% Should change our loads to this format throughout
-%theMonoDisplayRender = load(fullfile(aoReconDir,'monoDispRender.mat'));
-load(fullfile(aoReconDir,'monoDispRender.mat'));
-
-% If we were clever, we'd add code here to make sure what we loaded matched
-% variable values set above.
+% Do safe load and check that cached parameters match current parameters
+if (~buildNewForward)
+    forwardRenderStructure = load(fullfile(aoReconDir,forwardRenderStructureName));
+    if (forwardRenderStructure.eccX ~= eccXDegs | forwardRenderStructure.eccY ~= eccY)
+        error('Precomputed forward rendering matrix not computed for current eccentricity');
+    end
+    if (forwardRenderStructure.fieldSizeDegs ~= fieldSizeDegs)
+        error('Precomputed forward rendering matrix not computed for current field size');
+    end
+    if (forwardRenderStructure.nPixels ~= nPixels)
+        error('Precomputed forward rendering nPixels not equal to current value');
+    end
+    if (any(forwardRenderStructure.imageSize ~= imageSize))
+        error('Precomputed forward rendering imageSize not equal to current value')
+    end
+    if (forwardRenderStructure.pupilDiamMM ~= forwardPupilDiamMM)
+        error('Precompued forward pupil size not equal to current value');
+    end
+end
 
 %% Code for building new render matrix
 %
 % Run this code segement if you would like to
 % rebuild a new mosaic and render matrix
-buildNew = false;
-if buildNew
-    theConeMosaic = ConeResponseCmosaic(eccXDegs, eccYDegs, ...
-        'fovealDegree', fieldSizeDegs, 'pupilSize', 3.0);
-    theConeMosaic.Display = monoDisplay;
-    render = theConeMosaic.forwardRender([nPixels nPixels 3], ...
+if (buildNewForward)
+    % Get display
+    theDisplayLoad = load(fullfile(aoReconDir,[displayName 'Display.mat']));
+    eval(['theDisplay = theDisplayLoad.' displayName 'Display;']);
+    clear theDisplayLoad;
+
+    % Create and setup cone mosaic
+    %
+    % For AO, we create a dummy object with 3 mm pupil and then adjust
+    % pupil and make the OI diffraction limited with no LCA.  The field
+    % name PSF is not optimal, because it is actually OI. We need the dummy
+    % 3 mm pupil because the code that pulls out the initial Polens optics
+    % checks that the desired pupil size is smaller than the 4 mm at which
+    % those data were measured.
+    if (AOForwardRender)
+        theConeMosaic = ConeResponseCmosaic(eccXDegs, eccYDegs, ...
+        'fovealDegree', fieldSizeDegs, 'pupilSize', 3); 
+        theConeMosaic.PSF = ConeResponse.psfDiffLmt(forwardPupilDiamMM);
+    else
+        theConeMosaic = ConeResponseCmosaic(eccXDegs, eccYDegs, ...
+        'fovealDegree', fieldSizeDegs, 'pupilSize', forwardPupilDiamMM); 
+    end
+    theConeMosaic.Display = theDisplay;
+
+    % Generate render matrix
+    forwardRenderMatrix = theConeMosaic.forwardRender([nPixels nPixels 3], ...
         'validation', false);
-    render = double(render);
+    forwardRenderMatrix = double(forwardRenderMatrix);
+
+    % Push new info back into structure and save
+    forwardRenderStructure.theDisplay = theDisplay;
+    forwardRenderStructure.renderMatrix = forwardRenderMatrix;
+    forwardRenderStructure.theConeMosaic = theConeMosaic;
+    forwardRenderStructure.fieldSizeDegs = fieldSizeDegs;
+    forwardRenderStructure.eccX = eccXDegs;
+    forwardRenderStructure.eccY = eccYDegs;
+    forwardRenderStructure.nPixels = nPixels;
+    forwardRenderStructure.pupilDiamMM = forwardPupilDiamMM;
+    forwardRenderStructure.AORender = AOForwardRender;
+    save(fullfile(aoReconDir,forwardRenderStructureName));
 end
+forwardRenderMatrix = forwardRenderStructure.render;
+theConeMosaic = forwardRenderStructure.theConeMosiac;
+theDisplay = forwardRenderStructure.theDisplay;
+clear forwardRenderStructure;
 
 %% Change the optics to diffraction limited optics with no LCA
 % 
 % This allows us to simulate the conditions we have in AO experiment,
 % and reconstruct from those conditions
-simulateAO = false;
-if (simulateAO)
-    pupilDiameterMm = 7.0;
-    theConeMosaic.PSF = ConeResponse.psfDiffLmt(pupilDiameterMm);
-end
+
 
 % Get the optical image structures
 OIRegular = theConeMosaic.PSF;
@@ -75,9 +133,9 @@ reconstructWrtAO = true;
 buildNewAO = false;
 if (reconstructWrtAO)
     if (buildNewAO)
-        render = theConeMosaic.forwardRender([nPixels nPixels 3], ...
+        forwardRenderMatrix = theConeMosaic.forwardRender([nPixels nPixels 3], ...
             'validation', false);
-        render = double(render);
+        forwardRenderMatrix = double(forwardRenderMatrix);
     else
         load(fullfile(aoReconDir,'aoOpticsRenderMatrix.mat'));
     end
@@ -146,7 +204,7 @@ prior = load(fullfile(aoReconDir,'sparsePrior.mat'));
 
 % Construct onstruct image estimator
 regPara = 0.001; stride = 2;
-estimator = PoissonSparseEstimator(render, inv(prior.regBasis), ...
+estimator = PoissonSparseEstimator(forwardRenderMatrix, inv(prior.regBasis), ...
             prior.mu', regPara, stride, [nPixels nPixels 3]);
 
 % Estimate image
@@ -159,6 +217,6 @@ reconImage = estimator.runEstimate(coneExcitations * scaleFactor, ...
 
 %% Show reconstruction
 meanLuminanceCdPerM2 = [];
-[stimScene, ~, linear] = sceneFromFile(gammaCorrection(reconImage, monoDisplay), 'rgb', ...
+[stimScene, ~, linear] = sceneFromFile(gammaCorrection(reconImage, theDisplay), 'rgb', ...
                                         meanLuminanceCdPerM2, theConeMosaic.Display);
 visualizeScene(stimScene, 'displayRadianceMaps', false);
