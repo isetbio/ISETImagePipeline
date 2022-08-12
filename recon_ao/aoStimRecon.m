@@ -18,11 +18,8 @@ aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 
 %% Setup / Simulation parameters
 %
-% Note these are only for book-keeping, if these are changed, we need to
-% build a new render matrix using the code below
-%
 % Spatial parameters.  Common to forward and recon models
-nPixels = 64;
+nPixels = 100;
 fieldSizeMinutes = 30;
 fieldSizeDegs = fieldSizeMinutes/60;
 eccXDegs = 2.0;
@@ -141,13 +138,14 @@ if (buildNewForward || ~exist(fullfile(aoReconDir,forwardRenderStructureName),'f
     forwardRenderStructure.pupilDiamMM = forwardPupilDiamMM;
     forwardRenderStructure.AORender = AOForwardRender;
     forwardRenderStructure.defocusDiopters = forwardDefocusDiopters;
-    save(fullfile(aoReconDir,forwardRenderStructureName));
+    save(fullfile(aoReconDir,forwardRenderStructureName,'forwardRenderStructure'));
 
     % If not building, load cached file.  If we're doing this, it exists
     % as checked above. After laod, check that cached parameters match current parameters
 else
     % Read and check that loaded structure is as expected
-    forwardRenderStructure = load(fullfile(aoReconDir,forwardRenderStructureName));
+    clear forwardRenderStructure;
+    load(fullfile(aoReconDir,forwardRenderStructureName),'forwardRenderStructure');
     if (forwardRenderStructure.eccX ~= eccXDegs || forwardRenderStructure.eccY ~= eccY)
         error('Precomputed forward rendering matrix not computed for current eccentricity');
     end
