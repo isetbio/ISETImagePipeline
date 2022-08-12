@@ -56,8 +56,8 @@ sparsePriorName = 'conventionalSparsePrior.mat';
 %
 % Use AO in forward rendering?
 % This determins pupil diameter which typically differs in AO
-AOForwardRender = false;
-if (AOForwardRender)
+forwardAORender = false;
+if (forwardAORender)
     forwardPupilDiamMM = 7;
 else
     forwardPupilDiamMM = 3;
@@ -67,27 +67,19 @@ end
 forwardDefocusDiopters = 0;
 
 % Force build and save
-buildNewForward = true;
+buildNewForward = false;
+
+% Recon rendering parameters
+useForwardRenderingForRecon = true;
 
 %% Set forward render filenname
-if (AOForwardRender)
+if (forwardAORender)
     forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters);
 else
     forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters);
 end
 
-%% Get
-%
-% The file monoDisplayRender_FieldSize_EccX_EccY_Pix_PupilDiam_AOFlag_DefocusDiopters.mat contains
-%    theDisplay: Special monochromatic display with narrow-band primaries
-%    theConeMosaic: Wrapper object that contains a pre-generated,
-%       half-degree cone mosaic at eccX = 2.0 and eccY = 0.0
-%    renderMatrix: Linear transformation between input pixel and cone response,
-%       for the pre-generated cone mosaic. Used as the likelihood function.
-% The name has numbers filed in for the various parameters, to help keep
-% versions for different parameters separate.
-
-%% Build new render matrix if desired/needed
+%% Build render matrix if desired/needed
 %
 % Run this code segement if you would like to rebuild a new mosaic and
 % render matrix.  This also gets run if there is no cached file corresponding
@@ -112,7 +104,7 @@ if (buildNewForward || ~exist(fullfile(aoReconDir,forwardRenderStructureName),'f
     % 3 mm pupil because the code that pulls out the initial Polens optics
     % checks that the desired pupil size is smaller than the 4 mm at which
     % those data were measured.
-    if (AOForwardRender)
+    if (forwardAORender)
         theConeMosaic = ConeResponseCmosaic(eccXDegs, eccYDegs, ...
             'fovealDegree', fieldSizeDegs, 'pupilSize', 3, 'useRandomSeed', false);
         theConeMosaic.PSF = ConeResponse.psfDiffLmt(forwardPupilDiamMM);
@@ -136,17 +128,18 @@ if (buildNewForward || ~exist(fullfile(aoReconDir,forwardRenderStructureName),'f
     forwardRenderStructure.eccY = eccYDegs;
     forwardRenderStructure.nPixels = nPixels;
     forwardRenderStructure.pupilDiamMM = forwardPupilDiamMM;
-    forwardRenderStructure.AORender = AOForwardRender;
+    forwardRenderStructure.AORender = forwardAORender;
     forwardRenderStructure.defocusDiopters = forwardDefocusDiopters;
-    save(fullfile(aoReconDir,forwardRenderStructureName,'forwardRenderStructure'));
+    save(fullfile(aoReconDir,forwardRenderStructureName),'forwardRenderStructure');
 
+else
     % If not building, load cached file.  If we're doing this, it exists
     % as checked above. After laod, check that cached parameters match current parameters
-else
+    %
     % Read and check that loaded structure is as expected
     clear forwardRenderStructure;
     load(fullfile(aoReconDir,forwardRenderStructureName),'forwardRenderStructure');
-    if (forwardRenderStructure.eccX ~= eccXDegs || forwardRenderStructure.eccY ~= eccY)
+    if (forwardRenderStructure.eccX ~= eccXDegs || forwardRenderStructure.eccY ~= eccYDegs)
         error('Precomputed forward rendering matrix not computed for current eccentricity');
     end
     if (forwardRenderStructure.fieldSizeDegs ~= fieldSizeDegs)
@@ -154,9 +147,6 @@ else
     end
     if (forwardRenderStructure.nPixels ~= nPixels)
         error('Precomputed forward rendering nPixels not equal to current value');
-    end
-    if (any(forwardRenderStructure.imageSize ~= imageSize))
-        error('Precomputed forward rendering imageSize not equal to current value')
     end
     if (forwardRenderStructure.pupilDiamMM ~= forwardPupilDiamMM)
         error('Precompued forward pupil size not equal to current value');
@@ -173,11 +163,27 @@ end
 forwardRenderMatrix = forwardRenderStructure.renderMatrix;
 forwardConeMosaic = forwardRenderStructure.theConeMosaic;
 forwardOI = forwardConeMosaic.PSF;
+
+% Set display variable
 theDisplay = forwardRenderStructure.theDisplay;
+
+% Clear forward render structure
 clear forwardRenderStructure;
 
-% Get the optical image structures
-OIAO = ConeResponse.psfDiffLmt;
+%% Reconstruction rendering parameters
+%
+% These are how the reconstruction algorithm thinks the image
+% was formed.  Need not be the same as the forward rendering.
+if (useForwardRenderingForRecon)
+    reconRenderMatrix = forwardRenderMatrix;
+    reconConeMosaic = forwardConeMosaic;
+    reconOI = forwardOI;
+    reconPupilDiamMM = forwardPupilDiamMM;
+    reconAORender = forwardAORender;
+    reconDefocusDiopters = forwardDefocusDiopters;
+else
+    error('Need to implement separate recon rendering setup');
+end
 
 %% Need new render if we want to reconstruct with respect to the AO stimulus
 reconstructWrtAO = true;
@@ -192,61 +198,72 @@ if (reconstructWrtAO)
     end
 end
 
-%% Show cone mosaic
-theConeMosaic.visualizeMosaic();
+%% Show forward cone mosaic
+forwardConeMosaic.visualizeMosaic();
 
 %% Generate an image stimulus
 % stimulus in the size of retinal degree
 % should not exceed 'fieldSizeDegs'
 stimSizeDegs = 0.4;
-size = stimSizeDegs / fieldSizeDegs;
-idxLB = round(nPixels * (0.5 - size / 2));
-idxUB = round(nPixels * (0.5 + size / 2));
-idxRange = idxLB : idxUB;
+stimSizeFraction = stimSizeDegs / fieldSizeDegs;
+idxLB = round(nPixels * (0.5 - stimSizeFraction / 2));
+idxUB = round(nPixels * (0.5 + stimSizeFraction / 2));
+idxRange = idxLB:idxUB;
 
 % Image stimulus with a gray background and yellow color
-testImage = ones(nPixels, nPixels, 3) * 0.20;
-testImage(idxRange, idxRange, 1) = 0.8;
-testImage(idxRange, idxRange, 2) = 0.65;
+stimulusImageRGB = ones(nPixels, nPixels, 3) * 0.20;
+stimulusImageRGB(idxRange, idxRange, 1) = 0.8;
+stimulusImageRGB(idxRange, idxRange, 2) = 0.65;
 
 % Show the stimulus by creating an ISETBio scene
 meanLuminanceCdPerM2 = [];
-[stimScene, ~, linear] = sceneFromFile(testImage, 'rgb', ...
-    meanLuminanceCdPerM2, theConeMosaic.Display);
-stimScene = sceneSet(stimScene, 'fov', stimSizeDegs);
-visualizeScene(stimScene, 'displayRadianceMaps', false);
+[stimulusScene, ~, testImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
+    meanLuminanceCdPerM2, forwardConeMosaic.Display);
+stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
+visualizeScene(stimulusScene, 'displayRadianceMaps', false);
 
-% Compute and visual retinal images
-forwardOI = oiCompute(stimScene,forwardOI);
+%% Compute forward retinal image and excitations.
+%
+% We'll reconstruct from these.
+forwardOI = oiCompute(stimulusScene,forwardOI);
 visualizeOpticalImage(forwardOI);
-theResponseRegular = theConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered');
-coneExcitationsCheckRegular = theResponseRegular(:);
+forwardExcitationsToStimulus = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
 
-OIAO = oiCompute(stimScene,OIAO);
-visualizeOpticalImage(OIAO);
-theResponseAO = theConeMosaic.Mosaic.compute(OIAO, 'opticalImagePositionDegs', 'mosaic-centered');
-coneExcitationsCheckAO = theResponseAO(:);
+% Check forward exciations calculation another way.  Also shows another way
+% to visualize the retinal image, but this only is done when the check
+% fails.
+forwardExcitationsToStimulusCheck = forwardConeMosaic.compute(stimulusImageRGB);
+if (max(abs(forwardExcitationsToStimulusCheck-forwardExcitationsToStimulus)) ~= 0)
+    forwardConeMosaic.visualizeOI()
+    error('Two ways of doing the same thing do not agree');
+end
+temp = squeeze(forwardConeMosaic.LastResponse);
+if (max(abs(temp-forwardExcitationsToStimulus)) ~= 0)
+    error('Last excitations in object not as we expect');
+end
 
-for ii = 1:101
-    temp = OIAO.data.photons(:,:,ii);
+% This code lets us figure out which wavelengths had non-zero photon counts
+for ii = 1:size(forwardOI.data.photons,3)
+    temp = forwardOI.data.photons(:,:,ii);
     if (any(max(temp(:)) >= 1e12))
-        fprintf('Plane %d has non-zero photons, max %g, mean %g, center %g\n',ii,max(temp(:)),mean(temp(:)),temp(40,40));
+        fprintf('Plane %d has non-zero photons, max %g, mean %g, center pixel value %g\n',ii,max(temp(:)),mean(temp(:)),temp(round(nPixels/2),round(nPixels/2)));
     end
 end
 
-%% Compute cone response
-coneExcitations = theConeMosaic.compute(testImage);
-theConeMosaic.visualizeOI()
+% reconOI = oiCompute(stimScene,reconOI);
+% visualizeOpticalImage(reconOI);
+% theResponseAO = theConeMosaic.Mosaic.compute(reconOI, 'opticalImagePositionDegs', 'mosaic-centered');
+% coneExcitationsCheckAO = theResponseAO(:);
 
 % Visualization of the cone response note that we are using
 % 'activationRange', [0 max(coneExcitations)] to avoid confusions due to
 % small stimulus
 figureHandle = figure(); axesHandle = [];
-theConeMosaic.Mosaic.visualize(...
+forwardConeMosaic.Mosaic.visualize(...
     'figureHandle', figureHandle, ...
     'axesHandle', axesHandle, ...
-    'activation', theConeMosaic.LastResponse, ...
-    'activationRange', [0 max(coneExcitations)], ...
+    'activation', forwardConeMosaic.LastResponse, ...
+    'activationRange', [0 max(forwardExcitationsToStimulus)], ...
     'plotTitle',  'Cone Response');
 
 %% Run reconstruction
@@ -255,19 +272,27 @@ prior = load(fullfile(aoReconDir,sparsePriorName));
 
 % Construct onstruct image estimator
 regPara = 0.001; stride = 2;
-estimator = PoissonSparseEstimator(forwardRenderMatrix, inv(prior.regBasis), ...
+estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
     prior.mu', regPara, stride, [nPixels nPixels 3]);
 
-% Estimate image
+% Estimate
 %
-% Note: could scale up/down the cone excitation vector if the
-% reconstruction is going out of range
-scaleFactor = 1;
-reconImage = estimator.runEstimate(coneExcitations * scaleFactor, ...
+% Scale excitations to take into account difference in forward and recon
+% pupil sizes.  This helps keep things in range.
+scaleFactor = (forwardPupilDiamMM/reconPupilDiamMM)^2;
+reconImage = estimator.runEstimate(forwardExcitationsToStimulus * scaleFactor, ...
     'maxIter', 500, 'display', 'iter', 'gpu', false);
 
-%% Show reconstruction
+% Show reconstruction
 meanLuminanceCdPerM2 = [];
-[stimScene, ~, linear] = sceneFromFile(gammaCorrection(reconImage, theDisplay), 'rgb', ...
+[reconScene, ~, reconImageLinear] = sceneFromFile(gammaCorrection(reconImage, theDisplay), 'rgb', ...
     meanLuminanceCdPerM2, theConeMosaic.Display);
-visualizeScene(stimScene, 'displayRadianceMaps', false);
+visualizeScene(reconScene, 'displayRadianceMaps', false);
+
+% Compute forward excitations from reconstruction
+% And compare with stimulus exciations
+forwardOI = oiCompute(reconScene,forwardOI);
+forwardExcitationsToRecon = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
+figure; clf; hold on;
+plot(forwardExcitationsToStimulus,forwardExcitationsToRecon,'ro','MarkerFaceColor','r','MarkerSize',10);
+
