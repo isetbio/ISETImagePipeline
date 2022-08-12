@@ -286,7 +286,8 @@ reconImage = estimator.runEstimate(forwardExcitationsToStimulus * scaleFactor, .
 % Show reconstruction
 meanLuminanceCdPerM2 = [];
 [reconScene, ~, reconImageLinear] = sceneFromFile(gammaCorrection(reconImage, theDisplay), 'rgb', ...
-    meanLuminanceCdPerM2, theConeMosaic.Display);
+    meanLuminanceCdPerM2, forwardConeMosaic.Display);
+reconScene = sceneSet(reconScene, 'fov', fieldSizeDegs);
 visualizeScene(reconScene, 'displayRadianceMaps', false);
 
 % Compute forward excitations from reconstruction
@@ -295,4 +296,5 @@ forwardOI = oiCompute(reconScene,forwardOI);
 forwardExcitationsToRecon = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
 figure; clf; hold on;
 plot(forwardExcitationsToStimulus,forwardExcitationsToRecon,'ro','MarkerFaceColor','r','MarkerSize',10);
+axis('square');
 
