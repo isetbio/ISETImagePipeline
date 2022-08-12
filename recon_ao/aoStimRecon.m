@@ -250,11 +250,6 @@ for ii = 1:size(forwardOI.data.photons,3)
     end
 end
 
-% reconOI = oiCompute(stimScene,reconOI);
-% visualizeOpticalImage(reconOI);
-% theResponseAO = theConeMosaic.Mosaic.compute(reconOI, 'opticalImagePositionDegs', 'mosaic-centered');
-% coneExcitationsCheckAO = theResponseAO(:);
-
 % Visualization of the cone response note that we are using
 % 'activationRange', [0 max(coneExcitations)] to avoid confusions due to
 % small stimulus
