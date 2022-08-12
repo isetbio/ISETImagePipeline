@@ -26,6 +26,8 @@ fieldSizeDegs = fieldSizeMinutes/60;
 eccXDegs = 2.0;
 eccYDegs = 0.0;
 forwardDefocusDiopters = 0;
+displayGammaBits = 16;
+displayGammaGamma = 2;
 AOForwardRender = false;
 displayName = 'mono';
 if (AOForwardRender)
@@ -97,6 +99,9 @@ if (buildNewForward)
     % Get display
     theDisplayLoad = load(fullfile(aoReconDir,[displayName 'Display.mat']));
     eval(['theDisplay = theDisplayLoad.' displayName 'Display;']);
+    gammaInput = linspace(0,1,2^displayGammaBits);
+    gammaOutput = gammaInput.^displayGammaGamma;
+    theDisplgammaTable = gammaOutput(:,[1 1 1]);
     clear theDisplayLoad;
 
     % Create and setup cone mosaic
