@@ -56,7 +56,7 @@ sparsePriorName = 'conventionalSparsePrior.mat';
 %
 % Use AO in forward rendering?
 % This determins pupil diameter which typically differs in AO
-forwardAORender = false;
+forwardAORender = true;
 if (forwardAORender)
     forwardPupilDiamMM = 7;
 else
