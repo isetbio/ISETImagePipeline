@@ -243,12 +243,13 @@ if (max(abs(temp-forwardExcitationsToStimulus)) ~= 0)
 end
 
 % This code lets us figure out which wavelengths had non-zero photon counts
-for ii = 1:size(forwardOI.data.photons,3)
-    temp = forwardOI.data.photons(:,:,ii);
-    if (any(max(temp(:)) >= 1e12))
-        fprintf('Plane %d has non-zero photons, max %g, mean %g, center pixel value %g\n',ii,max(temp(:)),mean(temp(:)),temp(round(nPixels/2),round(nPixels/2)));
-    end
-end
+%
+% for ii = 1:size(forwardOI.data.photons,3)
+%     temp = forwardOI.data.photons(:,:,ii);
+%     if (any(max(temp(:)) >= 1e12))
+%         fprintf('Plane %d has non-zero photons, max %g, mean %g, center pixel value %g\n',ii,max(temp(:)),mean(temp(:)),temp(round(nPixels/2),round(nPixels/2)));
+%     end
+% end
 
 % Visualization of the cone response note that we are using
 % 'activationRange', [0 max(coneExcitations)] to avoid confusions due to
