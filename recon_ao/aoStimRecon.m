@@ -35,9 +35,25 @@ eccYDegs = 0.0;
 %    'mono'            - A display with monochromatic primaries
 %
 % Also specify gamma table parameters
-displayName = 'mono';
+displayName = 'conventional';
 displayGammaBits = 16;
 displayGammaGamma = 2;
+switch (displayName)
+    case 'conventional'
+        displayFieldName = 'CRT12BitDisplay';
+        overwriteDisplayGamma = false;
+    case 'mono'
+        overwriteDisplayGamma = true;
+        displayFieldName = 'monoDisplay';
+    otherwise
+        error('Unknown display specified');
+end
+
+% Prior parameters
+%
+% conventionalSparsePrior - from the paper, images analyzed on conventional
+%                           display.
+sparsePriorName = 'conventionalSparsePrior.mat';
 
 % Forward rendering parameters
 %
@@ -83,10 +99,12 @@ end
 if (buildNewForward || ~exist(fullfile(aoReconDir,forwardRenderStructureName),'file'))
     % Get display
     theDisplayLoad = load(fullfile(aoReconDir,[displayName 'Display.mat']));
-    eval(['theDisplay = theDisplayLoad.' displayName 'Display;']);
-    gammaInput = linspace(0,1,2^displayGammaBits)';
-    gammaOutput = gammaInput.^displayGammaGamma;
-    theDisplay.gamma = gammaOutput(:,[1 1 1]);
+    eval(['theDisplay = theDisplayLoad.' displayFieldName ';']);
+    if (overwriteDisplayGamma)
+        gammaInput = linspace(0,1,2^displayGammaBits)';
+        gammaOutput = gammaInput.^displayGammaGamma;
+        theDisplay.gamma = gammaOutput(:,[1 1 1]);
+    end
     clear theDisplayLoad;
 
     % Create and setup cone mosaic
@@ -155,7 +173,7 @@ end
 
 % Set forward variables from loaded/built structure
 forwardRenderMatrix = forwardRenderStructure.renderMatrix;
-forwardConeMosaic = forwardRenderStructure.theConeMosiac;
+forwardConeMosaic = forwardRenderStructure.theConeMosaic;
 forwardOI = forwardConeMosaic.PSF;
 theDisplay = forwardRenderStructure.theDisplay;
 clear forwardRenderStructure;
@@ -235,7 +253,7 @@ theConeMosaic.Mosaic.visualize(...
 
 %% Run reconstruction
 % with special prior built for the display
-prior = load(fullfile(aoReconDir,'sparsePrior.mat'));
+prior = load(fullfile(aoReconDir,sparsePriorName));
 
 % Construct onstruct image estimator
 regPara = 0.001; stride = 2;
