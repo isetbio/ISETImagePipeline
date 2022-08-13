@@ -33,7 +33,7 @@ eccYDegs = 0.0;
 %    'mono'            - A display with monochromatic primaries
 %
 % Also specify gamma table parameters
-displayName = 'mono';
+displayName = 'conventional';
 displayGammaBits = 16;
 displayGammaGamma = 2;
 switch (displayName)
@@ -71,10 +71,10 @@ sparsePriorName = [sparsePriorStr 'SparsePrior.mat'];
 forwardAORender = true;
 if (forwardAORender)
     forwardPupilDiamMM = 7;
-    forwardAOStr = 'AO';
+    forwardAOStr = ['AO' num2str(forwardPupilDiamMM)];
 else
     forwardPupilDiamMM = 3;
-    forwardAOStr = 'NOAO';
+    forwardAOStr = ['NOAO' num2str(forwardPupilDiamMM)];
 end
 
 % Residual defocus for forward rendering
@@ -109,7 +109,7 @@ if (buildNewForward || ~exist(fullfile(aoReconDir,forwardRenderStructureName),'f
         gammaOutput = gammaInput.^displayGammaGamma;
         theDisplay.gamma = gammaOutput(:,[1 1 1]);
     end
-    clear theDisplayLoad;
+    clear theDisplayLoad;v
 
     % Create and setup cone mosaic
     %
@@ -206,8 +206,8 @@ else
 end
 
 %% Setup output directory
-outputName = sprintf('%s_%s_%d_%0.2f_%0.2f_%s_%s_%0.2f_%0.2f_%0.2f_%0.2f_%0.2f', ...
-    forwardAOStr,reconAOStr,nPixels,forwardDefocusDiopters,reconDefocusDiopters,displayName, sparsePriorStr, ...
+outputName = sprintf('%s_%s_%d_%d_%0.2f_%0.2f_%s_%s_%0.2f_%0.2f_%0.2f_%0.2f_%0.2f', ...
+    forwardAOStr,reconAOStr,nPixels,fieldSizeMinutes,forwardDefocusDiopters,reconDefocusDiopters,displayName, sparsePriorStr, ...
     stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal);
 outputDir = fullfile(aoReconDir,outputName);
 if (~exist(outputDir,'dir'))
@@ -337,12 +337,50 @@ estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
 %
 % Scale excitations to take into account difference in forward and recon
 % pupil sizes.  This helps keep things in range.
+meanLuminanceCdPerM2 = [];
 scaleFactor = (forwardPupilDiamMM/reconPupilDiamMM)^2;
-reconImage = estimator.runEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
+reconImage1 = estimator.runEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
     'maxIter', 500, 'display', 'iter', 'gpu', false);
+[recon1Scene, ~, reconImage1Linear] = sceneFromFile(gammaCorrection(reconImage1, theDisplay), 'rgb', ...
+    meanLuminanceCdPerM2, forwardConeMosaic.Display);
+recon1Scene = sceneSet(recon1Scene, 'fov', fieldSizeDegs);
+[recon1NegLogPrior,~,recon1NegLogLikely] = ...
+    estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, reconImage1Linear(:));
+visualizeScene(reconScene1, 'displayRadianceMaps', false);
+saveas(gcf,fullfile(outputDir,'Recon1.jpg'),'jpg');
+
+% Start at stimulus image.  We do this to check if the random starting
+% point gets stuck in a local minimum.  If we find much of this, we will
+% need to think of a better way to initialize but that doesn't depend on
+% knowing the stimulus.
+reconImage2 = estimator.runEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
+    'maxIter', 500, 'display', 'iter', 'gpu', false, 'init', stimulusImageLinear(:));
+[recon2Scene, ~, reconImage2Linear] = sceneFromFile(gammaCorrection(reconImage2, theDisplay), 'rgb', ...
+    meanLuminanceCdPerM2, forwardConeMosaic.Display);
+recon2Scene = sceneSet(recon2Scene, 'fov', fieldSizeDegs);
+[recon2NegLogPrior,~,recon2NegLogLikely] = ...
+    estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, reconImage2Linear(:));
+visualizeScene(recon2Scene, 'displayRadianceMaps', false);
+saveas(gcf,fullfile(outputDir,'Recon2.jpg'),'jpg');
+
+% Report back the better
+if (-(recon1NegLogPrior+recon1NegLogLikely) > -(recon2NegLogPrior+recon2NegLogLikely))
+    reconWhichStr = 'Recon1 (random start) better\n';
+    reconNegLogPrior = recon1NegLogPrior;
+    reconNegLogLikely = reonc1NegLogLikely;
+    reconImage = reconImage1;
+    reconScene = reconScene1;
+    reconImageLinear = recon1ImageLinear;
+else
+    reconWhichStr = 'Recon2 (stimulus start) better\n';
+    reconNegLogPrior = recon2NegLogPrior;
+    reconNegLogLikely = reonc2NegLogLikely;
+    reconImage = reconImage2;
+    reconScene = reconScene2;
+    reconImageLinear = recon2ImageLinear;
+end
 
 % Show reconstruction
-meanLuminanceCdPerM2 = [];
 [reconScene, ~, reconImageLinear] = sceneFromFile(gammaCorrection(reconImage, theDisplay), 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 reconScene = sceneSet(reconScene, 'fov', fieldSizeDegs);
@@ -371,28 +409,31 @@ saveas(gcf,fullfile(outputDir,'StimulusVsReconExcitations.jpg'),'jpg');
 %% Evaluate prior and likelihood of stimulus and reconstruction
 [stimNegLogPrior,~,stimNegLogLikely] = ...
     estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, stimulusImageLinear(:));
-[reconNegLogPrior,~,reconNegLogLikely] = ...
-    estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, reconImageLinear(:));
-fprintf('Stimulus: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
+fid = fopen(fullfile(outputDir,'ReconProbInfo.txt'),'w');
+fprintf(fid,'Stimulus: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
     -stimNegLogPrior,-stimNegLogLikely,-(stimNegLogPrior+stimNegLogLikely));
-fprintf('Recon: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
-    -reconNegLogPrior,-reconNegLogLikely,-(reconNegLogPrior+reconNegLogLikely));
-fprintf('Each of the folowing should be *higher* for a valid reconstruction');
+fprintf(fid,'Recon1: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
+    -recon1NegLogPrior,-recon1NegLogLikely,-(recon1NegLogPrior+recon1NegLogLikely));
+fprintf(fid,'Recon2: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
+    -recon2NegLogPrior,-recon2NegLogLikely,-(recon2NegLogPrior+recon2NegLogLikely));
+fprintf(fid,reconWhichStr);
+fprintf(fid,'Each of the folowing should be *higher* for a valid reconstruction\n');
 if (-stimNegLogPrior > -reconNegLogPrior)
-    fprintf('\tReconstruction prior *lower* than stimulus\n');
+    fprintf(fid,'\tReconstruction prior *lower* than stimulus\n');
 else
-    fprintf('\tReconstruction prior *higher* than stimulus\n');
+    fprintf(fid,'\tReconstruction prior *higher* than stimulus\n');
 end
 if (-stimNegLogLikely > -reconNegLogLikely)
-    fprintf('\tStimulus likelihood *higher* than reconstruction\n');
+    fprintf(fid,'\tStimulus likelihood *higher* than reconstruction\n');
 else
-    fprintf('\tStimulus likelihood *lower* than reconstruction\n');
+    fprintf(fid,'\tStimulus likelihood *lower* than reconstruction\n');
 end
 if (-(stimNegLogPrior+stimNegLogLikely) > -(reconNegLogPrior+reconNegLogLikely))
-    fprintf('\tReconstruction neg objective *lower* than stimulus\n');
+    fprintf(fid,'\tReconstruction neg objective *lower* than stimulus\n');
 else
-    fprintf('\ttReconstruction neg objective *higher* than stimulus\n');
+    fprintf(fid,'\tReconstruction neg objective *higher* than stimulus\n');
 end
+fclose(fid);
 
 %% Save workspace
 close all;
