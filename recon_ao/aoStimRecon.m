@@ -7,6 +7,7 @@
 % History:
 %   07/29/22  lz    Wrote this sometime in the past
 %   07/29/22  dhb, chr  Starting to dig into this
+%   08/13/22  dhb   Lots of bookkeeping, cleaning, etc.
 
 %% Clear
 clear; close all;
@@ -32,7 +33,7 @@ eccYDegs = 0.0;
 %    'mono'            - A display with monochromatic primaries
 %
 % Also specify gamma table parameters
-displayName = 'conventional';
+displayName = 'mono';
 displayGammaBits = 16;
 displayGammaGamma = 2;
 switch (displayName)
@@ -46,11 +47,22 @@ switch (displayName)
         error('Unknown display specified');
 end
 
+% Stimulus parameters
+stimSizeDegs = 0.4;
+stimBgVal = 0.2;
+% stimRVal = 0.8;
+% stimGVal = 0.65;
+% stimBVal = 0.2;
+stimRVal = 0.5;
+stimGVal = 0.5;
+stimBVal = 0.5;
+
 % Prior parameters
 %
 % conventionalSparsePrior - from the paper, images analyzed on conventional
 %                           display.
-sparsePriorName = 'conventionalSparsePrior.mat';
+sparsePriorStr = 'conventional';
+sparsePriorName = [sparsePriorStr 'SparsePrior.mat'];
 
 % Forward rendering parameters
 %
@@ -59,12 +71,14 @@ sparsePriorName = 'conventionalSparsePrior.mat';
 forwardAORender = true;
 if (forwardAORender)
     forwardPupilDiamMM = 7;
+    forwardAOStr = 'AO';
 else
     forwardPupilDiamMM = 3;
+    forwardAOStr = 'NOAO';
 end
 
 % Residual defocus for forward rendering
-forwardDefocusDiopters = 0.1;
+forwardDefocusDiopters = 0.05;
 
 % Force build and save
 buildNewForward = false;
@@ -106,11 +120,13 @@ if (buildNewForward || ~exist(fullfile(aoReconDir,forwardRenderStructureName),'f
     % checks that the desired pupil size is smaller than the 4 mm at which
     % those data were measured.
     if (forwardAORender)
+        % We build a normal optics structure, and then overwrite the PSF
+        % property.  Allow specified defocus.
         theConeMosaic = ConeResponseCmosaic(eccXDegs, eccYDegs, ...
-            'fovealDegree', fieldSizeDegs, 'pupilSize', 3, 'useRandomSeed', false, ...
-            'defocusDiopters',forwardDefocusDiopters);
-        theConeMosaic.PSF = ConeResponse.psfDiffLmt(forwardPupilDiamMM);
+            'fovealDegree', fieldSizeDegs, 'pupilSize', 3, 'useRandomSeed', false);
+        theConeMosaic.PSF = ConeResponse.psfDiffLmt(forwardPupilDiamMM,'defocusDiopters', forwardDefocusDiopters);
     else
+        % Build normal optics structure. 
         theConeMosaic = ConeResponseCmosaic(eccXDegs, eccYDegs, ...
             'fovealDegree', fieldSizeDegs, 'pupilSize', forwardPupilDiamMM, 'useRandomSeed', false, ...
             'defocusDiopters',forwardDefocusDiopters);
@@ -184,39 +200,50 @@ if (useForwardRenderingForRecon)
     reconPupilDiamMM = forwardPupilDiamMM;
     reconAORender = forwardAORender;
     reconDefocusDiopters = forwardDefocusDiopters;
+    reconAOStr = forwardAOStr;
 else
     error('Need to implement separate recon rendering setup');
 end
 
-%% Need new render if we want to reconstruct with respect to the AO stimulus
-reconstructWrtAO = true;
-buildNewAO = false;
-if (reconstructWrtAO)
-    if (buildNewAO)
-        forwardRenderMatrix = theConeMosaic.forwardRender([nPixels nPixels 3], ...
-            'validation', false);
-        forwardRenderMatrix = double(forwardRenderMatrix);
-    else
-        load(fullfile(aoReconDir,'aoOpticsRenderMatrix.mat'));
-    end
+%% Setup output directory
+outputName = sprintf('%s_%s_%d_%0.2f_%0.2f_%s_%s_%0.2f_%0.2f_%0.2f_%0.2f_%0.2f', ...
+    forwardAOStr,reconAOStr,nPixels,forwardDefocusDiopters,reconDefocusDiopters,displayName, sparsePriorStr, ...
+    stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal);
+outputDir = fullfile(aoReconDir,outputName);
+if (~exist(outputDir,'dir'))
+    mkdir(outputDir);
 end
+
+%% Need new render if we want to reconstruct with respect to the AO stimulus
+% reconstructWrtAO = true;
+% buildNewAO = false;
+% if (reconstructWrtAO)
+%     if (buildNewAO)
+%         forwardRenderMatrix = theConeMosaic.forwardRender([nPixels nPixels 3], ...
+%             'validation', false);
+%         forwardRenderMatrix = double(forwardRenderMatrix);
+%     else
+%         load(fullfile(aoReconDir,'aoOpticsRenderMatrix.mat'));
+%     end
+% end
 
 %% Show forward cone mosaic
 forwardConeMosaic.visualizeMosaic();
+saveas(gcf,fullfile(outputDir,'Mosaic.jpg'),'jpg');
 
 %% Generate an image stimulus
 % stimulus in the size of retinal degree
 % should not exceed 'fieldSizeDegs'
-stimSizeDegs = 0.4;
 stimSizeFraction = stimSizeDegs / fieldSizeDegs;
 idxLB = round(nPixels * (0.5 - stimSizeFraction / 2));
 idxUB = round(nPixels * (0.5 + stimSizeFraction / 2));
 idxRange = idxLB:idxUB;
 
 % Image stimulus with a gray background and yellow color
-stimulusImageRGB = ones(nPixels, nPixels, 3) * 0.20;
-stimulusImageRGB(idxRange, idxRange, 1) = 0.8;
-stimulusImageRGB(idxRange, idxRange, 2) = 0.65;
+stimulusImageRGB = ones(nPixels, nPixels, 3) * stimBgVal;
+stimulusImageRGB(idxRange, idxRange, 1) = stimRVal;
+stimulusImageRGB(idxRange, idxRange, 2) = stimGVal;
+stimulusImageRGB(idxRange, idxRange, 3) = stimBVal;
 
 % Show the stimulus by creating an ISETBio scene
 meanLuminanceCdPerM2 = [];
@@ -224,6 +251,7 @@ meanLuminanceCdPerM2 = [];
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
 visualizeScene(stimulusScene, 'displayRadianceMaps', false);
+saveas(gcf,fullfile(outputDir,'Stimulus.jpg'),'jpg');
 
 %% Compute forward retinal image and excitations using ISETBio
 %
@@ -260,6 +288,7 @@ xlim([0 maxVal]); ylim([0 maxVal]);
 xlabel('Excitations to stimulus ISETBio');
 ylabel('Excitations to stimulus render matrix');
 title('Exciations ISETBio and render matrix');
+saveas(gcf,fullfile(outputDir,'ISETBioVsRenderMatrixExciations.jpg'),'jpg');
 
 %% Choose which excitations to reconstruct form
 if (reconstructfromRenderMatrix)
@@ -292,9 +321,11 @@ forwardConeMosaic.Mosaic.visualize(...
     'activation', reshape(forwardExcitationsToStimulusUse,1,1,length(forwardExcitationsToStimulusUse)), ...
     'activationRange', [0 max(forwardExcitationsToStimulusUse)], ...
     'plotTitle',  titleStr);
+saveas(gcf,fullfile(outputDir,'MosaicExcitations.jpg'),'jpg');
 
 %% Run reconstruction
-% with special prior built for the display
+%
+% Load prior
 prior = load(fullfile(aoReconDir,sparsePriorName));
 
 % Construct onstruct image estimator
@@ -316,6 +347,7 @@ meanLuminanceCdPerM2 = [];
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 reconScene = sceneSet(reconScene, 'fov', fieldSizeDegs);
 visualizeScene(reconScene, 'displayRadianceMaps', false);
+saveas(gcf,fullfile(outputDir,'Recon.jpg'),'jpg');
 
 % Compute forward excitations from reconstruction
 % And compare with stimulus exciations
@@ -334,3 +366,34 @@ if (reconstructfromRenderMatrix)
 else
     title('Reconstruction from forward ISETBio');
 end
+saveas(gcf,fullfile(outputDir,'StimulusVsReconExcitations.jpg'),'jpg');
+
+%% Evaluate prior and likelihood of stimulus and reconstruction
+[stimNegLogPrior,~,stimNegLogLikely] = ...
+    estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, stimulusImageLinear(:));
+[reconNegLogPrior,~,reconNegLogLikely] = ...
+    estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, reconImageLinear(:));
+fprintf('Stimulus: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
+    -stimNegLogPrior,-stimNegLogLikely,-(stimNegLogPrior+stimNegLogLikely));
+fprintf('Recon: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
+    -reconNegLogPrior,-reconNegLogLikely,-(reconNegLogPrior+reconNegLogLikely));
+fprintf('Each of the folowing should be *higher* for a valid reconstruction');
+if (-stimNegLogPrior > -reconNegLogPrior)
+    fprintf('\tReconstruction prior *lower* than stimulus\n');
+else
+    fprintf('\tReconstruction prior *higher* than stimulus\n');
+end
+if (-stimNegLogLikely > -reconNegLogLikely)
+    fprintf('\tStimulus likelihood *higher* than reconstruction\n');
+else
+    fprintf('\tStimulus likelihood *lower* than reconstruction\n');
+end
+if (-(stimNegLogPrior+stimNegLogLikely) > -(reconNegLogPrior+reconNegLogLikely))
+    fprintf('\tReconstruction neg objective *lower* than stimulus\n');
+else
+    fprintf('\ttReconstruction neg objective *higher* than stimulus\n');
+end
+
+%% Save workspace
+close all;
+save(fullfile(outputDir,'xRunOutput.mat'));
