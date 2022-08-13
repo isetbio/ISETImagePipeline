@@ -64,19 +64,20 @@ else
 end
 
 % Residual defocus for forward rendering
-forwardDefocusDiopters = 0;
+forwardDefocusDiopters = 0.1;
 
 % Force build and save
 buildNewForward = false;
 
 % Recon rendering parameters
 useForwardRenderingForRecon = true;
+reconstructfromRenderMatrix = true;
 
 %% Set forward render filenname
 if (forwardAORender)
-    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters);
+    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters);
 else
-    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters);
+    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters);
 end
 
 %% Build render matrix if desired/needed
@@ -106,11 +107,13 @@ if (buildNewForward || ~exist(fullfile(aoReconDir,forwardRenderStructureName),'f
     % those data were measured.
     if (forwardAORender)
         theConeMosaic = ConeResponseCmosaic(eccXDegs, eccYDegs, ...
-            'fovealDegree', fieldSizeDegs, 'pupilSize', 3, 'useRandomSeed', false);
+            'fovealDegree', fieldSizeDegs, 'pupilSize', 3, 'useRandomSeed', false, ...
+            'defocusDiopters',forwardDefocusDiopters);
         theConeMosaic.PSF = ConeResponse.psfDiffLmt(forwardPupilDiamMM);
     else
         theConeMosaic = ConeResponseCmosaic(eccXDegs, eccYDegs, ...
-            'fovealDegree', fieldSizeDegs, 'pupilSize', forwardPupilDiamMM, 'useRandomSeed', false);
+            'fovealDegree', fieldSizeDegs, 'pupilSize', forwardPupilDiamMM, 'useRandomSeed', false, ...
+            'defocusDiopters',forwardDefocusDiopters);
     end
     theConeMosaic.Display = theDisplay;
 
@@ -217,29 +220,52 @@ stimulusImageRGB(idxRange, idxRange, 2) = 0.65;
 
 % Show the stimulus by creating an ISETBio scene
 meanLuminanceCdPerM2 = [];
-[stimulusScene, ~, testImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
+[stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
 visualizeScene(stimulusScene, 'displayRadianceMaps', false);
 
-%% Compute forward retinal image and excitations.
+%% Compute forward retinal image and excitations using ISETBio
 %
 % We'll reconstruct from these.
 forwardOI = oiCompute(stimulusScene,forwardOI);
 visualizeOpticalImage(forwardOI);
-forwardExcitationsToStimulus = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
+forwardExcitationsToStimulusISETBio = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
 
 % Check forward exciations calculation another way.  Also shows another way
 % to visualize the retinal image, but this only is done when the check
 % fails.
 forwardExcitationsToStimulusCheck = forwardConeMosaic.compute(stimulusImageRGB);
-if (max(abs(forwardExcitationsToStimulusCheck-forwardExcitationsToStimulus)) ~= 0)
+if (max(abs(forwardExcitationsToStimulusCheck-forwardExcitationsToStimulusISETBio)) ~= 0)
     forwardConeMosaic.visualizeOI()
     error('Two ways of doing the same thing do not agree');
 end
 temp = squeeze(forwardConeMosaic.LastResponse);
-if (max(abs(temp-forwardExcitationsToStimulus)) ~= 0)
+if (max(abs(temp-forwardExcitationsToStimulusISETBio)) ~= 0)
     error('Last excitations in object not as we expect');
+end
+
+%% Compute excitations using forward render matrix.
+%
+% We would like these to agree with direct rendering, but
+% for reasons we are slowly coming to understand (quantization
+% is a non-linear process), they don't always.
+forwardExcitationsToStimulusRenderMatrix = forwardRenderMatrix*stimulusImageLinear(:);
+figure; clf; hold on;
+plot(forwardExcitationsToStimulusISETBio,forwardExcitationsToStimulusRenderMatrix,'ro','MarkerFaceColor','r','MarkerSize',10);
+axis('square');
+maxVal = max([forwardExcitationsToStimulusISETBio; forwardExcitationsToStimulusRenderMatrix]);
+plot([0 maxVal],[0 maxVal],'k');
+xlim([0 maxVal]); ylim([0 maxVal]);
+xlabel('Excitations to stimulus ISETBio');
+ylabel('Excitations to stimulus render matrix');
+title('Exciations ISETBio and render matrix');
+
+%% Choose which excitations to reconstruct form
+if (reconstructfromRenderMatrix)
+    forwardExcitationsToStimulusUse = forwardExcitationsToStimulusRenderMatrix;
+else
+    forwardExcitationsToStimulusUse = forwardExcitationsToStimulusISETBio;
 end
 
 % This code lets us figure out which wavelengths had non-zero photon counts
@@ -254,13 +280,18 @@ end
 % Visualization of the cone response note that we are using
 % 'activationRange', [0 max(coneExcitations)] to avoid confusions due to
 % small stimulus
+if (reconstructfromRenderMatrix)
+    titleStr = 'Excitations using render matrix';
+else
+    titleStr = 'Excitations using ISETBio';
+end
 figureHandle = figure(); axesHandle = [];
 forwardConeMosaic.Mosaic.visualize(...
     'figureHandle', figureHandle, ...
     'axesHandle', axesHandle, ...
-    'activation', forwardConeMosaic.LastResponse, ...
-    'activationRange', [0 max(forwardExcitationsToStimulus)], ...
-    'plotTitle',  'Cone Response');
+    'activation', reshape(forwardExcitationsToStimulusUse,1,1,length(forwardExcitationsToStimulusUse)), ...
+    'activationRange', [0 max(forwardExcitationsToStimulusUse)], ...
+    'plotTitle',  titleStr);
 
 %% Run reconstruction
 % with special prior built for the display
@@ -276,7 +307,7 @@ estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
 % Scale excitations to take into account difference in forward and recon
 % pupil sizes.  This helps keep things in range.
 scaleFactor = (forwardPupilDiamMM/reconPupilDiamMM)^2;
-reconImage = estimator.runEstimate(forwardExcitationsToStimulus * scaleFactor, ...
+reconImage = estimator.runEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
     'maxIter', 500, 'display', 'iter', 'gpu', false);
 
 % Show reconstruction
@@ -291,6 +322,15 @@ visualizeScene(reconScene, 'displayRadianceMaps', false);
 forwardOI = oiCompute(reconScene,forwardOI);
 forwardExcitationsToRecon = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
 figure; clf; hold on;
-plot(forwardExcitationsToStimulus,forwardExcitationsToRecon,'ro','MarkerFaceColor','r','MarkerSize',10);
+plot(forwardExcitationsToStimulusUse,forwardExcitationsToRecon,'ro','MarkerFaceColor','r','MarkerSize',10);
 axis('square');
-
+maxVal = max([forwardExcitationsToStimulusUse; forwardExcitationsToRecon]);
+plot([0 maxVal],[0 maxVal],'k');
+xlim([0 maxVal]); ylim([0 maxVal]);
+xlabel('Excitations to stimulus');
+ylabel('Excitations to reconstruction');
+if (reconstructfromRenderMatrix)
+    title('Reconstruction from forward render matrix');
+else
+    title('Reconstruction from forward ISETBio');
+end
