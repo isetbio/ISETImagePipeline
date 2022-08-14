@@ -1,16 +1,29 @@
-%% aoStimRecon
+function aoStimRecon(displayName,sparsePriorStr,...
+                    forwardAORender, ...
+                    forwardDefocusDiopters, ...
+                    stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
+                    regPara,stride)
+% Synopsis:
+%    Driver to run AO recon simulations.
 %
-% Descriptoin:
+% Description:
 %    Script to see how well we can measure unique yellow percepts under AO
-%    conditions.
+%    conditions.  This has many parameters.  See aoStimReconRunMany for
+%    those not fixed here.
+% 
+%    This script organizes and saves ts output in the directory hierarchy
+%    set up by the local hook file.
+%
+% See also: aoStimReconRunMany
 
 % History:
 %   07/29/22  lz    Wrote this sometime in the past
 %   07/29/22  dhb, chr  Starting to dig into this
 %   08/13/22  dhb   Lots of bookkeeping, cleaning, etc.
+%   08/14/22  dhb   Made it a callable function.
 
-%% Clear
-clear; close all;
+%% Close existing figures
+close all;
 
 %% Point at directory with data files for this subproject
 %
@@ -26,54 +39,25 @@ fieldSizeDegs = fieldSizeMinutes/60;
 eccXDegs = 2.0;
 eccYDegs = 0.0;
 
-% Display parameters.
-%
-% Display options are:
-%    'conventional'    - A conventional display
-%    'mono'            - A display with monochromatic primaries
-%
-% Also specify gamma table parameters
-displayName = 'conventional';
-displayGammaBits = 16;
+% Gamma table parameters
+displayGammaBits = 12;
 displayGammaGamma = 2;
 switch (displayName)
     case 'conventional'
         displayFieldName = 'CRT12BitDisplay';
         overwriteDisplayGamma = false;
     case 'mono'
-        overwriteDisplayGamma = true;
         displayFieldName = 'monoDisplay';
+        overwriteDisplayGamma = true;
     otherwise
         error('Unknown display specified');
 end
 
-% Stimulus parameters
-stimSizeDegs = 0.4;
-stimBgVal = 0.2;
-stimRVal = 0.8;
-stimGVal = 0.65;
-stimBVal = 0.2;
-% stimRVal = 0.5;
-% stimGVal = 0.5;
-% stimBVal = 0.5;
-
-% Prior parameters
-%
-% conventionalSparsePrior - from the paper, images analyzed on conventional
-%                           display.
-sparsePriorStr = 'conventional';
+% Sparse prior name
 sparsePriorName = [sparsePriorStr 'SparsePrior.mat'];
 
-% Reconstruction parameters
-%regPara = 0.001;
-regPara = 0.001;
-stride = 2;
 
-% Forward rendering parameters
-%
-% Use AO in forward rendering?
-% This determins pupil diameter which typically differs in AO
-forwardAORender = true;
+% Determine pupil diameter which typically differs in AO
 if (forwardAORender)
     forwardPupilDiamMM = 7;
     forwardAOStr = ['AO' num2str(forwardPupilDiamMM)];
@@ -81,9 +65,6 @@ else
     forwardPupilDiamMM = 3;
     forwardAOStr = ['NOAO' num2str(forwardPupilDiamMM)];
 end
-
-% Residual defocus for forward rendering
-forwardDefocusDiopters = 0.00;
 
 % Force build and save
 buildNewForward = false;
