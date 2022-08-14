@@ -20,7 +20,7 @@ aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 %% Setup / Simulation parameters
 %
 % Spatial parameters.  Common to forward and recon models
-nPixels = 100;
+nPixels = 58;
 fieldSizeMinutes = 30;
 fieldSizeDegs = fieldSizeMinutes/60;
 eccXDegs = 2.0;
@@ -50,12 +50,12 @@ end
 % Stimulus parameters
 stimSizeDegs = 0.4;
 stimBgVal = 0.2;
-% stimRVal = 0.8;
-% stimGVal = 0.65;
-% stimBVal = 0.2;
-stimRVal = 0.5;
-stimGVal = 0.5;
-stimBVal = 0.5;
+stimRVal = 0.8;
+stimGVal = 0.65;
+stimBVal = 0.2;
+% stimRVal = 0.5;
+% stimGVal = 0.5;
+% stimBVal = 0.5;
 
 % Prior parameters
 %
@@ -63,6 +63,11 @@ stimBVal = 0.5;
 %                           display.
 sparsePriorStr = 'conventional';
 sparsePriorName = [sparsePriorStr 'SparsePrior.mat'];
+
+% Reconstruction parameters
+%regPara = 0.001;
+regPara = 0.001;
+stride = 2;
 
 % Forward rendering parameters
 %
@@ -78,7 +83,7 @@ else
 end
 
 % Residual defocus for forward rendering
-forwardDefocusDiopters = 0.05;
+forwardDefocusDiopters = 0.00;
 
 % Force build and save
 buildNewForward = false;
@@ -109,7 +114,7 @@ if (buildNewForward || ~exist(fullfile(aoReconDir,forwardRenderStructureName),'f
         gammaOutput = gammaInput.^displayGammaGamma;
         theDisplay.gamma = gammaOutput(:,[1 1 1]);
     end
-    clear theDisplayLoad;v
+    clear theDisplayLoad;
 
     % Create and setup cone mosaic
     %
@@ -206,40 +211,30 @@ else
 end
 
 %% Setup output directory
-outputName = sprintf('%s_%s_%d_%d_%0.2f_%0.2f_%s_%s_%0.2f_%0.2f_%0.2f_%0.2f_%0.2f', ...
-    forwardAOStr,reconAOStr,nPixels,fieldSizeMinutes,forwardDefocusDiopters,reconDefocusDiopters,displayName, sparsePriorStr, ...
-    stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal);
-outputDir = fullfile(aoReconDir,outputName);
+outputMainName = sprintf('%s_%s_%0.2f_%0.2f_%d_%d_%0.1f_%s_%s', ...
+    forwardAOStr,reconAOStr,forwardDefocusDiopters,reconDefocusDiopters,nPixels,fieldSizeMinutes,60*stimSizeDegs,displayName,sparsePriorStr);
+outputSubName = sprintf('%0.4f_%d_%0.2f_%0.2f_%0.2f_%0.2f',regPara,stride,stimBgVal,stimRVal,stimGVal,stimBVal);
+outputDir = fullfile(aoReconDir,outputMainName,outputSubName);
 if (~exist(outputDir,'dir'))
     mkdir(outputDir);
 end
-
-%% Need new render if we want to reconstruct with respect to the AO stimulus
-% reconstructWrtAO = true;
-% buildNewAO = false;
-% if (reconstructWrtAO)
-%     if (buildNewAO)
-%         forwardRenderMatrix = theConeMosaic.forwardRender([nPixels nPixels 3], ...
-%             'validation', false);
-%         forwardRenderMatrix = double(forwardRenderMatrix);
-%     else
-%         load(fullfile(aoReconDir,'aoOpticsRenderMatrix.mat'));
-%     end
-% end
 
 %% Show forward cone mosaic
 forwardConeMosaic.visualizeMosaic();
 saveas(gcf,fullfile(outputDir,'Mosaic.jpg'),'jpg');
 
 %% Generate an image stimulus
-% stimulus in the size of retinal degree
-% should not exceed 'fieldSizeDegs'
+%
+% Stimulus size in retinal degrees should not exceed 'fieldSizeDegs'
 stimSizeFraction = stimSizeDegs / fieldSizeDegs;
+if (stimSizeFraction > 1)
+    error('Stimulus size too big given field size');
+end
 idxLB = round(nPixels * (0.5 - stimSizeFraction / 2));
 idxUB = round(nPixels * (0.5 + stimSizeFraction / 2));
 idxRange = idxLB:idxUB;
 
-% Image stimulus with a gray background and yellow color
+% Set image pixels
 stimulusImageRGB = ones(nPixels, nPixels, 3) * stimBgVal;
 stimulusImageRGB(idxRange, idxRange, 1) = stimRVal;
 stimulusImageRGB(idxRange, idxRange, 2) = stimGVal;
@@ -250,14 +245,14 @@ meanLuminanceCdPerM2 = [];
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
-visualizeScene(stimulusScene, 'displayRadianceMaps', false);
+visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
 saveas(gcf,fullfile(outputDir,'Stimulus.jpg'),'jpg');
 
 %% Compute forward retinal image and excitations using ISETBio
 %
 % We'll reconstruct from these.
 forwardOI = oiCompute(stimulusScene,forwardOI);
-visualizeOpticalImage(forwardOI);
+visualizeOpticalImage(forwardOI, 'avoidAutomaticRGBscaling', true);
 forwardExcitationsToStimulusISETBio = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
 
 % Check forward exciations calculation another way.  Also shows another way
@@ -297,15 +292,6 @@ else
     forwardExcitationsToStimulusUse = forwardExcitationsToStimulusISETBio;
 end
 
-% This code lets us figure out which wavelengths had non-zero photon counts
-%
-% for ii = 1:size(forwardOI.data.photons,3)
-%     temp = forwardOI.data.photons(:,:,ii);
-%     if (any(max(temp(:)) >= 1e12))
-%         fprintf('Plane %d has non-zero photons, max %g, mean %g, center pixel value %g\n',ii,max(temp(:)),mean(temp(:)),temp(round(nPixels/2),round(nPixels/2)));
-%     end
-% end
-
 % Visualization of the cone response note that we are using
 % 'activationRange', [0 max(coneExcitations)] to avoid confusions due to
 % small stimulus
@@ -329,7 +315,6 @@ saveas(gcf,fullfile(outputDir,'MosaicExcitations.jpg'),'jpg');
 prior = load(fullfile(aoReconDir,sparsePriorName));
 
 % Construct onstruct image estimator
-regPara = 0.001; stride = 2;
 estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
     prior.mu', regPara, stride, [nPixels nPixels 3]);
 
@@ -339,58 +324,64 @@ estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
 % pupil sizes.  This helps keep things in range.
 meanLuminanceCdPerM2 = [];
 scaleFactor = (forwardPupilDiamMM/reconPupilDiamMM)^2;
-reconImage1 = estimator.runEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
+[recon1Image,recon1InitLoss,recon1SolnLoss] = estimator.runEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
     'maxIter', 500, 'display', 'iter', 'gpu', false);
-[recon1Scene, ~, reconImage1Linear] = sceneFromFile(gammaCorrection(reconImage1, theDisplay), 'rgb', ...
+[recon1Scene, ~, recon1ImageLinear] = sceneFromFile(gammaCorrection(recon1Image, theDisplay), 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 recon1Scene = sceneSet(recon1Scene, 'fov', fieldSizeDegs);
 [recon1NegLogPrior,~,recon1NegLogLikely] = ...
-    estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, reconImage1Linear(:));
-visualizeScene(reconScene1, 'displayRadianceMaps', false);
+    estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, recon1ImageLinear(:));
+visualizeScene(recon1Scene, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true);
 saveas(gcf,fullfile(outputDir,'Recon1.jpg'),'jpg');
 
 % Start at stimulus image.  We do this to check if the random starting
 % point gets stuck in a local minimum.  If we find much of this, we will
 % need to think of a better way to initialize but that doesn't depend on
-% knowing the stimulus.
-reconImage2 = estimator.runEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
+% knowing the stimulus.  Maybe start at the prior mean?
+[recon2Image,recon2InitLoss,recon2SolnLoss] = estimator.runEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
     'maxIter', 500, 'display', 'iter', 'gpu', false, 'init', stimulusImageLinear(:));
-[recon2Scene, ~, reconImage2Linear] = sceneFromFile(gammaCorrection(reconImage2, theDisplay), 'rgb', ...
+[recon2Scene, ~, recon2ImageLinear] = sceneFromFile(gammaCorrection(recon2Image, theDisplay), 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 recon2Scene = sceneSet(recon2Scene, 'fov', fieldSizeDegs);
 [recon2NegLogPrior,~,recon2NegLogLikely] = ...
-    estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, reconImage2Linear(:));
-visualizeScene(recon2Scene, 'displayRadianceMaps', false);
+    estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, recon2ImageLinear(:));
+visualizeScene(recon2Scene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
 saveas(gcf,fullfile(outputDir,'Recon2.jpg'),'jpg');
 
 % Report back the better
 if (-(recon1NegLogPrior+recon1NegLogLikely) > -(recon2NegLogPrior+recon2NegLogLikely))
     reconWhichStr = 'Recon1 (random start) better\n';
     reconNegLogPrior = recon1NegLogPrior;
-    reconNegLogLikely = reonc1NegLogLikely;
-    reconImage = reconImage1;
-    reconScene = reconScene1;
+    reconNegLogLikely = recon1NegLogLikely;
+    reconImage = recon1Image;
+    reconScene = recon1Scene;
     reconImageLinear = recon1ImageLinear;
 else
     reconWhichStr = 'Recon2 (stimulus start) better\n';
     reconNegLogPrior = recon2NegLogPrior;
-    reconNegLogLikely = reonc2NegLogLikely;
-    reconImage = reconImage2;
-    reconScene = reconScene2;
+    reconNegLogLikely = recon2NegLogLikely;
+    reconImage = recon2Image;
+    reconScene = recon2Scene;
     reconImageLinear = recon2ImageLinear;
 end
 
 % Show reconstruction
-[reconScene, ~, reconImageLinear] = sceneFromFile(gammaCorrection(reconImage, theDisplay), 'rgb', ...
+[reconScene, ~, reconImageLinear] = sceneFromFile(gammaCorrection(recon2Image, theDisplay), 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 reconScene = sceneSet(reconScene, 'fov', fieldSizeDegs);
-visualizeScene(reconScene, 'displayRadianceMaps', false);
+visualizeScene(reconScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
 saveas(gcf,fullfile(outputDir,'Recon.jpg'),'jpg');
 
 % Compute forward excitations from reconstruction
 % And compare with stimulus exciations
 forwardOI = oiCompute(reconScene,forwardOI);
-forwardExcitationsToRecon = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
+if (reconstructfromRenderMatrix)
+    title('Reconstruction from forward render matrix');
+    forwardExcitationsToRecon = squeeze(forwardRenderMatrix*reconImageLinear(:));
+else
+    title('Reconstruction from forward ISETBio');
+    forwardExcitationsToRecon = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
+end
 figure; clf; hold on;
 plot(forwardExcitationsToStimulusUse,forwardExcitationsToRecon,'ro','MarkerFaceColor','r','MarkerSize',10);
 axis('square');
@@ -399,25 +390,28 @@ plot([0 maxVal],[0 maxVal],'k');
 xlim([0 maxVal]); ylim([0 maxVal]);
 xlabel('Excitations to stimulus');
 ylabel('Excitations to reconstruction');
-if (reconstructfromRenderMatrix)
-    title('Reconstruction from forward render matrix');
-else
-    title('Reconstruction from forward ISETBio');
-end
 saveas(gcf,fullfile(outputDir,'StimulusVsReconExcitations.jpg'),'jpg');
 
 %% Evaluate prior and likelihood of stimulus and reconstruction
 [stimNegLogPrior,~,stimNegLogLikely] = ...
     estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, stimulusImageLinear(:));
-fid = fopen(fullfile(outputDir,'ReconProbInfo.txt'),'w');
+txtFileName = fullfile(outputDir,'ReconProbInfo.txt');
+if (exist(txtFileName,'file'))
+    delete(txtFileName);
+end
+fid = fopen(txtFileName,'w');
 fprintf(fid,'Stimulus: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
     -stimNegLogPrior,-stimNegLogLikely,-(stimNegLogPrior+stimNegLogLikely));
 fprintf(fid,'Recon1: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
     -recon1NegLogPrior,-recon1NegLogLikely,-(recon1NegLogPrior+recon1NegLogLikely));
+fprintf(fid,'Recon1 initial loss %0.6g; recon1 solution loss %0.6g; fractional difference (init less soln; should be pos): %0.6g\n', ...
+    recon1InitLoss,recon1SolnLoss,(recon1InitLoss-recon1SolnLoss)/abs(recon1InitLoss));
 fprintf(fid,'Recon2: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
     -recon2NegLogPrior,-recon2NegLogLikely,-(recon2NegLogPrior+recon2NegLogLikely));
+fprintf(fid,'Recon2 initial loss %0.6g; recon2 solution loss %0.6g; fractional difference (init less soln; should be pos): %0.6g\n', ...
+    recon2InitLoss,recon2SolnLoss,(recon2InitLoss-recon2SolnLoss)/abs(recon2InitLoss));
 fprintf(fid,reconWhichStr);
-fprintf(fid,'Each of the folowing should be *higher* for a valid reconstruction\n');
+fprintf(fid,'Each of the following should be *higher* for a valid reconstruction\n');
 if (-stimNegLogPrior > -reconNegLogPrior)
     fprintf(fid,'\tReconstruction prior *lower* than stimulus\n');
 else
