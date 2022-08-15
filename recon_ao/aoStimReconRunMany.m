@@ -24,7 +24,7 @@ stimBgVal = 0.1;
 stimRValList = [0.80  0.70];
 stimGValList = [0.65  0.70];
 stimBValList = [0.10  0.10];
-if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) = length(stimRValList))
+if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
     error('Stimulus value lists must have same length');
 end
 
@@ -35,7 +35,7 @@ end
 sparsePriorStr = 'conventional';
 
 % Reconstruction parameters
-regParamList = [0.001 0.01 0.1 1];
+regParaList = [0.001 0.01 0.1 1];
 stride = 2;
 
 % Use AO in forward rendering?
@@ -55,8 +55,8 @@ for ss = 1:length(stimSizeDegsList)
         stimBVal = stimBValList(cc);
         for ff = 1:length(forwardDefocusDioptersList)
             forwardDefocusDiopters = forwardDefocusDioptersList(ff);
-            for rr = 1:length(regParamList)
-                regParam = regParamList(rr);
+            for rr = 1:length(regParaList)
+                regPara = regParaList(rr);
                 aoStimRecon(displayName,sparsePriorStr,...
                     forwardAORender, ...
                     forwardDefocusDiopters, ...
