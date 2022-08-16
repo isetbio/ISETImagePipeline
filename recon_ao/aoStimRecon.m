@@ -56,7 +56,6 @@ end
 % Sparse prior name
 sparsePriorName = [sparsePriorStr 'SparsePrior.mat'];
 
-
 % Determine pupil diameter which typically differs in AO
 if (forwardAORender)
     forwardPupilDiamMM = 7;
@@ -234,6 +233,7 @@ saveas(gcf,fullfile(outputDir,'Stimulus.jpg'),'jpg');
 % We'll reconstruct from these.
 forwardOI = oiCompute(stimulusScene,forwardOI);
 visualizeOpticalImage(forwardOI, 'avoidAutomaticRGBscaling', true);
+saveas(gcf,fullfile(outputDir,'StimulusRetinalImage.jpg'),'jpg');
 forwardExcitationsToStimulusISETBio = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
 
 % Check forward exciations calculation another way.  Also shows another way
