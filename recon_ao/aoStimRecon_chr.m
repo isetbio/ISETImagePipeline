@@ -1,8 +1,8 @@
 function aoStimRecon_chr(displayName,sparsePriorStr,...
-                    forwardAORender, reconAORender, ...
-                    forwardDefocusDiopters, reconDefocusDiopters, ...
-                    stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
-                    regPara,stride)
+    forwardAORender, reconAORender, ...
+    forwardDefocusDiopters, reconDefocusDiopters, ...
+    stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
+    regPara,stride)
 % Synopsis:
 %    Driver to run AO recon simulations.
 %
@@ -10,7 +10,7 @@ function aoStimRecon_chr(displayName,sparsePriorStr,...
 %    Script to see how well we can measure unique yellow percepts under AO
 %    conditions.  This has many parameters.  See aoStimReconRunMany for
 %    those not fixed here.
-% 
+%
 %    This script organizes and saves ts output in the directory hierarchy
 %    set up by the local hook file.
 %
@@ -25,7 +25,7 @@ function aoStimRecon_chr(displayName,sparsePriorStr,...
 %% Close existing figures
 close all;
 
-%% Point at directory with data files for this subproject 
+%% Point at directory with data files for this subproject
 %
 % This will allow us to load in project specific precomputed information.
 % Also records initials of version editors, otherwise set to 'main'
@@ -58,7 +58,7 @@ end
 % Sparse prior name
 sparsePriorName = [sparsePriorStr 'SparsePrior.mat'];
 
-% Determine pupil diameter which typically differs in AO ----------------
+% Determine forward pupil diameter, allowing it to differ in AO case
 if (forwardAORender)
     forwardPupilDiamMM = 7;
     forwardAOStr = ['AO' num2str(forwardPupilDiamMM)];
@@ -68,7 +68,7 @@ else
 end
 
 
-% Determine pupil diameter which typically differs in AO using a new recon
+% Determine recon pupil diameter, allowing it to differ in AO case
 if (reconAORender)
     reconPupilDiamMM = 7;
     reconAOStr = ['AO' num2str(reconPupilDiamMM)];
@@ -82,6 +82,9 @@ buildNewForward = false;
 buildNewRecon = false;
 
 % Recon rendering parameters
+%
+% DHB: See "DHB:" comment below. I think we no
+% longer need these two "use" variables.
 useForwardRenderingForRecon = false;
 useReconRenderingForRecon = true;
 reconstructfromRenderMatrix = true;
@@ -101,29 +104,28 @@ end
 
 %% Build render matrices/files or load from existing cache
 if (buildNewForward || ~exist(fullfile(aoReconDir,forwardRenderStructureName),'file'))
-forwardRenderStructure = newRenderStruct_chr(aoReconDir, eccXDegs, eccYDegs, ...
-    fieldSizeDegs, nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters, ...
-    overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, displayGammaGamma);
-save(fullfile(aoReconDir,forwardRenderStructureName),'forwardRenderStructure');
+    forwardRenderStructure = newRenderStruct_chr(aoReconDir, eccXDegs, eccYDegs, ...
+        fieldSizeDegs, nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters, ...
+        overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, displayGammaGamma);
+    save(fullfile(aoReconDir,forwardRenderStructureName),'forwardRenderStructure');
 else
     clear forwardRenderStructure;
     load(fullfile(aoReconDir,forwardRenderStructureName),'forwardRenderStructure');
-    grabReconCache_chr(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ... 
+    grabReconCache_chr(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters)
-end 
+end
 
 if (buildNewRecon || ~exist(fullfile(aoReconDir,reconRenderStructureName),'file'))
-reconRenderStructure = newRenderStruct_chr(aoReconDir, eccXDegs, eccYDegs, ...
-    fieldSizeDegs, nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters, ...
-    overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, displayGammaGamma);
-save(fullfile(aoReconDir,reconRenderStructureName),'reconRenderStructure');
+    reconRenderStructure = newRenderStruct_chr(aoReconDir, eccXDegs, eccYDegs, ...
+        fieldSizeDegs, nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters, ...
+        overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, displayGammaGamma);
+    save(fullfile(aoReconDir,reconRenderStructureName),'reconRenderStructure');
 else
     clear reconRenderStructure;
     load(fullfile(aoReconDir,forwardRenderStructureName),'forwardRenderStructure');
-    grabReconCache_chr(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ... 
+    grabReconCache_chr(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters)
-end 
-
+end
 
 % Set forward variables from loaded/built structure
 forwardRenderMatrix = forwardRenderStructure.renderMatrix;
@@ -145,6 +147,12 @@ clear forwardRenderStructure;
 %
 % These are how the reconstruction algorithm thinks the image
 % was formed.  Need not be the same as the forward rendering.
+%
+% DHB: Now that you have the ability to create and load 
+% separate forward and recon files, we don't really need
+% a conditinal here.  Rather, just proceed as above where
+% you set the forward and recon variables appropriately and
+% get rid of this conditional altogether.
 if (useForwardRenderingForRecon)
     reconRenderMatrix = forwardRenderMatrix;
     reconConeMosaic = forwardConeMosaic;
@@ -198,7 +206,7 @@ saveas(gcf,fullfile(outputDir,'Stimulus.jpg'),'jpg');
 
 %% Compute forward retinal image and excitations using ISETBio
 %
-% We'll reconstruct from these.
+% We may or may not reconstruct from these.
 forwardOI = oiCompute(stimulusScene,forwardOI);
 visualizeOpticalImage(forwardOI, 'avoidAutomaticRGBscaling', true);
 saveas(gcf,fullfile(outputDir,'StimulusRetinalImage.jpg'),'jpg');
@@ -271,6 +279,13 @@ estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
 %
 % Scale excitations to take into account difference in forward and recon
 % pupil sizes.  This helps keep things in range.
+%
+% DHB: I think I might have scale factor backwards, now that I look at it.
+% If we use a large forward pupil and reconstruct with a small one, we want
+% to scale the cone exciations passed to the recon to be smaller.  So it
+% should be (reconPupilDiamMM)^2/(fowardPupilDiamMM)^2.  Leaving it for
+% now, but as soon as the two pupil sizes differ, we'll want to check
+% carefully.
 meanLuminanceCdPerM2 = [];
 scaleFactor = (forwardPupilDiamMM/reconPupilDiamMM)^2;
 [recon1Image,recon1InitLoss,recon1SolnLoss] = estimator.runEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
