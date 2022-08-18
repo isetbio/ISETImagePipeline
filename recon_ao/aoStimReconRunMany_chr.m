@@ -9,7 +9,7 @@
 %   08/15/22  dhb  Wrote after converting aoStimRecon to a function
 
 %% Clear
-clear; close all;
+% clear; close all;
 
 %% Parameters
 %
@@ -18,12 +18,12 @@ clear; close all;
 %    'mono'            - A display with monochromatic primaries
 displayName = 'mono';
 
-% Stimulus parameters in min / dg
-stimSizeDegsList = [24/60 10/60];
+% Stimulus parameters in min / (min/dg)
+stimSizeDegsList = [24/60]; % 10/60];
 stimBgVal = 0.1;
-stimRValList = [0.80  0.70];
-stimGValList = [0.65  0.70];
-stimBValList = [0.10  0.10];
+stimRValList = [0.80];  %0.70];
+stimGValList = [0.65]; % 0.70];
+stimBValList = [0.10];%  0.10];
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
     error('Stimulus value lists must have same length');
 end
@@ -35,18 +35,18 @@ end
 sparsePriorStr = 'conventional';
 
 % Reconstruction parameters
-regParaList = [0.001 0.01 0.1 1];
+regParaList = [0.001];% 0.01 0.1 1];
 stride = 2;
 
 % Use AO in forward rendering?
 %
-% This determines pupil diameter which typically differs in AO -----------
+% This determines pupil diameter which typically differs in AO 
 forwardAORender = true;
 reconAORender = true;
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.00 0.05 0.1]; 
-reconDefocusDioptersList = [0.00 0.05 0.1];
+forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
+reconDefocusDioptersList = [0.00];% 0.05 0.1];
 
 %% Run through specified list conditions
 for ss = 1:length(stimSizeDegsList)
