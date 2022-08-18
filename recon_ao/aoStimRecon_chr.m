@@ -1,8 +1,8 @@
 function aoStimRecon_chr(displayName,sparsePriorStr,...
-                    forwardAORender, reconAORender, ...
-                    forwardDefocusDiopters, reconDefocusDiopters, ...
-                    stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
-                    regPara,stride)
+    forwardAORender, reconAORender, ...
+    forwardDefocusDiopters, reconDefocusDiopters, ...
+    stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
+    regPara,stride)
 % Synopsis:
 %    Driver to run AO recon simulations.
 %
@@ -10,7 +10,7 @@ function aoStimRecon_chr(displayName,sparsePriorStr,...
 %    Script to see how well we can measure unique yellow percepts under AO
 %    conditions.  This has many parameters.  See aoStimReconRunMany for
 %    those not fixed here.
-% 
+%
 %    This script organizes and saves ts output in the directory hierarchy
 %    set up by the local hook file.
 %
@@ -26,7 +26,7 @@ function aoStimRecon_chr(displayName,sparsePriorStr,...
 %% Close existing figures
 % close all;
 
-%% Point at directory with data files for this subproject 
+%% Point at directory with data files for this subproject
 %
 % This will allow us to load in project specific precomputed information.
 % Also records initials of version editors, otherwise set to 'main'
@@ -59,7 +59,7 @@ end
 % Sparse prior name
 sparsePriorName = [sparsePriorStr 'SparsePrior.mat'];
 
-% Determine pupil diameter which typically differs in AO ----------------
+% Determine forward pupil diameter, allowing it to differ in AO case
 if (forwardAORender)
     forwardPupilDiamMM = 7;
     forwardAOStr = ['AO' num2str(forwardPupilDiamMM)];
@@ -96,6 +96,7 @@ buildNewRecon = false;
 % if (useReconRenderingForRecon)
 %     reconRandSeed = true;
 % end
+
 reconstructfromRenderMatrix = true;
 forwardRandSeed = false;
 reconRandSeed = true;
@@ -155,7 +156,7 @@ else
     load(fullfile(aoReconDir,forwardRenderStructureName),'forwardRenderStructure');
     grabRenderStruct_chr(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ... 
         nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters)
-end 
+end
 
 % Set forward variables from loaded/built structure
 forwardRenderMatrix = forwardRenderStructure.renderMatrix;
@@ -197,6 +198,7 @@ clear reconRenderStructure;
 % else % ----------------------------------
 %     error('Need to implement separate recon rendering setup');
 % end
+
 
 %% Setup output directories
 outputMainName = sprintf('%s_%s_%0.2f_%0.2f_%d_%d_%0.1f_%s_%s_%s', ...
