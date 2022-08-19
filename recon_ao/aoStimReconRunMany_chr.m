@@ -18,8 +18,12 @@
 %    'mono'            - A display with monochromatic primaries
 displayName = 'mono';
 
-% Stimulus parameters in min / (min/dg)
+% Stimulus parameters.
+%
+% Size list parameter in degs, but expressed as min/60 (because 60 min/deg)
 stimSizeDegsList = [24/60]; % 10/60];
+
+% RGB values (before gamma correction)
 stimBgVal = 0.1;
 stimRValList = [0.80];  %0.70];
 stimGValList = [0.65]; % 0.70];

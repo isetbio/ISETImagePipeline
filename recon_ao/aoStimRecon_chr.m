@@ -31,7 +31,7 @@ function aoStimRecon_chr(displayName,sparsePriorStr,...
 % This will allow us to load in project specific precomputed information.
 % Also records initials of version editors, otherwise set to 'main'
 aoReconDir = getpref('ISETImagePipeline','aoReconDir');
-versEditor = 'TESTING2';
+versEditor = 'DHB';
 
 %% Setup / Simulation parameters
 %
@@ -76,13 +76,9 @@ else
     reconAOStr = ['NOAO' num2str(reconPupilDiamMM)];
 end
 
-
-
 % Force build and save
 buildNewForward = false;
 buildNewRecon = false;
-
-
 
 % Recon rendering parameters
 % 
@@ -99,29 +95,29 @@ buildNewRecon = false;
 
 reconstructfromRenderMatrix = true;
 forwardRandSeed = false;
-reconRandSeed = true;
+reconRandSeed = false;
 
 if (forwardRandSeed)
-    forwardSeed = 'rand';
+    forwardSeedStr = 'rand';
 else
-    forwardSeed = 'noRand';
+    forwardSeedStr = 'noRand';
 end
 if (reconRandSeed)
-    reconSeed = 'rand';
+    reconSeedStr = 'rand';
 else
-    reconSeed = 'noRand';
+    reconSeedStr = 'noRand';
 end
 
 %% Set render filennames
 if (forwardAORender)
-    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeed);
+    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr);
 else
-    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeed);
+    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr);
 end
 if (reconAORender)
-    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeed);
+    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr);
 else
-    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeed);
+    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr);
 end
 
 %% Build render matrices/files or load from existing cache
@@ -132,29 +128,29 @@ end
 % that to the reconRenderStructure (line 142). Then in the second if statement replace
 % the forwardRenderStructure with what it should actaully be. 
 if (buildNewRecon || ~exist(fullfile(aoReconDir,reconRenderStructureName),'file'))
-reconRenderStructure = buildRenderStruct_chr(aoReconDir, eccXDegs, eccYDegs, ...
-    fieldSizeDegs, nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters, ...
-    overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
-    displayGammaGamma, reconRandSeed);
-save(fullfile(aoReconDir,reconRenderStructureName),'reconRenderStructure');
+    reconRenderStructure = buildRenderStruct_chr(aoReconDir, eccXDegs, eccYDegs, ...
+        fieldSizeDegs, nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters, ...
+        overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
+        displayGammaGamma, reconRandSeed);
+    save(fullfile(aoReconDir,reconRenderStructureName),'reconRenderStructure');
 else
     clear reconRenderStructure;
     load(fullfile(aoReconDir,reconRenderStructureName),'forwardRenderStructure');
     reconRenderStructure = forwardRenderStructure;
-    grabRenderStruct_chr(reconRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ... 
+    grabRenderStruct_chr(reconRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters)
-end 
+end
 
 if (buildNewForward || ~exist(fullfile(aoReconDir,forwardRenderStructureName),'file'))
-forwardRenderStructure = buildRenderStruct_chr(aoReconDir, eccXDegs, eccYDegs, ...
-    fieldSizeDegs, nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters, ...
-    overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
-    displayGammaGamma, forwardRandSeed);
-save(fullfile(aoReconDir,forwardRenderStructureName),'forwardRenderStructure');
+    forwardRenderStructure = buildRenderStruct_chr(aoReconDir, eccXDegs, eccYDegs, ...
+        fieldSizeDegs, nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters, ...
+        overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
+        displayGammaGamma, forwardRandSeed);
+    save(fullfile(aoReconDir,forwardRenderStructureName),'forwardRenderStructure');
 else
     clear forwardRenderStructure;
     load(fullfile(aoReconDir,forwardRenderStructureName),'forwardRenderStructure');
-    grabRenderStruct_chr(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ... 
+    grabRenderStruct_chr(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters)
 end
 
@@ -175,30 +171,6 @@ theReconDisplay = reconRenderStructure.theDisplay;
 % Clear forward render structure
 clear forwardRenderStructure;
 clear reconRenderStructure;
-
-%% Reconstruction rendering parameters
-%
-% These are how the reconstruction algorithm thinks the image
-% was formed.  Need not be the same as the forward rendering.
-%
-% DHB: Now that you have the ability to create and load 
-% separate forward and recon files, we don't really need
-% a conditinal here.  Rather, just proceed as above where
-% you set the forward and recon variables appropriately and
-% get rid of this conditional altogether.
-% if (useForwardRenderingForRecon)
-%     reconRenderMatrix = forwardRenderMatrix;
-%     reconConeMosaic = forwardConeMosaic;
-%     reconOI = forwardOI;
-%     reconPupilDiamMM = forwardPupilDiamMM;
-%     reconAORender = forwardAORender;
-%     reconDefocusDiopters = forwardDefocusDiopters;
-%     reconAOStr = forwardAOStr;
-% elseif (useReconRenderingForRecon)
-% else % ----------------------------------
-%     error('Need to implement separate recon rendering setup');
-% end
-
 
 %% Setup output directories
 outputMainName = sprintf('%s_%s_%0.2f_%0.2f_%d_%d_%0.1f_%s_%s_%s', ...
@@ -278,8 +250,7 @@ end
 forwardExcitationsToStimulusRenderMatrix = forwardRenderMatrix*stimulusImageLinear(:);
 reconExcitationsToStimulusRenderMatrix = reconRenderMatrix*stimulusImageLinear(:);
 
-
-
+% Compare with ISETBio
 figure; clf; hold on;
 plot(forwardExcitationsToStimulusISETBio,forwardExcitationsToStimulusRenderMatrix,'ro','MarkerFaceColor','r','MarkerSize',10);
 axis('square');
@@ -290,8 +261,6 @@ xlabel('Excitations to stimulus ISETBio');
 ylabel('Excitations to stimulus render matrix');
 title('Exciations ISETBio and render matrix');
 saveas(gcf,fullfile(outputDir,'ISETBioVsRenderMatrixExciations.jpg'),'jpg');
-
-
 
 %% Choose which excitations to reconstruct form
 if (reconstructfromRenderMatrix)
@@ -351,7 +320,7 @@ estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
 meanLuminanceCdPerM2 = [];
 scaleFactor = (forwardPupilDiamMM/reconPupilDiamMM)^2;
 [recon1Image,recon1InitLoss,recon1SolnLoss] = estimator.runEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
-    'maxIter', 500, 'display', 'iter', 'gpu', false);
+    'maxIter', 500, 'display', 'iter', 'gpu', false, 'init', 0.5*ones(stimulusImageLinear(:)));
 [recon1Scene, ~, recon1ImageLinear] = sceneFromFile(gammaCorrection(recon1Image, theForwardDisplay), 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 recon1Scene = sceneSet(recon1Scene, 'fov', fieldSizeDegs);
