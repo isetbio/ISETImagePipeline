@@ -22,16 +22,17 @@ function aoStimRecon_chr(displayName,sparsePriorStr,...
 %   08/13/22  dhb   Lots of bookkeeping, cleaning, etc.
 %   08/14/22  dhb   Made it a callable function.
 %   08/17/22  chr   Incorporated separate forward and recon callings 
+%   08/19/22  dhb, chr  Edit to clarify and remove stochasticity 
 
 %% Close existing figures
-% close all;
+close all;
 
 %% Point at directory with data files for this subproject
 %
 % This will allow us to load in project specific precomputed information.
 % Also records initials of version editors, otherwise set to 'main'
 aoReconDir = getpref('ISETImagePipeline','aoReconDir');
-versEditor = 'DHB';
+versEditor = 'CHRagain';
 
 %% Setup / Simulation parameters
 %
@@ -80,23 +81,20 @@ end
 buildNewForward = false;
 buildNewRecon = false;
 
-% Recon rendering parameters
-% 
-% DHB: See "DHB:" comment below. I think we no
-% longer need these two "use" variables.
-% useForwardRenderingForRecon = true;
-% if (useForwardRenderingForRecon)
-%     forwardRandSeed = true;
-% end
-% useReconRenderingForRecon = true;
-% if (useReconRenderingForRecon)
-%     reconRandSeed = true;
-% end
-
+% Determine which method will be used for the reconstruction: ISETBIO or
+% Render Matrix
 reconstructfromRenderMatrix = true;
+if (reconstructfromRenderMatrix)
+    exciteSource = 'renderMatrix';
+else
+    exciteSource = 'isetbio';
+
+end
+
+% Establish if a random seed will be used when building the cone mosaic for
+% the render matrices
 forwardRandSeed = false;
 reconRandSeed = false;
-
 if (forwardRandSeed)
     forwardSeedStr = 'rand';
 else
@@ -132,11 +130,11 @@ if (buildNewRecon || ~exist(fullfile(aoReconDir,reconRenderStructureName),'file'
         fieldSizeDegs, nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
         displayGammaGamma, reconRandSeed);
-    save(fullfile(aoReconDir,reconRenderStructureName),'reconRenderStructure');
+    save(fullfile(aoReconDir,reconRenderStructureName),'renderStructure');
 else
     clear reconRenderStructure;
-    load(fullfile(aoReconDir,reconRenderStructureName),'forwardRenderStructure');
-    reconRenderStructure = forwardRenderStructure;
+    load(fullfile(aoReconDir,reconRenderStructureName),'renderStructure');
+    reconRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct_chr(reconRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters)
 end
@@ -146,10 +144,11 @@ if (buildNewForward || ~exist(fullfile(aoReconDir,forwardRenderStructureName),'f
         fieldSizeDegs, nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
         displayGammaGamma, forwardRandSeed);
-    save(fullfile(aoReconDir,forwardRenderStructureName),'forwardRenderStructure');
+    save(fullfile(aoReconDir,forwardRenderStructureName),'renderStructure');
 else
     clear forwardRenderStructure;
-    load(fullfile(aoReconDir,forwardRenderStructureName),'forwardRenderStructure');
+    load(fullfile(aoReconDir,forwardRenderStructureName),'renderStructure');
+    forwardRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct_chr(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters)
 end
@@ -173,9 +172,9 @@ clear forwardRenderStructure;
 clear reconRenderStructure;
 
 %% Setup output directories
-outputMainName = sprintf('%s_%s_%0.2f_%0.2f_%d_%d_%0.1f_%s_%s_%s', ...
-    forwardAOStr,reconAOStr,forwardDefocusDiopters,reconDefocusDiopters,nPixels,fieldSizeMinutes,60*stimSizeDegs,displayName,sparsePriorStr, versEditor);
-outputSubName = sprintf('%0.4f_%d_%0.2f_%0.2f_%0.2f_%0.2f',regPara,stride,stimBgVal,stimRVal,stimGVal,stimBVal);
+outputMainName = sprintf('%s_%s_%0.2f_%0.2f_%d_%d_%s_%s_%s', ...
+    forwardAOStr,reconAOStr,forwardDefocusDiopters,reconDefocusDiopters,nPixels,fieldSizeMinutes,displayName,sparsePriorStr, versEditor);
+outputSubName = sprintf('%0.1f_%0.4f_%d_%0.2f_%0.2f_%0.2f_%0.2f_%s',60*stimSizeDegs, regPara,stride,stimBgVal,stimRVal,stimGVal,stimBVal, exciteSource);
 outputDir = fullfile(aoReconDir,outputMainName,outputSubName);
 if (~exist(outputDir,'dir'))
     mkdir(outputDir);
@@ -221,10 +220,10 @@ visualizeOpticalImage(forwardOI, 'avoidAutomaticRGBscaling', true);
 saveas(gcf,fullfile(outputDir,'forwardStimulusRetinalImage.jpg'),'jpg');
 forwardExcitationsToStimulusISETBio = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
 
-reconOI = oiCompute(stimulusScene,forwardOI);
+reconOI = oiCompute(stimulusScene,reconOI);
 visualizeOpticalImage(reconOI, 'avoidAutomaticRGBscaling', true);
 saveas(gcf,fullfile(outputDir,'reconStimulusRetinalImage.jpg'),'jpg');
-reconExcitationsToStimulusISETBio = squeeze(reconConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
+reconExcitationsToStimulusISETBio = squeeze(reconConeMosaic.Mosaic.compute(reconOI, 'opticalImagePositionDegs', 'mosaic-centered'));
 
 % Check forward exciations calculation another way.  Also shows another way
 % to visualize the retinal image, but this only is done when the check
@@ -320,7 +319,7 @@ estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
 meanLuminanceCdPerM2 = [];
 scaleFactor = (forwardPupilDiamMM/reconPupilDiamMM)^2;
 [recon1Image,recon1InitLoss,recon1SolnLoss] = estimator.runEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
-    'maxIter', 500, 'display', 'iter', 'gpu', false, 'init', 0.5*ones(stimulusImageLinear(:)));
+    'maxIter', 500, 'display', 'iter', 'gpu', false, 'init', 0.5*ones(length(stimulusImageLinear(:)), 1));
 [recon1Scene, ~, recon1ImageLinear] = sceneFromFile(gammaCorrection(recon1Image, theForwardDisplay), 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 recon1Scene = sceneSet(recon1Scene, 'fov', fieldSizeDegs);

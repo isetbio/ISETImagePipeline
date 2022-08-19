@@ -9,7 +9,7 @@
 %   08/15/22  dhb  Wrote after converting aoStimRecon to a function
 
 %% Clear
-% clear; close all;
+clear; close all;
 
 %% Parameters
 %
