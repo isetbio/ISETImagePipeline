@@ -1,4 +1,4 @@
-function renderStructure = buildRenderStruct_chr(aoReconDir, ...
+function renderStructure = buildRenderStruct(aoReconDir, ...
     eccXDegs, eccYDegs, fieldSizeDegs, nPixels, pupilDiamMM, aoRender, ...
     defocusDiopters, overwriteDisplayGamma, displayName, displayFieldName, ...
     displayGammaBits, displayGammaGamma, randSeed, replaceCones, startCones, newCones)
@@ -16,6 +16,7 @@ function renderStructure = buildRenderStruct_chr(aoReconDir, ...
 % History:
 %   08/16/22  chr  Made it a callable function
 %   08/25/22  chr  Included portion for dichromacy
+%   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
 
 
 % Get display
@@ -52,8 +53,10 @@ end
 % Option to replace cones in mosaic with another kind to simulate
 % dichromacy. 
 if (replaceCones)
-    coneInd = find(theConeMosaic.Mosaic.coneTypes == startCones);
-    theConeMosaic.Mosaic.reassignTypeOfCones(coneInd, newCones); 
+    for i=1:length(startCones)
+        coneInd = find(theConeMosaic.Mosaic.coneTypes == startCones(i));
+        theConeMosaic.Mosaic.reassignTypeOfCones(coneInd, newCones);
+    end
 end
 
 theConeMosaic.Display = theDisplay;

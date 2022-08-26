@@ -1,4 +1,4 @@
-function grabRenderStruct_chr(renderStructure, eccXDegs, eccYDegs, ...
+function grabRenderStruct(renderStructure, eccXDegs, eccYDegs, ...
     fieldSizeDegs, nPixels, pupilDiamMM, aoRender, defocusDiopters)
 % Synopsis:
 %    Load caches files and conduct safety checks
@@ -14,6 +14,7 @@ function grabRenderStruct_chr(renderStructure, eccXDegs, eccYDegs, ...
 
 % History:
 %   08/16/22  chr  Made the check a callable function
+%   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
 
 
 if (renderStructure.eccX ~= eccXDegs || renderStructure.eccY ~= eccYDegs)

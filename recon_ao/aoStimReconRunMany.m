@@ -7,6 +7,7 @@
 
 % History:
 %   08/15/22  dhb  Wrote after converting aoStimRecon to a function
+%   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
 
 %% Clear
 clear; close all;
@@ -18,12 +19,16 @@ clear; close all;
 %    'mono'            - A display with monochromatic primaries
 displayName = 'mono';
 
-% Stimulus parameters
-stimSizeDegsList = [0.4 10/60];
+% Stimulus parameters.
+%
+% Size list parameter in degs, but expressed as min/60 (because 60 min/deg)
+stimSizeDegsList = [24/60]; % 10/60];
+
+% RGB values (before gamma correction)
 stimBgVal = 0.1;
-stimRValList = [0.80  0.70];
-stimGValList = [0.65  0.70];
-stimBValList = [0.10  0.10];
+stimRValList = [0.80];  %0.70];
+stimGValList = [0.65]; % 0.70];
+stimBValList = [0.10];%  0.10];
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
     error('Stimulus value lists must have same length');
 end
@@ -35,17 +40,23 @@ end
 sparsePriorStr = 'conventional';
 
 % Reconstruction parameters
-regParaList = [0.001 0.01 0.1 1];
+regParaList = [0.001];% 0.01 0.1 1];
 stride = 2;
 
 % Use AO in forward rendering?
 %
-% This determines pupil diameter which typically differs in AO
-forwardAORender = true;
+% This determines pupil diameter which typically differs in AO 
+forwardAORender = [true];
+reconAORender = [true];
 
-% Residual defocus for forward rendering
-forwardDefocusDioptersList = [0.00 0.05 0.1];
+% Residual defocus for forward and recon rendering, of equal sizes
+forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
+reconDefocusDioptersList = [0.00];% 0.05 0.1];
 
+% Establish chromaticity for forward and recon mosaic, with string options:
+% "chromNorm", "chromProt", "chromDeut", "chromTrit", "chromAllL", "chromAllM"
+forwardChromList = ["chromNorm"];
+reconChromList = ["chromNorm"];
 %% Run through specified list conditions
 for ss = 1:length(stimSizeDegsList)
     stimSizeDegs = stimSizeDegsList(ss);
@@ -55,13 +66,18 @@ for ss = 1:length(stimSizeDegsList)
         stimBVal = stimBValList(cc);
         for ff = 1:length(forwardDefocusDioptersList)
             forwardDefocusDiopters = forwardDefocusDioptersList(ff);
+            reconDefocusDiopters = reconDefocusDioptersList(ff);
             for rr = 1:length(regParaList)
                 regPara = regParaList(rr);
-                aoStimRecon(displayName,sparsePriorStr,...
-                    forwardAORender, ...
-                    forwardDefocusDiopters, ...
-                    stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
-                    regPara,stride);
+                for dd = 1:length(forwardChromList)
+                    forwardChrom = forwardChromList(dd);
+                    reconChrom = reconChromList(dd);
+                    aoStimRecon(displayName,sparsePriorStr,...
+                        forwardAORender, reconAORender, ...
+                        forwardDefocusDiopters, reconDefocusDiopters, ...
+                        stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
+                        regPara,stride, forwardChrom, reconChrom);
+                end
             end
         end
     end
