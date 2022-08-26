@@ -1,7 +1,7 @@
 function renderStructure = buildRenderStruct_chr(aoReconDir, ...
     eccXDegs, eccYDegs, fieldSizeDegs, nPixels, pupilDiamMM, aoRender, ...
     defocusDiopters, overwriteDisplayGamma, displayName, displayFieldName, ...
-    displayGammaBits, displayGammaGamma, randSeed)
+    displayGammaBits, displayGammaGamma, randSeed, replaceCones, startCones, newCones)
 % Synopsis:
 %    Build render matrix if desired/needed
 %
@@ -15,6 +15,7 @@ function renderStructure = buildRenderStruct_chr(aoReconDir, ...
 
 % History:
 %   08/16/22  chr  Made it a callable function
+%   08/25/22  chr  Included portion for dichromacy
 
 
 % Get display
@@ -28,7 +29,7 @@ end
 clear theDisplayLoad;
 
 % Create and setup cone mosaic
-%
+% 
 % For AO, we create a dummy object with 3 mm pupil and then adjust
 % pupil and make the OI diffraction limited with no LCA.  The field
 % name PSF is not optimal, because it is actually OI. We need the dummy
@@ -47,6 +48,14 @@ else
         'fovealDegree', fieldSizeDegs, 'pupilSize', pupilDiamMM, 'useRandomSeed', randSeed, ...
         'defocusDiopters',defocusDiopters);
 end
+
+% Option to replace cones in mosaic with another kind to simulate
+% dichromacy. 
+if (replaceCones)
+    coneInd = find(theConeMosaic.Mosaic.coneTypes == startCones);
+    theConeMosaic.Mosaic.reassignTypeOfCones(coneInd, newCones); 
+end
+
 theConeMosaic.Display = theDisplay;
 
 % Generate render matrix

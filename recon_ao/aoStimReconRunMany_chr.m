@@ -52,6 +52,13 @@ reconAORender = true;
 forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
 reconDefocusDioptersList = [0.00];% 0.05 0.1];
 
+% Determine if you want to change any of the cone mosaics to dichromatic.
+% 
+% Default settings for 'true' are Deuteranopia where all M cones are 
+% switched to L cones. If modeling another version, must manually switch in 
+% aoStimRecon_chr.m 
+dichromForward = [false true];
+dichromRecon = [true true];
 %% Run through specified list conditions
 for ss = 1:length(stimSizeDegsList)
     stimSizeDegs = stimSizeDegsList(ss);
@@ -64,11 +71,15 @@ for ss = 1:length(stimSizeDegsList)
             reconDefocusDiopters = reconDefocusDioptersList(ff);
             for rr = 1:length(regParaList)
                 regPara = regParaList(rr);
-                aoStimRecon_chr(displayName,sparsePriorStr,...
-                    forwardAORender, reconAORender, ...
-                    forwardDefocusDiopters, reconDefocusDiopters, ...
-                    stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
-                    regPara,stride);
+                for dd = 1:length(dichromForward)
+                    replaceForwardCones = dichromForward(dd);
+                    replaceReconCones = dichromRecon(dd);
+                    aoStimRecon_chr(displayName,sparsePriorStr,...
+                        forwardAORender, reconAORender, ...
+                        forwardDefocusDiopters, reconDefocusDiopters, ...
+                        stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
+                        regPara,stride, replaceForwardCones, replaceReconCones);
+                end
             end
         end
     end

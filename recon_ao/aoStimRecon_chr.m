@@ -2,7 +2,7 @@ function aoStimRecon_chr(displayName,sparsePriorStr,...
     forwardAORender, reconAORender, ...
     forwardDefocusDiopters, reconDefocusDiopters, ...
     stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
-    regPara,stride)
+    regPara,stride, replaceForwardCones, replaceReconCones)
 % Synopsis:
 %    Driver to run AO recon simulations.
 %
@@ -32,7 +32,7 @@ close all;
 % This will allow us to load in project specific precomputed information.
 % Also records initials of version editors, otherwise set to 'main'
 aoReconDir = getpref('ISETImagePipeline','aoReconDir');
-versEditor = 'CHRagain';
+versEditor = 'chrSwitch';
 
 %% Setup / Simulation parameters
 %
@@ -79,7 +79,7 @@ end
 
 % Force build and save
 buildNewForward = false;
-buildNewRecon = false;
+buildNewRecon = true;
 
 % Determine which method will be used for the reconstruction: ISETBIO or
 % Render Matrix
@@ -106,51 +106,72 @@ else
     reconSeedStr = 'noRand';
 end
 
+% Determine if user would like to replace all cones of one type to another
+% in the forward or recon mosaics. Start cones are input as integers where
+% 1 = LCones, 2 = MCones, and 3 = SCones. New Cones are input using cone
+% letter (L,M,S) before 'CONE_ID'
+%
+% Looking into naming options that incorporate this change. For now,
+% manually appending to output subdirectories with mosaic and chromacy model 
+% (Protanopia, Deuteranopia, Tritanopia). Ex: _chromDeut
+% replaceForwardCones = false;
+% replaceReconCones = true;
+if (replaceForwardCones)
+    forwardStartCones = 2;
+    forwardNewCones = cMosaic.LCONE_ID;
+    forwardChrom = 'chromDeut';
+else
+    forwardChrom = 'chromNorm';
+end
+if (replaceReconCones)
+    reconStartCones = 2;
+    reconNewCones = cMosaic.LCONE_ID;
+    reconChrom = 'chromDeut';
+else
+    reconChrom = 'chromNorm';
+end
+
 %% Set render filennames
 if (forwardAORender)
-    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr);
+    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr, forwardChrom);
 else
-    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr);
+    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr, forwardChrom);
 end
 if (reconAORender)
-    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr);
+    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr, reconChrom);
 else
-    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr);
+    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr, reconChrom);
 end
 
 %% Build render matrices/files or load from existing cache
-%
-% Have to do a workaround if loading render structures (line 141) since as of now
-% all of them use the name 'forwardRenderStructure'. Instead of having to
-% rebuild, make the call for the forwardRender and then manually assign
-% that to the reconRenderStructure (line 142). Then in the second if statement replace
-% the forwardRenderStructure with what it should actaully be. 
-if (buildNewRecon || ~exist(fullfile(aoReconDir,reconRenderStructureName),'file'))
-    reconRenderStructure = buildRenderStruct_chr(aoReconDir, eccXDegs, eccYDegs, ...
-        fieldSizeDegs, nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters, ...
-        overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
-        displayGammaGamma, reconRandSeed);
-    save(fullfile(aoReconDir,reconRenderStructureName),'renderStructure');
-else
-    clear reconRenderStructure;
-    load(fullfile(aoReconDir,reconRenderStructureName),'renderStructure');
-    reconRenderStructure = renderStructure; clear renderStructure; 
-    grabRenderStruct_chr(reconRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
-        nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters)
-end
 
 if (buildNewForward || ~exist(fullfile(aoReconDir,forwardRenderStructureName),'file'))
-    forwardRenderStructure = buildRenderStruct_chr(aoReconDir, eccXDegs, eccYDegs, ...
+    renderStructure = buildRenderStruct_chr(aoReconDir, eccXDegs, eccYDegs, ...
         fieldSizeDegs, nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
-        displayGammaGamma, forwardRandSeed);
+        displayGammaGamma, forwardRandSeed, replaceForwardCones, forwardStartCones, forwardNewCones);
     save(fullfile(aoReconDir,forwardRenderStructureName),'renderStructure');
+    forwardRenderStructure = renderStructure; clear renderStructure;
 else
     clear forwardRenderStructure;
     load(fullfile(aoReconDir,forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct_chr(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters)
+end
+if (buildNewRecon || ~exist(fullfile(aoReconDir,reconRenderStructureName),'file'))
+    renderStructure = buildRenderStruct_chr(aoReconDir, eccXDegs, eccYDegs, ...
+        fieldSizeDegs, nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters, ...
+        overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
+        displayGammaGamma, reconRandSeed, replaceReconCones, reconStartCones, reconNewCones);
+    save(fullfile(aoReconDir,reconRenderStructureName),'renderStructure');
+    reconRenderStructure = renderStructure; clear renderStructure;
+else
+    clear reconRenderStructure;
+    load(fullfile(aoReconDir,reconRenderStructureName),'renderStructure');
+    reconRenderStructure = renderStructure; clear renderStructure; 
+    grabRenderStruct_chr(reconRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
+        nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters)
 end
 
 % Set forward variables from loaded/built structure
@@ -174,13 +195,14 @@ clear reconRenderStructure;
 %% Setup output directories
 outputMainName = sprintf('%s_%s_%0.2f_%0.2f_%d_%d_%s_%s_%s', ...
     forwardAOStr,reconAOStr,forwardDefocusDiopters,reconDefocusDiopters,nPixels,fieldSizeMinutes,displayName,sparsePriorStr, versEditor);
-outputSubName = sprintf('%0.1f_%0.4f_%d_%0.2f_%0.2f_%0.2f_%0.2f_%s',60*stimSizeDegs, regPara,stride,stimBgVal,stimRVal,stimGVal,stimBVal, exciteSource);
+outputSubName = sprintf('%0.1f_%0.4f_%d_%0.2f_%0.2f_%0.2f_%0.2f_%s_%s_%_s',60*stimSizeDegs, regPara,stride,stimBgVal,stimRVal,stimGVal,stimBVal, exciteSource, forwardChrom, reconChrom);
 outputDir = fullfile(aoReconDir,outputMainName,outputSubName);
 if (~exist(outputDir,'dir'))
     mkdir(outputDir);
 end
 
 %% Show forward cone mosaic
+
 forwardConeMosaic.visualizeMosaic();
 saveas(gcf,fullfile(outputDir,'forwardMosaic.jpg'),'jpg');
 
