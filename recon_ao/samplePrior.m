@@ -1,11 +1,13 @@
-%% Create an estimator object
+% Clear and close
+clear; close all;
+
 % Load prior and display
 prior = load('sparsePrior.mat');
 display = displayCreate('CRT12BitDisplay');
 
 regPara = 1.0;
-stride = 4;
-imSize = [64, 64, 3];
+stride = 16;
+imSize = [16, 16, 3];
 
 % Construct image estimator
 estm = PoissonSparseEstimator([], inv(prior.regBasis), ...
@@ -39,12 +41,13 @@ for idx = 1:nIter
         subplot(1, nPlot, plotIdx);
         imshow(gammaCorrection(reshape(image, imSize), display));
         title(sprintf('n Iter = %d', idx));
+        drawnow;
     end
 end
 
 %% Adding noise: Langevin algorithm
-nIter = 2500;
-stepSize = 250;
+nIter = 4000;
+stepSize = 1000;
 nPlot = nIter / stepSize;
 
 figure();
@@ -62,7 +65,7 @@ for idx = 1:nIter
     image = image + tau * (-grad) + sqrt(2 * gamma) * normrnd(0, 1, prod(imSize), 1);
 
     % record the value of a pixel
-    pxIdx = 2080;
+    pxIdx = round(prod(imSize)/2);
     center(idx) = image(pxIdx);
  
     % plot
@@ -71,26 +74,35 @@ for idx = 1:nIter
         subplot(1, nPlot, plotIdx);
         imshow(gammaCorrection(reshape(image, imSize), display));
         title(sprintf('n Iter = %d', idx));
+        drawnow;
     end
 end
 
 % plot ACF of the center pixel
-[acf, lags] = autocorr(center, 'NumLags', 500);
+[acf, lags] = autocorr(center, 'NumLags', nIter-1);
 figure();
 plot(lags, acf, 'LineWidth', 2);
 box off;
+drawnow;
 
 %% Sampler function
-prior = load('sparsePrior.mat');
-display = displayCreate('CRT12BitDisplay');
-
-imSize = [100, 100, 3];
-nSample = 6;
-
-samples = lgvSampler(prior, nSample, imSize);
+nSample = 3;
+sampleSteps = 1000;
+samples = lgvSampler(prior, nSample, imSize,'burnIn',sampleSteps,'nStep',sampleSteps);
 
 figure();
 for idx = 1:nSample
     subplot(2, 3, idx);
     imshow(gammaCorrection(reshape(samples(idx, :, :, :), imSize), display));
 end
+
+%% Sample by drawing from exponential
+patchSize = sqrt(size(prior.regBasis,1)/3);
+meanPatch = prior.regBasis*prior.mu';
+meanPatch(meanPatch < 0) = 0;
+figure; imshow(gammaCorrection(reshape(meanPatch/max(meanPatch(:)), [patchSize,patchSize,3]), display));
+rndMu = exprnd(prior.mu);
+rndPatch = prior.regBasis*rndMu';
+rndPatch(rndPatch < 0) = 0;
+figure; imshow(gammaCorrection(reshape(rndPatch/max(rndPatch(:)), [patchSize,patchSize,3]), display));
+
