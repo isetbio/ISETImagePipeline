@@ -9,6 +9,11 @@ regPara = 1.0;
 stride = 16;
 imSize = [16, 16, 3];
 
+tau = 2e-5;           % 1e-5
+gamma = 2.5e-6;       % 2.5e-4
+tau = 1e-5;
+gamma = 2.5e-4;
+
 % Construct image estimator
 estm = PoissonSparseEstimator([], inv(prior.regBasis), ...
                         prior.mu', regPara, stride, imSize);
@@ -54,8 +59,6 @@ figure();
 
 image = rand(prod(imSize), 1);
 center = zeros(nIter, 1);
-tau = 1e-5;
-gamma = 2.5e-4;
 for idx = 1:nIter
     % neg prior grad
     [~, grad] = estm.prior(reshape(image, imSize));
@@ -87,22 +90,27 @@ drawnow;
 
 %% Sampler function
 nSample = 3;
-sampleSteps = 1000;
-samples = lgvSampler(prior, nSample, imSize,'burnIn',sampleSteps,'nStep',sampleSteps);
+sampleSteps = 4000;
+samples = lgvSampler(prior, nSample, imSize,'burnIn',sampleSteps,'nStep',sampleSteps, ...
+    'stride',stride,'gamma',gamma,'tau',tau);
 
 figure();
 for idx = 1:nSample
-    subplot(2, 3, idx);
+    subplot(2, nSample, idx);
     imshow(gammaCorrection(reshape(samples(idx, :, :, :), imSize), display));
 end
 
 %% Sample by drawing from exponential
 patchSize = sqrt(size(prior.regBasis,1)/3);
-meanPatch = prior.regBasis*prior.mu';
-meanPatch(meanPatch < 0) = 0;
-figure; imshow(gammaCorrection(reshape(meanPatch/max(meanPatch(:)), [patchSize,patchSize,3]), display));
-rndMu = exprnd(prior.mu);
-rndPatch = prior.regBasis*rndMu';
-rndPatch(rndPatch < 0) = 0;
-figure; imshow(gammaCorrection(reshape(rndPatch/max(rndPatch(:)), [patchSize,patchSize,3]), display));
+meanPatch = prior.mu';
+for idx = 1:nSample
+    rndMu = exprnd(ones(size(prior.mu)))';
+    rndSign = randi(2,size(rndMu)); rndSign(rndSign == 2) = -1;
+    rndPatch = meanPatch + prior.regBasis*(rndMu .* rndSign);
+    max(rndPatch)
+    min(rndPatch)
+    rndPatch(rndPatch < 0) = 0;
+    subplot(2,nSample,idx+nSample); 
+    imshow(gammaCorrection(reshape(rndPatch, [patchSize,patchSize,3]), display));
+end
 
