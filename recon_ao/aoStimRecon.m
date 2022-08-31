@@ -33,6 +33,7 @@ close all;
 % This will allow us to load in project specific precomputed information.
 % Also records initials of version editors, otherwise set to 'main'
 aoReconDir = getpref('ISETImagePipeline','aoReconDir');
+helpDir = '/helperFiles';
 versEditor = '';
 
 %% Setup / Simulation parameters
@@ -174,30 +175,30 @@ end
 
 %% Build render matrices/files or load from existing cache
 
-if (buildNewForward || ~exist(fullfile(aoReconDir,forwardRenderStructureName),'file'))
-    renderStructure = buildRenderStruct(aoReconDir, eccXDegs, eccYDegs, ...
+if (buildNewForward || ~exist(fullfile(aoReconDir, helpDir, forwardRenderStructureName),'file'))
+    renderStructure = buildRenderStruct(aoReconDir, helpDir, eccXDegs, eccYDegs, ...
         fieldSizeDegs, nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
         displayGammaGamma, forwardRandSeed, replaceForwardCones, forwardStartCones, forwardNewCones);
-    save(fullfile(aoReconDir,forwardRenderStructureName),'renderStructure');
+    save(fullfile(aoReconDir, helpDir,forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure;
 else
     clear forwardRenderStructure;
-    load(fullfile(aoReconDir,forwardRenderStructureName),'renderStructure');
+    load(fullfile(aoReconDir, helpDir, forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters)
 end
-if (buildNewRecon || ~exist(fullfile(aoReconDir,reconRenderStructureName),'file'))
-    renderStructure = buildRenderStruct(aoReconDir, eccXDegs, eccYDegs, ...
+if (buildNewRecon || ~exist(fullfile(aoReconDir, helpDir, reconRenderStructureName),'file'))
+    renderStructure = buildRenderStruct(aoReconDir, helpDir, eccXDegs, eccYDegs, ...
         fieldSizeDegs, nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
         displayGammaGamma, reconRandSeed, replaceReconCones, reconStartCones, reconNewCones);
-    save(fullfile(aoReconDir,reconRenderStructureName),'renderStructure');
+    save(fullfile(aoReconDir, helpDir, reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure;
 else
     clear reconRenderStructure;
-    load(fullfile(aoReconDir,reconRenderStructureName),'renderStructure');
+    load(fullfile(aoReconDir, helpDir, reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(reconRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters)
@@ -350,7 +351,7 @@ saveas(gcf,fullfile(outputDir,'reconMosaicExcitations.jpg'),'jpg');
 %% Run reconstruction
 %
 % Load prior
-prior = load(fullfile(aoReconDir,sparsePriorName));
+prior = load(fullfile(aoReconDir, helpDir, sparsePriorName));
 
 % Construct onstruct image estimator
 estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...

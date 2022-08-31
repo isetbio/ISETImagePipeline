@@ -1,29 +1,37 @@
-
+close all; clear all
+% Establish sizing framework
 nPixels = 100;
 fieldSizeDegs = 1;
+overwriteDisplayGamma = true;
 
-stimBgVal = 0.1;
-stimRVal = [0.80] + stimBgVal;  
-stimGVal = [0.65] + stimBgVal; 
-stimBVal = [0.10] + stimBgVal;
+% Create stimulus values
+stimBgVal = 0.0;
+stimRVal = [0.800000] + stimBgVal;  
+stimGVal = [0.650000] + stimBgVal; 
+stimBVal = [0.100000] + stimBgVal;
 stimRGB = [stimRVal; stimGVal; stimBVal];
 
+% Apply values to full image
 stimulusImageRGB = ones(nPixels, nPixels, 3) * stimBgVal;
 stimulusImageRGB(:, :, 1) = stimRGB(1);
 stimulusImageRGB(:, :, 2) = stimRGB(2);
 stimulusImageRGB(:, :, 3) = stimRGB(3);
 
-displayName = 'conventional';
-displayFieldName = 'CRT12BitDisplay';
-aoReconDir = getpref('ISETImagePipeline','aoReconDir');
-theDisplayLoad = load(fullfile(aoReconDir,[displayName 'Display.mat']));
+% Create the display for processing
+displayName = 'mono';
+displayFieldName = 'monoDisplay';
+aoReconDir = getpref('ISETImagePipeline','aoReconDir'); helpDir = '/helperFiles';
+theDisplayLoad = load(fullfile(aoReconDir,helpDir,[displayName 'Display.mat']));
 eval(['theDisplay = theDisplayLoad.' displayFieldName ';']);
+
+% Account for the gamma functions 
 
 
 % Show the stimulus by creating an ISETBio scene
 meanLuminanceCdPerM2 = [];
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, theDisplay);
+stimulusImageRGB = gammaCorrection(stimulusImageLinear, theDisplay);
 stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
 visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
 
