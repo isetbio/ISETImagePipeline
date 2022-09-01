@@ -108,7 +108,7 @@ B_primary = theDisplay.spd;
 stimDirectExcitations = (coneFundamentals*B_primary)*stimLinear;
 
 %% Perturb M cone component of the directl computed cone excitations
-perturbAmount = 0.08;
+perturbAmount = 0.15;
 perturbDirectExcitations = stimDirectExcitations + [0 perturbAmount*stimDirectExcitations(2) 0]';
 perturbDirectLinear = inv(coneFundamentals*B_primary)*perturbDirectExcitations;
 perturbRGB = gammaCorrection(perturbDirectLinear, theDisplay);
