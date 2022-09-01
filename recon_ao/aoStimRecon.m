@@ -34,7 +34,7 @@ close all;
 % Also records initials of version editors, otherwise set to 'main'
 aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 helpDir = '/helperFiles';
-versEditor = '';
+versEditor = '_testing';
 
 %% Setup / Simulation parameters
 %

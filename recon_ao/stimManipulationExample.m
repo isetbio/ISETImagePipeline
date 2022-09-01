@@ -2,13 +2,12 @@ close all; clear all
 % Establish sizing framework
 nPixels = 100;
 fieldSizeDegs = 1;
-overwriteDisplayGamma = true;
 
 % Create stimulus values
 stimBgVal = 0.0;
-stimRVal = [0.800000] + stimBgVal;  
-stimGVal = [0.650000] + stimBgVal; 
-stimBVal = [0.100000] + stimBgVal;
+stimRVal = [0.80] + stimBgVal;  
+stimGVal = [0.65] + stimBgVal; 
+stimBVal = [0.10] + stimBgVal;
 stimRGB = [stimRVal; stimGVal; stimBVal];
 
 % Apply values to full image
@@ -23,6 +22,15 @@ displayFieldName = 'monoDisplay';
 aoReconDir = getpref('ISETImagePipeline','aoReconDir'); helpDir = '/helperFiles';
 theDisplayLoad = load(fullfile(aoReconDir,helpDir,[displayName 'Display.mat']));
 eval(['theDisplay = theDisplayLoad.' displayFieldName ';']);
+
+% Overwrite Gamma portion that was included in the building of mono cone
+% mosaics, must adjust accordingly if using a 'conventional' displayName 
+displayGammaBits = 12;
+displayGammaGamma = 2;
+gammaInput = linspace(0,1,2^displayGammaBits)';
+gammaOutput = gammaInput.^displayGammaGamma;
+theDisplay.gamma = gammaOutput(:,[1 1 1]);
+
 
 % Show the stimulus by creating an ISETBio scene
 meanLuminanceCdPerM2 = [];
@@ -83,6 +91,6 @@ figure; clf; hold on; plot(wls,coneFundamentals','r');
 coneExcitations = (coneFundamentals*B_primary)*stimRGB;
 
 % Perturb M cones
-coneExcitations1 = coneExcitations + [0 0.05*coneExcitations(2) 0]';
+coneExcitations1 = coneExcitations + [0 0.25*coneExcitations(2) 0]';
 stimPerturbMLinear = inv(coneFundamentals*B_primary)*coneExcitations1;
 stimPerturbMRGB = gammaCorrection(stimPerturbMLinear, theDisplay);
