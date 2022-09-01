@@ -26,10 +26,9 @@ stimSizeDegsList = [24/60]; % 10/60];
 
 % RGB values (before gamma correction) below vals at 0.25 M original
 stimBgVal = 0.1;
-%                0.05    0.15    0.25     Origin
-stimRValList = [0.6559, 0.3678, 0.0796]; % 0.80];
-stimGValList = [0.6862, 0.7587, 0.8311]; % 0.65];
-stimBValList = [0.1000, 0.0999, 0.0998]; % 0.10];
+stimRValList = [0.4751];% 4966]; % 0.80];
+stimGValList = [0.9108];% 9100]; % 0.65];
+stimBValList = [0.3154];% 3325]; % 0.10];
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
     error('Stimulus value lists must have same length');
 end
@@ -56,8 +55,8 @@ reconDefocusDioptersList = [0.00];% 0.05 0.1];
 
 % Establish chromaticity for forward and recon mosaic, with string options:
 % "chromNorm", "chromProt", "chromDeut", "chromTrit", "chromAllL", "chromAllM"
-forwardChromList = ["chromNorm", "chromNorm"];%, "chromDeut"];
-reconChromList = ["chromNorm", "chromDeut"];%, "chromDeut"];
+forwardChromList = ["chromDeut"];%, "chromNorm"];%, "chromDeut"];
+reconChromList = ["chromDeut"];%, "chromDeut"];%, "chromDeut"];
 %% Run through specified list conditions
 for ss = 1:length(stimSizeDegsList)
     stimSizeDegs = stimSizeDegsList(ss);
