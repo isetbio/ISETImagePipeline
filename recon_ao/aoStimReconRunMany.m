@@ -26,9 +26,9 @@ stimSizeDegsList = [24/60]; % 10/60];
 
 % RGB values (before gamma correction) below vals at 0.25 M original
 stimBgVal = 0.1;
-stimRValList = [0.4751];% 4966]; % 0.80];
-stimGValList = [0.9108];% 9100]; % 0.65];
-stimBValList = [0.3154];% 3325]; % 0.10];
+stimRValList = [0.6466];% 4966]; % 0.80];
+stimGValList = [0.7015];% 9100]; % 0.65];
+stimBValList = [0.0994];% 3325]; % 0.10];
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
     error('Stimulus value lists must have same length');
 end
