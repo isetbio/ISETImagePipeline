@@ -42,8 +42,8 @@ versEditor = '_testing';
 nPixels = 58;
 fieldSizeMinutes = 30;
 fieldSizeDegs = fieldSizeMinutes/60;
-eccXDegs = 2.0;
-eccYDegs = 0.0;
+eccXDegs = 4.0;
+eccYDegs = 2.0;
 
 % Gamma table parameters
 displayGammaBits = 12;
@@ -132,6 +132,8 @@ elseif strcmp(forwardChrom, 'chromAllM')
     forwardNewCones = cMosaic.MCONE_ID;
 elseif strcmp(forwardChrom, 'chromNorm')
     replaceForwardCones = false; 
+    forwardStartCones = [];
+    forwardNewCones = [];
 else
     error('Unrecognized chromaticity input')
 end
@@ -156,7 +158,9 @@ elseif strcmp(reconChrom, 'chromAllM')
     reconStartCones = [1 3];
     reconNewCones = cMosaic.MCONE_ID;
 elseif strcmp(reconChrom, 'chromNorm')
-    replaceReconCones = false; 
+    replaceReconCones = false;
+    reconStartCones = []; 
+    reconNewCones = [];
 else
     error('Unrecognized chromaticity input')
 end

@@ -17,7 +17,7 @@ stimulusImageRGB(:, :, 3) = stimRGB(3);
 
 %% Create the display for processing
 %
-% Interested in using a conventional/CRT12BitDisplay here instead of mono
+% Ideally would use a conventional/CRT12BitDisplay here instead of mono
 displayName = 'mono';
 displayFieldName = 'monoDisplay';
 aoReconDir = getpref('ISETImagePipeline','aoReconDir'); helpDir = '/helperFiles';
@@ -28,10 +28,10 @@ wls = theDisplay.wave;
 %% Adjustments if using mono displayName
 % 
 % Overwrite Gamma portion that was included in the building of mono cone
-% mosaics 
+% mosaics when using a mono display
+displayGammaBits = 12;
+displayGammaGamma = 2;
 if strcmp(displayName, 'mono')
-    displayGammaBits = 12;
-    displayGammaGamma = 2;
     gammaInput = linspace(0,1,2^displayGammaBits)';
     gammaOutput = gammaInput.^displayGammaGamma;
     theDisplay.gamma = gammaOutput(:,[1 1 1]);
@@ -49,7 +49,7 @@ visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBsc
 % We'll need to be able to do this lower down.
 stimulusImageRGB1 = gammaCorrection(stimulusImageLinear, theDisplay);
 
-% And becuase it's here, do inverse gamma correction the ISETBio way.
+% And because it's here, do inverse gamma correction the ISETBio way.
 % Note that currently there is an invGammaCorrection function on the
 % path that actually does the forward gammaCorrection.
 gammaLength = size(theDisplay.gamma,1);
@@ -91,6 +91,7 @@ lensTransmittance = theLens.transmittance';
 % Combine QE from mosaic with lens transmittance
 coneWls = theMosaic.wave;
 coneQENoLens = theMosaic.qe';
+% The code below adjusts for size by putting lens transmission into 3 x 31
 coneQE = coneQENoLens .* ...
     lensTransmittance(ones(size(coneQENoLens,1),1),:);
 coneQESpline = SplineCmf(coneWls,coneQE,wls);
@@ -107,8 +108,12 @@ if (~isempty(coneIndex))
     error('Did not actually change mosaic cone types');
 end
 
-%% Compute cone mosaic responses to original image
-theOI = oiCompute(theOI,stimulusScene);
+%% Compute cone mosaic responses to original image 
+% 
+% Checking the OI computation since the documentation says this should be
+% flipped
+% theOI = oiCompute(theOI,stimulusScene);
+theOI = oiCompute(stimulusScene, theOI);
 origMosaicExcitations = theMosaic.compute(theOI);
 
 %% Compute cone excitations directly from linear stimulus RGB values
