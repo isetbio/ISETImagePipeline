@@ -1,14 +1,14 @@
 %% Intialize
-close all; clear all
+% close all; clear all
 
 %% Establish sizes
 nPixels = 100;
 fieldSizeDegs = 0.5;
 
 % Create stimulus values and full image
-stimRVal = 0.80;  
-stimGVal = 0.65; 
-stimBVal = 0.10;
+stimRVal = 0.1620;  
+stimGVal = 0.8461; 
+stimBVal = 0.9490;
 stimRGB = [stimRVal; stimGVal; stimBVal];
 stimulusImageRGB = ones(nPixels, nPixels, 3);
 stimulusImageRGB(:, :, 1) = stimRGB(1);
@@ -76,8 +76,11 @@ if (max(abs(stimLinear-stimLinear1))/mean(stimLinear) > 1e-3)
 end
 
 %% Build a mosaic object and pull out parts we need.
-theConeMosaic = ConeResponseCmosaic(0, 0, ...
-        'fovealDegree', fieldSizeDegs, 'pupilSize', 3, 'useRandomSeed', true);
+theConeMosaic = ConeResponseCmosaic(2.0, 0, ...
+        'fovealDegree', fieldSizeDegs, 'pupilSize', 3, 'useRandomSeed', true, 'defocusDiopters', 0);
+% theConeMosaic = ConeResponseCmosaic(2.0, 0, ...
+%     'fovealDegree', fieldSizeDegs, 'pupilSize', 3, 'useRandomSeed', true, ...
+%     'defocusDiopters', 0);
 theOI = theConeMosaic.PSF;
 theMosaic = theConeMosaic.Mosaic;
 
@@ -124,8 +127,14 @@ B_primary = theDisplay.spd;
 stimDirectExcitations = (coneFundamentals*B_primary)*stimLinear;
 
 %% Perturb M cone component of the directl computed cone excitations
-perturbAmount = 0.15;
-perturbDirectExcitations = stimDirectExcitations + [0 perturbAmount*stimDirectExcitations(2) 0]';
+perturbAmount = 0.30;
+% perturbAmount2 = perturbAmount1 - (stimDirectExcitations(1) / stimDirectExcitations(2)) + 1;
+% 
+% c1 = stimDirectExcitations(2) - stimDirectExcitations(1) + (perturbAmount2 * stimDirectExcitations(2));
+% c2 = stimDirectExcitations(1) - stimDirectExcitations(2) + (perturbAmount1 * stimDirectExcitations(2));
+% 
+perturbDirectExcitations = stimDirectExcitations - [0 (perturbAmount * stimDirectExcitations(2)) 0]';
+% perturbDirectExcitations = (stimDirectExcitations + [c1 (c2) 0]') .* [1 0.4484 1]';
 perturbDirectLinear = inv(coneFundamentals*B_primary)*perturbDirectExcitations;
 perturbRGB = gammaCorrection(perturbDirectLinear, theDisplay);
 perturbImageRGB = ones(nPixels, nPixels, 3);
@@ -142,7 +151,7 @@ perturbMosaicExcitations = theMosaic.compute(perturbOI);
 
 %% Figure compares mosaic excitations for the two different stimuli
 figure; clf; hold on;
-maxVal = 1500;
+maxVal = 5000;
 plot(origMosaicExcitations(:),perturbMosaicExcitations(:),'ro','MarkerFaceColor','r','MarkerSize',8);
 plot([0 maxVal],[0 maxVal],'k');
 xlim([0 maxVal]); ylim([0 maxVal]);

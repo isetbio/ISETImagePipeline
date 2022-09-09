@@ -34,7 +34,7 @@ close all;
 % Also records initials of version editors, otherwise set to 'main'
 aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 helpDir = '/helperFiles';
-versEditor = '_testing';
+versEditor = '_testNoAO';
 
 %% Setup / Simulation parameters
 %
@@ -42,8 +42,8 @@ versEditor = '_testing';
 nPixels = 58;
 fieldSizeMinutes = 30;
 fieldSizeDegs = fieldSizeMinutes/60;
-eccXDegs = 4.0;
-eccYDegs = 2.0;
+eccXDegs = 2.0;
+eccYDegs = 0.0;
 
 % Gamma table parameters
 displayGammaBits = 12;
