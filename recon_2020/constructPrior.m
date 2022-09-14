@@ -62,3 +62,42 @@ regBasis = U * diag(sqrt(SIG)) * result.TransformWeights;
 
 %% Visualization of basis function
 [~] = visualizeBasis(regBasis, 16, size(regBasis, 2), false);
+
+%% Project Images onto the basis function
+projBasis = inv(regBasis);
+projs = projBasis * (imageData' - mu');
+
+% plot the histogram for the coefficients
+nRow = 5; nCol = 5;
+figure();
+nFig = 1;
+for i = 1:nRow
+    for j = 1:nCol
+        subplot(nRow, nCol, nFig);
+        histogram(projs(:, nFig));
+        
+        nFig = nFig + 1;
+        xlim([-5, 5])
+    end
+end
+
+%% Fit exp distribution on the coefficients
+allProj = projs(:);
+index = randsample(length(allProj), 2.5e4);
+
+figure(); subplot(1, 2, 1);
+histogram(allProj(index), 'Normalization', 'pdf');
+set(gca, 'yscale', 'log'); box off;
+
+subplot(1, 2, 2);
+histogram(abs(allProj(index)), 'Normalization', 'pdf');
+set(gca, 'yscale', 'log'); box off;
+xlim([0, 10]);
+ylimits = ylim();
+
+yyaxis right
+dist = fitdist(abs(allProj), 'Exponential');
+plot(0:0.1:domain(2), dist.pdf(0:0.1:domain(2)));
+set(gca, 'yscale', 'log'); box off;
+xlim([0, 10]);
+ylim(ylimits);
