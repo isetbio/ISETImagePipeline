@@ -85,19 +85,24 @@ end
 allProj = projs(:);
 index = randsample(length(allProj), 2.5e4);
 
+xmax = 12;
 figure(); subplot(1, 2, 1);
-histogram(allProj(index), 'Normalization', 'pdf');
+histogram(allProj(index), 100, 'Normalization', 'pdf');
+xlim([-xmax, xmax]);
 set(gca, 'yscale', 'log'); box off;
+set(gca,'TickDir','out');
 
 subplot(1, 2, 2);
-histogram(abs(allProj(index)), 'Normalization', 'pdf');
+histogram(abs(allProj(index)), 100, 'Normalization', 'pdf');
 set(gca, 'yscale', 'log'); box off;
-xlim([0, 10]);
+
+xlim([0, xmax]);
 ylimits = ylim();
 
 yyaxis right
 dist = fitdist(abs(allProj), 'Exponential');
-plot(0:0.1:domain(2), dist.pdf(0:0.1:domain(2)));
+plot(0:0.1:xmax, dist.pdf(0:0.1:xmax), 'LineWidth', 2);
 set(gca, 'yscale', 'log'); box off;
-xlim([0, 10]);
+set(gca,'TickDir','out');
+xlim([0, xmax]);
 ylim(ylimits);
