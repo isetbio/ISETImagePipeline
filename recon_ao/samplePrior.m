@@ -9,8 +9,8 @@ regPara = 1.0;
 stride = 2;
 imSize = [16, 16, 3];
 
-tau = 1e-5;
-gamma = 1e-5;
+tau = 1e-6;
+gamma = 1e-6;
 sampleSteps = 1e4;
 
 % % Construct image estimator
