@@ -1,5 +1,5 @@
 %% Intialize
-close all; clear
+% close all; clear
 
 %% Establish sizes
 nPixels = 100;
@@ -18,8 +18,8 @@ stimulusImageRGB(:, :, 3) = stimRGB(3);
 %% Create the display for processing
 %
 % Ideally would use a conventional/CRT12BitDisplay here instead of mono
-displayName = 'mono';
-displayFieldName = 'monoDisplay';
+displayName = 'conventional';
+displayFieldName = 'CRT12BitDisplay';
 aoReconDir = getpref('ISETImagePipeline','aoReconDir'); helpDir = '/helperFiles';
 theDisplayLoad = load(fullfile(aoReconDir,helpDir,[displayName 'Display.mat']));
 eval(['theDisplay = theDisplayLoad.' displayFieldName ';']);
@@ -27,8 +27,9 @@ wlsDisplayOrig = theDisplay.wave;
 
 % Spline underlying display wavelength down to the wavelength sampling we
 % will eventually use in the calculations.
-wls = (380:5:780)';
+wls = (380:10:780)';
 theDisplay = displaySet(theDisplay,'wave',wls);
+figure; plot(wls,theDisplay.spd);
 
 %% Adjustments if using mono displayName
 % 
@@ -177,8 +178,8 @@ perturbMosaicExcitations = theMosaic.compute(perturbOI);
 %% Figure compares mosaic excitations for the two different stimuli
 figure; clf;
 subplot(1,3,1); hold on;
-minVal = 2000;
-maxVal = 4000;
+minVal = 1500;
+maxVal = 3000;
 origTemp = origMosaicExcitations(:,:,LconeIndices); 
 perturbTemp = perturbMosaicExcitations(:,:,LconeIndices);
 fracDiff(1) = max(abs(origTemp(:)-perturbTemp(:)))/mean(origMosaicExcitations(:));
@@ -191,8 +192,8 @@ title("Originally L cones, now M");
 axis('square');
 
 subplot(1,3,2); hold on;
-minVal = 2000;
-maxVal = 4000;
+minVal = 1500;
+maxVal = 3000;
 origTemp = origMosaicExcitations(:,:,MconeIndices); 
 perturbTemp = perturbMosaicExcitations(:,:,MconeIndices);
 fracDiff(2) = max(abs(origTemp(:)-perturbTemp(:)))/mean(origMosaicExcitations(:));
@@ -205,8 +206,8 @@ title("Originally M cones, still M");
 axis('square');
 
 subplot(1,3,3); hold on;
-minVal = 1000;
-maxVal = 2000;
+minVal = 200;
+maxVal = 1000;
 origTemp = origMosaicExcitations(:,:,SconeIndices); 
 perturbTemp = perturbMosaicExcitations(:,:,SconeIndices);
 fracDiff(3) = max(abs(origTemp(:)-perturbTemp(:)))/mean(origMosaicExcitations(:));
