@@ -9,11 +9,9 @@ regPara = 1.0;
 stride = 2;
 imSize = [16, 16, 3];
 
-tau = 2e-5;           % 1e-5
-gamma = 2.5e-6;       % 2.5e-4
-tau = 0.5e-5;
+tau = 1e-5;
 gamma = 1e-5;
-sampleSteps = 8000;
+sampleSteps = 1e4;
 
 % % Construct image estimator
 % estm = PoissonSparseEstimator([], inv(prior.regBasis), ...
@@ -88,20 +86,21 @@ sampleSteps = 8000;
 
 %% Sampler function
 nSample = 9;
-samples = lgvSampler(prior, nSample, imSize,'burnIn',sampleSteps,'nStep',sampleSteps, ...
-    'stride',stride,'gamma',gamma,'tau',tau);
 
 figure();
 for idx = 1:nSample
+    sample = lgvSampler(prior, 1, imSize,'burnIn',sampleSteps,'nStep',sampleSteps, ...
+        'stride',stride,'gamma',gamma,'tau',tau);
+
     subplot(2, nSample, idx);
-    imshow(gammaCorrection(reshape(samples(idx, :, :, :), imSize), display));
+    imshow(gammaCorrection(reshape(sample, imSize), display));
 end
 
 %% Sample by drawing from exponential
 patchSize = sqrt(size(prior.regBasis,1)/3);
 meanPatch = prior.mu';
 for idx = 1:nSample
-    rndMu = exprnd(ones(size(prior.mu)))';
+    rndMu = exprnd(0.3980 * ones(size(prior.mu)))';
     rndSign = randi(2,size(rndMu)); rndSign(rndSign == 2) = -1;
     rndPatch = meanPatch + prior.regBasis*(rndMu .* rndSign);
     max(rndPatch)
