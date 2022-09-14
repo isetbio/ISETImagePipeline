@@ -74,10 +74,11 @@ nFig = 1;
 for i = 1:nRow
     for j = 1:nCol
         subplot(nRow, nCol, nFig);
-        histogram(projs(:, nFig));
+        histogram(projs(nFig, :));
         
         nFig = nFig + 1;
-        xlim([-5, 5])
+        xlim([-8, 8])
+        set(gca, 'yscale', 'log'); box off;
     end
 end
 
