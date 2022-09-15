@@ -1,9 +1,25 @@
 %% Intialize
 close all; clear
 
-%% Establish sizes
+%% Parameters
+% 
+% Establish sizes
 nPixels = 100;
 fieldSizeDegs = 0.5;
+
+% Randomize intensities across image?
+%
+% Seemed clever at one point to better constrain the
+% regression, but chromatic aberation
+% messes up the metamerism for an image with spatial
+% structure so isn't all that useful in the end.
+randomizeImageIntensities = false;
+
+% Force all mosaic params to foveal values
+forceFovealValues = true;
+
+% Use cone fundamentals obtained through simulated measurement?
+useFundamentalsBySimulation = true;
 
 % Create stimulus values and full image
 stimRVal = 0.1620;  
@@ -40,6 +56,11 @@ if strcmp(displayName, 'mono')
     gammaInput = linspace(0,1,2^displayGammaBits)';
     gammaOutput = gammaInput.^displayGammaGamma;
     theDisplay.gamma = gammaOutput(:,[1 1 1]);
+end
+
+% Make sure display has no ambient
+if (any(theDisplay.ambient ~= 0))
+    error('Code assumes display ambient is zero, but it is not');
 end
 
 %% Show the stimulus by creating an ISETBio scene
@@ -80,7 +101,25 @@ if (max(abs(stimLinear-stimLinear1))/mean(stimLinear) > 1e-3)
 end
 
 %% Randomize image intensities?
-randomizeImageIntensities = true;
+%
+% This scales all of the pixels in the uniform field by a random
+% number between 0 and 1, in the linear image domain. The reason
+% for implementing this was to better constrain the regression comparing
+% excitations for metameric pairs, since any scaling of a metameric pair
+% is another metameric pair.  But this approach hits the cold hard reality
+% of chromatic aberration - since this produces spatial structure in the
+% image, aberration will break the metamerism.  Leaving the code here in
+% case we ever want to explore this effect in more detail.
+%
+% Note that when this is true, we rewrite stimulusScene and
+% stimulusImageLinear so they no longer match their values above.
+%
+% Also note that we'll use the same randVal below to apply the same random
+% scaling to the perturbed scene/image. So don't rewrite that variable
+% between here and below.
+%
+% Finally note that to preserve metamerism, the scaling must be applied to
+% the linear image, not the gamma corrected RGB values.
 if (randomizeImageIntensities)
     randVals = rand(size(squeeze(stimulusImageLinear1(:,:,1))));
     for cc = 1:size(stimulusImageLinear,3)
@@ -109,7 +148,7 @@ theConeMosaic = ConeResponseCmosaic(2.0, 0, ...
         'eccVaryingOuterSegmentLength', false, ...
         'eccVaryingMacularPigmentDensity', false, ...
         'eccVaryingMacularPigmentDensityDynamic', false, ...
-        'anchorAllEccVaryingParamsToTheirFovealValues', true);
+        'anchorAllEccVaryingParamsToTheirFovealValues', forceFovealValues);
 theOI = theConeMosaic.PSF;
 theMosaic = theConeMosaic.Mosaic;
 
@@ -136,12 +175,11 @@ coneFundamentalsFromObjects = EnergyToQuanta(wls,coneQEFromObjects')';
 %
 % Build a set of monochromatic images at each sample wavelength.  The photon
 % level is scene radiance in photons/sr-m2-nm-sec.
-pixelSize = 64;
 photonsPerSrM2NMSec = 1e25;
 for ww = 1:length(wls)
     % Set up a dummy scene. Spatially uniform with a black body
     % spectrum of 5000 degK.  We'll replace the scene contents just below.
-    scene{ww} = sceneCreate('uniform bb',pixelSize,5000,wls);
+    scene{ww} = sceneCreate('uniform bb',nPixels,5000,wls);
 
     % Use small field of view to minimize effects of eccentricity, and also
     % so we don't need too many pixels (for efficiency in this demo).
@@ -151,7 +189,7 @@ for ww = 1:length(wls)
     % photons/sec-nm.
     photons = sceneGet(scene{ww},'photons');
     photons = zeros(size(photons));
-    photons(:,:,ww) = photonsPerSrM2NMSec*ones(pixelSize,pixelSize);
+    photons(:,:,ww) = photonsPerSrM2NMSec*ones(nPixels,nPixels);
     scene{ww} = sceneSet(scene{ww},'photons',photons);
 end
 
@@ -195,7 +233,6 @@ end
 coneFundamentalsBySimulation = EnergyToQuanta(wls,coneQEBySimulation')';
 
 %% Choose which fundamentals
-useFundamentalsBySimulation = true;
 if (useFundamentalsBySimulation)
     coneFundamentals = coneFundamentalsBySimulation;
 else
@@ -204,9 +241,10 @@ end
 
 %% Plot cone fundamentals obtained various ways
 figure; clf; hold on;
-plot(wls,coneFundamentalsFromObjects','r','LineWidth',3);
-plot(wls,coneFundamentalsBySimulation','k','LineWidth',1);
+plot(wls,coneFundamentalsFromObjects','r','LineWidth',4);
+plot(wls,coneFundamentalsBySimulation','y-','LineWidth',2);
 xlabel('Wavelength'); ylabel('Fundamental');
+legend({'From Object', 'By Simulation'})
 
 %% Make all the mosaic M cones into L cones
 coneTypes = theMosaic.coneTypes;
@@ -263,20 +301,22 @@ if (randomizeImageIntensities)
     meanLuminanceCdPerM2, theDisplay);
     perturbScene = sceneSet(perturbScene, 'fov', fieldSizeDegs);
 end
-
+visualizeScene(perturbScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
 perturbOI = oiCompute(theOI,perturbScene);
 perturbMosaicExcitations = theMosaic.compute(perturbOI);
 
 %% Figure compares mosaic excitations for the two different stimuli
 figure; clf;
 subplot(1,3,1); hold on;
-minVal = 1500;
-maxVal = 3000;
 origTemp = origMosaicExcitations(:,:,LConeIndices); 
 perturbTemp = perturbMosaicExcitations(:,:,LConeIndices);
 fracDiff(1) = max(abs(origTemp(:)-perturbTemp(:)))/mean(origMosaicExcitations(:));
 slope(:,1) = [origTemp(:) ones(size(origTemp(:)))]\perturbTemp(:);
 meanExcitation(1) = mean(origTemp(:));
+relStddevExcitation(1,1) = std(origTemp(:))/meanExcitation(1);
+relStddevExcitation(1,2) = std(perturbTemp(:))/meanExcitation(1);
+minVal = 0.9*min(origTemp(:));
+maxVal = 1.1*max(origTemp(:));
 plot(origTemp(:),perturbTemp(:),'ro','MarkerFaceColor','r','MarkerSize',8);
 plot([minVal maxVal],[minVal maxVal],'k');
 xlim([minVal maxVal]); ylim([minVal maxVal]);
@@ -284,13 +324,15 @@ title("Originally L cones");
 axis('square');
 
 subplot(1,3,2); hold on;
-minVal = 1500;
-maxVal = 3000;
 origTemp = origMosaicExcitations(:,:,MConeIndices); 
 perturbTemp = perturbMosaicExcitations(:,:,MConeIndices);
 fracDiff(2) = max(abs(origTemp(:)-perturbTemp(:)))/mean(origMosaicExcitations(:));
 slope(:,2) = [origTemp(:) ones(size(origTemp(:)))]\perturbTemp(:);
 meanExcitation(2) = mean(origTemp(:));
+relStddevExcitation(2,1) = std(origTemp(:))/meanExcitation(2);
+relStddevExcitation(2,2) = std(perturbTemp(:))/meanExcitation(2);
+minVal = 0.9*min(origTemp(:));
+maxVal = 1.1*max(origTemp(:));
 plot(origTemp(:),perturbTemp(:),'go','MarkerFaceColor','g','MarkerSize',8);
 plot([minVal maxVal],[minVal maxVal],'k');
 xlim([minVal maxVal]); ylim([minVal maxVal]);
@@ -298,13 +340,15 @@ title("Originally M cones");
 axis('square');
 
 subplot(1,3,3); hold on;
-minVal = 200;
-maxVal = 800;
 origTemp = origMosaicExcitations(:,:,SConeIndices); 
 perturbTemp = perturbMosaicExcitations(:,:,SConeIndices);
 fracDiff(3) = max(abs(origTemp(:)-perturbTemp(:)))/mean(origMosaicExcitations(:));
 slope(:,3) = [origTemp(:) ones(size(origTemp(:)))]\perturbTemp(:);
 meanExcitation(3) = mean(origTemp(:));
+relStddevExcitation(3,1) = std(origTemp(:))/meanExcitation(3);
+relStddevExcitation(3,2) = std(perturbTemp(:))/meanExcitation(3);
+minVal = 0.9*min(origTemp(:));
+maxVal = 1.1*max(origTemp(:));
 plot(origTemp(:),perturbTemp(:),'bo','MarkerFaceColor','b','MarkerSize',8);
 plot([minVal maxVal],[minVal maxVal],'k');
 xlim([minVal maxVal]); ylim([minVal maxVal]);
@@ -315,6 +359,9 @@ axis('square');
 fprintf('Maximum fractional difference in L mosaic excitation = %0.4g\n',fracDiff(1));
 fprintf('Maximum fractional difference in M mosaic excitation = %0.4g\n',fracDiff(2));
 fprintf('Maximum fractional difference in S mosaic excitation = %0.4g\n',fracDiff(3));
+fprintf('Relative stdevs of L mosaic excitations = %0.4g, %0.4g\n',relStddevExcitation(1,1),relStddevExcitation(2,1));
+fprintf('Relative stdevs of M mosaic excitations = %0.4g, %0.4g\n',relStddevExcitation(2,1),relStddevExcitation(2,2));
+fprintf('Relative stdevs of M mosaic excitations = %0.4g, %0.4g\n',relStddevExcitation(3,1),relStddevExcitation(3,2));
 fprintf('Slope for L mosaic excitation = %0.4g, intercept = %0.4g\n',slope(1,1),slope(2,1));
 fprintf('Slope for M mosaic excitation = %0.4g, intercept = %0.4g\n',slope(1,2),slope(2,2));
 fprintf('Slope for S mosaic excitation = %0.4g, intercept = %0.4g\n',slope(1,3),slope(2,3));
