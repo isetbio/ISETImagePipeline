@@ -17,7 +17,7 @@ stimulusImageRGB(:, :, 3) = stimRGB(3);
 
 %% Create the display for processing
 %
-% Ideally would use a conventional/CRT12BitDisplay here instead of mono
+% Use conventional/CRT12BitDisplay
 displayName = 'conventional';
 displayFieldName = 'CRT12BitDisplay';
 aoReconDir = getpref('ISETImagePipeline','aoReconDir'); helpDir = '/helperFiles';
@@ -32,7 +32,7 @@ theDisplay = displaySet(theDisplay,'wave',wls);
 
 %% Adjustments if using mono displayName
 % 
-% Overwrite Gamma portion that was included in the building of mono cone
+% Overwrite gamma function that was included in the building of mono cone
 % mosaics when using a mono display
 displayGammaBits = 12;
 displayGammaGamma = 2;
@@ -47,7 +47,6 @@ meanLuminanceCdPerM2 = [];
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, theDisplay);
 stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
-visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
 
 %% Explicitly do gamma correction and check below.  
 % 
@@ -80,13 +79,37 @@ if (max(abs(stimLinear-stimLinear1))/mean(stimLinear) > 1e-3)
     error('Explict gamma correction from linear values doesn''t match RGB input');
 end
 
+%% Randomize image intensities?
+randomizeImageIntensities = true;
+if (randomizeImageIntensities)
+    randVals = rand(size(squeeze(stimulusImageLinear1(:,:,1))));
+    for cc = 1:size(stimulusImageLinear,3)
+        stimulusImageLinear(:,:,cc) = stimulusImageLinear(:,:,cc) .* randVals;
+    end
+    stimulusImageRGB = gammaCorrection(stimulusImageLinear, theDisplay);
+
+    [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
+    meanLuminanceCdPerM2, theDisplay);
+    stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
+end
+
+%% Visualize scene
+visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
+
 %% Build a mosaic object and pull out parts we need.
+% 
+% For this excercise, we want a simple mosaic so we take explicit
+% control of all the fancy eccentricity varying parameters.
 theConeMosaic = ConeResponseCmosaic(2.0, 0, ...
-        'fovealDegree', fieldSizeDegs, 'pupilSize', 3, 'useRandomSeed', true, 'defocusDiopters', 0, ...
-        'wave', wls);
-% theConeMosaic = ConeResponseCmosaic(2.0, 0, ...
-%     'fovealDegree', fieldSizeDegs, 'pupilSize', 3, 'useRandomSeed', true, ...
-%     'defocusDiopters', 0);
+        'fovealDegree', fieldSizeDegs, 'pupilSize', 3, 'useRandomSeed', false, 'defocusDiopters', 0, ...
+        'wave', wls, ...
+        'rodIntrusionAdjustedConeAperture', false, ...
+        'eccVaryingConeAperture', false, ...
+        'eccVaryingConeBlur', false, ...
+        'eccVaryingOuterSegmentLength', false, ...
+        'eccVaryingMacularPigmentDensity', false, ...
+        'eccVaryingMacularPigmentDensityDynamic', false, ...
+        'anchorAllEccVaryingParamsToTheirFovealValues', true);
 theOI = theConeMosaic.PSF;
 theMosaic = theConeMosaic.Mosaic;
 
@@ -107,7 +130,6 @@ coneQEFromObjects = coneQENoLens .* ...
 if (any(coneWls ~= wls))
     error('All our work getting wavelength support consistent failed.');
 end
-%coneQESpline = SplineCmf(coneWls,coneQE,wls);
 coneFundamentalsFromObjects = EnergyToQuanta(wls,coneQEFromObjects')';
 
 %% Another way to get the fundamentals
@@ -173,7 +195,12 @@ end
 coneFundamentalsBySimulation = EnergyToQuanta(wls,coneQEBySimulation')';
 
 %% Choose which fundamentals
-coneFundamentals = coneFundamentalsBySimulation;
+useFundamentalsBySimulation = true;
+if (useFundamentalsBySimulation)
+    coneFundamentals = coneFundamentalsBySimulation;
+else
+    coneFundamentals = coneFundamentalsFromObjects;
+end
 
 %% Plot cone fundamentals obtained various ways
 figure; clf; hold on;
@@ -226,6 +253,17 @@ perturbImageRGB(:, :, 3) = perturbRGB(3);
 [perturbScene, ~, perturbImageLinear] = sceneFromFile(perturbImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, theDisplay);
 perturbScene = sceneSet(perturbScene, 'fov', fieldSizeDegs);
+if (randomizeImageIntensities)
+    for cc = 1:size(perturbImageLinear,3)
+        perturbImageLinear(:,:,cc) = perturbImageLinear(:,:,cc) .* randVals;
+    end
+    perturbImageRGB = gammaCorrection(perturbImageLinear, theDisplay);
+
+    [perturbScene, ~, perturbImageLinear] = sceneFromFile(perturbImageRGB, 'rgb', ...
+    meanLuminanceCdPerM2, theDisplay);
+    perturbScene = sceneSet(perturbScene, 'fov', fieldSizeDegs);
+end
+
 perturbOI = oiCompute(theOI,perturbScene);
 perturbMosaicExcitations = theMosaic.compute(perturbOI);
 
@@ -242,7 +280,7 @@ meanExcitation(1) = mean(origTemp(:));
 plot(origTemp(:),perturbTemp(:),'ro','MarkerFaceColor','r','MarkerSize',8);
 plot([minVal maxVal],[minVal maxVal],'k');
 xlim([minVal maxVal]); ylim([minVal maxVal]);
-title("Originally L cones, now M");
+title("Originally L cones");
 axis('square');
 
 subplot(1,3,2); hold on;
@@ -256,7 +294,7 @@ meanExcitation(2) = mean(origTemp(:));
 plot(origTemp(:),perturbTemp(:),'go','MarkerFaceColor','g','MarkerSize',8);
 plot([minVal maxVal],[minVal maxVal],'k');
 xlim([minVal maxVal]); ylim([minVal maxVal]);
-title("Originally M cones, still M");
+title("Originally M cones");
 axis('square');
 
 subplot(1,3,3); hold on;
@@ -270,7 +308,7 @@ meanExcitation(3) = mean(origTemp(:));
 plot(origTemp(:),perturbTemp(:),'bo','MarkerFaceColor','b','MarkerSize',8);
 plot([minVal maxVal],[minVal maxVal],'k');
 xlim([minVal maxVal]); ylim([minVal maxVal]);
-title("Originally S cones, still S");
+title("Originally S cones");
 axis('square');
 
 %% Compute and report fraction difference
