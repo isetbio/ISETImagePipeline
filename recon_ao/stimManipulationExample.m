@@ -33,7 +33,7 @@ forceFovealValues = true;
 useFundamentalsBySimulation = true;
 
 % Force M = L excitations in base stimulus?
-forceMEqualL = true;
+forceMEqualL = false;
 
 % Create stimulus values and full image
 stimRVal = 0.1620;  
@@ -57,7 +57,7 @@ wlsDisplayOrig = theDisplay.wave;
 
 % Spline underlying display wavelength down to the wavelength sampling we
 % will eventually use in the calculations.
-wls = (380:5:780)';
+wls = (400:10:700)';
 theDisplay = displaySet(theDisplay,'wave',wls);
 
 %% Adjustments if using mono displayName
@@ -169,8 +169,8 @@ for ww = 1:length(wls)
 end
 
 % Match scale to the coneQE obtained directly
+coneScaleFactor = coneQEBySimulation(:)\coneQEFromObjects(:);
 for cc = 1:size(coneQEFromObjects,1)
-    coneQEBySimulation(cc,:) = (coneQEBySimulation(cc,:)'\coneQEFromObjects(cc,:)')*coneQEBySimulation(cc,:);
     coneQEBySimulation(cc,:) = coneScaleFactor*coneQEBySimulation(cc,:);
 end
 coneFundamentalsBySimulation = EnergyToQuanta(wls,coneQEBySimulation')';
@@ -193,13 +193,26 @@ plot(wls,coneFundamentalsBySimulation(3,:)','y-','LineWidth',2);
 xlabel('Wavelength'); ylabel('Fundamental');
 legend({'From Object', 'By Simulation'});
 
-%% Show the stimulus by creating an ISETBio scene
+%% Make all the mosaic M cones into L cones
+%
+% Do this after computing cone fundamentals from original mosaic and before
+% computing cone excitations.
+coneTypes = theMosaic.coneTypes;
+coneIndex = find(coneTypes == cMosaic.MCONE_ID);
+theMosaic.reassignTypeOfCones(coneIndex, cMosaic.LCONE_ID);
+coneTypes = theMosaic.coneTypes;
+coneIndex = find(coneTypes == cMosaic.MCONE_ID);
+if (~isempty(coneIndex))
+    error('Did not actually change mosaic cone types');
+end
+
+%% Create an ISETBio scene from RGB values
 meanLuminanceCdPerM2 = [];
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, theDisplay);
 stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
 
-%% Explicitly do gamma correction and check below.  
+% Explicitly do gamma correction and check below.  
 % 
 % We'll need to be able to do this lower down.
 stimulusImageRGB1 = gammaCorrection(stimulusImageLinear, theDisplay);
@@ -230,13 +243,6 @@ if (max(abs(stimLinear-stimLinear1))/mean(stimLinear) > 1e-3)
     error('Explict gamma correction from linear values doesn''t match RGB input');
 end
 
-%% Force M = L?
-%
-% If we make the L and M cone excitations match, then a trichromatic mosaic
-% reconstructed with respect to a dichromatic mosaic will produce a
-% spatially uniform field. This can be a useful condition to enforce for
-% didactic reasons.
-
 %% Compute cone excitations directly from linear stimulus RGB values
 %
 % These are not scaled right, but we don't care about that as
@@ -244,51 +250,27 @@ end
 B_primary = theDisplay.spd;
 M_PrimaryToExcitations = (coneFundamentals*B_primary);
 M_ExcitationsToPrimary = inv(M_PrimaryToExcitations);
-stimLinear = [0.1 0.8 0.9]';
 stimExcitations = M_PrimaryToExcitations*stimLinear;
+
+%% Force M = L?
+%
+% If we make the L and M cone excitations match, then a trichromatic mosaic
+% reconstructed with respect to a dichromatic mosaic will produce a
+% spatially uniform field. This can be a useful condition to enforce for
+% didactic reasons.
 if (forceMEqualL)
     stimMEqualLExcitations = stimExcitations;
-    %meanLM = mean([stimMEqualLExcitations(1) stimMEqualLExcitations(2)]);
-    stimMEqualLExcitations(1) = stimMEqualLExcitations(2);
-%     stimMEqualLExcitations(1) = meanLM;
-%     stimMEqualLExcitations(2) = meanLM;
+    meanLM = mean([stimMEqualLExcitations(1) stimMEqualLExcitations(2)]);
+    %stimMEqualLExcitations(1) = stimMEqualLExcitations(2);
+    stimMEqualLExcitations(1) = meanLM;
+    stimMEqualLExcitations(2) = meanLM;
     stimMEqualLLinear = M_ExcitationsToPrimary*stimMEqualLExcitations
     if (any(stimMEqualLLinear < 0) || any(stimMEqualLLinear > 1))
         error('M = L stimulus is out of gamut.  Adjust initial RGB');
     end
-    %stimLinear = stimMEqualLLinear;
+    stimLinear = stimMEqualLLinear;
+    stimExcitations = stimMEqualLExcitations;
 end
-
-%% Perturb M cone component of the directl computed cone excitations
-perturbAmount = 0.20;
-perturbDirectExcitations = stimMEqualLExcitations - [0 (perturbAmount * stimMEqualLExcitations(2)) 0]';
-perturbDirectLinear = inv(coneFundamentals*B_primary)*perturbDirectExcitations;
-if (any(perturbDirectLinear < 0) || any(perturbDirectLinear > 1))
-    error('Perturbed stimulus is out of gamut.  Reduce perturb amount');
-end
-perturbRGB = gammaCorrection(perturbDirectLinear, theDisplay);
-perturbImageRGB = ones(nPixels, nPixels, 3);
-perturbImageRGB(:, :, 1) = perturbRGB(1);
-perturbImageRGB(:, :, 2) = perturbRGB(2);
-perturbImageRGB(:, :, 3) = perturbRGB(3);
-
-%% Create perturbed scene and mosaic excitations
-[perturbScene, ~, perturbImageLinear] = sceneFromFile(perturbImageRGB, 'rgb', ...
-    meanLuminanceCdPerM2, theDisplay);
-perturbScene = sceneSet(perturbScene, 'fov', fieldSizeDegs);
-if (randomizeImageIntensities)
-    for cc = 1:size(perturbImageLinear,3)
-        perturbImageLinear(:,:,cc) = perturbImageLinear(:,:,cc) .* randVals;
-    end
-    perturbImageRGB = gammaCorrection(perturbImageLinear, theDisplay);
-
-    [perturbScene, ~, perturbImageLinear] = sceneFromFile(perturbImageRGB, 'rgb', ...
-    meanLuminanceCdPerM2, theDisplay);
-    perturbScene = sceneSet(perturbScene, 'fov', fieldSizeDegs);
-end
-visualizeScene(perturbScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
-perturbOI = oiCompute(theOI,perturbScene);
-perturbMosaicExcitations = theMosaic.compute(perturbOI);
 
 %% Randomize image intensities?
 %
@@ -322,26 +304,41 @@ if (randomizeImageIntensities)
     stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
 end
 
-%% Visualize scene
+%% Visualize scene and compute
 visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
-
-%% Make all the mosaic M cones into L cones
-coneTypes = theMosaic.coneTypes;
-coneIndex = find(coneTypes == cMosaic.MCONE_ID);
-theMosaic.reassignTypeOfCones(coneIndex, cMosaic.LCONE_ID);
-coneTypes = theMosaic.coneTypes;
-coneIndex = find(coneTypes == cMosaic.MCONE_ID);
-if (~isempty(coneIndex))
-    error('Did not actually change mosaic cone types');
-end
-
-%% Compute cone mosaic responses to original image 
-% 
-% Checking the OI computation since the documentation says this should be
-% flipped
-% theOI = oiCompute(theOI,stimulusScene);
 theOI = oiCompute(stimulusScene, theOI);
 origMosaicExcitations = theMosaic.compute(theOI);
+
+%% Perturb M cone component of the directl computed cone excitations
+perturbAmount = 0.20;
+perturbDirectExcitations = stimExcitations - [0 (perturbAmount * stimExcitations(2)) 0]';
+perturbDirectLinear = M_ExcitationsToPrimary*perturbDirectExcitations;
+if (any(perturbDirectLinear < 0) || any(perturbDirectLinear > 1))
+    error('Perturbed stimulus is out of gamut.  Reduce perturb amount');
+end
+perturbRGB = gammaCorrection(perturbDirectLinear, theDisplay);
+perturbImageRGB = ones(nPixels, nPixels, 3);
+perturbImageRGB(:, :, 1) = perturbRGB(1);
+perturbImageRGB(:, :, 2) = perturbRGB(2);
+perturbImageRGB(:, :, 3) = perturbRGB(3);
+
+%% Create perturbed scene and mosaic excitations
+[perturbScene, ~, perturbImageLinear] = sceneFromFile(perturbImageRGB, 'rgb', ...
+    meanLuminanceCdPerM2, theDisplay);
+perturbScene = sceneSet(perturbScene, 'fov', fieldSizeDegs);
+if (randomizeImageIntensities)
+    for cc = 1:size(perturbImageLinear,3)
+        perturbImageLinear(:,:,cc) = perturbImageLinear(:,:,cc) .* randVals;
+    end
+    perturbImageRGB = gammaCorrection(perturbImageLinear, theDisplay);
+
+    [perturbScene, ~, perturbImageLinear] = sceneFromFile(perturbImageRGB, 'rgb', ...
+    meanLuminanceCdPerM2, theDisplay);
+    perturbScene = sceneSet(perturbScene, 'fov', fieldSizeDegs);
+end
+visualizeScene(perturbScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
+perturbOI = oiCompute(theOI,perturbScene);
+perturbMosaicExcitations = theMosaic.compute(perturbOI);
 
 %% Figure compares mosaic excitations for the two different stimuli
 figure; clf;
