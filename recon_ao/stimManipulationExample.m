@@ -227,8 +227,12 @@ for ww = 1:length(wls)
 end
 
 % Match scale to the coneQE obtained directly
+%
+% Do this jointly for the three cone classes.  We want to keep a consistent
+% relative scale.
+coneScaleFactor = coneQEBySimulation(:)\coneQEFromObjects(:);
 for cc = 1:size(coneQEFromObjects,1)
-    coneQEBySimulation(cc,:) = (coneQEBySimulation(cc,:)'\coneQEFromObjects(cc,:)')*coneQEBySimulation(cc,:);
+    coneQEBySimulation(cc,:) = coneScaleFactor*coneQEBySimulation(cc,:);
 end
 coneFundamentalsBySimulation = EnergyToQuanta(wls,coneQEBySimulation')';
 
@@ -272,7 +276,7 @@ B_primary = theDisplay.spd;
 stimDirectExcitations = (coneFundamentals*B_primary)*stimLinear;
 
 %% Perturb M cone component of the directl computed cone excitations
-perturbAmount = 0.30;
+perturbAmount = 0.20;
 % perturbAmount2 = perturbAmount1 - (stimDirectExcitations(1) / stimDirectExcitations(2)) + 1;
 % 
 % c1 = stimDirectExcitations(2) - stimDirectExcitations(1) + (perturbAmount2 * stimDirectExcitations(2));
