@@ -1,3 +1,14 @@
+%% stimManipulationExample
+%
+% This shows how to produce a metameric pair for a dichromat.  Along the
+% way, it illustrates how to figure out the spectral sensitivities of cones
+% in ISETBio, as well as how to manipulate the cone types of a cMosaic
+% object.
+
+%% History
+%
+% 09/16/22  dhb  Tidying up and adding comments.
+
 %% Intialize
 close all; clear
 
@@ -20,6 +31,9 @@ forceFovealValues = true;
 
 % Use cone fundamentals obtained through simulated measurement?
 useFundamentalsBySimulation = true;
+
+% Force M = L excitations in base stimulus?
+forceMEqualL = true;
 
 % Create stimulus values and full image
 stimRVal = 0.1620;  
@@ -62,78 +76,6 @@ end
 if (any(theDisplay.ambient ~= 0))
     error('Code assumes display ambient is zero, but it is not');
 end
-
-%% Show the stimulus by creating an ISETBio scene
-meanLuminanceCdPerM2 = [];
-[stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
-    meanLuminanceCdPerM2, theDisplay);
-stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
-
-%% Explicitly do gamma correction and check below.  
-% 
-% We'll need to be able to do this lower down.
-stimulusImageRGB1 = gammaCorrection(stimulusImageLinear, theDisplay);
-
-% And because it's here, do inverse gamma correction the ISETBio way.
-% Note that currently there is an invGammaCorrection function on the
-% path that actually does the forward gammaCorrection.
-gammaLength = size(theDisplay.gamma,1);
-stimulusImageLinear1 = ieLUTDigital(round((gammaLength-1)*stimulusImageRGB1), theDisplay.gamma);
-
-% Check that things we think should match actually do.  Don't expect exact
-% agreement because gamma table is discrete. 
-% 
-% This also pulls out a single pixel's linear values, which we will need
-% when we compute metamers below
-centerPixel = round(nPixels/2);
-examplePixelStimulusRGB = squeeze(stimulusImageRGB(centerPixel,centerPixel,:));
-if (any(stimRGB ~= examplePixelStimulusRGB))
-    error('Stimulus not built the way we expect');
-end
-examplePixelStimulusRGB1 = squeeze(stimulusImageRGB1(centerPixel,centerPixel,:));
-if (max(abs(examplePixelStimulusRGB1-stimRGB))/mean(stimRGB) > 1e-2)
-    error('Explict gamma correction from linear values doesn''t match RGB input');
-end
-stimLinear = squeeze(stimulusImageLinear(centerPixel,centerPixel,:));
-stimLinear1 = squeeze(stimulusImageLinear1(centerPixel,centerPixel,:));
-if (max(abs(stimLinear-stimLinear1))/mean(stimLinear) > 1e-3)
-    error('Explict gamma correction from linear values doesn''t match RGB input');
-end
-
-%% Randomize image intensities?
-%
-% This scales all of the pixels in the uniform field by a random
-% number between 0 and 1, in the linear image domain. The reason
-% for implementing this was to better constrain the regression comparing
-% excitations for metameric pairs, since any scaling of a metameric pair
-% is another metameric pair.  But this approach hits the cold hard reality
-% of chromatic aberration - since this produces spatial structure in the
-% image, aberration will break the metamerism.  Leaving the code here in
-% case we ever want to explore this effect in more detail.
-%
-% Note that when this is true, we rewrite stimulusScene and
-% stimulusImageLinear so they no longer match their values above.
-%
-% Also note that we'll use the same randVal below to apply the same random
-% scaling to the perturbed scene/image. So don't rewrite that variable
-% between here and below.
-%
-% Finally note that to preserve metamerism, the scaling must be applied to
-% the linear image, not the gamma corrected RGB values.
-if (randomizeImageIntensities)
-    randVals = rand(size(squeeze(stimulusImageLinear1(:,:,1))));
-    for cc = 1:size(stimulusImageLinear,3)
-        stimulusImageLinear(:,:,cc) = stimulusImageLinear(:,:,cc) .* randVals;
-    end
-    stimulusImageRGB = gammaCorrection(stimulusImageLinear, theDisplay);
-
-    [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
-    meanLuminanceCdPerM2, theDisplay);
-    stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
-end
-
-%% Visualize scene
-visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
 
 %% Build a mosaic object and pull out parts we need.
 % 
@@ -227,11 +169,8 @@ for ww = 1:length(wls)
 end
 
 % Match scale to the coneQE obtained directly
-%
-% Do this jointly for the three cone classes.  We want to keep a consistent
-% relative scale.
-coneScaleFactor = coneQEBySimulation(:)\coneQEFromObjects(:);
 for cc = 1:size(coneQEFromObjects,1)
+    coneQEBySimulation(cc,:) = (coneQEBySimulation(cc,:)'\coneQEFromObjects(cc,:)')*coneQEBySimulation(cc,:);
     coneQEBySimulation(cc,:) = coneScaleFactor*coneQEBySimulation(cc,:);
 end
 coneFundamentalsBySimulation = EnergyToQuanta(wls,coneQEBySimulation')';
@@ -245,46 +184,88 @@ end
 
 %% Plot cone fundamentals obtained various ways
 figure; clf; hold on;
-plot(wls,coneFundamentalsFromObjects','r','LineWidth',4);
-plot(wls,coneFundamentalsBySimulation','y-','LineWidth',2);
+plot(wls,coneFundamentalsFromObjects(1,:)','r','LineWidth',4);
+plot(wls,coneFundamentalsBySimulation(1,:)','y-','LineWidth',2);
+plot(wls,coneFundamentalsFromObjects(2,:)','g','LineWidth',4);
+plot(wls,coneFundamentalsBySimulation(2,:)','y-','LineWidth',2);
+plot(wls,coneFundamentalsFromObjects(3,:)','b','LineWidth',4);
+plot(wls,coneFundamentalsBySimulation(3,:)','y-','LineWidth',2);
 xlabel('Wavelength'); ylabel('Fundamental');
-legend({'From Object', 'By Simulation'})
+legend({'From Object', 'By Simulation'});
 
-%% Make all the mosaic M cones into L cones
-coneTypes = theMosaic.coneTypes;
-coneIndex = find(coneTypes == cMosaic.MCONE_ID);
-theMosaic.reassignTypeOfCones(coneIndex, cMosaic.LCONE_ID);
-coneTypes = theMosaic.coneTypes;
-coneIndex = find(coneTypes == cMosaic.MCONE_ID);
-if (~isempty(coneIndex))
-    error('Did not actually change mosaic cone types');
+%% Show the stimulus by creating an ISETBio scene
+meanLuminanceCdPerM2 = [];
+[stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
+    meanLuminanceCdPerM2, theDisplay);
+stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
+
+%% Explicitly do gamma correction and check below.  
+% 
+% We'll need to be able to do this lower down.
+stimulusImageRGB1 = gammaCorrection(stimulusImageLinear, theDisplay);
+
+% And because it's here, do inverse gamma correction the ISETBio way.
+% Note that currently there is an invGammaCorrection function on the
+% path that actually does the forward gammaCorrection.
+gammaLength = size(theDisplay.gamma,1);
+stimulusImageLinear1 = ieLUTDigital(round((gammaLength-1)*stimulusImageRGB1), theDisplay.gamma);
+
+% Check that things we think should match actually do.  Don't expect exact
+% agreement because gamma table is discrete. 
+% 
+% This also pulls out a single pixel's linear values, which we will need
+% when we compute metamers below
+centerPixel = round(nPixels/2);
+examplePixelStimulusRGB = squeeze(stimulusImageRGB(centerPixel,centerPixel,:));
+if (any(stimRGB ~= examplePixelStimulusRGB))
+    error('Stimulus not built the way we expect');
+end
+examplePixelStimulusRGB1 = squeeze(stimulusImageRGB1(centerPixel,centerPixel,:));
+if (max(abs(examplePixelStimulusRGB1-stimRGB))/mean(stimRGB) > 1e-2)
+    error('Explict gamma correction from linear values doesn''t match RGB input');
+end
+stimLinear = squeeze(stimulusImageLinear(centerPixel,centerPixel,:));
+stimLinear1 = squeeze(stimulusImageLinear1(centerPixel,centerPixel,:));
+if (max(abs(stimLinear-stimLinear1))/mean(stimLinear) > 1e-3)
+    error('Explict gamma correction from linear values doesn''t match RGB input');
 end
 
-%% Compute cone mosaic responses to original image 
-% 
-% Checking the OI computation since the documentation says this should be
-% flipped
-% theOI = oiCompute(theOI,stimulusScene);
-theOI = oiCompute(stimulusScene, theOI);
-origMosaicExcitations = theMosaic.compute(theOI);
+%% Force M = L?
+%
+% If we make the L and M cone excitations match, then a trichromatic mosaic
+% reconstructed with respect to a dichromatic mosaic will produce a
+% spatially uniform field. This can be a useful condition to enforce for
+% didactic reasons.
 
 %% Compute cone excitations directly from linear stimulus RGB values
 %
 % These are not scaled right, but we don't care about that as
 % all we need is the stimulus direction that is silent to a cone class.
 B_primary = theDisplay.spd;
-stimDirectExcitations = (coneFundamentals*B_primary)*stimLinear;
+M_PrimaryToExcitations = (coneFundamentals*B_primary);
+M_ExcitationsToPrimary = inv(M_PrimaryToExcitations);
+stimLinear = [0.1 0.8 0.9]';
+stimExcitations = M_PrimaryToExcitations*stimLinear;
+if (forceMEqualL)
+    stimMEqualLExcitations = stimExcitations;
+    %meanLM = mean([stimMEqualLExcitations(1) stimMEqualLExcitations(2)]);
+    stimMEqualLExcitations(1) = stimMEqualLExcitations(2);
+%     stimMEqualLExcitations(1) = meanLM;
+%     stimMEqualLExcitations(2) = meanLM;
+    stimMEqualLLinear = M_ExcitationsToPrimary*stimMEqualLExcitations
+    if (any(stimMEqualLLinear < 0) || any(stimMEqualLLinear > 1))
+        error('M = L stimulus is out of gamut.  Adjust initial RGB');
+    end
+    %stimLinear = stimMEqualLLinear;
+end
 
 %% Perturb M cone component of the directl computed cone excitations
 perturbAmount = 0.20;
-% perturbAmount2 = perturbAmount1 - (stimDirectExcitations(1) / stimDirectExcitations(2)) + 1;
-% 
-% c1 = stimDirectExcitations(2) - stimDirectExcitations(1) + (perturbAmount2 * stimDirectExcitations(2));
-% c2 = stimDirectExcitations(1) - stimDirectExcitations(2) + (perturbAmount1 * stimDirectExcitations(2));
-% 
-perturbDirectExcitations = stimDirectExcitations - [0 (perturbAmount * stimDirectExcitations(2)) 0]';
-% perturbDirectExcitations = (stimDirectExcitations + [c1 (c2) 0]') .* [1 0.4484 1]';
+perturbDirectExcitations = stimMEqualLExcitations - [0 (perturbAmount * stimMEqualLExcitations(2)) 0]';
 perturbDirectLinear = inv(coneFundamentals*B_primary)*perturbDirectExcitations;
+if (any(perturbDirectLinear < 0) || any(perturbDirectLinear > 1))
+    error('Perturbed stimulus is out of gamut.  Reduce perturb amount');
+end
 perturbRGB = gammaCorrection(perturbDirectLinear, theDisplay);
 perturbImageRGB = ones(nPixels, nPixels, 3);
 perturbImageRGB(:, :, 1) = perturbRGB(1);
@@ -308,6 +289,59 @@ end
 visualizeScene(perturbScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
 perturbOI = oiCompute(theOI,perturbScene);
 perturbMosaicExcitations = theMosaic.compute(perturbOI);
+
+%% Randomize image intensities?
+%
+% This scales all of the pixels in the uniform field by a random
+% number between 0 and 1, in the linear image domain. The reason
+% for implementing this was to better constrain the regression comparing
+% excitations for metameric pairs, since any scaling of a metameric pair
+% is another metameric pair.  But this approach hits the cold hard reality
+% of chromatic aberration - since this produces spatial structure in the
+% image, aberration will break the metamerism.  Leaving the code here in
+% case we ever want to explore this effect in more detail.
+%
+% Note that when this is true, we rewrite stimulusScene and
+% stimulusImageLinear so they no longer match their values above.
+%
+% Also note that we'll use the same randVal below to apply the same random
+% scaling to the perturbed scene/image. So don't rewrite that variable
+% between here and below.
+%
+% Finally note that to preserve metamerism, the scaling must be applied to
+% the linear image, not the gamma corrected RGB values.
+if (randomizeImageIntensities)
+    randVals = rand(size(squeeze(stimulusImageLinear1(:,:,1))));
+    for cc = 1:size(stimulusImageLinear,3)
+        stimulusImageLinear(:,:,cc) = stimulusImageLinear(:,:,cc) .* randVals;
+    end
+    stimulusImageRGB = gammaCorrection(stimulusImageLinear, theDisplay);
+
+    [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
+    meanLuminanceCdPerM2, theDisplay);
+    stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
+end
+
+%% Visualize scene
+visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
+
+%% Make all the mosaic M cones into L cones
+coneTypes = theMosaic.coneTypes;
+coneIndex = find(coneTypes == cMosaic.MCONE_ID);
+theMosaic.reassignTypeOfCones(coneIndex, cMosaic.LCONE_ID);
+coneTypes = theMosaic.coneTypes;
+coneIndex = find(coneTypes == cMosaic.MCONE_ID);
+if (~isempty(coneIndex))
+    error('Did not actually change mosaic cone types');
+end
+
+%% Compute cone mosaic responses to original image 
+% 
+% Checking the OI computation since the documentation says this should be
+% flipped
+% theOI = oiCompute(theOI,stimulusScene);
+theOI = oiCompute(stimulusScene, theOI);
+origMosaicExcitations = theMosaic.compute(theOI);
 
 %% Figure compares mosaic excitations for the two different stimuli
 figure; clf;
