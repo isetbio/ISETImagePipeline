@@ -33,7 +33,7 @@ forceFovealValues = true;
 useFundamentalsBySimulation = true;
 
 % Force M = L excitations in base stimulus?
-forceMEqualL = false;
+forceMEqualL = true;
 
 % Create stimulus values and full image
 stimRVal = 0.1620;  
@@ -259,17 +259,28 @@ stimExcitations = M_PrimaryToExcitations*stimLinear;
 % spatially uniform field. This can be a useful condition to enforce for
 % didactic reasons.
 if (forceMEqualL)
-    stimMEqualLExcitations = stimExcitations;
-    meanLM = mean([stimMEqualLExcitations(1) stimMEqualLExcitations(2)]);
-    %stimMEqualLExcitations(1) = stimMEqualLExcitations(2);
-    stimMEqualLExcitations(1) = meanLM;
-    stimMEqualLExcitations(2) = meanLM;
-    stimMEqualLLinear = M_ExcitationsToPrimary*stimMEqualLExcitations
+
+    maximizeVec = [1 0 -1];
+    constraintEqA = [1 -1 0];
+    constraintEqb = 0;
+    primaryHeadroom = 0.10;
+    stimMEqualLLinear = ...
+        FindPrimaryConstrainExcitations([0.5 0.5 0.5]',M_PrimaryToExcitations,primaryHeadroom,maximizeVec,constraintEqA,constraintEqb);
+    stimMEqualLExcitations = M_PrimaryToExcitations*stimMEqualLLinear;
     if (any(stimMEqualLLinear < 0) || any(stimMEqualLLinear > 1))
         error('M = L stimulus is out of gamut.  Adjust initial RGB');
     end
     stimLinear = stimMEqualLLinear;
     stimExcitations = stimMEqualLExcitations;
+
+    stimulusImageLinear = ones(nPixels, nPixels, 3);
+    stimulusImageLinear(:, :, 1) = stimLinear(1);
+    stimulusImageLinear(:, :, 2) = stimLinear(2);
+    stimulusImageLinear(:, :, 3) = stimLinear(3);
+    stimulusImageRGB = gammaCorrection(stimulusImageLinear, theDisplay);
+    [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
+    meanLuminanceCdPerM2, theDisplay);
+    stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
 end
 
 %% Randomize image intensities?

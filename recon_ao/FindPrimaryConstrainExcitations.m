@@ -21,12 +21,12 @@ function primaryOut = FindPrimaryConstrainExcitations(primaryIn,M_PrimaryToExcit
 
 % Examples
 %{
-    primaryIn = [0.5 0.5 0.2]';
+    primaryIn = [0.5 0.5 0.5]';
     M_PrimaryToExcitations = ...
        [0.4155    1.0703    0.1670
         0.1265    0.9730    0.2068
         0.0039    0.0155    0.1559];
-    maximizeVec = [1 0 -0.5];
+    maximizeVec = [1 0 -1];
     constraintEqA = [1 -1 0];
     constraintEqb = 0;
     primaryHeadroom = 0.05;
@@ -55,6 +55,7 @@ end
 
 function f = FitFunction(x,M_PrimaryToExcitations,maximizeVec)
 
-f = -maximizeVec*x;
+weightedExcitations = maximizeVec*M_PrimaryToExcitations*x;
+f = -weightedExcitations;
 
 end
