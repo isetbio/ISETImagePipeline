@@ -18,14 +18,6 @@ close all; clear
 nPixels = 100;
 fieldSizeDegs = 0.5;
 
-% Randomize intensities across image?
-%
-% Seemed clever at one point to better constrain the
-% regression, but chromatic aberation
-% messes up the metamerism for an image with spatial
-% structure so isn't all that useful in the end.
-randomizeImageIntensities = false;
-
 % Force all mosaic params to foveal values
 forceFovealValues = true;
 
@@ -33,6 +25,8 @@ forceFovealValues = true;
 useFundamentalsBySimulation = true;
 
 % Force M = L excitations in base stimulus?
+%
+% When this is true, the stimulus values specified below are ignored
 forceMEqualL = true;
 
 % Create stimulus values and full image
@@ -259,13 +253,14 @@ stimExcitations = M_PrimaryToExcitations*stimLinear;
 % spatially uniform field. This can be a useful condition to enforce for
 % didactic reasons.
 if (forceMEqualL)
-
-    maximizeVec = [1 0 -1];
-    constraintEqA = [1 -1 0];
-    constraintEqb = 0;
-    primaryHeadroom = 0.10;
+    % Set up parameters for the optimization
+    maximizeVec = [1 0 0];
+    constraintEqA = [1 -1 0 ; 0 0 1];
+    constraintEqb = [0 0.1]';
+    lambda = 0.01;
+    primaryHeadroom = 0.05;
     stimMEqualLLinear = ...
-        FindPrimaryConstrainExcitations([0.5 0.5 0.5]',M_PrimaryToExcitations,primaryHeadroom,maximizeVec,constraintEqA,constraintEqb);
+        FindPrimaryConstrainExcitations([0.5 0.5 0.5]',M_PrimaryToExcitations,primaryHeadroom,maximizeVec,constraintEqA,constraintEqb,lambda);
     stimMEqualLExcitations = M_PrimaryToExcitations*stimMEqualLLinear;
     if (any(stimMEqualLLinear < 0) || any(stimMEqualLLinear > 1))
         error('M = L stimulus is out of gamut.  Adjust initial RGB');
@@ -273,43 +268,12 @@ if (forceMEqualL)
     stimLinear = stimMEqualLLinear;
     stimExcitations = stimMEqualLExcitations;
 
+    % Recreate the scene from what we found
     stimulusImageLinear = ones(nPixels, nPixels, 3);
     stimulusImageLinear(:, :, 1) = stimLinear(1);
     stimulusImageLinear(:, :, 2) = stimLinear(2);
     stimulusImageLinear(:, :, 3) = stimLinear(3);
     stimulusImageRGB = gammaCorrection(stimulusImageLinear, theDisplay);
-    [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
-    meanLuminanceCdPerM2, theDisplay);
-    stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
-end
-
-%% Randomize image intensities?
-%
-% This scales all of the pixels in the uniform field by a random
-% number between 0 and 1, in the linear image domain. The reason
-% for implementing this was to better constrain the regression comparing
-% excitations for metameric pairs, since any scaling of a metameric pair
-% is another metameric pair.  But this approach hits the cold hard reality
-% of chromatic aberration - since this produces spatial structure in the
-% image, aberration will break the metamerism.  Leaving the code here in
-% case we ever want to explore this effect in more detail.
-%
-% Note that when this is true, we rewrite stimulusScene and
-% stimulusImageLinear so they no longer match their values above.
-%
-% Also note that we'll use the same randVal below to apply the same random
-% scaling to the perturbed scene/image. So don't rewrite that variable
-% between here and below.
-%
-% Finally note that to preserve metamerism, the scaling must be applied to
-% the linear image, not the gamma corrected RGB values.
-if (randomizeImageIntensities)
-    randVals = rand(size(squeeze(stimulusImageLinear1(:,:,1))));
-    for cc = 1:size(stimulusImageLinear,3)
-        stimulusImageLinear(:,:,cc) = stimulusImageLinear(:,:,cc) .* randVals;
-    end
-    stimulusImageRGB = gammaCorrection(stimulusImageLinear, theDisplay);
-
     [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, theDisplay);
     stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
@@ -337,16 +301,6 @@ perturbImageRGB(:, :, 3) = perturbRGB(3);
 [perturbScene, ~, perturbImageLinear] = sceneFromFile(perturbImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, theDisplay);
 perturbScene = sceneSet(perturbScene, 'fov', fieldSizeDegs);
-if (randomizeImageIntensities)
-    for cc = 1:size(perturbImageLinear,3)
-        perturbImageLinear(:,:,cc) = perturbImageLinear(:,:,cc) .* randVals;
-    end
-    perturbImageRGB = gammaCorrection(perturbImageLinear, theDisplay);
-
-    [perturbScene, ~, perturbImageLinear] = sceneFromFile(perturbImageRGB, 'rgb', ...
-    meanLuminanceCdPerM2, theDisplay);
-    perturbScene = sceneSet(perturbScene, 'fov', fieldSizeDegs);
-end
 visualizeScene(perturbScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
 perturbOI = oiCompute(theOI,perturbScene);
 perturbMosaicExcitations = theMosaic.compute(perturbOI);
@@ -357,7 +311,8 @@ subplot(1,3,1); hold on;
 origTemp = origMosaicExcitations(:,:,LConeIndices); 
 perturbTemp = perturbMosaicExcitations(:,:,LConeIndices);
 fracDiff(1) = max(abs(origTemp(:)-perturbTemp(:)))/mean(origMosaicExcitations(:));
-slope(:,1) = [origTemp(:) ones(size(origTemp(:)))]\perturbTemp(:);
+slope(:,1) = [origTemp(:)]\perturbTemp(:);
+%slope(:,1) = [origTemp(:) ones(size(origTemp(:)))]\perturbTemp(:);
 meanExcitation(1) = mean(origTemp(:));
 relStddevExcitation(1,1) = std(origTemp(:))/meanExcitation(1);
 relStddevExcitation(1,2) = std(perturbTemp(:))/meanExcitation(1);
@@ -373,7 +328,8 @@ subplot(1,3,2); hold on;
 origTemp = origMosaicExcitations(:,:,MConeIndices); 
 perturbTemp = perturbMosaicExcitations(:,:,MConeIndices);
 fracDiff(2) = max(abs(origTemp(:)-perturbTemp(:)))/mean(origMosaicExcitations(:));
-slope(:,2) = [origTemp(:) ones(size(origTemp(:)))]\perturbTemp(:);
+slope(:,2) = [origTemp(:)]\perturbTemp(:);
+%slope(:,2) = [origTemp(:) ones(size(origTemp(:)))]\perturbTemp(:);
 meanExcitation(2) = mean(origTemp(:));
 relStddevExcitation(2,1) = std(origTemp(:))/meanExcitation(2);
 relStddevExcitation(2,2) = std(perturbTemp(:))/meanExcitation(2);
@@ -389,7 +345,8 @@ subplot(1,3,3); hold on;
 origTemp = origMosaicExcitations(:,:,SConeIndices); 
 perturbTemp = perturbMosaicExcitations(:,:,SConeIndices);
 fracDiff(3) = max(abs(origTemp(:)-perturbTemp(:)))/mean(origMosaicExcitations(:));
-slope(:,3) = [origTemp(:) ones(size(origTemp(:)))]\perturbTemp(:);
+slope(:,3) = [origTemp(:)]\perturbTemp(:);
+%slope(:,3) = [origTemp(:) ones(size(origTemp(:)))]\perturbTemp(:);
 meanExcitation(3) = mean(origTemp(:));
 relStddevExcitation(3,1) = std(origTemp(:))/meanExcitation(3);
 relStddevExcitation(3,2) = std(perturbTemp(:))/meanExcitation(3);
@@ -408,9 +365,12 @@ fprintf('Maximum fractional difference in S mosaic excitation = %0.4g\n',fracDif
 fprintf('Relative stdevs of L mosaic excitations = %0.4g, %0.4g\n',relStddevExcitation(1,1),relStddevExcitation(2,1));
 fprintf('Relative stdevs of M mosaic excitations = %0.4g, %0.4g\n',relStddevExcitation(2,1),relStddevExcitation(2,2));
 fprintf('Relative stdevs of M mosaic excitations = %0.4g, %0.4g\n',relStddevExcitation(3,1),relStddevExcitation(3,2));
-fprintf('Slope for L mosaic excitation = %0.4g, intercept = %0.4g\n',slope(1,1),slope(2,1));
-fprintf('Slope for M mosaic excitation = %0.4g, intercept = %0.4g\n',slope(1,2),slope(2,2));
-fprintf('Slope for S mosaic excitation = %0.4g, intercept = %0.4g\n',slope(1,3),slope(2,3));
+fprintf('Slope for L mosaic excitation = %0.4g\n',slope(1));
+fprintf('Slope for M mosaic excitation = %0.4g\n',slope(2));
+fprintf('Slope for S mosaic excitation = %0.4g\n',slope(3));
+% fprintf('Slope for L mosaic excitation = %0.4g, intercept = %0.4g\n',slope(1,1),slope(2,1));
+% fprintf('Slope for M mosaic excitation = %0.4g, intercept = %0.4g\n',slope(1,2),slope(2,2));
+% fprintf('Slope for S mosaic excitation = %0.4g, intercept = %0.4g\n',slope(1,3),slope(2,3));
 fprintf('Mean L %0.4g\n',meanExcitation(1));
 fprintf('Mean M %0.4g\n',meanExcitation(2));
 fprintf('Mean S %0.4g\n',meanExcitation(3));
