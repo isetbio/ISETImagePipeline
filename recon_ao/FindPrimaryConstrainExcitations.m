@@ -26,7 +26,7 @@ function primaryOut = FindPrimaryConstrainExcitations(primaryIn,M_PrimaryToExcit
        [0.4155    1.0703    0.1670
         0.1265    0.9730    0.2068
         0.0039    0.0155    0.1559];
-    maximizeVec = [1 0 -1];
+    maximizeVec = [1 0 0];
     constraintEqA = [1 -1 0];
     constraintEqb = 0;
     primaryHeadroom = 0.05;
@@ -49,13 +49,14 @@ x0 = primaryIn;
 vlb = zeros(size(x0)) + primaryHeadroom;
 vub = ones(size(x0)) - primaryHeadroom;
 
-primaryOut = fmincon(@(x)FitFunction(x,M_PrimaryToExcitations,maximizeVec),x0,[],[],constraintEqA*M_PrimaryToExcitations,constraintEqb,vlb,vub,[],foptions);
+primaryOut0 = fmincon(@(x)FitFunction(x,M_PrimaryToExcitations,maximizeVec),x0,[],[],constraintEqA*M_PrimaryToExcitations,constraintEqb,vlb,vub,[],foptions);
+primaryOut = fmincon(@(x)FitFunction(primaryOut0,M_PrimaryToExcitations,maximizeVec),x0,[],[],constraintEqA*M_PrimaryToExcitations,constraintEqb,vlb,vub,[],foptions);
 
 end
 
 function f = FitFunction(x,M_PrimaryToExcitations,maximizeVec)
 
 weightedExcitations = maximizeVec*M_PrimaryToExcitations*x;
-f = -weightedExcitations;
+f = -1000*weightedExcitations;
 
 end
