@@ -32,7 +32,7 @@ for x = 1 : xStep
     for y = 1 : yStep
         fullImg((x - 1) * stride + 1 : x * stride, ...
                 (y - 1) * stride + 1: y * stride, :) ...
-                = sampleSparse(prior);
+                = returnSample(prior);
     end
 end
 
@@ -58,7 +58,7 @@ end
 specturm = amplitude .* phase;
 
 %% Helper function that samples from sparse prior
-function sample = sampleSparse(prior)
+function sample = returnSample(prior)
 
 stride = sqrt(size(prior.regBasis, 1) / 3);
 imSize = [stride, stride, 3];
