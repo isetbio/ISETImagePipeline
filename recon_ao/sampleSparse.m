@@ -1,3 +1,6 @@
+%% Clear
+clear; close all;
+
 %% Sample images from the sparse prior
 % load prior and display
 prior = load('sparsePrior.mat');
@@ -21,7 +24,7 @@ imshow(gammaCorrection(reshape(rndPatch, imSize), display), ...
         'InitialMagnification', 1000);
 
 %% Sample a larger image
-imSize = [100, 100, 3];
+imSize = [100 100 3];
 xStep = ceil(imSize(1) / stride);
 yStep = ceil(imSize(2) / stride);
 
@@ -41,13 +44,29 @@ image = imgaussfilt(image, 0.1);
 imshow(gammaCorrection(image, display), ...
     'InitialMagnification', 500);
 
+%% Try climbing uphill from the above
+priorStride = 2;
+tau = 2e-6;
+gamma = tau;
+sampleSteps = 200;
+
+sample = lgvSampler(prior, 1, imSize,'burnIn',sampleSteps,'nStep',sampleSteps, ...
+    'stride',priorStride,'gamma',gamma,'tau',tau,'seed',image(:));
+figure;
+imshow(gammaCorrection(reshape(sample, imSize), display));
+
 %% 1/f pink noise
-imSize = [200, 200, 3];
 image = zeros(imSize);
 for idx = 1:3
     image(:, :, idx) = spectrumSample(imSize(1:2));
 end
-imshow(image);
+figure;
+imshow(gammaCorrection(reshape(image, imSize), display));
+
+sample = lgvSampler(prior, 1, imSize,'burnIn',sampleSteps,'nStep',sampleSteps, ...
+    'stride',priorStride,'gamma',gamma,'tau',tau,'seed',image(:));
+figure;
+imshow(gammaCorrection(reshape(sample, imSize), display));
 
 %% Helper function that samples from sparse prior
 function sample = returnSample(prior)
