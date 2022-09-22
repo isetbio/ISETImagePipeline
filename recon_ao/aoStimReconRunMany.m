@@ -22,15 +22,15 @@ displayName = 'mono';
 % Stimulus parameters.
 %
 % Size list parameter in degs, but expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [24/60]; % 10/60];
+stimSizeDegsList = [24/60]
 
 % RGB values (before gamma correction) 
 stimBgVal = 0.1;
 % Below are new values, first is for uniform field recon in dichrom, second
 % is the corresponding metamer in dichrom conditions
-stimRValList = [0.1620 0.9281]; % 0.6466];
-stimGValList = [0.8461 0.6745]; % 0.7015];
-stimBValList = [0.9490 0.9492]; % 0.0994];
+stimRValList = 0.80; %[0.1620 0.9281]; % 0.6466];
+stimGValList = 0.65; %[0.8461 0.6745]; % 0.7015];
+stimBValList = 0.10; %[0.9490 0.9492]; % 0.0994];
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
     error('Stimulus value lists must have same length');
 end
@@ -48,8 +48,8 @@ stride = 2;
 % Use AO in forward rendering?
 %
 % This determines pupil diameter which typically differs in AO 
-forwardAORender = [false];
-reconAORender = [false];
+forwardAORender = [true];
+reconAORender = [true];
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
@@ -57,8 +57,15 @@ reconDefocusDioptersList = [0.00];% 0.05 0.1];
 
 % Establish chromaticity for forward and recon mosaic, with string options:
 % "chromNorm", "chromProt", "chromDeut", "chromTrit", "chromAllL", "chromAllM"
-forwardChromList = ["chromDeut" "chromNorm" "chromNorm"]; 
-reconChromList = ["chromDeut" "chromDeut" "chromNorm"];
+forwardChromList = ["chromNorm"];% "chromNorm" "chromNorm"]; 
+reconChromList = ["chromNorm"];% "chromDeut" "chromNorm"];
+
+% Establish a slide list which adjusts the stimulus position across the
+% mosaic diagonally in non-overlapping portions
+slideList = -3:3; 
+
+
+
 %% Run through specified list conditions
 for ss = 1:length(stimSizeDegsList)
     stimSizeDegs = stimSizeDegsList(ss);
@@ -74,11 +81,14 @@ for ss = 1:length(stimSizeDegsList)
                 for dd = 1:length(forwardChromList)
                     forwardChrom = forwardChromList(dd);
                     reconChrom = reconChromList(dd);
-                    aoStimRecon(displayName,sparsePriorStr,...
-                        forwardAORender, reconAORender, ...
-                        forwardDefocusDiopters, reconDefocusDiopters, ...
-                        stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
-                        regPara,stride, forwardChrom, reconChrom);
+                    for yy = 1:length(slideList)
+                        slide = slideList(yy);
+                        aoStimRecon(displayName,sparsePriorStr,...
+                            forwardAORender, reconAORender, ...
+                            forwardDefocusDiopters, reconDefocusDiopters, ...
+                            stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
+                            regPara,stride, forwardChrom, reconChrom, slide);
+                    end
                 end
             end
         end

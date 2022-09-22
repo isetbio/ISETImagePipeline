@@ -2,7 +2,7 @@ function aoStimRecon(displayName,sparsePriorStr,...
     forwardAORender, reconAORender, ...
     forwardDefocusDiopters, reconDefocusDiopters, ...
     stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
-    regPara,stride, forwardChrom, reconChrom)
+    regPara,stride, forwardChrom, reconChrom, slide)
 % Synopsis:
 %    Driver to run AO recon simulations.
 %
@@ -34,7 +34,7 @@ close all;
 % Also records initials of version editors, otherwise set to 'main'
 aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 helpDir = '/helperFiles';
-versEditor = '_testNoAO';
+versEditor = '_sizingTest';
 
 %% Setup / Simulation parameters
 %
@@ -229,7 +229,7 @@ clear reconRenderStructure;
 %% Setup output directories
 outputMainName = sprintf('%s_%s_%0.2f_%0.2f_%d_%d_%s_%s%s', ...
     forwardAOStr,reconAOStr,forwardDefocusDiopters,reconDefocusDiopters,nPixels,fieldSizeMinutes,displayName,sparsePriorStr, versEditor);
-outputSubName = sprintf('%0.1f_%0.4f_%d_%0.2f_%0.2f_%0.2f_%0.2f_%s_%s_%s',60*stimSizeDegs, regPara,stride,stimBgVal,stimRVal,stimGVal,stimBVal, exciteSource, forwardChrom, reconChrom);
+outputSubName = sprintf('%0.1f_%0.4f_%d_%0.2f_%0.2f_%0.2f_%0.2f_%s_%s_%s_%d',60*stimSizeDegs, regPara,stride,stimBgVal,stimRVal,stimGVal,stimBVal, exciteSource, forwardChrom, reconChrom, slide);
 outputDir = fullfile(aoReconDir,outputMainName,outputSubName);
 if (~exist(outputDir,'dir'))
     mkdir(outputDir);
@@ -252,7 +252,18 @@ if (stimSizeFraction > 1)
 end
 idxLB = round(nPixels * (0.5 - stimSizeFraction / 2));
 idxUB = round(nPixels * (0.5 + stimSizeFraction / 2));
-idxRange = idxLB:idxUB;
+idxRange = (idxLB:idxUB) + (5 * slide); 
+
+
+% Create a slide check that ends the function and deletes the created
+% directory if the stimulus position exceeds bounds. 
+if min(idxRange) <= 0 || max(idxRange) > 58
+    warning(['Slide value ' int2str(slide) ' exceeded bounds. Beginning next simulation']);
+    rmdir(outputDir, 's');
+    close all
+    return
+end
+
 
 % Set image pixels
 stimulusImageRGB = ones(nPixels, nPixels, 3) * stimBgVal;

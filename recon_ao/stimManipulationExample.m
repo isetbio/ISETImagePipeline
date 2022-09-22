@@ -26,18 +26,23 @@ useFundamentalsBySimulation = true;
 
 % Force M = L excitations in base stimulus?
 %
-% When this is true, the stimulus values specified below are ignored
+% When this is true, the stimulus values specified below are ignored. Also
+% establish the starting vector for the function 
 forceMEqualL = true;
+baseImage = [0.5, 0.5, 0.5]'; 
 
 % Create stimulus values and full image
-stimRVal = 0.1620;  
-stimGVal = 0.8461; 
-stimBVal = 0.9490;
+stimRVal = 0.9906; %0.1620;  
+stimGVal = 0.5858; %0.8461; 
+stimBVal = 0.9560; %0.9490;
 stimRGB = [stimRVal; stimGVal; stimBVal];
 stimulusImageRGB = ones(nPixels, nPixels, 3);
 stimulusImageRGB(:, :, 1) = stimRGB(1);
 stimulusImageRGB(:, :, 2) = stimRGB(2);
 stimulusImageRGB(:, :, 3) = stimRGB(3);
+
+% Testing of use of BaseImage
+% baseImage = stimRGB; 
 
 %% Create the display for processing
 %
@@ -260,7 +265,7 @@ if (forceMEqualL)
     lambda = 0.01;
     primaryHeadroom = 0.05;
     stimMEqualLLinear = ...
-        FindPrimaryConstrainExcitations([0.5 0.5 0.5]',M_PrimaryToExcitations,primaryHeadroom,maximizeVec,constraintEqA,constraintEqb,lambda);
+        FindPrimaryConstrainExcitations(baseImage,M_PrimaryToExcitations,primaryHeadroom,maximizeVec,constraintEqA,constraintEqb,lambda);
     stimMEqualLExcitations = M_PrimaryToExcitations*stimMEqualLLinear;
     if (any(stimMEqualLLinear < 0) || any(stimMEqualLLinear > 1))
         error('M = L stimulus is out of gamut.  Adjust initial RGB');
@@ -274,6 +279,7 @@ if (forceMEqualL)
     stimulusImageLinear(:, :, 2) = stimLinear(2);
     stimulusImageLinear(:, :, 3) = stimLinear(3);
     stimulusImageRGB = gammaCorrection(stimulusImageLinear, theDisplay);
+    stimulusRGBNew = squeeze(stimulusImageRGB(centerPixel,centerPixel,:));
     [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, theDisplay);
     stimulusScene = sceneSet(stimulusScene, 'fov', fieldSizeDegs);
@@ -285,7 +291,7 @@ theOI = oiCompute(stimulusScene, theOI);
 origMosaicExcitations = theMosaic.compute(theOI);
 
 %% Perturb M cone component of the directl computed cone excitations
-perturbAmount = 0.20;
+perturbAmount = 0.45;
 perturbDirectExcitations = stimExcitations - [0 (perturbAmount * stimExcitations(2)) 0]';
 perturbDirectLinear = M_ExcitationsToPrimary*perturbDirectExcitations;
 if (any(perturbDirectLinear < 0) || any(perturbDirectLinear > 1))

@@ -21,7 +21,7 @@ function primaryOut = FindPrimaryConstrainExcitations(primaryIn,M_PrimaryToExcit
 
 % Examples
 %{
-    primaryIn = [0.5 0.5 0.5]';
+    primaryIn = [0.80 0.65 0.10]';
     M_PrimaryToExcitations = ...
        [0.4155    1.0703    0.1670
         0.1265    0.9730    0.2068
