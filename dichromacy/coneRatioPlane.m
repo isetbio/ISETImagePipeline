@@ -52,6 +52,10 @@ end
 
 scatter(lrs, mrs, 'r*');
 
+%% Human data
+% Hofer et al., 2005
+load('lm_ratio_hofer2015.mat');
+
 %% Error surface, sparse prior
 % Image reconstruction error
 
@@ -92,8 +96,8 @@ for idx = 1 : length(s)
     sub_error = error(id_start : (id_start + length(l) - 1));
 
     % plot slices through the data
-    % figure();
-    % plot(l, sub_error);
+     figure();
+     plot(l, sub_error);
     % plot(l_extend, interp1(l, sub_error, l_extend));
 
     sub_error = interp1(l, sub_error, l_extend);
@@ -120,7 +124,7 @@ end
 % scatter(lrs, mrs, 'r*');
 error = error_extend;
 
-% Error plot
+%% Error plot
 % sparse prior
 plotIdx = error < 2e3;
 
@@ -142,8 +146,39 @@ levels = [835, 840:10:890, 900:50:1600];
 contour(L, M, Z, levels, 'ShowText', 'off');
 hold on; box off; axis equal;
 
-% scatter(0.45, 0.45, '*r');
-% set(gca,'TickDir','out');
+set(gca,'TickDir','out');
+scatter(l_ratio, m_ratio, 50, '*r');
+
+%% VSS Plot
+figure();
+levels = [0.005, 0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1.28, 2.56] + 1;
+levels = min(Z(:)) * levels;
+[~, c] = contour(L, M, Z, levels, 'ShowText', 'off');
+c.LineWidth = 1.0;
+hold on; box off; axis equal;
+
+set(gca,'TickDir','out');
+scatter(l_ratio, m_ratio, 50, '*r');
+
+%% turn to log units
+figure();
+ratioZ = (Z - min(Z(:))) / min(Z(:));
+logZ = log2(ratioZ);
+levels = -7.5 : 0.8 : -0.5;
+[~, c] = contour(L, M, logZ, levels);
+c.LineWidth = 1.5;
+
+levelLabel = (2 .^ levels) * 100;
+levelLabel = arrayfun(@(x) sprintf('%.2f%%', x), levelLabel, 'UniformOutput', false);
+colorbar('Ticks', levels, ...
+         'TickLabels', levelLabel)
+
+hold on; box off; axis equal;
+set(gca,'TickDir','out');
+scatter(l_ratio, m_ratio, 100, '*r');
+
+xticks(0 : 0.2 : 1);
+yticks(0 : 0.2 : 1);
 
 %% Error surface, denoiser prior
 s = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
@@ -222,12 +257,12 @@ end
 % scatter(lrs, mrs, 'r*');
 error = error_extend;
 
-% Error plot
+%% Error plot
 % denoiser
 plotIdx = error < 800;
 
-lv = 0 : 0.02 : 1;
-mv = 0 : 0.02 : 1;
+lv = 0 : 0.025 : 1;
+mv = 0 : 0.025 : 1;
 [L, M] = meshgrid(lv, mv);
 
 Z = griddata(lrs(plotIdx), mrs(plotIdx), error(plotIdx), L, M, 'natural');
@@ -245,5 +280,25 @@ levels = [464:4:504, 550, 600];
 contour(L, M, Z, levels, 'ShowText', 'off');
 hold on; box off; axis equal;
 
-% scatter(0.45, 0.45, '*r');
-% set(gca,'TickDir','out');
+set(gca,'TickDir','out');
+scatter(l_ratio, m_ratio, '*r');
+
+%% Plot, VSS 2022
+figure();
+ratioZ = (Z - min(Z(:))) / min(Z(:));
+logZ = log2(ratioZ);
+levels = -5.025 : 0.25 : -3;
+[~, c] = contour(L, M, logZ, levels);
+c.LineWidth = 1.5;
+
+levelLabel = (2 .^ levels) * 100;
+levelLabel = arrayfun(@(x) sprintf('%.1f%%', x), levelLabel, 'UniformOutput', false);
+colorbar('Ticks', levels, ...
+         'TickLabels', levelLabel)
+
+hold on; box off; axis equal;
+set(gca,'TickDir','out');
+scatter(l_ratio, m_ratio, 100, '*r');
+
+xticks(0 : 0.2 : 1);
+yticks(0 : 0.2 : 1);
