@@ -1,5 +1,4 @@
 %% Sample images from the sparse prior
-
 % load prior and display
 prior = load('sparsePrior.mat');
 display = displayCreate('CRT12BitDisplay');
@@ -43,19 +42,12 @@ imshow(gammaCorrection(image, display), ...
     'InitialMagnification', 500);
 
 %% 1/f pink noise
-imCenter = floor(imSize(1:2) / 2);
-amplitude = zeros(imSize);
-phase = exp(1i * rand(imSize) * 2 * pi);
-
-for x = 1:imSize(1)
-    for y = 1:imSize(2)
-        amplitude(x, y) = ...
-            1 / sqrt((x - imCenter(1)) ^ 2 + ...
-                     (y - imCenter(2)) ^ 2);
-    end
+imSize = [200, 200, 3];
+image = zeros(imSize);
+for idx = 1:3
+    image(:, :, idx) = spectrumSample(imSize(1:2));
 end
-
-specturm = amplitude .* phase;
+imshow(image);
 
 %% Helper function that samples from sparse prior
 function sample = returnSample(prior)
@@ -75,5 +67,27 @@ sample = prior.mu' + prior.regBasis * (rndMu .* rndSign);
 
 % reshape image
 sample = reshape(sample, imSize);
+
+end
+
+function image = spectrumSample(imSize)
+
+imCenter = floor(imSize / 2);
+amplitude = zeros(imSize);
+phase = exp(1i * (rand(imSize) * 2 * pi));
+
+for x = 1:imSize(1)
+    for y = 1:imSize(2)
+        amplitude(x, y) = ...
+            1 / sqrt((x - imCenter(1)) ^ 2 + ...
+                     (y - imCenter(2)) ^ 2 + 1);
+    end
+end
+
+specturm = amplitude .* phase;
+image = real(ifft2(ifftshift(specturm)));
+
+image = image - min(image(:));
+image = image / max(image(:));
 
 end
