@@ -29,12 +29,12 @@ useFundamentalsBySimulation = true;
 % When this is true, the stimulus values specified below are ignored. Also
 % establish the starting vector for the function 
 forceMEqualL = true;
-baseImage = [0.5, 0.5, 0.5]'; 
+baseImageForForce = [0.5, 0.5, 0.5]'; 
 
 % Create stimulus values and full image
-stimRVal = 0.9906; %0.1620;  
-stimGVal = 0.5858; %0.8461; 
-stimBVal = 0.9560; %0.9490;
+stimRVal = 0.1620;  
+stimGVal = 0.8461; 
+stimBVal = 0.9490;
 stimRGB = [stimRVal; stimGVal; stimBVal];
 stimulusImageRGB = ones(nPixels, nPixels, 3);
 stimulusImageRGB(:, :, 1) = stimRGB(1);
@@ -261,17 +261,20 @@ if (forceMEqualL)
     % Set up parameters for the optimization
     maximizeVec = [1 0 0];
     constraintEqA = [1 -1 0 ; 0 0 1];
-    constraintEqb = [0 0.1]';
+    constraintEqb = [0 1.516*10^15]';
     lambda = 0.01;
-    primaryHeadroom = 0.05;
+    primaryHeadroom = 0.00;
     stimMEqualLLinear = ...
-        FindPrimaryConstrainExcitations(baseImage,M_PrimaryToExcitations,primaryHeadroom,maximizeVec,constraintEqA,constraintEqb,lambda);
+        FindPrimaryConstrainExcitations(baseImageForForce,M_PrimaryToExcitations,primaryHeadroom,maximizeVec,constraintEqA,constraintEqb,lambda);
     stimMEqualLExcitations = M_PrimaryToExcitations*stimMEqualLLinear;
     if (any(stimMEqualLLinear < 0) || any(stimMEqualLLinear > 1))
         error('M = L stimulus is out of gamut.  Adjust initial RGB');
     end
     stimLinear = stimMEqualLLinear;
     stimExcitations = stimMEqualLExcitations;
+    if (abs(stimExcitations(1)-stimExcitations(2))/stimExcitations(1) > 1e-5)
+        error('Did not force L equal M within tolerance');
+    end
 
     % Recreate the scene from what we found
     stimulusImageLinear = ones(nPixels, nPixels, 3);
@@ -291,7 +294,7 @@ theOI = oiCompute(stimulusScene, theOI);
 origMosaicExcitations = theMosaic.compute(theOI);
 
 %% Perturb M cone component of the directl computed cone excitations
-perturbAmount = 0.45;
+perturbAmount = 0.20;
 perturbDirectExcitations = stimExcitations - [0 (perturbAmount * stimExcitations(2)) 0]';
 perturbDirectLinear = M_ExcitationsToPrimary*perturbDirectExcitations;
 if (any(perturbDirectLinear < 0) || any(perturbDirectLinear > 1))
