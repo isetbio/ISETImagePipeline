@@ -24,6 +24,7 @@ function aoStimRecon_dichrom(displayName,sparsePriorStr,...
 %   08/17/22  chr   Incorporated separate forward and recon callings 
 %   08/19/22  dhb, chr  Edit to clarify and remove stochasticity 
 %   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
+%   09/22/22  chr  Convert to its own dichrom file
 
 %% Close existing figures
 close all;
@@ -34,7 +35,7 @@ close all;
 % Also records initials of version editors, otherwise set to 'main'
 aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 helpDir = '/helperFiles';
-versEditor = '_dichromTestsPeanutButter';
+versEditor = '_dichromTests';
 
 %% Setup / Simulation parameters
 %

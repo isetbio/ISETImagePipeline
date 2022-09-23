@@ -294,7 +294,7 @@ theOI = oiCompute(stimulusScene, theOI);
 origMosaicExcitations = theMosaic.compute(theOI);
 
 %% Perturb M cone component of the directl computed cone excitations
-perturbAmount = 0.20;
+perturbAmount = 0.30;
 perturbDirectExcitations = stimExcitations - [0 (perturbAmount * stimExcitations(2)) 0]';
 perturbDirectLinear = M_ExcitationsToPrimary*perturbDirectExcitations;
 if (any(perturbDirectLinear < 0) || any(perturbDirectLinear > 1))

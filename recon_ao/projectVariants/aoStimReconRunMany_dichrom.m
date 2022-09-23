@@ -8,6 +8,7 @@
 % History:
 %   08/15/22  dhb  Wrote after converting aoStimRecon to a function
 %   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
+%   09/22/22  chr  Convert to its own dichrom file
 
 %% Clear
 clear; close all;
@@ -28,9 +29,10 @@ stimSizeDegsList = [24/60];
 stimBgVal = 0.1;
 % Below are new values, first is for uniform field recon in dichrom, second
 % is the corresponding metamer in dichrom conditions
-stimRValList = [0.05 0.4091];% 0.2234];%[0.5 0.2983]; % 0.6466];
-stimGValList = [0.05 0.0654];% 0.2234];%[0.5 0.1865]; % 0.7015];
-stimBValList = [0.05 0.2272];% 0.2234];%[0.5 0.2251]; % 0.0994];
+               % Blue   % 40       % 25    % 30 
+stimRValList = [0.0110 0.9499]; % [0.7509 0.8226];
+stimGValList = [0.6180 0.1729]; % [0.4025 0.3432];
+stimBValList = [0.9667 0.9732]; % [0.9708 0.9716];
 
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
     error('Stimulus value lists must have same length');

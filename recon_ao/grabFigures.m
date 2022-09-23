@@ -2,8 +2,12 @@
 
 % Establish directory names and use dir function to create the loop through
 % sub directories. Manually replace outputMainName here. 
+close all; clear
 aoReconDir = getpref('ISETImagePipeline','aoReconDir');
-originalOutputMain = '/AO7_AO7_0.00_0.00_58_30_conventional_conventional_dichromTestsPeanutButter';
+originalOutputMain = '/AO7_AO7_0.00_0.00_58_30_conventional_conventional_dichromTests';
+if strcmp(originalOutputMain(1), '/') == 0
+error('Forgot to append backslash for proper directory')
+end
 slideList = 0;
 dirStruct = dir([aoReconDir originalOutputMain]);
 
