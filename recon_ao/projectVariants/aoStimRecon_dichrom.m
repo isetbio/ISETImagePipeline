@@ -34,8 +34,10 @@ close all;
 % This will allow us to load in project specific precomputed information.
 % Also records initials of version editors, otherwise set to 'main'
 aoReconDir = getpref('ISETImagePipeline','aoReconDir');
+
+% Replaced versEditor to apply it to subDirectories as well
 helpDir = '/helperFiles';
-versEditor = '_dichromTests';
+versEditor = 'dichromTests';
 
 %% Setup / Simulation parameters
 %
@@ -91,7 +93,6 @@ if (reconstructfromRenderMatrix)
     exciteSource = 'renderMatrix';
 else
     exciteSource = 'isetbio';
-
 end
 
 % Establish if a random seed will be used when building the cone mosaic for
@@ -110,61 +111,12 @@ else
 end
 
 % Optional chromaticities to be used in forward and recon cone mosaics,
-% with normal being trichromatic
-if strcmp(forwardChrom, 'chromProt')
-    replaceForwardCones = true;
-    forwardStartCones = 1;
-    forwardNewCones = cMosaic.MCONE_ID;
-elseif strcmp(forwardChrom, 'chromDeut')
-    replaceForwardCones = true;
-    forwardStartCones = 2;
-    forwardNewCones = cMosaic.LCONE_ID;
-elseif strcmp(forwardChrom, 'chromTrit')
-    replaceForwardCones = true;
-    forwardStartCones = 3;
-    forwardNewCones = cMosaic.LCONE_ID;
-elseif strcmp(forwardChrom, 'chromAllL')
-    replaceForwardCones = true;
-    forwardStartCones = [2 3];
-    forwardNewCones = cMosaic.LCONE_ID;
-elseif strcmp(forwardChrom, 'chromAllM')
-    replaceForwardCones = true;
-    forwardStartCones = [1 3];
-    forwardNewCones = cMosaic.MCONE_ID;
-elseif strcmp(forwardChrom, 'chromNorm')
-    replaceForwardCones = false; 
-    forwardStartCones = [];
-    forwardNewCones = [];
-else
-    error('Unrecognized chromaticity input')
-end
-if strcmp(reconChrom, 'chromProt')
-    replaceReconCones = true;
-    reconStartCones = 1;
-    reconNewCones = cMosaic.MCONE_ID;
-elseif strcmp(reconChrom, 'chromDeut')
-    replaceReconCones = true;
-    reconStartCones = 2;
-    reconNewCones = cMosaic.LCONE_ID;
-elseif strcmp(reconChrom, 'chromTrit')
-    replaceReconCones = true;
-    reconStartCones = 3;
-    reconNewCones = cMosaic.LCONE_ID;
-elseif strcmp(reconChrom, 'chromAllL')
-    replaceReconCones = true;
-    reconStartCones = [2 3];
-    reconNewCones = cMosaic.LCONE_ID;
-elseif strcmp(reconChrom, 'chromAllM')
-    replaceReconCones = true;
-    reconStartCones = [1 3];
-    reconNewCones = cMosaic.MCONE_ID;
-elseif strcmp(reconChrom, 'chromNorm')
-    replaceReconCones = false;
-    reconStartCones = []; 
-    reconNewCones = [];
-else
-    error('Unrecognized chromaticity input')
-end
+% with normal being trichromatic. Can consider bumping this off to another
+% function to declutter, return the replaceCones, startCones and newCones
+[replaceForwardCones, forwardStartCones, ...
+    forwardNewCones] = assignCones(forwardChrom);
+[replaceReconCones, reconStartCones, ...
+    reconNewCones] = assignCones(reconChrom);
 
 %% Set render filennames
 if (forwardAORender)
@@ -180,30 +132,33 @@ end
 
 %% Build render matrices/files or load from existing cache
 
-if (buildNewForward || ~exist(fullfile(aoReconDir, helpDir, 'dichromTests', forwardRenderStructureName),'file'))
+% Build or grab foward cone mosaic and render 
+if (buildNewForward || ~exist(fullfile(aoReconDir, helpDir, versEditor, forwardRenderStructureName),'file'))
     renderStructure = buildRenderStruct_dichrom(aoReconDir, helpDir, eccXDegs, eccYDegs, ...
         fieldSizeDegs, nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
         displayGammaGamma, forwardRandSeed, replaceForwardCones, forwardStartCones, forwardNewCones);
-    save(fullfile(aoReconDir, helpDir, "dichromTests", forwardRenderStructureName),'renderStructure');
+    save(fullfile(aoReconDir, helpDir, versEditor, forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure;
 else
     clear forwardRenderStructure;
-    load(fullfile(aoReconDir, helpDir, "dichromTests", forwardRenderStructureName),'renderStructure');
+    load(fullfile(aoReconDir, helpDir, versEditor, forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters)
 end
-if (buildNewRecon || ~exist(fullfile(aoReconDir, helpDir, "dichromTests", reconRenderStructureName),'file'))
+
+% Build or grab recon cone mosaic and render 
+if (buildNewRecon || ~exist(fullfile(aoReconDir, helpDir, versEditor, reconRenderStructureName),'file'))
     renderStructure = buildRenderStruct_dichrom(aoReconDir, helpDir, eccXDegs, eccYDegs, ...
         fieldSizeDegs, nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
         displayGammaGamma, reconRandSeed, replaceReconCones, reconStartCones, reconNewCones);
-    save(fullfile(aoReconDir, helpDir, "dichromTests", reconRenderStructureName),'renderStructure');
+    save(fullfile(aoReconDir, helpDir, versEditor, reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure;
 else
     clear reconRenderStructure;
-    load(fullfile(aoReconDir, helpDir, "dichromTests", reconRenderStructureName),'renderStructure');
+    load(fullfile(aoReconDir, helpDir, versEditor, reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(reconRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters)
@@ -217,18 +172,14 @@ forwardOI = forwardConeMosaic.PSF;
 % Set recon variables from loaded/built structure
 reconRenderMatrix = reconRenderStructure.renderMatrix;
 reconConeMosaic = reconRenderStructure.theConeMosaic;
-reconOI = reconConeMosaic.PSF;
-
-% Set display variable
-theForwardDisplay = forwardRenderStructure.theDisplay;
-theReconDisplay = reconRenderStructure.theDisplay;
+% reconOI = reconConeMosaic.PSF;
 
 % Clear forward render structure
 clear forwardRenderStructure;
 clear reconRenderStructure;
 
 %% Setup output directories
-outputMainName = sprintf('%s_%s_%0.2f_%0.2f_%d_%d_%s_%s%s', ...
+outputMainName = sprintf('%s_%s_%0.2f_%0.2f_%d_%d_%s_%s_%s', ...
     forwardAOStr,reconAOStr,forwardDefocusDiopters,reconDefocusDiopters,nPixels,fieldSizeMinutes,displayName,sparsePriorStr, versEditor);
 outputSubName = sprintf('%0.1f_%0.4f_%d_%0.2f_%0.2f_%0.2f_%0.2f_%s_%s_%s_%d',60*stimSizeDegs, regPara,stride,stimBgVal,stimRVal,stimGVal,stimBVal, exciteSource, forwardChrom, reconChrom, slide);
 outputDir = fullfile(aoReconDir,outputMainName,outputSubName);
@@ -255,7 +206,6 @@ idxLB = round(nPixels * (0.5 - stimSizeFraction / 2));
 idxUB = round(nPixels * (0.5 + stimSizeFraction / 2));
 idxRange = (idxLB:idxUB) + (5 * slide); 
 
-
 % Create a slide check that ends the function and deletes the created
 % directory if the stimulus position exceeds bounds. 
 if min(idxRange) <= 0 || max(idxRange) > 58
@@ -264,7 +214,6 @@ if min(idxRange) <= 0 || max(idxRange) > 58
     close all
     return
 end
-
 
 % Set image pixels
 stimulusImageRGB = ones(nPixels, nPixels, 3) * stimBgVal;
@@ -288,17 +237,10 @@ visualizeOpticalImage(forwardOI, 'avoidAutomaticRGBscaling', true);
 saveas(gcf,fullfile(outputDir,'forwardStimulusRetinalImage.jpg'),'jpg');
 forwardExcitationsToStimulusISETBio = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
 
-reconOI = oiCompute(stimulusScene,reconOI);
-visualizeOpticalImage(reconOI, 'avoidAutomaticRGBscaling', true);
-saveas(gcf,fullfile(outputDir,'reconStimulusRetinalImage.jpg'),'jpg');
-reconExcitationsToStimulusISETBio = squeeze(reconConeMosaic.Mosaic.compute(reconOI, 'opticalImagePositionDegs', 'mosaic-centered'));
-
 % Check forward exciations calculation another way.  Also shows another way
 % to visualize the retinal image, but this only is done when the check
 % fails.
 forwardExcitationsToStimulusCheck = forwardConeMosaic.compute(stimulusImageRGB);
-reconExcitationsToStimulusCheck = reconConeMosaic.compute(stimulusImageRGB);
-
 
 if (max(abs(forwardExcitationsToStimulusCheck-forwardExcitationsToStimulusISETBio)) ~= 0)
     forwardConeMosaic.visualizeOI()
@@ -315,7 +257,6 @@ end
 % for reasons we are slowly coming to understand (quantization
 % is a non-linear process), they don't always.
 forwardExcitationsToStimulusRenderMatrix = forwardRenderMatrix*stimulusImageLinear(:);
-reconExcitationsToStimulusRenderMatrix = reconRenderMatrix*stimulusImageLinear(:);
 
 % Compare with ISETBio
 figure; clf; hold on;
@@ -332,10 +273,8 @@ saveas(gcf,fullfile(outputDir,'ISETBioVsRenderMatrixExciations.jpg'),'jpg');
 %% Choose which excitations to reconstruct form
 if (reconstructfromRenderMatrix)
     forwardExcitationsToStimulusUse = forwardExcitationsToStimulusRenderMatrix;
-    reconExcitationsToStimulusUse = reconExcitationsToStimulusRenderMatrix;
 else
     forwardExcitationsToStimulusUse = forwardExcitationsToStimulusISETBio;
-    reconExcitationsToStimulusUse = reconExcitationsToStimulusISETBio;
 end
 
 % Visualization of the cone response note that we are using
@@ -355,21 +294,12 @@ forwardConeMosaic.Mosaic.visualize(...
     'plotTitle',  titleStr);
 saveas(gcf,fullfile(outputDir,'forwardMosaicExcitations.jpg'),'jpg');
 
-figureHandle = figure(); axesHandle = [];
-reconConeMosaic.Mosaic.visualize(...
-    'figureHandle', figureHandle, ...
-    'axesHandle', axesHandle, ...
-    'activation', reshape(reconExcitationsToStimulusUse,1,1,length(reconExcitationsToStimulusUse)), ...
-    'activationRange', [0 max(reconExcitationsToStimulusUse)], ...
-    'plotTitle',  titleStr);
-saveas(gcf,fullfile(outputDir,'reconMosaicExcitations.jpg'),'jpg');
-
 %% Run reconstruction
 %
 % Load prior
 prior = load(fullfile(aoReconDir, helpDir, sparsePriorName));
 
-% Construct onstruct image estimator
+% Construct image estimator
 estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
     prior.mu', regPara, stride, [nPixels nPixels 3]);
 
@@ -401,7 +331,8 @@ saveas(gcf,fullfile(outputDir,'Recon1.jpg'),'jpg');
 % need to think of a better way to initialize but that doesn't depend on
 % knowing the stimulus.  Maybe start at the prior mean?
 [recon2Image,recon2InitLoss,recon2SolnLoss] = estimator.runEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
-    'maxIter', 500, 'display', 'iter', 'gpu', false, 'init', stimulusImageLinear(:));
+    'maxIter', 500, 'display', 'iter', 'gpu', false, 'init', stimulusImageLinear(:)); 
+%%%% Replace the init value above to something less "cheaty" going forward
 [recon2Scene, ~, recon2ImageLinear] = sceneFromFile(gammaCorrection(recon2Image, theForwardDisplay), 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 recon2Scene = sceneSet(recon2Scene, 'fov', fieldSizeDegs);
