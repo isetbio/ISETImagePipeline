@@ -8,6 +8,8 @@
 % History:
 %   08/15/22  dhb  Wrote after converting aoStimRecon to a function
 %   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
+%   09/22/22  chr  Convert to its own dichrom file
+%   09/27/22  chr  Incorporate inputs for stimulus centering position
 
 %% Clear
 clear; close all;
@@ -17,35 +19,51 @@ clear; close all;
 % Display, options are:
 %    'conventional'    - A conventional display
 %    'mono'            - A display with monochromatic primaries
-displayName = 'mono';
+displayName = 'conventional';
 
-% Stimulus parameters.
+%% Spatial parameters
+% 
+% Common to forward and recon models
+nPixels = 58;
+centerPixel = round(nPixels/2);
+
+%% Stimulus parameters.
 %
-% Size list parameter in degs, but expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [24/60]
+% Size list parameter in degs, expressed as min/60 (because 60 min/deg)
+stimSizeDegsList = [24/60];
 
 % RGB values (before gamma correction) 
 stimBgVal = 0.1;
-% Below are new values, first is for uniform field recon in dichrom, second
-% is the corresponding metamer in dichrom conditions
-stimRValList = 0.80; %[0.1620 0.9281]; % 0.6466];
-stimGValList = 0.65; %[0.8461 0.6745]; % 0.7015];
-stimBValList = 0.10; %[0.9490 0.9492]; % 0.0994];
+stimRValList = [0.0110 0.9499];
+stimGValList = [0.6180 0.1729];
+stimBValList = [0.9667 0.9732];
+
+% Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
     error('Stimulus value lists must have same length');
 end
 
-% Prior parameters
+% Input desired x and y position for stimulus to be centered over. Function
+% will end if values exceed pixel limits. 
+centerXPosition = [centerPixel];
+centerYPosition = [centerPixel];
+centerCoord = [centerXPosition; centerYPosition];
+coordChange = centerCoord - centerPixel;
+
+%% Prior parameters
 %
 % conventionalSparsePrior - from the paper, images analyzed on conventional
 %                           display.
 sparsePriorStr = 'conventional';
 
-% Reconstruction parameters
+%% Reconstruction parameters
+%
+% Should cycle through a few of these regs to optimize for 58x58 pixels
+% Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = [0.001];% 0.01 0.1 1];
 stride = 2;
 
-% Use AO in forward rendering?
+% Use AO in forward rendering? Should consider mix-and-match 
 %
 % This determines pupil diameter which typically differs in AO 
 forwardAORender = [true];
@@ -55,15 +73,11 @@ reconAORender = [true];
 forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
 reconDefocusDioptersList = [0.00];% 0.05 0.1];
 
-% Establish chromaticity for forward and recon mosaic, with string options:
-% "chromNorm", "chromProt", "chromDeut", "chromTrit", "chromAllL", "chromAllM"
-forwardChromList = ["chromNorm"];% "chromNorm" "chromNorm"]; 
-reconChromList = ["chromNorm"];% "chromDeut" "chromNorm"];
-
-% Establish a slide list which adjusts the stimulus position across the
-% mosaic diagonally in non-overlapping portions
-slideList = -3:3; 
-
+% Chromaticity, options are:
+%    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
+%    "chromAllL", "chromAllM", "chromAllS"
+forwardChromList = ["chromDeut", "chromNorm", "chromNorm"]; 
+reconChromList = ["chromDeut", "chromDeut", "chromNorm"];
 
 
 %% Run through specified list conditions
@@ -73,21 +87,22 @@ for ss = 1:length(stimSizeDegsList)
         stimRVal = stimRValList(cc);
         stimGVal = stimGValList(cc);
         stimBVal = stimBValList(cc);
-        for ff = 1:length(forwardDefocusDioptersList)
-            forwardDefocusDiopters = forwardDefocusDioptersList(ff);
-            reconDefocusDiopters = reconDefocusDioptersList(ff);
-            for rr = 1:length(regParaList)
-                regPara = regParaList(rr);
-                for dd = 1:length(forwardChromList)
-                    forwardChrom = forwardChromList(dd);
-                    reconChrom = reconChromList(dd);
-                    for yy = 1:length(slideList)
-                        slide = slideList(yy);
+        for yy = 1:length(coordChange)
+            newCenter = coordChange(:,yy);
+            for ff = 1:length(forwardDefocusDioptersList)
+                forwardDefocusDiopters = forwardDefocusDioptersList(ff);
+                reconDefocusDiopters = reconDefocusDioptersList(ff);
+                for rr = 1:length(regParaList)
+                    regPara = regParaList(rr);
+                    for dd = 1:length(forwardChromList)
+                        forwardChrom = forwardChromList(dd);
+                        reconChrom = reconChromList(dd);
                         aoStimRecon(displayName,sparsePriorStr,...
                             forwardAORender, reconAORender, ...
                             forwardDefocusDiopters, reconDefocusDiopters, ...
                             stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
-                            regPara,stride, forwardChrom, reconChrom, slide);
+                            regPara,stride, forwardChrom, reconChrom, ...
+                            newCenter, nPixels, centerPixel);
                     end
                 end
             end
