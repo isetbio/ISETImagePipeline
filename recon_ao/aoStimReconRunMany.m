@@ -46,6 +46,8 @@ end
 
 % Input desired x and y position for stimulus to be centered over. Function
 % will end if values exceed pixel limits. 
+%
+% Position specified in pixels, could consider specifying in degrees.
 centerXPosition = [centerPixel];
 centerYPosition = [centerPixel];
 centerCoord = [centerXPosition; centerYPosition];
@@ -61,7 +63,7 @@ sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = [0.001];% 0.01 0.1 1];
+regParaList = [0.001];   % 0.01 0.1 1];
 stride = 2;
 
 % Use AO in forward rendering? Should consider mix-and-match 
@@ -74,12 +76,11 @@ reconAORender = [true];
 forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
 reconDefocusDioptersList = [0.00];% 0.05 0.1];
 
-% Chromaticity, options are:
+% Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS"
 forwardChromList = ["chromDeut", "chromNorm", "chromNorm"]; 
 reconChromList = ["chromDeut", "chromDeut", "chromNorm"];
-
 
 %% Run through specified list conditions
 for ss = 1:length(stimSizeDegsList)

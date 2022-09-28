@@ -110,9 +110,9 @@ else
     reconSeedStr = 'noRand';
 end
 
-% Optional chromaticities to be used in forward and recon cone mosaics,
-% with normal being trichromatic. Can consider bumping this off to another
-% function to declutter, return the replaceCones, startCones and newCones
+% Process mosaic chromatic type (trichromatic, deuteranopic, etc.) to be used.
+% This provides variables that are used to process the mosaic below according
+% to the specified chromatic type. See routine assignCones.
 [replaceForwardCones, forwardStartCones, ...
     forwardNewCones] = assignCones(forwardChrom);
 [replaceReconCones, reconStartCones, ...
