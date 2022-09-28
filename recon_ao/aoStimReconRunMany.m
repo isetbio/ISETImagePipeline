@@ -26,6 +26,7 @@ displayName = 'conventional';
 % Common to forward and recon models
 nPixels = 58;
 centerPixel = round(nPixels/2);
+eccVars = false;
 
 %% Stimulus parameters.
 %
@@ -102,7 +103,7 @@ for ss = 1:length(stimSizeDegsList)
                             forwardDefocusDiopters, reconDefocusDiopters, ...
                             stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
                             regPara,stride, forwardChrom, reconChrom, ...
-                            newCenter, nPixels, centerPixel);
+                            newCenter, nPixels, centerPixel, eccVars);
                     end
                 end
             end

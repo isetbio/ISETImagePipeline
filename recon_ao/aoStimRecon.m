@@ -2,7 +2,8 @@ function aoStimRecon(displayName,sparsePriorStr,...
     forwardAORender, reconAORender, ...
     forwardDefocusDiopters, reconDefocusDiopters, ...
     stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
-    regPara, stride, forwardChrom, reconChrom, newCenter, nPixels, centerPixel)
+    regPara, stride, forwardChrom, reconChrom, newCenter, ...
+    nPixels, centerPixel, eccVars)
 % Synopsis:
 %    Driver to run AO recon simulations.
 %
@@ -119,45 +120,47 @@ end
 
 %% Set render filennames
 if (forwardAORender)
-    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr, forwardChrom);
+    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr, forwardChrom, eccVars);
 else
-    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr, forwardChrom);
+    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr, forwardChrom, eccVars);
 end
 if (reconAORender)
-    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr, reconChrom);
+    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr, reconChrom, eccVars);
 else
-    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr, reconChrom);
+    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr, reconChrom, eccVars);
 end
 
 %% Build render matrices/files or load from existing cache
 
 % Build or grab foward cone mosaic and render 
-if (buildNewForward || ~exist(fullfile(aoReconDir, helpDir, versEditor, forwardRenderStructureName),'file'))
-    renderStructure = buildRenderStruct_dichrom(aoReconDir, helpDir, eccXDegs, eccYDegs, ...
+if (buildNewForward || ~exist(fullfile(aoReconDir, helpDir, forwardRenderStructureName),'file'))
+    renderStructure = buildRenderStruct(aoReconDir, helpDir, eccXDegs, eccYDegs, ...
         fieldSizeDegs, nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
-        displayGammaGamma, forwardRandSeed, replaceForwardCones, forwardStartCones, forwardNewCones);
-    save(fullfile(aoReconDir, helpDir, versEditor, forwardRenderStructureName),'renderStructure');
+        displayGammaGamma, forwardRandSeed, replaceForwardCones, forwardStartCones, ...
+        forwardNewCones, eccVars);
+    save(fullfile(aoReconDir, helpDir, forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure;
 else
     clear forwardRenderStructure;
-    load(fullfile(aoReconDir, helpDir, versEditor, forwardRenderStructureName),'renderStructure');
+    load(fullfile(aoReconDir, helpDir, forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters)
 end
 
 % Build or grab recon cone mosaic and render 
-if (buildNewRecon || ~exist(fullfile(aoReconDir, helpDir, versEditor, reconRenderStructureName),'file'))
-    renderStructure = buildRenderStruct_dichrom(aoReconDir, helpDir, eccXDegs, eccYDegs, ...
+if (buildNewRecon || ~exist(fullfile(aoReconDir, helpDir, reconRenderStructureName),'file'))
+    renderStructure = buildRenderStruct(aoReconDir, helpDir, eccXDegs, eccYDegs, ...
         fieldSizeDegs, nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
-        displayGammaGamma, reconRandSeed, replaceReconCones, reconStartCones, reconNewCones);
-    save(fullfile(aoReconDir, helpDir, versEditor, reconRenderStructureName),'renderStructure');
+        displayGammaGamma, reconRandSeed, replaceReconCones, reconStartCones, ...
+        reconNewCones, eccVars);
+    save(fullfile(aoReconDir, helpDir, reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure;
 else
     clear reconRenderStructure;
-    load(fullfile(aoReconDir, helpDir, versEditor, reconRenderStructureName),'renderStructure');
+    load(fullfile(aoReconDir, helpDir, reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(reconRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters)
