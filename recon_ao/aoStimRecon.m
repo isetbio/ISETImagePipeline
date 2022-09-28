@@ -321,7 +321,7 @@ estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
 meanLuminanceCdPerM2 = [];
 scaleFactor = (forwardPupilDiamMM/reconPupilDiamMM)^2;
 
-maxReconIterations = 50;
+maxReconIterations = 500;
 specifiedStarts = {};
 specifiedStarts{1} = 0.5*ones(length(stimulusImageLinear(:)), 1);
 [multistartStruct,~,reconIndex] = estimator.runMultistartEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
