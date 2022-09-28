@@ -323,51 +323,100 @@ estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
 % carefully.
 meanLuminanceCdPerM2 = [];
 scaleFactor = (forwardPupilDiamMM/reconPupilDiamMM)^2;
-[recon1Image,recon1InitLoss,recon1SolnLoss] = estimator.runEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
-    'maxIter', 500, 'display', 'iter', 'gpu', false, 'init', 0.5*ones(length(stimulusImageLinear(:)), 1));
-[recon1Scene, ~, recon1ImageLinear] = sceneFromFile(gammaCorrection(recon1Image, theForwardDisplay), 'rgb', ...
-    meanLuminanceCdPerM2, forwardConeMosaic.Display);
-recon1Scene = sceneSet(recon1Scene, 'fov', fieldSizeDegs);
-[recon1NegLogPrior,~,recon1NegLogLikely] = ...
-    estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, recon1ImageLinear(:));
-visualizeScene(recon1Scene, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true);
-saveas(gcf,fullfile(outputDir,'Recon1.jpg'),'jpg');
 
-% Start at stimulus image.  We do this to check if the random starting
-% point gets stuck in a local minimum.  If we find much of this, we will
-% need to think of a better way to initialize but that doesn't depend on
-% knowing the stimulus.  Maybe start at the prior mean?
-[recon2Image,recon2InitLoss,recon2SolnLoss] = estimator.runEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
-    'maxIter', 500, 'display', 'iter', 'gpu', false, 'init', stimulusImageLinear(:)); 
-%%%% Replace the init value above to something less "cheaty" going forward
-[recon2Scene, ~, recon2ImageLinear] = sceneFromFile(gammaCorrection(recon2Image, theForwardDisplay), 'rgb', ...
-    meanLuminanceCdPerM2, forwardConeMosaic.Display);
-recon2Scene = sceneSet(recon2Scene, 'fov', fieldSizeDegs);
-[recon2NegLogPrior,~,recon2NegLogLikely] = ...
-    estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, recon2ImageLinear(:));
-visualizeScene(recon2Scene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
-saveas(gcf,fullfile(outputDir,'Recon2.jpg'),'jpg');
+maxReconIterations = 500;
+specifiedStarts = {};
+specifiedStarts{1} = 0.5*ones(length(stimulusImageLinear(:)), 1);
+[multistartStruct,~,reconIndex] = estimator.runMultistartEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
+    'maxIter', maxReconIterations, 'display', 'iter', 'gpu', false, ...
+    'nWhiteStart', 1, 'nPinkStart', 1, ...
+    'nSparsePriorPatchStart', 1, 'sparsePrior', prior, ...
+    'specifiedStarts', specifiedStarts);
 
-% Report back the better
-if (-(recon1NegLogPrior+recon1NegLogLikely) > -(recon2NegLogPrior+recon2NegLogLikely))
-    reconWhichStr = 'Recon1 (random start) better\n';
-    reconNegLogPrior = recon1NegLogPrior;
-    reconNegLogLikely = recon1NegLogLikely;
-    reconImage = recon1Image;
-    reconScene = recon1Scene;
-    reconImageLinear = recon1ImageLinear;
-else
-    reconWhichStr = 'Recon2 (stimulus start) better\n';
-    reconNegLogPrior = recon2NegLogPrior;
-    reconNegLogLikely = recon2NegLogLikely;
-    reconImage = recon2Image;
-    reconScene = recon2Scene;
-    reconImageLinear = recon2ImageLinear;
+% Diagnose reconstructions
+% txtFileName = fullfile(outputDir,'ReconProbInfo.txt');
+% if (exist(txtFileName,'file'))
+%     delete(txtFileName);
+% end
+% fid = fopen(txtFileName,'w');
+
+% Evaluate stimulus
+[stimNegLogPrior,~,stimNegLogLikely] = ...
+    estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, stimulusImageLinear(:));
+stimLoss = stimNegLogPrior + stimNegLogLikely;
+
+for ii = 1:length(multistartStruct.initTypes)
+    [initSceneTemp, ~, initImageLinearTemp] = sceneFromFile(gammaCorrection(multistartStruct.initImages{ii}, forwardConeMosaic.Display), 'rgb', ...
+        meanLuminanceCdPerM2, forwardConeMosaic.Display);
+    [reconSceneTemp, ~, reconImageLinearTemp] = sceneFromFile(gammaCorrection(multistartStruct.reconImages{ii}, forwardConeMosaic.Display), 'rgb', ...
+        meanLuminanceCdPerM2, forwardConeMosaic.Display);
+    theFig = figure; clf;
+    set(theFig,'Position',[300 400 1150 780]);
+    theAxes = subplot(3,2,1);
+    visualizeScene(initSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
+    theAxes = subplot(3,2,2);
+    visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
+    subplot(3,2,3); hold on;
+    minVal = 0.9*min([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)]);
+    maxVal = 1.1*max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)]);
+    plot(multistartStruct.coneVec,multistartStruct.reconPreds(:,ii),'ro','MarkerFaceColor','r','MarkerSize',6);
+    xlabel('Measured Excitations');
+    ylabel('Predicted Exciations');
+    xlim([minVal maxVal]); ylim([minVal maxVal]);
+    axis('square');
+    title(sprintf('Recon %d, init %s',ii,multistartStruct.initTypes{ii}));
+
+    subplot(3,2,4);
+    bar([1]', ...
+        [multistartStruct.initLogPriors(ii)  ; ...
+         multistartStruct.reconLogPriors(ii) ; ...
+         -stimNegLogPrior]');
+    set(gca,'XTickLabel',sprintf('Recon %d',ii))
+    ylabel('Log Prior');
+    axis('square');
+    title('Init/Recon/Stim Log Priors');
+    subplot(3,2,5);
+    bar([1]', ...
+        [multistartStruct.initLogLikelihoods(ii)  ; ...
+         multistartStruct.reconLogLikelihoods(ii) ; ...
+         -stimNegLogLikely]');
+    set(gca,'XTickLabel',sprintf('Recon %d',ii))
+    ylabel('Log Likelihood');
+    axis('square');
+    title('Init/Recon/Stim Log Likelihoods');
+    subplot(3,2,6);
+    bar([1]', ...
+        [-multistartStruct.initLosses(ii)  ; ...
+         -multistartStruct.reconLosses(ii) ; ...
+         -stimLoss]');
+    set(gca,'XTickLabel',sprintf('Recon %d',ii))
+    ylabel('Neg Loss');
+    axis('square');
+    if (multistartStruct.reconLosses(ii) < stimLoss)
+        if (multistartStruct.reconLosses(ii) < multistartStruct.initLosses(ii))
+            title({'Init/Recon/Stim Neg Losses' ; 'Recon BETTER than Stim' ; 'Recon BETTER than Init'});
+        else
+            title({'Init/Recon/Stim Neg Losses' ; 'Recon BETTER than Stim' ; 'Recon WORSE than Init'});
+        end
+    else
+        if (multistartStruct.reconLosses(ii) < multistartStruct.initLosses(ii))
+            title({'Init/Recon/Stim Neg Losses' ; 'Recon WORSE than Stim' ; 'Recon BETTER than Init'});
+        else
+            title({'Init/Recon/Stim Neg Losses' ; 'Recon WORSE than Stim' ; 'Recon WORSE than Init'});
+        end
+    end
+
+    % Save
+    saveas(gcf,fullfile(outputDir,sprintf('Recon%dSummary.jpg',ii)),'jpg');
+    if (ii == reconIndex)
+        saveas(gcf,fullfile(outputDir,sprintf('ReconSummary.jpg',ii)),'jpg');
+    end
 end
+% fclose(fid);
 
-% Show reconstruction
-[reconScene, ~, reconImageLinear] = sceneFromFile(gammaCorrection(recon2Image, theForwardDisplay), 'rgb', ...
-    meanLuminanceCdPerM2, forwardConeMosaic.Display);
+% Save best
+[reconScene, ~, reconImageLinear] = sceneFromFile(gammaCorrection(multistartStruct.reconImages{reconIndex}, forwardConeMosaic.Display), 'rgb', ...
+        meanLuminanceCdPerM2, forwardConeMosaic.Display);
 reconScene = sceneSet(reconScene, 'fov', fieldSizeDegs);
 visualizeScene(reconScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
 saveas(gcf,fullfile(outputDir,'Recon.jpg'),'jpg');
@@ -392,42 +441,33 @@ xlabel('Excitations to stimulus');
 ylabel('Excitations to reconstruction');
 saveas(gcf,fullfile(outputDir,'StimulusVsReconExcitations.jpg'),'jpg');
 
-%% Evaluate prior and likelihood of stimulus and reconstruction
-[stimNegLogPrior,~,stimNegLogLikely] = ...
-    estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, stimulusImageLinear(:));
-txtFileName = fullfile(outputDir,'ReconProbInfo.txt');
-if (exist(txtFileName,'file'))
-    delete(txtFileName);
-end
-fid = fopen(txtFileName,'w');
-fprintf(fid,'Stimulus: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
-    -stimNegLogPrior,-stimNegLogLikely,-(stimNegLogPrior+stimNegLogLikely));
-fprintf(fid,'Recon1: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
-    -recon1NegLogPrior,-recon1NegLogLikely,-(recon1NegLogPrior+recon1NegLogLikely));
-fprintf(fid,'Recon1 initial loss %0.6g; recon1 solution loss %0.6g; fractional difference (init less soln; should be pos): %0.6g\n', ...
-    recon1InitLoss,recon1SolnLoss,(recon1InitLoss-recon1SolnLoss)/abs(recon1InitLoss));
-fprintf(fid,'Recon2: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
-    -recon2NegLogPrior,-recon2NegLogLikely,-(recon2NegLogPrior+recon2NegLogLikely));
-fprintf(fid,'Recon2 initial loss %0.6g; recon2 solution loss %0.6g; fractional difference (init less soln; should be pos): %0.6g\n', ...
-    recon2InitLoss,recon2SolnLoss,(recon2InitLoss-recon2SolnLoss)/abs(recon2InitLoss));
-fprintf(fid,reconWhichStr);
-fprintf(fid,'Each of the following should be *higher* for a valid reconstruction\n');
-if (-stimNegLogPrior > -reconNegLogPrior)
-    fprintf(fid,'\tReconstruction prior *lower* than stimulus\n');
-else
-    fprintf(fid,'\tReconstruction prior *higher* than stimulus\n');
-end
-if (-stimNegLogLikely > -reconNegLogLikely)
-    fprintf(fid,'\tStimulus likelihood *higher* than reconstruction\n');
-else
-    fprintf(fid,'\tStimulus likelihood *lower* than reconstruction\n');
-end
-if (-(stimNegLogPrior+stimNegLogLikely) > -(reconNegLogPrior+reconNegLogLikely))
-    fprintf(fid,'\tReconstruction neg objective *lower* than stimulus\n');
-else
-    fprintf(fid,'\tReconstruction neg objective *higher* than stimulus\n');
-end
-fclose(fid);
+% fprintf(fid,'Stimulus: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
+%     -stimNegLogPrior,-stimNegLogLikely,-(stimNegLogPrior+stimNegLogLikely));
+% fprintf(fid,'Recon1: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
+%     -recon1NegLogPrior,-recon1NegLogLikely,-(recon1NegLogPrior+recon1NegLogLikely));
+% fprintf(fid,'Recon1 initial loss %0.6g; recon1 solution loss %0.6g; fractional difference (init less soln; should be pos): %0.6g\n', ...
+%     recon1InitLoss,recon1SolnLoss,(recon1InitLoss-recon1SolnLoss)/abs(recon1InitLoss));
+% fprintf(fid,'Recon2: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
+%     -recon2NegLogPrior,-recon2NegLogLikely,-(recon2NegLogPrior+recon2NegLogLikely));
+% fprintf(fid,'Recon2 initial loss %0.6g; recon2 solution loss %0.6g; fractional difference (init less soln; should be pos): %0.6g\n', ...
+%     recon2InitLoss,recon2SolnLoss,(recon2InitLoss-recon2SolnLoss)/abs(recon2InitLoss));
+% fprintf(fid,reconWhichStr);
+% fprintf(fid,'Each of the following should be *higher* for a valid reconstruction\n');
+% if (-stimNegLogPrior > -reconNegLogPrior)
+%     fprintf(fid,'\tReconstruction prior *lower* than stimulus\n');
+% else
+%     fprintf(fid,'\tReconstruction prior *higher* than stimulus\n');
+% end
+% if (-stimNegLogLikely > -reconNegLogLikely)
+%     fprintf(fid,'\tStimulus likelihood *higher* than reconstruction\n');
+% else
+%     fprintf(fid,'\tStimulus likelihood *lower* than reconstruction\n');
+% end
+% if (-(stimNegLogPrior+stimNegLogLikely) > -(reconNegLogPrior+reconNegLogLikely))
+%     fprintf(fid,'\tReconstruction neg objective *lower* than stimulus\n');
+% else
+%     fprintf(fid,'\tReconstruction neg objective *higher* than stimulus\n');
+% end
 
 %% Save workspace
 close all;
