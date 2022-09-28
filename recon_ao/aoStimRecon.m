@@ -2,8 +2,8 @@ function aoStimRecon(displayName,sparsePriorStr,...
     forwardAORender, reconAORender, ...
     forwardDefocusDiopters, reconDefocusDiopters, ...
     stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
-    regPara, stride, forwardChrom, reconChrom, newCenter, ...
-    nPixels, centerPixel, eccVars)
+    regPara, stride, forwardChrom, reconChrom, stimCenter, ...
+    nPixels, centerPixel, eccVars, versEditor)
 % Synopsis:
 %    Driver to run AO recon simulations.
 %
@@ -38,7 +38,6 @@ aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 
 % Replaced versEditor to apply it to subDirectories as well
 helpDir = '/helperFiles';
-versEditor = 'dichromTests';
 
 %% Setup / Simulation parameters
 %
@@ -120,14 +119,14 @@ end
 
 %% Set render filennames
 if (forwardAORender)
-    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr, forwardChrom, eccVars);
+    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr, forwardChrom, eccVars);
 else
-    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr, forwardChrom, eccVars);
+    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr, forwardChrom, eccVars);
 end
 if (reconAORender)
-    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr, reconChrom, eccVars);
+    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr, reconChrom, eccVars);
 else
-    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s_%s.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr, reconChrom, eccVars);
+    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr, reconChrom, eccVars);
 end
 
 %% Build render matrices/files or load from existing cache
@@ -208,14 +207,14 @@ idxLB = round(nPixels * (0.5 - stimSizeFraction / 2));
 idxUB = round(nPixels * (0.5 + stimSizeFraction / 2));
 
 % Shift the stimulus to be centered on desired values
-idxXRange = (idxLB:idxUB) + newCenter(1);
-idxYRange = (idxLB:idxUB) + newCenter(2);
+idxXRange = (idxLB:idxUB) + stimCenter(1);
+idxYRange = (idxLB:idxUB) + stimCenter(2);
 
 % Check stimulus position. Ends function and deletes the created
 % directory if the stimulus position exceeds bounds. 
 if min(idxYRange) <= 0 || max(idxYRange) > nPixels ...
         || min(idxXRange) <= 0 || max(idxXRange) > nPixels
-    warning(['Stimulus centered on ' int2str(newCenter' + centerPixel) ...
+    warning(['Stimulus centered on ' int2str(stimCenter' + centerPixel) ...
         ' exceeds bounds. Beginning next simulation']);
     rmdir(outputDir, 's');
     close all
@@ -324,7 +323,7 @@ estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
 meanLuminanceCdPerM2 = [];
 scaleFactor = (forwardPupilDiamMM/reconPupilDiamMM)^2;
 
-maxReconIterations = 500;
+maxReconIterations = 10;
 specifiedStarts = {};
 specifiedStarts{1} = 0.5*ones(length(stimulusImageLinear(:)), 1);
 [multistartStruct,~,reconIndex] = estimator.runMultistartEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...

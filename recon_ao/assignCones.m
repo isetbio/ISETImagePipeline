@@ -5,14 +5,14 @@ function [replaceCones, startCones, newCones] = assignCones(chrom)
 %    Establish the chromatic assignments for cone mosaics
 %
 % Description:
-%    Provide string for desired chromaticity and return a boolean to
+%    Provide string for desired mosaic chromatic type and return a boolean to
 %    indicate desired changes as well as the starting cone values and the
 %    cone types replacing them. Established to be passed through aoStimRecon 
 %    and used in buildRenderStruct
 %    
 % Inputs: 
-%    chrom       - A string identifying chromaticity of built mosaic. In 
-%                  the form of "chromNorm", "chromProt", "chromDeut", 
+%    chrom       - A string identifying mosaic chromatic type of built mosaic.
+%                  In the form of "chromNorm", "chromProt", "chromDeut", 
 %                  "chromTrit", "chromAllL", "chromAllM", "chromAllS"
 %
 % Outputs: 
@@ -62,6 +62,6 @@ elseif strcmp(chrom, 'chromNorm')
     startCones = [];
     newCones = [];
 else
-    error('Unrecognized chromaticity input')
+    error('Unrecognized mosaic chromatic type')
 end
 

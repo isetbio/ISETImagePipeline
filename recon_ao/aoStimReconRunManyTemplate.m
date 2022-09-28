@@ -20,13 +20,14 @@ clear; close all;
 %    'conventional'    - A conventional display
 %    'mono'            - A display with monochromatic primaries
 displayName = 'conventional';
+versEditor = 'dichromTests';
 
 %% Spatial parameters
 % 
 % Common to forward and recon models
 nPixels = 58;
-centerPixel = round(nPixels/2);
-eccVars = false;
+trueCenter = round(nPixels/2);
+eccVars = true;
 
 %% Stimulus parameters.
 %
@@ -48,10 +49,10 @@ end
 % will end if values exceed pixel limits. 
 %
 % Position specified in pixels, could consider specifying in degrees.
-centerXPosition = [centerPixel];
-centerYPosition = [centerPixel];
-centerCoord = [centerXPosition; centerYPosition];
-coordChange = centerCoord - centerPixel;
+centerXPosition = [trueCenter];
+centerYPosition = [trueCenter];
+stimCenter = [centerXPosition; centerYPosition];
+deltaCenter = stimCenter - trueCenter;
 
 %% Prior parameters
 %
@@ -89,8 +90,8 @@ for ss = 1:length(stimSizeDegsList)
         stimRVal = stimRValList(cc);
         stimGVal = stimGValList(cc);
         stimBVal = stimBValList(cc);
-        for yy = 1:length(coordChange)
-            newCenter = coordChange(:,yy);
+        for yy = 1:length(deltaCenter)
+            stimCenter = deltaCenter(:,yy);
             for ff = 1:length(forwardDefocusDioptersList)
                 forwardDefocusDiopters = forwardDefocusDioptersList(ff);
                 reconDefocusDiopters = reconDefocusDioptersList(ff);
@@ -104,7 +105,7 @@ for ss = 1:length(stimSizeDegsList)
                             forwardDefocusDiopters, reconDefocusDiopters, ...
                             stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
                             regPara,stride, forwardChrom, reconChrom, ...
-                            newCenter, nPixels, centerPixel, eccVars);
+                            stimCenter, nPixels, trueCenter, eccVars, versEditor);
                     end
                 end
             end
