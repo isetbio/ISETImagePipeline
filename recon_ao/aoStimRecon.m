@@ -344,13 +344,19 @@ for ii = 1:length(multistartStruct.initTypes)
         meanLuminanceCdPerM2, forwardConeMosaic.Display);
     [reconSceneTemp, ~, reconImageLinearTemp] = sceneFromFile(gammaCorrection(multistartStruct.reconImages{ii}, forwardConeMosaic.Display), 'rgb', ...
         meanLuminanceCdPerM2, forwardConeMosaic.Display);
+
+    % Show stimulus, init, and recon
     theFig = figure; clf;
-    set(theFig,'Position',[300 400 1150 780]);
-    theAxes = subplot(3,2,1);
+    set(theFig,'Position',[300 400 1150 1150]);
+    theAxes = subplot(3,3,1);
+    visualizeScene(stimulusScene, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
+    theAxes = subplot(3,3,2);
     visualizeScene(initSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
-    theAxes = subplot(3,2,2);
+    theAxes = subplot(3,3,3);
     visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
-    subplot(3,2,3); hold on;
+
+    % Plot predicted versus stim excitations
+    subplot(3,3,5); hold on;
     minVal = 0.9*min([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)]);
     maxVal = 1.1*max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)]);
     plot(multistartStruct.coneVec,multistartStruct.reconPreds(:,ii),'ro','MarkerFaceColor','r','MarkerSize',6);
@@ -358,9 +364,10 @@ for ii = 1:length(multistartStruct.initTypes)
     ylabel('Predicted Exciations');
     xlim([minVal maxVal]); ylim([minVal maxVal]);
     axis('square');
-    title(sprintf('Recon %d, init %s',ii,multistartStruct.initTypes{ii}));
+    title(sprintf('Recon %d, init %s, iters %d',ii,multistartStruct.initTypes{ii}),maxReconIterations);
 
-    subplot(3,2,4);
+    % Priors, likelihoods, and losses
+    subplot(3,3,7);
     bar([1]', ...
         [multistartStruct.initLogPriors(ii)  ; ...
          multistartStruct.reconLogPriors(ii) ; ...
@@ -369,7 +376,7 @@ for ii = 1:length(multistartStruct.initTypes)
     ylabel('Log Prior');
     axis('square');
     title('Init/Recon/Stim Log Priors');
-    subplot(3,2,5);
+    subplot(3,3,8);
     bar([1]', ...
         [multistartStruct.initLogLikelihoods(ii)  ; ...
          multistartStruct.reconLogLikelihoods(ii) ; ...
@@ -378,7 +385,7 @@ for ii = 1:length(multistartStruct.initTypes)
     ylabel('Log Likelihood');
     axis('square');
     title('Init/Recon/Stim Log Likelihoods');
-    subplot(3,2,6);
+    subplot(3,3,9);
     bar([1]', ...
         [-multistartStruct.initLosses(ii)  ; ...
          -multistartStruct.reconLosses(ii) ; ...
@@ -386,6 +393,8 @@ for ii = 1:length(multistartStruct.initTypes)
     set(gca,'XTickLabel',sprintf('Recon %d',ii))
     ylabel('Neg Loss');
     axis('square');
+
+    % The loss figure title gives a useful summary
     if (multistartStruct.reconLosses(ii) < stimLoss)
         if (multistartStruct.reconLosses(ii) < multistartStruct.initLosses(ii))
             title({'Init/Recon/Stim Neg Losses' ; 'Recon BETTER than Stim' ; 'Recon BETTER than Init'});
@@ -402,6 +411,8 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Save
     saveas(gcf,fullfile(outputDir,sprintf('Recon%dSummary.jpg',ii)),'jpg');
+
+    % Save summary of best recon in its own file
     if (ii == reconIndex)
         saveas(gcf,fullfile(outputDir,sprintf('ReconSummary.jpg',ii)),'jpg');
     end
