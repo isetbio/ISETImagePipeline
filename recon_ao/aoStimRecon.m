@@ -188,8 +188,7 @@ if (~exist(outputDir,'dir'))
     mkdir(outputDir);
 end
 
-%% Show forward cone mosaic
-
+%% Show forward and recon cone mosaics
 forwardConeMosaic.visualizeMosaic();
 saveas(gcf,fullfile(outputDir,'forwardMosaic.jpg'),'jpg');
 
