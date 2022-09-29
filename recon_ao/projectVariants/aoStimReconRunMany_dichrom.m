@@ -64,8 +64,9 @@ sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = [0.001];   % 0.01 0.1 1];
+regParaList = [0.001];
 stride = 2;
+maxReconIterations = 10;
 
 % Use AO in forward rendering? Should consider mix-and-match 
 %
@@ -74,8 +75,8 @@ forwardAORender = [true];
 reconAORender = [true];
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
-reconDefocusDioptersList = [0.00];% 0.05 0.1];
+forwardDefocusDioptersList = [0.00];
+reconDefocusDioptersList = [0.00];
 
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 

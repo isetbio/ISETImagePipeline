@@ -3,7 +3,7 @@ function aoStimRecon(displayName,sparsePriorStr,...
     forwardDefocusDiopters, reconDefocusDiopters, ...
     stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
     regPara, stride, forwardChrom, reconChrom, stimCenter, ...
-    nPixels, centerPixel, eccVars, versEditor)
+    nPixels, centerPixel, eccVars, versEditor, maxReconIterations)
 % Synopsis:
 %    Driver to run AO recon simulations.
 %
@@ -35,9 +35,6 @@ close all;
 % This will allow us to load in project specific precomputed information.
 % Also records initials of version editors, otherwise set to 'main'
 aoReconDir = getpref('ISETImagePipeline','aoReconDir');
-
-% Replaced versEditor to apply it to subDirectories as well
-helpDir = '/helperFiles';
 
 %% Setup / Simulation parameters
 %
@@ -132,34 +129,34 @@ end
 %% Build render matrices/files or load from existing cache
 
 % Build or grab foward cone mosaic and render 
-if (buildNewForward || ~exist(fullfile(aoReconDir, helpDir, forwardRenderStructureName),'file'))
-    renderStructure = buildRenderStruct(aoReconDir, helpDir, eccXDegs, eccYDegs, ...
+if (buildNewForward || ~exist(fullfile(aoReconDir, versEditor, forwardRenderStructureName),'file'))
+    renderStructure = buildRenderStruct(aoReconDir, versEditor, eccXDegs, eccYDegs, ...
         fieldSizeDegs, nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
         displayGammaGamma, forwardRandSeed, replaceForwardCones, forwardStartCones, ...
         forwardNewCones, eccVars);
-    save(fullfile(aoReconDir, helpDir, forwardRenderStructureName),'renderStructure');
+    save(fullfile(aoReconDir, versEditor, forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure;
 else
     clear forwardRenderStructure;
-    load(fullfile(aoReconDir, helpDir, forwardRenderStructureName),'renderStructure');
+    load(fullfile(aoReconDir, versEditor, forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters)
 end
 
 % Build or grab recon cone mosaic and render 
-if (buildNewRecon || ~exist(fullfile(aoReconDir, helpDir, reconRenderStructureName),'file'))
-    renderStructure = buildRenderStruct(aoReconDir, helpDir, eccXDegs, eccYDegs, ...
+if (buildNewRecon || ~exist(fullfile(aoReconDir, versEditor, reconRenderStructureName),'file'))
+    renderStructure = buildRenderStruct(aoReconDir, versEditor, eccXDegs, eccYDegs, ...
         fieldSizeDegs, nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
         displayGammaGamma, reconRandSeed, replaceReconCones, reconStartCones, ...
         reconNewCones, eccVars);
-    save(fullfile(aoReconDir, helpDir, reconRenderStructureName),'renderStructure');
+    save(fullfile(aoReconDir, versEditor, reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure;
 else
     clear reconRenderStructure;
-    load(fullfile(aoReconDir, helpDir, reconRenderStructureName),'renderStructure');
+    load(fullfile(aoReconDir, versEditor, reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(reconRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters)
@@ -302,7 +299,7 @@ saveas(gcf,fullfile(outputDir,'forwardMosaicExcitations.jpg'),'jpg');
 %% Run reconstruction
 %
 % Load prior
-prior = load(fullfile(aoReconDir, helpDir, sparsePriorName));
+prior = load(fullfile(aoReconDir, versEditor, sparsePriorName));
 
 % Construct image estimator
 estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
@@ -322,7 +319,6 @@ estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
 meanLuminanceCdPerM2 = [];
 scaleFactor = (forwardPupilDiamMM/reconPupilDiamMM)^2;
 
-maxReconIterations = 10;
 specifiedStarts = {};
 specifiedStarts{1} = 0.5*ones(length(stimulusImageLinear(:)), 1);
 [multistartStruct,~,reconIndex] = estimator.runMultistartEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...

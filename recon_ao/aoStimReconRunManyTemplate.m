@@ -20,7 +20,7 @@ clear; close all;
 %    'conventional'    - A conventional display
 %    'mono'            - A display with monochromatic primaries
 displayName = 'conventional';
-versEditor = 'dichromTests';
+versEditor = '';
 
 %% Spatial parameters
 % 
@@ -36,9 +36,9 @@ stimSizeDegsList = [24/60];
 
 % RGB values (before gamma correction) 
 stimBgVal = 0.1;
-stimRValList = [0.0110 0.9499];
-stimGValList = [0.6180 0.1729];
-stimBValList = [0.9667 0.9732];
+stimRValList = [0.80];
+stimGValList = [0.65];
+stimBValList = [0.10];
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -64,8 +64,9 @@ sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = [0.001];   % 0.01 0.1 1];
+regParaList = [0.001]; % 0.01 0.1 1]
 stride = 2;
+maxReconIterations = 500;
 
 % Use AO in forward rendering? Should consider mix-and-match 
 %
@@ -74,14 +75,14 @@ forwardAORender = [true];
 reconAORender = [true];
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
-reconDefocusDioptersList = [0.00];% 0.05 0.1];
+forwardDefocusDioptersList = [0.00]; % 0.05 0.1]; 
+reconDefocusDioptersList = [0.00]; % 0.05 0.1];
 
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS"
-forwardChromList = ["chromDeut", "chromNorm", "chromNorm"]; 
-reconChromList = ["chromDeut", "chromDeut", "chromNorm"];
+forwardChromList = ["chromNorm"]; 
+reconChromList = ["chromNorm"];
 
 %% Run through specified list conditions
 for ss = 1:length(stimSizeDegsList)
