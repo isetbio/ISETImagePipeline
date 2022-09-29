@@ -49,9 +49,9 @@ end
 % will end if values exceed pixel limits. 
 %
 % Position specified in pixels, could consider specifying in degrees.
-centerXPosition = [trueCenter];
-centerYPosition = [trueCenter];
-stimCenter = [centerXPosition; centerYPosition];
+centerXPosition = [trueCenter trueCenter];
+centerYPosition = [trueCenter trueCenter];
+stimCenter = [centerXPosition ; centerYPosition];
 deltaCenter = stimCenter - trueCenter;
 
 %% Prior parameters
