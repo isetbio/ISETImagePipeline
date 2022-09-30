@@ -56,8 +56,7 @@ deltaCenter = stimCenter - trueCenter;
 
 %% Prior parameters
 %
-% conventionalSparsePrior - from the paper, images analyzed on conventional
-%                           display.
+% conventionalSparsePrior - from the paper, images analyzed on conventional display.
 sparsePriorStr = 'conventional';
 
 %% Reconstruction parameters

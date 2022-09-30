@@ -177,8 +177,8 @@ clear forwardRenderStructure;
 clear reconRenderStructure;
 
 %% Setup output directories
-outputMainName = sprintf('%s_%s_%0.2f_%0.2f_%d_%d_%s_%s_%s', ...
-    forwardAOStr,reconAOStr,forwardDefocusDiopters,reconDefocusDiopters,nPixels,fieldSizeMinutes,displayName,sparsePriorStr, versEditor);
+outputMainName = sprintf('%s_%s_%s_%0.2f_%0.2f_%d_%d_%s_%s', ...
+    versEditor,forwardAOStr,reconAOStr,forwardDefocusDiopters,reconDefocusDiopters,nPixels,fieldSizeMinutes,displayName,sparsePriorStr);
 outputSubName = sprintf('%0.1f_%0.4f_%d_%0.2f_%0.2f_%0.2f_%0.2f_%s_%s_%s',60*stimSizeDegs, regPara,stride,stimBgVal,stimRVal,stimGVal,stimBVal, exciteSource, forwardChrom, reconChrom);
 outputDir = fullfile(aoReconDir,outputMainName,outputSubName);
 if (~exist(outputDir,'dir'))
@@ -364,7 +364,7 @@ for ii = 1:length(multistartStruct.initTypes)
     ylabel('Predicted Exciations');
     xlim([minVal maxVal]); ylim([minVal maxVal]);
     axis('square');
-    title(sprintf('Recon %d, init %s, iters %d',ii,multistartStruct.initTypes{ii}),maxReconIterations);
+    title({sprintf('Recon %d, init %s',ii,multistartStruct.initTypes{ii}) ; sprintf('Iters = %d',maxReconIterations) });
 
     % Priors, likelihoods, and losses
     subplot(3,3,7);
