@@ -71,8 +71,8 @@ maxReconIterations = 500;
 % Use AO in forward rendering? Should consider mix-and-match 
 %
 % This determines pupil diameter which typically differs in AO 
-forwardAORender = [false];
-reconAORender = [false];
+forwardAORender = false;
+reconAORender = false;
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
