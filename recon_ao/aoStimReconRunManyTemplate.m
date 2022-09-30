@@ -27,7 +27,8 @@ versEditor = 'main';
 % Common to forward and recon models
 nPixels = 58;
 trueCenter = round(nPixels/2);
-eccVars = true;
+forwardEccVars = true;
+reconEccVars = true;
 
 %% Stimulus parameters.
 %
@@ -56,8 +57,7 @@ deltaCenter = stimCenter - trueCenter;
 
 %% Prior parameters
 %
-% conventionalSparsePrior - from the paper, images analyzed on conventional
-%                           display.
+% conventionalSparsePrior - from the paper, images analyzed on conventional display.
 sparsePriorStr = 'conventional';
 
 %% Reconstruction parameters
@@ -106,7 +106,8 @@ for ss = 1:length(stimSizeDegsList)
                             forwardDefocusDiopters, reconDefocusDiopters, ...
                             stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
                             regPara,stride, forwardChrom, reconChrom, ...
-                            stimCenter, nPixels, trueCenter, eccVars, versEditor);
+                            stimCenter, trueCenter, nPixels, versEditor, ...
+                            maxReconIterations, forwardEccVars, reconEccVars);
                     end
                 end
             end

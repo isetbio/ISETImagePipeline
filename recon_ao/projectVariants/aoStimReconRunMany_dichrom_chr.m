@@ -20,7 +20,7 @@ clear; close all;
 %    'conventional'    - A conventional display
 %    'mono'            - A display with monochromatic primaries
 displayName = 'conventional';
-versEditor = 'dichrom';
+versEditor = 'dichrom_chr';
 
 %% Spatial parameters
 % 
