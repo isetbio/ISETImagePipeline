@@ -66,6 +66,7 @@ sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = [0.005];   % 0.01 0.1 1];
 stride = 2;
+maxReconIterations = 500;
 
 % Use AO in forward rendering? Should consider mix-and-match 
 %
@@ -105,7 +106,7 @@ for ss = 1:length(stimSizeDegsList)
                             forwardDefocusDiopters, reconDefocusDiopters, ...
                             stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
                             regPara,stride, forwardChrom, reconChrom, ...
-                            stimCenter, nPixels, trueCenter, eccVars, versEditor);
+                            stimCenter, nPixels, trueCenter, eccVars, versEditor, maxReconIterations);
                     end
                 end
             end
