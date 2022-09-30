@@ -27,7 +27,8 @@ versEditor = 'dichrom_db';
 % Common to forward and recon models
 nPixels = 100;
 trueCenter = round(nPixels/2);
-eccVars = true;
+forwardEccVars = false;
+reconEccVars = false;
 
 %% Stimulus parameters.
 %
@@ -70,8 +71,8 @@ maxReconIterations = 500;
 % Use AO in forward rendering? Should consider mix-and-match 
 %
 % This determines pupil diameter which typically differs in AO 
-forwardAORender = [true false];
-reconAORender = [true false];
+forwardAORender = [false];
+reconAORender = [false];
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
@@ -105,7 +106,8 @@ for ss = 1:length(stimSizeDegsList)
                             forwardDefocusDiopters, reconDefocusDiopters, ...
                             stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
                             regPara,stride, forwardChrom, reconChrom, ...
-                            stimCenter, nPixels, trueCenter, eccVars, versEditor, maxReconIterations);
+                            stimCenter, trueCenter, nPixels, versEditor, ...
+                            maxReconIterations, forwardEccVars, reconEccVars);
                     end
                 end
             end
