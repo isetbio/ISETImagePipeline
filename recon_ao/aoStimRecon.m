@@ -36,6 +36,11 @@ close all;
 % This will allow us to load in project specific precomputed information.
 % Also records initials of version editors, otherwise set to 'main'
 aoReconDir = getpref('ISETImagePipeline','aoReconDir');
+renderDir = fullfile(aoReconDir, versEditor);
+if (~exist(renderDir,'dir'))
+    mkdir(renderDir);
+end
+
 
 %% Setup / Simulation parameters
 %
@@ -130,34 +135,34 @@ end
 %% Build render matrices/files or load from existing cache
 
 % Build or grab foward cone mosaic and render 
-if (buildNewForward || ~exist(fullfile(aoReconDir, versEditor, forwardRenderStructureName),'file'))
+if (buildNewForward || ~exist(fullfile(renderDir, forwardRenderStructureName),'file'))
     renderStructure = buildRenderStruct(aoReconDir, eccXDegs, eccYDegs, ...
         fieldSizeDegs, nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
         displayGammaGamma, forwardRandSeed, replaceForwardCones, forwardStartCones, ...
         forwardNewCones, forwardEccVars);
-    save(fullfile(aoReconDir, versEditor, forwardRenderStructureName),'renderStructure');
+    save(fullfile(renderDir, forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure;
 else
     clear forwardRenderStructure;
-    load(fullfile(aoReconDir, versEditor, forwardRenderStructureName),'renderStructure');
+    load(fullfile(renderDir, forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters)
 end
 
 % Build or grab recon cone mosaic and render 
-if (buildNewRecon || ~exist(fullfile(aoReconDir, versEditor, reconRenderStructureName),'file'))
+if (buildNewRecon || ~exist(fullfile(renderDir, reconRenderStructureName),'file'))
     renderStructure = buildRenderStruct(aoReconDir, eccXDegs, eccYDegs, ...
         fieldSizeDegs, nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
         displayGammaGamma, reconRandSeed, replaceReconCones, reconStartCones, ...
         reconNewCones, reconEccVars);
-    save(fullfile(aoReconDir, versEditor, reconRenderStructureName),'renderStructure');
+    save(fullfile(renderDir, reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure;
 else
     clear reconRenderStructure;
-    load(fullfile(aoReconDir, versEditor, reconRenderStructureName),'renderStructure');
+    load(fullfile(renderDir, reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(reconRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters)
