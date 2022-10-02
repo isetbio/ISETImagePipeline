@@ -27,7 +27,8 @@ versEditor = 'dichrom_db';
 % Common to forward and recon models
 nPixels = 100;
 trueCenter = round(nPixels/2);
-eccVars = true;
+forwardEccVars = false;
+reconEccVars = false;
 
 %% Stimulus parameters.
 %
@@ -36,9 +37,9 @@ stimSizeDegsList = [24/60];
 
 % RGB values (before gamma correction) 
 stimBgVal = 0.1;
-stimRValList = [0.0110 0.9499];
-stimGValList = [0.6180 0.1729];
-stimBValList = [0.9667 0.9732];
+stimRValList = [1.6200e-01 8.2258e-01];
+stimGValList = [8.4610e-01 3.4322e-01];
+stimBValList = [9.4900e-01 9.7158e-01];
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -70,8 +71,8 @@ maxReconIterations = 500;
 % Use AO in forward rendering? Should consider mix-and-match 
 %
 % This determines pupil diameter which typically differs in AO 
-forwardAORender = [true false];
-reconAORender = [true false];
+forwardAORender = false;
+reconAORender = false;
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
@@ -83,32 +84,46 @@ reconDefocusDioptersList = [0.00];% 0.05 0.1];
 forwardChromList = ["chromDeut", "chromNorm", "chromNorm"]; 
 reconChromList = ["chromDeut", "chromDeut", "chromNorm"];
 
-%% Run through specified list conditions
+%% Set up list conditions
+runIndex = 1;
 for ss = 1:length(stimSizeDegsList)
-    stimSizeDegs = stimSizeDegsList(ss);
     for cc = 1:length(stimRValList)
-        stimRVal = stimRValList(cc);
-        stimGVal = stimGValList(cc);
-        stimBVal = stimBValList(cc);
         for yy = 1:length(deltaCenter)
-            stimCenter = deltaCenter(:,yy);
             for ff = 1:length(forwardDefocusDioptersList)
-                forwardDefocusDiopters = forwardDefocusDioptersList(ff);
-                reconDefocusDiopters = reconDefocusDioptersList(ff);
                 for rr = 1:length(regParaList)
-                    regPara = regParaList(rr);
                     for dd = 1:length(forwardChromList)
-                        forwardChrom = forwardChromList(dd);
-                        reconChrom = reconChromList(dd);
-                        aoStimRecon(displayName,sparsePriorStr,...
-                            forwardAORender, reconAORender, ...
-                            forwardDefocusDiopters, reconDefocusDiopters, ...
-                            stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
-                            regPara,stride, forwardChrom, reconChrom, ...
-                            stimCenter, nPixels, trueCenter, eccVars, versEditor, maxReconIterations);
+
+                        stimSizeDegs(runIndex) = stimSizeDegsList(ss);
+
+                        stimRVal(runIndex) = stimRValList(cc);
+                        stimGVal(runIndex) = stimGValList(cc);
+                        stimBVal(runIndex) = stimBValList(cc);
+
+                        stimCenter(:,runIndex) = deltaCenter(:,yy);
+
+                        forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
+                        reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
+
+                        regPara(runIndex) = regParaList(rr);
+
+                        forwardChrom(runIndex) = forwardChromList(dd);
+                        reconChrom(runIndex) = reconChromList(dd);
+
+                        runIndex = runIndex + 1;
                     end
                 end
             end
         end
     end
+end
+
+% Run them all in parallel
+parfor pp = 1:length(regPara)
+    aoStimRecon(displayName,sparsePriorStr,...
+        forwardAORender, reconAORender, ...
+        forwardDefocusDiopters(pp), reconDefocusDiopters(pp), ...
+        stimSizeDegs(pp),stimBgVal,stimRVal(pp),stimGVal(pp),stimBVal(pp),...
+        regPara(pp), stride, forwardChrom(pp), reconChrom(pp), ...
+        stimCenter(:,pp), trueCenter, nPixels, versEditor, maxReconIterations, ...);
+        forwardEccVars, reconEccVars);
 end
