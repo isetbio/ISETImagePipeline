@@ -37,9 +37,9 @@ stimSizeDegsList = [24/60];
 
 % RGB values (before gamma correction) 
 stimBgVal = 0.1;
-stimRValList = [1.6200e-01 8.2258e-01];
-stimGValList = [8.4610e-01 3.4322e-01];
-stimBValList = [9.4900e-01 9.7158e-01];
+stimRValList = [1.1048e-02 8.2258e-01];
+stimGValList = [6.1803e-01 3.4322e-01];
+stimBValList = [9.6667e-01 9.7158e-01];
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -118,7 +118,7 @@ for ss = 1:length(stimSizeDegsList)
 end
 
 % Run them all in parallel
-parfor pp = 1:length(regPara)
+for pp = 1:length(regPara)
     aoStimRecon(displayName,sparsePriorStr,...
         forwardAORender, reconAORender, ...
         forwardDefocusDiopters(pp), reconDefocusDiopters(pp), ...
