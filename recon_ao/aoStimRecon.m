@@ -3,7 +3,8 @@ function aoStimRecon(displayName,sparsePriorStr,...
     forwardDefocusDiopters, reconDefocusDiopters, ...
     stimSizeDegs,stimBgVal,stimRVal,stimGVal,stimBVal,...
     regPara, stride, forwardChrom, reconChrom, stimCenter, ...
-    nPixels, centerPixel, eccVars, versEditor, maxReconIterations)
+    trueCenter, nPixels, versEditor, maxReconIterations, ...
+    forwardEccVars, reconEccVars)
 % Synopsis:
 %    Driver to run AO recon simulations.
 %
@@ -35,6 +36,11 @@ close all;
 % This will allow us to load in project specific precomputed information.
 % Also records initials of version editors, otherwise set to 'main'
 aoReconDir = getpref('ISETImagePipeline','aoReconDir');
+renderDir = fullfile(aoReconDir, versEditor);
+if (~exist(renderDir,'dir'))
+    mkdir(renderDir);
+end
+
 
 %% Setup / Simulation parameters
 %
@@ -116,47 +122,47 @@ end
 
 %% Set render filennames
 if (forwardAORender)
-    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr, forwardChrom, eccVars);
+    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr, forwardChrom, forwardEccVars);
 else
-    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr, forwardChrom, eccVars);
+    forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,forwardPupilDiamMM,forwardDefocusDiopters, forwardSeedStr, forwardChrom, forwardEccVars);
 end
 if (reconAORender)
-    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr, reconChrom, eccVars);
+    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr, reconChrom, reconEccVars);
 else
-    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr, reconChrom, eccVars);
+    reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s_%d.mat',displayName,fieldSizeMinutes,eccXDegs,eccYDegs,nPixels,reconPupilDiamMM,reconDefocusDiopters, reconSeedStr, reconChrom, reconEccVars);
 end
 
 %% Build render matrices/files or load from existing cache
 
 % Build or grab foward cone mosaic and render 
-if (buildNewForward || ~exist(fullfile(aoReconDir, versEditor, forwardRenderStructureName),'file'))
+if (buildNewForward || ~exist(fullfile(renderDir, forwardRenderStructureName),'file'))
     renderStructure = buildRenderStruct(aoReconDir, eccXDegs, eccYDegs, ...
         fieldSizeDegs, nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
         displayGammaGamma, forwardRandSeed, replaceForwardCones, forwardStartCones, ...
-        forwardNewCones, eccVars);
-    save(fullfile(aoReconDir, versEditor, forwardRenderStructureName),'renderStructure');
+        forwardNewCones, forwardEccVars);
+    save(fullfile(renderDir, forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure;
 else
     clear forwardRenderStructure;
-    load(fullfile(aoReconDir, versEditor, forwardRenderStructureName),'renderStructure');
+    load(fullfile(renderDir, forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(forwardRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, forwardPupilDiamMM, forwardAORender, forwardDefocusDiopters)
 end
 
 % Build or grab recon cone mosaic and render 
-if (buildNewRecon || ~exist(fullfile(aoReconDir, versEditor, reconRenderStructureName),'file'))
+if (buildNewRecon || ~exist(fullfile(renderDir, reconRenderStructureName),'file'))
     renderStructure = buildRenderStruct(aoReconDir, eccXDegs, eccYDegs, ...
         fieldSizeDegs, nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters, ...
         overwriteDisplayGamma, displayName, displayFieldName, displayGammaBits, ...
         displayGammaGamma, reconRandSeed, replaceReconCones, reconStartCones, ...
-        reconNewCones, eccVars);
-    save(fullfile(aoReconDir, versEditor, reconRenderStructureName),'renderStructure');
+        reconNewCones, reconEccVars);
+    save(fullfile(renderDir, reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure;
 else
     clear reconRenderStructure;
-    load(fullfile(aoReconDir, versEditor, reconRenderStructureName),'renderStructure');
+    load(fullfile(renderDir, reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(reconRenderStructure, eccXDegs, eccYDegs, fieldSizeDegs, ...
         nPixels, reconPupilDiamMM, reconAORender, reconDefocusDiopters)
@@ -179,7 +185,7 @@ clear reconRenderStructure;
 %% Setup output directories
 outputMainName = sprintf('%s_%s_%s_%0.2f_%0.2f_%d_%d_%s_%s', ...
     versEditor,forwardAOStr,reconAOStr,forwardDefocusDiopters,reconDefocusDiopters,nPixels,fieldSizeMinutes,displayName,sparsePriorStr);
-outputSubName = sprintf('%0.1f_%0.4f_%d_%0.2f_%0.2f_%0.2f_%0.2f_%s_%s_%s',60*stimSizeDegs, regPara,stride,stimBgVal,stimRVal,stimGVal,stimBVal, exciteSource, forwardChrom, reconChrom);
+outputSubName = sprintf('%0.1f_%0.4f_%d_%0.2f_%0.2f_%0.2f_%0.2f_%s_%s_%d_%s_%d',60*stimSizeDegs, regPara,stride,stimBgVal,stimRVal,stimGVal,stimBVal, exciteSource, forwardChrom, forwardEccVars, reconChrom, reconEccVars);
 outputDir = fullfile(aoReconDir,outputMainName,outputSubName);
 if (~exist(outputDir,'dir'))
     mkdir(outputDir);
@@ -210,7 +216,7 @@ idxYRange = (idxLB:idxUB) + stimCenter(2);
 % directory if the stimulus position exceeds bounds. 
 if min(idxYRange) <= 0 || max(idxYRange) > nPixels ...
         || min(idxXRange) <= 0 || max(idxXRange) > nPixels
-    warning(['Stimulus centered on ' int2str(stimCenter' + centerPixel) ...
+    warning(['Stimulus centered on ' int2str(stimCenter' + trueCenter) ...
         ' exceeds bounds. Beginning next simulation']);
     rmdir(outputDir, 's');
     close all
