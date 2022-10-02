@@ -49,8 +49,8 @@ stimulusImageRGB(:, :, 3) = stimRGB(3);
 % Use conventional/CRT12BitDisplay
 displayName = 'conventional';
 displayFieldName = 'CRT12BitDisplay';
-aoReconDir = getpref('ISETImagePipeline','aoReconDir'); helpDir = '/helperFiles';
-theDisplayLoad = load(fullfile(aoReconDir,helpDir,[displayName 'Display.mat']));
+aoReconDir = getpref('ISETImagePipeline','aoReconDir'); displayDir = 'displaysttttttttttt';
+theDisplayLoad = load(fullfile(aoReconDir,displayDir,[displayName 'Display.mat']));
 eval(['theDisplay = theDisplayLoad.' displayFieldName ';']);
 wlsDisplayOrig = theDisplay.wave;
 
