@@ -206,7 +206,13 @@ if (stimSizeFraction > 1)
     error('Stimulus size too big given field size');
 end
 idxLB = round(nPixels * (0.5 - stimSizeFraction / 2));
+if (idxLB < 1)
+    idxLB = 1;
+end
 idxUB = round(nPixels * (0.5 + stimSizeFraction / 2));
+if (idxUB > nPixels)
+    idxUB = nPixels;
+end
 
 % Shift the stimulus to be centered on desired values
 idxXRange = (idxLB:idxUB) + stimCenter(1);
