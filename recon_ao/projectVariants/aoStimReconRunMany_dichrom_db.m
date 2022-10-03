@@ -33,7 +33,7 @@ reconEccVars = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [24/60];
+stimSizeDegsList = 0.5; %[24/60];
 
 % RGB values (before gamma correction) 
 stimBgVal = 0.1;
@@ -118,7 +118,7 @@ for ss = 1:length(stimSizeDegsList)
 end
 
 % Run them all in parallel
-for pp = 1:length(regPara)
+parfor pp = 1:length(regPara)
     aoStimRecon(displayName,sparsePriorStr,...
         forwardAORender, reconAORender, ...
         forwardDefocusDiopters(pp), reconDefocusDiopters(pp), ...
