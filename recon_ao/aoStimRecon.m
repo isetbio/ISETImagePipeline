@@ -41,7 +41,6 @@ if (~exist(renderDir,'dir'))
     mkdir(renderDir);
 end
 
-
 %% Setup / Simulation parameters
 %
 % Spatial parameters.  Common to forward and recon models
