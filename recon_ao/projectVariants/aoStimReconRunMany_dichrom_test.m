@@ -17,7 +17,7 @@ clear; close all;
 %% Version editor string
 %
 % Helps us keep different calcs separate
-prBase.versEditor = 'dichrom_db';
+prBase.versEditor = 'dichrom_test';
 
 %% Point at directory with data files for this subproject
 %
@@ -38,13 +38,11 @@ prBase.displayName = 'conventional';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
 
-
 %% Spatial parameters
 % 
 % Common to forward and recon models
-prBase.nPixels = 20;
+prBase.nPixels = 100;
 prBase.trueCenter = round(prBase.nPixels/2);
-
 
 %% Mosaic parameters
 prBase.fieldSizeMinutes = 30;
@@ -93,6 +91,10 @@ prBase.sparsePriorStr = 'conventional';
 regParaList = 0.002; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
 prBase.maxReconIterations = 5;
+prBase.whiteNoiseStarts = 0;
+prBase.pinkNoiseStarts = 0;
+prBase.sparsePriorPatchStarts = 0;
+prBase.uniformStartVals = [0.5];
 
 % Use AO in forward rendering? Should consider mix-and-match 
 %
@@ -107,8 +109,8 @@ reconDefocusDioptersList = [0.00];% 0.05 0.1];
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS"
-forwardChromList = ["chromDeut", "chromNorm", "chromNorm"]; 
-reconChromList = ["chromDeut", "chromDeut", "chromNorm"];
+forwardChromList = ["chromDeut"]; 
+reconChromList = ["chromDeut"];
 
 % Force build and save of render structures.  This
 % only affects this script, and will typically be false.
