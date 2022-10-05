@@ -29,10 +29,8 @@ close all;
 %
 % This will allow us to load in project specific precomputed information.
 % Also records initials of version editors, otherwise set to 'main'
-aoReconDir = getpref('ISETImagePipeline','aoReconDir');
-renderDir = fullfile(aoReconDir, pr.versEditor);
-if (~exist(renderDir,'dir'))
-    mkdir(renderDir);
+if (~exist(cnv.renderDir ,'dir'))
+    mkdir(cnv.renderDir );
 end
 
 % Sparse prior name
@@ -44,22 +42,22 @@ sparsePriorName = [pr.sparsePriorStr 'SparsePrior.mat'];
 % is correct at the calling level.
 %
 % Grab foward cone mosaic and render matrix
-if (~exist(fullfile(renderDir, cnv.forwardRenderStructureName),'file'))
+if (~exist(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'file'))
     error('Forward render strucure not cached')
 else
     clear forwardRenderStructure;
-    load(fullfile(renderDir, cnv.forwardRenderStructureName),'renderStructure');
+    load(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(forwardRenderStructure, pr.eccXDegs, pr.eccYDegs, cnv.fieldSizeDegs, ...
         pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters);
 end
 
 % Grab recon cone mosaic and render matrix
-if (~exist(fullfile(renderDir, cnv.reconRenderStructureName),'file'))
+if (~exist(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'file'))
     error('Recon render strucure not cached');
 else
     clear reconRenderStructure;
-    load(fullfile(renderDir, cnv.reconRenderStructureName),'renderStructure');
+    load(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(reconRenderStructure, pr.eccXDegs, pr.eccYDegs, cnv.fieldSizeDegs, ...
         pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters);
@@ -204,7 +202,7 @@ saveas(gcf,fullfile(cnv.outputDir,'forwardMosaicExcitations.jpg'),'jpg');
 %% Run reconstruction
 %
 % Load prior
-prior = load(fullfile(aoReconDir, 'priors', sparsePriorName));
+prior = load(fullfile(pr.aoReconDir, 'priors', sparsePriorName));
 
 % Construct image estimator
 estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...

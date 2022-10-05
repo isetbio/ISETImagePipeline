@@ -10,6 +10,7 @@
 %   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
 %   09/22/22  chr  Convert to its own dichrom file
 %   09/27/22  chr  Incorporate inputs for stimulus centering position
+%   10/05/22  dhb  Lots of changes for parall
 
 %% Clear
 clear; close all;
@@ -17,17 +18,13 @@ clear; close all;
 %% Version editor string
 %
 % Helps us keep different calcs separate
-prBase.versEditor = 'dichrom_db';
+prBase.versEditor = 'dichrom_test';
 
 %% Point at directory with data files for this subproject
 %
 % This will allow us to load in project specific precomputed information.
 % Also records initials of version editors, otherwise set to 'main'
-aoReconDir = getpref('ISETImagePipeline','aoReconDir');
-renderDir = fullfile(aoReconDir, prBase.versEditor);
-if (~exist(renderDir,'dir'))
-    mkdir(renderDir);
-end
+prBase.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 
 %% Parameters
 %
@@ -38,13 +35,11 @@ prBase.displayName = 'conventional';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
 
-
 %% Spatial parameters
 % 
 % Common to forward and recon models
-prBase.nPixels = 20;
+prBase.nPixels = 100;
 prBase.trueCenter = round(prBase.nPixels/2);
-
 
 %% Mosaic parameters
 prBase.fieldSizeMinutes = 30;
@@ -76,8 +71,8 @@ end
 % will end if values exceed pixel limits. 
 %
 % Position specified in pixels, could consider specifying in degrees.
-centerXPosition = [prBase.trueCenter prBase.trueCenter];
-centerYPosition = [prBase.trueCenter prBase.trueCenter];
+centerXPosition = [prBase.trueCenter];
+centerYPosition = [prBase.trueCenter];
 prBase.stimCenter = [centerXPosition ; centerYPosition];
 deltaCenterList = [prBase.stimCenter - prBase.trueCenter];
 
@@ -90,9 +85,13 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.002; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+regParaList = 0.005; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 5;
+prBase.maxReconIterations = 4000;
+prBase.whiteNoiseStarts = 0;
+prBase.pinkNoiseStarts = 0;
+prBase.sparsePriorPatchStarts = 0;
+prBase.uniformStartVals = [0.5];
 
 % Use AO in forward rendering? Should consider mix-and-match 
 %
@@ -107,8 +106,8 @@ reconDefocusDioptersList = [0.00];% 0.05 0.1];
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS"
-forwardChromList = ["chromDeut", "chromNorm", "chromNorm"]; 
-reconChromList = ["chromDeut", "chromDeut", "chromNorm"];
+forwardChromList = ["chromDeut" "chromNorm" "chromNorm"]; 
+reconChromList =   ["chromDeut" "chromDeut" "chromNorm"];
 
 % Force build and save of render structures.  This
 % only affects this script, and will typically be false.
@@ -119,7 +118,7 @@ buildNewRecon = false;
 runIndex = 1;
 for ss = 1:length(stimSizeDegsList)
     for cc = 1:length(stimRValList)
-        for yy = 1:length(deltaCenterList)
+        for yy = 1:size(deltaCenterList,2)
             for ff = 1:length(forwardDefocusDioptersList)
                 for rr = 1:length(regParaList)
                     for dd = 1:length(forwardChromList)
@@ -149,65 +148,48 @@ for ss = 1:length(stimSizeDegsList)
 end
 
 %% Build render structures we need if they are not cached
-% Run them all in parallel
 for pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come
-    % out of lists above.
-    pr = prBase;
-    pr.stimSizeDegs = stimSizeDegs(pp);
-    pr.stimRVal = stimRVal(pp);
-    pr.stimGVal = stimGVal(pp);
-    pr.stimBVal = stimBVal(pp);
-    pr.stimCenter = stimCenter(:,pp);
-    pr.forwardDefocusDiopters = forwardDefocusDiopters(pp);
-    pr.reconDefocusDiopters = reconDefocusDiopters(pp);
-    pr.regPara = regPara(pp);
-    pr.forwardChrom = forwardChrom(pp);
-    pr.reconChrom = reconChrom(pp);
+    % out of lists precreated above.
+    pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
+        stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
+        forwardChrom,reconChrom);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
 
     % Build foward cone mosaic and render matrix if needed
-    if (buildNewForward || ~exist(fullfile(renderDir, cnv.forwardRenderStructureName),'file'))
-        renderStructure = buildRenderStruct(aoReconDir, pr.eccXDegs, pr.eccYDegs, ...
+    if (buildNewForward || ~exist(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'file'))
+        renderStructure = buildRenderStruct(pr.aoReconDir , pr.eccXDegs, pr.eccYDegs, ...
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
             cnv.forwardNewCones, pr.forwardEccVars);
-        save(fullfile(renderDir, cnv.forwardRenderStructureName),'renderStructure');
+        save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure');
         forwardRenderStructure = renderStructure; clear renderStructure;
     end
 
     % Build recon cone mosaic and render structure if needed
-    if (buildNewRecon || ~exist(fullfile(renderDir, cnv.reconRenderStructureName),'file'))
-        renderStructure = buildRenderStruct(aoReconDir, pr.eccXDegs, pr.eccYDegs, ...
+    if (buildNewRecon || ~exist(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'file'))
+        renderStructure = buildRenderStruct(pr.aoReconDir , pr.eccXDegs, pr.eccYDegs, ...
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
             cnv.reconNewCones, pr.reconEccVars);
-        save(fullfile(renderDir, cnv.reconRenderStructureName),'renderStructure');
+        save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure');
         reconRenderStructure = renderStructure; clear renderStructure;
     end
 end
 
-% Run them all in parallel
+% Run the reconstructions in parallel
 parfor pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come
     % out of lists above.
-    pr = prBase;
-    pr.stimSizeDegs = stimSizeDegs(pp);
-    pr.stimRVal = stimRVal(pp);
-    pr.stimGVal = stimGVal(pp);
-    pr.stimBVal = stimBVal(pp);
-    pr.stimCenter = stimCenter(:,pp);
-    pr.forwardDefocusDiopters = forwardDefocusDiopters(pp);
-    pr.reconDefocusDiopters = reconDefocusDiopters(pp);
-    pr.regPara = regPara(pp);
-    pr.forwardChrom = forwardChrom(pp);
-    pr.reconChrom = reconChrom(pp);
+    pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
+        stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
+        forwardChrom,reconChrom);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);

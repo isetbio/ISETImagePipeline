@@ -23,11 +23,7 @@ prBase.versEditor = 'dichrom_test';
 %
 % This will allow us to load in project specific precomputed information.
 % Also records initials of version editors, otherwise set to 'main'
-aoReconDir = getpref('ISETImagePipeline','aoReconDir');
-renderDir = fullfile(aoReconDir, prBase.versEditor);
-if (~exist(renderDir,'dir'))
-    mkdir(renderDir);
-end
+prBase.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 
 %% Parameters
 %
@@ -74,8 +70,8 @@ end
 % will end if values exceed pixel limits. 
 %
 % Position specified in pixels, could consider specifying in degrees.
-centerXPosition = [prBase.trueCenter prBase.trueCenter];
-centerYPosition = [prBase.trueCenter prBase.trueCenter];
+centerXPosition = [prBase.trueCenter];
+centerYPosition = [prBase.trueCenter];
 prBase.stimCenter = [centerXPosition ; centerYPosition];
 deltaCenterList = [prBase.stimCenter - prBase.trueCenter];
 
@@ -172,30 +168,30 @@ for pp = 1:length(regPara)
     cnv = computeConvenienceParams(pr);
 
     % Build foward cone mosaic and render matrix if needed
-    if (buildNewForward || ~exist(fullfile(renderDir, cnv.forwardRenderStructureName),'file'))
-        renderStructure = buildRenderStruct(aoReconDir, pr.eccXDegs, pr.eccYDegs, ...
+    if (buildNewForward || ~exist(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'file'))
+        renderStructure = buildRenderStruct(pr.aoReconDir , pr.eccXDegs, pr.eccYDegs, ...
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
             cnv.forwardNewCones, pr.forwardEccVars);
-        save(fullfile(renderDir, cnv.forwardRenderStructureName),'renderStructure');
+        save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure');
         forwardRenderStructure = renderStructure; clear renderStructure;
     end
 
     % Build recon cone mosaic and render structure if needed
-    if (buildNewRecon || ~exist(fullfile(renderDir, cnv.reconRenderStructureName),'file'))
-        renderStructure = buildRenderStruct(aoReconDir, pr.eccXDegs, pr.eccYDegs, ...
+    if (buildNewRecon || ~exist(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'file'))
+        renderStructure = buildRenderStruct(pr.aoReconDir , pr.eccXDegs, pr.eccYDegs, ...
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
             cnv.reconNewCones, pr.reconEccVars);
-        save(fullfile(renderDir, cnv.reconRenderStructureName),'renderStructure');
+        save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure');
         reconRenderStructure = renderStructure; clear renderStructure;
     end
 end
 
 % Run them all in parallel
-parfor pp = 1:length(regPara)
+for pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come
     % out of lists above.

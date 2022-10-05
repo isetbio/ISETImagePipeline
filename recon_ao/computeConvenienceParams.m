@@ -9,6 +9,12 @@ function cnv = computeConvenienceParams(pr)
 %    The convenience parameters massage the parameters into
 %    a more directly useful form for some parts of the code.
 
+% Render directory
+cnv.renderDir  = fullfile(pr.aoReconDir , pr.versEditor);
+if (~exist(cnv.renderDir ,'dir'))
+    mkdir(cnv.renderDir );
+end
+
 % Determine which method will be used for the reconstruction: ISETBIO or
 % Render Matrix
 if (pr.reconstructfromRenderMatrix)
@@ -85,6 +91,6 @@ end
 cnv.outputMainName = sprintf('%s_%s_%s_%0.2f_%0.2f_%d_%d_%s_%s', ...
     pr.versEditor,cnv.forwardAOStr,cnv.reconAOStr,pr.forwardDefocusDiopters,pr.reconDefocusDiopters,pr.nPixels,pr.fieldSizeMinutes,pr.displayName,pr.sparsePriorStr);
 cnv.outputSubName = sprintf('%0.1f_%0.4f_%d_%0.2f_%0.2f_%0.2f_%0.2f_%s_%s_%d_%s_%d',60*pr.stimSizeDegs, pr.regPara,pr.stride,pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal, cnv.exciteSource, pr.forwardChrom, pr.forwardEccVars, pr.reconChrom, pr.reconEccVars);
-cnv.outputDir = fullfile(aoReconDir,cnv.outputMainName,cnv.outputSubName);
+cnv.outputDir = fullfile(pr.aoReconDir ,cnv.outputMainName,cnv.outputSubName);
 
 end
