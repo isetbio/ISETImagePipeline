@@ -18,7 +18,7 @@ clear; close all;
 %% Version editor string
 %
 % Helps us keep different calcs separate
-prBase.versEditor = 'dichrom_test';
+prBase.versEditor = 'dichrom_db';
 
 %% Point at directory with data files for this subproject
 %
