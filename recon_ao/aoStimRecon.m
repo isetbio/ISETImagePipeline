@@ -263,8 +263,23 @@ for ii = 1:length(multistartStruct.initTypes)
     theAxes = subplot(3,3,3);
     visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
 
+    % Forward mosaic
+    theAxes = subplot(3,3,4);
+    figureHandle = theFig; 
+    forwardConeMosaic.visualizeMosaic(figureHandle,theAxes);
+
+    % Excitations
+    theAxes = subplot(3,3,5);
+    figureHandle = theFig; 
+    forwardConeMosaic.Mosaic.visualize(...
+    'figureHandle', figureHandle, ...
+    'axesHandle', theAxes, ...
+    'activation', reshape(forwardExcitationsToStimulusUse,1,1,length(forwardExcitationsToStimulusUse)), ...
+    'activationRange', [0 max(forwardExcitationsToStimulusUse)], ...
+    'plotTitle',  titleStr);
+
     % Plot predicted versus stim excitations
-    subplot(3,3,5); hold on;
+    subplot(3,3,6); hold on;
     minVal = 0.9*min([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)]);
     maxVal = 1.1*max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)]);
     plot(multistartStruct.coneVec,multistartStruct.reconPreds(:,ii),'ro','MarkerFaceColor','r','MarkerSize',6);
