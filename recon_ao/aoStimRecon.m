@@ -226,9 +226,9 @@ scaleFactor = (cnv.forwardPupilDiamMM/cnv.reconPupilDiamMM)^2;
 specifiedStarts = {};
 for uu = 1:length(pr.uniformStartVals)
     clear temp
-    temp(:,:,1) = pr.UniformStartVals(1,uu)* ones(nPixels,nPixels);
-    temp(:,:,2) = pr.UniformStartVals(2,uu)* ones(nPixels,nPixels);
-    temp(:,:,3) = pr.UniformStartVals(3,uu)* ones(nPixels,nPixels);
+    temp(:,:,1) = pr.uniformStartVals(1,uu)* ones(pr.nPixels,pr.nPixels);
+    temp(:,:,2) = pr.uniformStartVals(2,uu)* ones(pr.nPixels,pr.nPixels);
+    temp(:,:,3) = pr.uniformStartVals(3,uu)* ones(pr.nPixels,pr.nPixels);
     specifiedStarts{uu} = temp(:); 
 end
 
