@@ -225,7 +225,11 @@ scaleFactor = (cnv.forwardPupilDiamMM/cnv.reconPupilDiamMM)^2;
 % Set up uniform field starts
 specifiedStarts = {};
 for uu = 1:length(pr.uniformStartVals)
-    specifiedStarts{uu} = pr.uniformStartVals(uu)*ones(length(stimulusImageLinear(:)), 1);
+    clear temp
+    temp(:,:,1) = pr.UniformStartVals(1,uu)* ones(nPixels,nPixels);
+    temp(:,:,2) = pr.UniformStartVals(2,uu)* ones(nPixels,nPixels);
+    temp(:,:,3) = pr.UniformStartVals(3,uu)* ones(nPixels,nPixels);
+    specifiedStarts{uu} = temp(:); 
 end
 
 % Run the estimator
