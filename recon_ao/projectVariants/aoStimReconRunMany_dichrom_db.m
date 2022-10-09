@@ -87,11 +87,11 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.005; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 4000;
+prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 0;
 prBase.sparsePriorPatchStarts = 0;
-prBase.uniformStartVals = [ [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]'];
+prBase.uniformStartVals = [ [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]' ];
 
 % Use AO in forward rendering? Should consider mix-and-match 
 %
