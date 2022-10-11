@@ -19,3 +19,13 @@ image = spectrumSampler(imSize);
 figure();
 imshow(gammaCorrection(image, display), ...
        'InitialMagnification', 1000);
+
+%% Sample from specturm prior + nonlinear transformation
+imSize = [100, 100, 3];
+
+gain = 20; 
+image = spectrumSampler(imSize, gain);
+
+figure();
+imshow(gammaCorrection(image, display), ...
+       'InitialMagnification', 1000);
