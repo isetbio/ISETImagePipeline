@@ -183,7 +183,7 @@ parfor pp = 1:length(regPara)
 end
 
 % Run the reconstructions in parallel
-for pp = 1:length(regPara)
+parfor pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come
     % out of lists above.
