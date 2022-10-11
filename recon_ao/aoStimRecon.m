@@ -91,40 +91,52 @@ saveas(gcf,fullfile(cnv.outputDir,'reconMosaic.jpg'),'jpg');
 
 %% Generate an image stimulus
 %
-% Stimulus size in retinal degrees should not exceed 'cnv.fieldSizeDegs'
-stimSizeFraction = pr.stimSizeDegs / cnv.fieldSizeDegs;
-if (stimSizeFraction > 1)
-    error('Stimulus size too big given field size');
-end
-idxLB = round(pr.nPixels * (0.5 - stimSizeFraction / 2));
-if (idxLB < 1)
-    idxLB = 1;
-end
-idxUB = round(pr.nPixels * (0.5 + stimSizeFraction / 2));
-if (idxUB > pr.nPixels)
-    idxUB = pr.nPixels;
-end
+% When pr.stimBgVal is a scalar, we construct a uniform field of
+% appropriate size.
+if (length(pr.stimBgVal) == 1)
+    % Stimulus size in retinal degrees should not exceed 'cnv.fieldSizeDegs'
+    stimSizeFraction = pr.stimSizeDegs / cnv.fieldSizeDegs;
+    if (stimSizeFraction > 1)
+        error('Stimulus size too big given field size');
+    end
+    idxLB = round(pr.nPixels * (0.5 - stimSizeFraction / 2));
+    if (idxLB < 1)
+        idxLB = 1;
+    end
+    idxUB = round(pr.nPixels * (0.5 + stimSizeFraction / 2));
+    if (idxUB > pr.nPixels)
+        idxUB = pr.nPixels;
+    end
 
-% Shift the stimulus to be centered on desired values
-idxXRange = (idxLB:idxUB) + pr.stimCenter(1);
-idxYRange = (idxLB:idxUB) + pr.stimCenter(2);
+    % Shift the stimulus to be centered on desired values
+    idxXRange = (idxLB:idxUB) + pr.stimCenter(1);
+    idxYRange = (idxLB:idxUB) + pr.stimCenter(2);
 
-% Check stimulus position. Ends function and deletes the created
-% directory if the stimulus position exceeds bounds. 
-if min(idxYRange) <= 0 || max(idxYRange) > pr.nPixels ...
-        || min(idxXRange) <= 0 || max(idxXRange) > pr.nPixels
-    warning(['Stimulus centered on ' int2str(pr.stimCenter' + pr.trueCenter) ...
-        ' exceeds bounds. Beginning next simulation']);
-    rmdir(cnv.outputDir, 's');
-    close all
-    return
+    % Check stimulus position. Ends function and deletes the created
+    % directory if the stimulus position exceeds bounds.
+    if min(idxYRange) <= 0 || max(idxYRange) > pr.nPixels ...
+            || min(idxXRange) <= 0 || max(idxXRange) > pr.nPixels
+        warning(['Stimulus centered on ' int2str(pr.stimCenter' + pr.trueCenter) ...
+            ' exceeds bounds. Beginning next simulation']);
+        rmdir(cnv.outputDir, 's');
+        close all
+        return
+    end
+
+    % Set image pixels
+    stimulusImageRGB = ones(pr.nPixels, pr.nPixels, 3) * pr.stimBgVal;
+    stimulusImageRGB(idxYRange, idxXRange, 1) = pr.stimRVal;
+    stimulusImageRGB(idxYRange, idxXRange, 2) = pr.stimGVal;
+    stimulusImageRGB(idxYRange, idxXRange, 3) = pr.stimBVal;
+
+% Otherwise, treat passed pr.stimBgVal as an actual image
+else
+    stimulusImageRGB = pr.stimBgVal;
+    nPixelsCheck = size(stimulusImageRGB,1);
+    if (nPixelsCheck ~= pr.nPixels)
+        error('Passed image does not have correct pixel dimension');
+    end
 end
-
-% Set image pixels
-stimulusImageRGB = ones(pr.nPixels, pr.nPixels, 3) * pr.stimBgVal;
-stimulusImageRGB(idxYRange, idxXRange, 1) = pr.stimRVal;
-stimulusImageRGB(idxYRange, idxXRange, 2) = pr.stimGVal;
-stimulusImageRGB(idxYRange, idxXRange, 3) = pr.stimBVal;
 
 % Show the stimulus by creating an ISETBio scene
 meanLuminanceCdPerM2 = [];
