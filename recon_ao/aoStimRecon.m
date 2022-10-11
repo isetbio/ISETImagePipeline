@@ -232,6 +232,11 @@ for uu = 1:length(pr.uniformStartVals)
     specifiedStarts{uu} = temp(:); 
 end
 
+% Start from stimulus?
+if (pr.stimulusStart)
+    specifiedStarts{length(specifiedStarts)+1} = stimulusImageLinear(:);
+end
+
 % Run the estimator
 [multistartStruct,~,reconIndex] = estimator.runMultistartEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
     'maxIter', pr.maxReconIterations, 'display', 'iter', 'gpu', false, ...
