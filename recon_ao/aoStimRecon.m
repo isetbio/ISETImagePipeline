@@ -319,7 +319,23 @@ for ii = 1:length(multistartStruct.initTypes)
     set(gca,'XTickLabel',sprintf('Recon %d',ii))
     ylabel('Log Prior');
     axis('square');
-    title('Init/Recon/Stim Log Priors');
+
+    % Prior summary
+    if (multistartStruct.reconLogPriors(ii) > -stimNegLogPrior)
+        if (multistartStruct.reconLogPriors(ii) > multistartStruct.initLogPriors(ii))
+            title({'Init/Recon/Stim Log Priors' ; 'Recon BETTER than Stim' ; 'Recon BETTER than Init'});
+        else
+            title({'Init/Recon/Stim Log Priors' ; 'Recon BETTER than Stim' ; 'Recon WORSE than Init'});
+        end
+    else
+        if (multistartStruct.reconLogPriors(ii) > multistartStruct.initLogPriors(ii))
+            title({'Init/Recon/Stim Log Priors' ; 'Recon WORSE than Stim' ; 'Recon BETTER than Init'});
+        else
+            title({'Init/Recon/Stim Log Priors' ; 'Recon WORSE than Stim' ; 'Recon WORSE than Init'});
+        end
+    end
+
+    % Likelihoods
     subplot(3,3,8);
     bar([1]', ...
         [multistartStruct.initLogLikelihoods(ii)  ; ...
@@ -328,7 +344,23 @@ for ii = 1:length(multistartStruct.initTypes)
     set(gca,'XTickLabel',sprintf('Recon %d',ii))
     ylabel('Log Likelihood');
     axis('square');
-    title('Init/Recon/Stim Log Likelihoods');
+
+    % Likelihood summary
+    if (multistartStruct.reconLogLikelihoods(ii) > -stimNegLogLikely)
+        if (multistartStruct.reconLogLikelihoods(ii) > multistartStruct.initLogLikelihoods(ii))
+            title({'Init/Recon/Stim Log Likelihoods' ; 'Recon BETTER than Stim' ; 'Recon BETTER than Init'});
+        else
+            title({'Init/Recon/Stim Log Likelihoods' ; 'Recon BETTER than Stim' ; 'Recon WORSE than Init'});
+        end
+    else
+        if (multistartStruct.reconLogLikelihoods(ii) > multistartStruct.initLogLikelihoods(ii))
+            title({'Init/Recon/Stim Log Likelihoods' ; 'Recon WORSE than Stim' ; 'Recon BETTER than Init'});
+        else
+            title({'Init/Recon/Stim Log Likelihoods' ; 'Recon WORSE than Stim' ; 'Recon WORSE than Init'});
+        end
+    end
+
+    % Loss value (negative, so plus is good)
     subplot(3,3,9);
     bar([1]', ...
         [-multistartStruct.initLosses(ii)  ; ...
