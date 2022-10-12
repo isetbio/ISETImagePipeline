@@ -18,7 +18,7 @@ clear; close all;
 %% Version editor string
 %
 % Helps us keep different calcs separate
-prBase.versEditor = 'dichrom_db';
+prBase.versEditor = 'small_db';
 
 %% Point at directory with data files for this subproject
 %
@@ -149,7 +149,7 @@ for ss = 1:length(stimSizeDegsList)
 end
 
 %% Build render structures we need if they are not cached
-parfor pp = 1:length(regPara)
+for pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come
     % out of lists precreated above.
