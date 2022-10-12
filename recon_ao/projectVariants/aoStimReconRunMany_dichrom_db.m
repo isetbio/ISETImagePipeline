@@ -91,7 +91,7 @@ prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 0;
 prBase.sparsePriorPatchStarts = 0;
-prBase.stimulusStart = false;
+prBase.stimulusStart = true;
 prBase.uniformStartVals = [ [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]' ];
 
 % Use AO in forward rendering? Should consider mix-and-match 
