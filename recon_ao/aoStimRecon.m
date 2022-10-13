@@ -402,8 +402,9 @@ reconScene = sceneSet(reconScene, 'fov', cnv.fieldSizeDegs);
 visualizeScene(reconScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
 saveas(gcf,fullfile(cnv.outputDir,'Recon.jpg'),'jpg');
 
+
 % Compute forward excitations from reconstruction
-% And compare with stimulus exciations
+% and compare with stimulus excitations
 forwardOI = oiCompute(reconScene,forwardOI);
 if (pr.reconstructfromRenderMatrix)
     title('Reconstruction from forward render matrix');
@@ -420,7 +421,28 @@ plot([0 maxVal],[0 maxVal],'k');
 xlim([0 maxVal]); ylim([0 maxVal]);
 xlabel('Excitations to stimulus');
 ylabel('Excitations to reconstruction');
-saveas(gcf,fullfile(cnv.outputDir,'StimulusVsReconExcitations.jpg'),'jpg');
+saveas(gcf,fullfile(cnv.outputDir,'StimulusVsForwardReconExcitations.jpg'),'jpg');
+
+% Compute recon excitations from reconstruction
+% and compare with stimulus excitations
+reconOI = oiCompute(reconScene,reconOI);
+if (pr.reconstructfromRenderMatrix)
+    title('Reconstruction from recon render matrix');
+    reconExcitationsToRecon = squeeze(reconRenderMatrix*reconImageLinear(:));
+else
+    title('Reconstruction from recon ISETBio');
+    reconExcitationsToRecon = squeeze(reconConeMosaic.Mosaic.compute(reconOI, 'opticalImagePositionDegs', 'mosaic-centered'));
+end
+figure; clf; hold on;
+plot(forwardExcitationsToStimulusUse,reconExcitationsToRecon,'ro','MarkerFaceColor','r','MarkerSize',10);
+axis('square');
+maxVal = max([forwardExcitationsToStimulusUse; reconExcitationsToRecon]);
+plot([0 maxVal],[0 maxVal],'k');
+xlim([0 maxVal]); ylim([0 maxVal]);
+xlabel('Excitations to stimulus');
+ylabel('Excitations to reconstruction');
+saveas(gcf,fullfile(cnv.outputDir,'StimulusVsReconReconExcitations.jpg'),'jpg');
+
 
 % fprintf(fid,'Stimulus: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
 %     -stimNegLogPrior,-stimNegLogLikely,-(stimNegLogPrior+stimNegLogLikely));
