@@ -26,20 +26,18 @@ end
 % Field size in degrees from minutes
 cnv.fieldSizeDegs = pr.fieldSizeMinutes/60;
 
-% Determine forward pupil diameter, allowing it to differ in AO case
+% Determine AO/pupil rendering string
+cnv.forwardPupilDiamMM = pr.forwardPupilDiamMM;
 if (pr.forwardAORender)
-    cnv.forwardPupilDiamMM = 7;
     cnv.forwardAOStr = ['AO' num2str(cnv.forwardPupilDiamMM)];
 else
-    cnv.forwardPupilDiamMM = 3;
     cnv.forwardAOStr = ['NOAO' num2str(cnv.forwardPupilDiamMM)];
 end
 
+cnv.reconPupilDiamMM = pr.reconPupilDiamMM;
 if (pr.reconAORender)
-    cnv.reconPupilDiamMM = 7;
     cnv.reconAOStr = ['AO' num2str(cnv.reconPupilDiamMM)];
 else
-    cnv.reconPupilDiamMM = 3;
     cnv.reconAOStr = ['NOAO' num2str(cnv.reconPupilDiamMM)];
 end
 

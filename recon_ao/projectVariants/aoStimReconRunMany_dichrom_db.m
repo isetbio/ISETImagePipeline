@@ -94,11 +94,11 @@ prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = true;
 prBase.uniformStartVals = [ [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]' ];
 
-% Use AO in forward rendering? Should consider mix-and-match 
-%
-% This determines pupil diameter which typically differs in AO 
+% Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
+prBase.forwardPupilDiamMM = 3;
+prBase.reconPupilDiamMM = 3;
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 

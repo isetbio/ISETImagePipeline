@@ -54,7 +54,7 @@ prBase.reconstructfromRenderMatrix = true;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [24/60 5/60];
+stimSizeDegsList = [24/60 5/60 2.5/60];
 
 % RGB values (before gamma correction) 
 prBase.stimBgVal = 0.1;
@@ -94,11 +94,11 @@ prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = true;
 prBase.uniformStartVals = [];
 
-% Use AO in forward rendering? Should consider mix-and-match 
-%
-% This determines pupil diameter which typically differs in AO 
+% Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = true;
 prBase.reconAORender = true;
+prBase.fowarardPupilDiamMM = 7;
+prBase.reconPupilDiamMM = 7;
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.06];% 0.05 0.1]; 
