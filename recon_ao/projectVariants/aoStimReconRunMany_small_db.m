@@ -85,7 +85,7 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.005; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+regParaList = [0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
 prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
@@ -97,7 +97,7 @@ prBase.uniformStartVals = [];
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = true;
 prBase.reconAORender = true;
-prBase.fowarardPupilDiamMM = 7;
+prBase.forwardPupilDiamMM = 7;
 prBase.reconPupilDiamMM = 7;
 
 % Residual defocus for forward and recon rendering, of equal sizes
