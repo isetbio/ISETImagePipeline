@@ -85,11 +85,11 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = [0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+regParaList = 0.001; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
 prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
-prBase.pinkNoiseStarts = 1;
+prBase.pinkNoiseStarts = 0;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = true;
 prBase.uniformStartVals = [];
@@ -184,7 +184,7 @@ for pp = 1:length(regPara)
 end
 
 % Run the reconstructions in parallel
-parfor pp = 1:length(regPara)
+for pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come
     % out of lists above.
