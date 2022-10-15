@@ -18,7 +18,7 @@ clear; close all;
 %% Version editor string
 %
 % Helps us keep different calcs separate
-prBase.versEditor = 'small_db';
+prBase.versEditor = 'small_ctr_db';
 
 %% Point at directory with data files for this subproject
 %
@@ -54,10 +54,10 @@ prBase.reconstructfromRenderMatrix = true;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [24/60 5/60 2.5/60];
+stimSizeDegsList = [24/60 5/60 2/60];
 
 % RGB values (before gamma correction) 
-prBase.stimBgVal = 0.1;
+prBase.stimBgVal = 0.2;
 stimRValList = [0.8];
 stimGValList = [0.8];
 stimBValList = [0.05];
@@ -85,13 +85,13 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.001; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+regParaList = 0.005; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 5000;
+prBase.maxReconIterations = 10000;
 prBase.whiteNoiseStarts = 0;
-prBase.pinkNoiseStarts = 0;
+prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
-prBase.stimulusStart = true;
+prBase.stimulusStart = false;
 prBase.uniformStartVals = [];
 
 % Use AO in forward rendering? And determine optics pupil size
@@ -101,8 +101,8 @@ prBase.forwardPupilDiamMM = 7;
 prBase.reconPupilDiamMM = 7;
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.06];% 0.05 0.1]; 
-reconDefocusDioptersList = [0.06];% 0.05 0.1];
+forwardDefocusDioptersList = [0.06]; % 0.05 0.1]; 
+reconDefocusDioptersList = [0.06];   % 0.05 0.1];
 
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
