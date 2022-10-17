@@ -86,16 +86,21 @@ else
 end
 
 % Output directory name
+if (pr.addPoissonNoise)
+    noiseStr = 'noise';
+else
+    noiseStr = 'nonoise';
+end
 cnv.outputMainName = sprintf('%s_%s_%s_%0.2f_%0.2f_%d_%d_%s_%s', ...
     pr.versEditor,cnv.forwardAOStr,cnv.reconAOStr,pr.forwardDefocusDiopters,pr.reconDefocusDiopters,pr.nPixels,pr.fieldSizeMinutes,pr.displayName,pr.sparsePriorStr);
 if (length(pr.stimBgVal) > 1)
-    cnv.outputSubName = sprintf('%0.1f_%0.4f_%d_%s_%s_%s_%d_%s_%d_%d_%d', ...
+    cnv.outputSubName = sprintf('%0.1f_%0.4f_%d_%s_%s_%s_%d_%s_%d_%d_%d_%s', ...
         60*pr.stimSizeDegs, pr.regPara,pr.stride,pr.imageName,cnv.exciteSource, pr.forwardChrom, pr.forwardEccVars, pr.reconChrom, pr.reconEccVars, ...
-        pr.stimCenter(1),pr.stimCenter(2));
+        pr.stimCenter(1),pr.stimCenter(2),noiseStr);
 else
-    cnv.outputSubName = sprintf('%0.1f_%0.4f_%d_%0.2f_%0.2f_%0.2f_%0.2f_%s_%s_%d_%s_%d_%d_%d', ...
+    cnv.outputSubName = sprintf('%0.1f_%0.4f_%d_%0.2f_%0.2f_%0.2f_%0.2f_%s_%s_%d_%s_%d_%d_%d_%s', ...
         60*pr.stimSizeDegs, pr.regPara,pr.stride,pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal, cnv.exciteSource, pr.forwardChrom, pr.forwardEccVars, pr.reconChrom, pr.reconEccVars, ...
-        pr.stimCenter(1),pr.stimCenter(2));
+        pr.stimCenter(1),pr.stimCenter(2),noiseStr);
 end
 cnv.outputDir = fullfile(pr.aoReconDir ,cnv.outputMainName,cnv.outputSubName);
 

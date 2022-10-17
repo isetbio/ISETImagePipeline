@@ -30,7 +30,7 @@ prBase.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 %
 % Display, options are:
 %    'conventional'    - A conventional display
-%    'mono'            - A display with monochromatic primaries
+%    'mono'            - A display with monochromatic primar
 prBase.displayName = 'conventional';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
@@ -50,6 +50,7 @@ prBase.reconRandSeed = false;
 prBase.forwardEccVars = false;
 prBase.reconEccVars = false;
 prBase.reconstructfromRenderMatrix = true;
+prBase.addPoissonNoise = true;
 
 %% Stimulus parameters.
 %
@@ -85,9 +86,9 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.005; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+regParaList = 0.001; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 10000;
+prBase.maxReconIterations = 5000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;

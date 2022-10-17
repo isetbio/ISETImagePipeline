@@ -194,6 +194,11 @@ else
     forwardExcitationsToStimulusUse = forwardExcitationsToStimulusISETBio;
 end
 
+%% Add noise?
+if (pr.addPoissonNoise)
+    forwardExcitationsToStimulusUse = iePoisson(forwardExcitationsToStimulusUse);
+end
+
 % Visualization of the cone response note that we are using
 % 'activationRange', [0 max(coneExcitations)] to avoid confusions due to
 % small stimulus
