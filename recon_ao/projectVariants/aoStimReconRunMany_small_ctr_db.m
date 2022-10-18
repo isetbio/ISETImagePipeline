@@ -50,7 +50,7 @@ prBase.reconRandSeed = false;
 prBase.forwardEccVars = false;
 prBase.reconEccVars = false;
 prBase.reconstructfromRenderMatrix = true;
-prBase.addPoissonNoise = true;
+prBase.addPoissonNoise = false;
 
 %% Stimulus parameters.
 %
@@ -97,9 +97,9 @@ prBase.uniformStartVals = [];
 
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = true;
-prBase.reconAORender = true;
+prBase.reconAORender = false;
 prBase.forwardPupilDiamMM = 7;
-prBase.reconPupilDiamMM = 7;
+prBase.reconPupilDiamMM = 3;
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.06]; % 0.05 0.1]; 
