@@ -143,7 +143,9 @@ meanLuminanceCdPerM2 = [];
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 stimulusScene = sceneSet(stimulusScene, 'fov', cnv.fieldSizeDegs);
-visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
+%visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
+figure; clf; imshow(stimulusImageRGB);
+title('Stimulus Image');
 saveas(gcf,fullfile(cnv.outputDir,'Stimulus.jpg'),'jpg');
 
 %% Compute forward retinal image and excitations using ISETBio
@@ -283,16 +285,25 @@ for ii = 1:length(multistartStruct.initTypes)
     theFig = figure; clf;
     set(theFig,'Position',[300 400 1150 1150]);
     theAxes = subplot(3,3,1);
-    visualizeScene(stimulusScene, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
-    theAxes = subplot(3,3,2);
-    visualizeScene(initSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
-    theAxes = subplot(3,3,3);
-    visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
+    % visualizeScene(stimulusScene, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
+    imshow(stimulusImageRGB);
+    title('Stimulus Image');
 
-    % Forward mosaic
+    theAxes = subplot(3,3,2);
+    %visualizeScene(initSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
+    imshow(gammaCorrection(multistartStruct.initImages{ii}, forwardConeMosaic.Display));
+    title('Initial Image');
+
+    theAxes = subplot(3,3,3);
+    %visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
+    imshow(gammaCorrection(multistartStruct.reconImages{ii}, forwardConeMosaic.Display));
+    title('Reconstructed Image');
+
+    % Show forward mosaic
     theAxes = subplot(3,3,4);
     figureHandle = theFig; 
     forwardConeMosaic.visualizeMosaic(figureHandle,theAxes);
+    title('Forward Mosaic');
 
     % Excitations
     theAxes = subplot(3,3,5);
@@ -404,9 +415,10 @@ end
 [reconScene, ~, reconImageLinear] = sceneFromFile(gammaCorrection(multistartStruct.reconImages{reconIndex}, forwardConeMosaic.Display), 'rgb', ...
         meanLuminanceCdPerM2, forwardConeMosaic.Display);
 reconScene = sceneSet(reconScene, 'fov', cnv.fieldSizeDegs);
-visualizeScene(reconScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
+% visualizeScene(reconScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
+figure; clf; imshow(gammaCorrection(multistartStruct.reconImages{reconIndex}, forwardConeMosaic.Display));
+title('Reconstructed Image');
 saveas(gcf,fullfile(cnv.outputDir,'Recon.jpg'),'jpg');
-
 
 % Compute forward excitations from reconstruction
 % and compare with stimulus excitations
