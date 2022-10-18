@@ -50,6 +50,7 @@ prBase.reconRandSeed = false;
 prBase.forwardEccVars = false;
 prBase.reconEccVars = false;
 prBase.reconstructfromRenderMatrix = true;
+prBase.addPoissonNoise = true;
 
 %% Stimulus parameters.
 %
