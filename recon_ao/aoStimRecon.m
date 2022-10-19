@@ -231,15 +231,8 @@ estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
 %
 % Scale excitations to take into account difference in forward and recon
 % pupil sizes.  This helps keep things in range.
-%
-% DHB: I think I might have scale factor backwards, now that I look at it.
-% If we use a large forward pupil and reconstruct with a small one, we want
-% to scale the cone exciations passed to the recon to be smaller.  So it
-% should be (cnv.reconPupilDiamMM)^2/(fowardPupilDiamMM)^2.  Leaving it for
-% now, but as soon as the two pupil sizes differ, we'll want to check
-% carefully.
 meanLuminanceCdPerM2 = [];
-scaleFactor = (cnv.forwardPupilDiamMM/cnv.reconPupilDiamMM)^2;
+scaleFactor = (cnv.reconPupilDiamMM/cnv.forwardPupilDiamMM)^2;
 
 % Set up uniform field starts
 specifiedStarts = {};
@@ -331,8 +324,8 @@ for ii = 1:length(multistartStruct.initTypes)
     minVal = 0.9*min([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)]);
     maxVal = 1.1*max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)]);
     plot(multistartStruct.coneVec,multistartStruct.reconPreds(:,ii),'ro','MarkerFaceColor','r','MarkerSize',6);
-    xlabel('Measured Excitations');
-    ylabel('Predicted Excitations');
+    xlabel('Scaled (pupil) stimulus excitations');
+    ylabel('Recon excitations to recon');
     xlim([minVal maxVal]); ylim([minVal maxVal]);
     axis('square');
     title({sprintf('Recon %d, init %s',ii,multistartStruct.initTypes{ii}) ; sprintf('Iters = %d',pr.maxReconIterations) });
@@ -348,13 +341,13 @@ for ii = 1:length(multistartStruct.initTypes)
         title('Reconstruction from ISETBio');
         forwardExcitationsToReconTemp = squeeze(forwardConeMosaic.Mosaic.compute(forwardOITemp, 'opticalImagePositionDegs', 'mosaic-centered'));
     end
-    plot(forwardExcitationsToStimulusUse,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
+    plot(forwardExcitationsToStimulusUse*scaleFactor,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
     axis('square');
     minVal = 0.9*min([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
     maxVal = 1.1*max([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
     plot([minVal maxVal],[minVal maxVal],'k');
     xlim([minVal maxVal]); ylim([minVal maxVal]);
-    xlabel('Excitations to stimulus');
+    xlabel('Unscaled (pupil) forward excitations to stimulus');
     ylabel('Forward excitations to recon');
 
     % Compute recon excitations from reconstruction
@@ -369,13 +362,13 @@ for ii = 1:length(multistartStruct.initTypes)
         title('Recon from ISETBio');
         reconExcitationsToReconTemp = squeeze(reconConeMosaic.Mosaic.compute(reconOITemp, 'opticalImagePositionDegs', 'mosaic-centered'));
     end
-    plot(forwardExcitationsToStimulusUse,reconExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
+    plot(forwardExcitationsToStimulusUse*scaleFactor,reconExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
     axis('square');
-    minVal = 0.9*min([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
-    maxVal = 1.1*max([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
+    minVal = 0.9*min([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
+    maxVal = 1.1*max([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
     plot([minVal maxVal],[minVal maxVal],'k');
     xlim([minVal maxVal]); ylim([minVal maxVal]);
-    xlabel('Excitations to stimulus');
+    xlabel('Scaled (pupil) excitations to stimulus');
     ylabel('Recon excitations to recon');
 
     % Check that we know what we are doing.  Small difference may be gamma
@@ -485,39 +478,42 @@ saveas(gcf,fullfile(cnv.outputDir,'Recon.jpg'),'jpg');
 forwardOI = oiCompute(reconScene,forwardOI);
 figure; clf; hold on;
 if (pr.reconstructfromRenderMatrix)
-    title('Reconstruction from forward render matrix');
-    forwardExcitationsToRecon = squeeze(forwardRenderMatrix*reconImageLinear(:));
+    title('Recon from render matrix');
+    forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
 else
-    title('Reconstruction from forward ISETBio');
-    forwardExcitationsToRecon = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
+    title('Reconstruction from ISETBio');
+    forwardExcitationsToReconTemp = squeeze(forwardConeMosaic.Mosaic.compute(forwardOITemp, 'opticalImagePositionDegs', 'mosaic-centered'));
 end
-plot(forwardExcitationsToStimulusUse,forwardExcitationsToRecon,'ro','MarkerFaceColor','r','MarkerSize',10);
+plot(forwardExcitationsToStimulusUse*scaleFactor,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
 axis('square');
-maxVal = max([forwardExcitationsToStimulusUse; forwardExcitationsToRecon]);
-plot([0 maxVal],[0 maxVal],'k');
-xlim([0 maxVal]); ylim([0 maxVal]);
-xlabel('Excitations to stimulus');
-ylabel('Forward excitations to reconstruction');
+minVal = 0.9*min([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
+maxVal = 1.1*max([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
+plot([minVal maxVal],[minVal maxVal],'k');
+xlim([minVal maxVal]); ylim([minVal maxVal]);
+xlabel('Unscaled (pupil) forward excitations to stimulus');
+ylabel('Forward excitations to recon');
 saveas(gcf,fullfile(cnv.outputDir,'StimulusVsReconForwardExcitations.jpg'),'jpg');
 
 % Compute recon excitations from reconstruction
 % and compare with stimulus excitations
 reconOI = oiCompute(reconScene,reconOI);
 figure; clf; hold on;
+reconExcitationsToReconCheck = reconRenderMatrix*reconImageLinearTemp(:);
 if (pr.reconstructfromRenderMatrix)
-    title('Reconstruction from recon render matrix');
-    reconExcitationsToRecon = squeeze(reconRenderMatrix*reconImageLinear(:));
+    title('Recon from render matrix');
+    reconExcitationsToReconTemp = reconExcitationsToReconCheck;
 else
-    title('Reconstruction from recon ISETBio');
-    reconExcitationsToRecon = squeeze(reconConeMosaic.Mosaic.compute(reconOI, 'opticalImagePositionDegs', 'mosaic-centered'));
+    title('Recon from ISETBio');
+    reconExcitationsToReconTemp = squeeze(reconConeMosaic.Mosaic.compute(reconOITemp, 'opticalImagePositionDegs', 'mosaic-centered'));
 end
-plot(forwardExcitationsToStimulusUse,reconExcitationsToRecon,'ro','MarkerFaceColor','r','MarkerSize',10);
+plot(forwardExcitationsToStimulusUse*scaleFactor,reconExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
 axis('square');
-maxVal = max([forwardExcitationsToStimulusUse; reconExcitationsToRecon]);
-plot([0 maxVal],[0 maxVal],'k');
-xlim([0 maxVal]); ylim([0 maxVal]);
-xlabel('Excitations to stimulus');
-ylabel('Recon excitations to reconstruction');
+minVal = 0.9*min([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
+maxVal = 1.1*max([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
+plot([minVal maxVal],[minVal maxVal],'k');
+xlim([minVal maxVal]); ylim([minVal maxVal]);
+xlabel('Scaled (pupil) excitations to stimulus');
+ylabel('Recon excitations to recon');
 saveas(gcf,fullfile(cnv.outputDir,'StimulusVsReconReconExcitations.jpg'),'jpg');
 
 % fprintf(fid,'Stimulus: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
