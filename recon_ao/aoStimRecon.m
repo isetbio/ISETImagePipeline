@@ -186,7 +186,7 @@ plot([0 maxVal],[0 maxVal],'k');
 xlim([0 maxVal]); ylim([0 maxVal]);
 xlabel('Excitations to stimulus ISETBio');
 ylabel('Excitations to stimulus render matrix');
-title('Exciations ISETBio and render matrix');
+title('Mean excitations ISETBio and render matrix');
 saveas(gcf,fullfile(cnv.outputDir,'ISETBioVsRenderMatrixExciations.jpg'),'jpg');
 
 %% Choose which excitations to reconstruct form
@@ -278,35 +278,35 @@ stimLoss = stimNegLogPrior + stimNegLogLikely;
 for ii = 1:length(multistartStruct.initTypes)
     [initSceneTemp, ~, initImageLinearTemp] = sceneFromFile(gammaCorrection(multistartStruct.initImages{ii}, forwardConeMosaic.Display), 'rgb', ...
         meanLuminanceCdPerM2, forwardConeMosaic.Display);
-    [reconSceneTemp, ~, reconImageLinearTemp] = sceneFromFile(gammaCorrection(multistartStruct.reconImages{ii}, forwardConeMosaic.Display), 'rgb', ...
-        meanLuminanceCdPerM2, forwardConeMosaic.Display);
+    [reconSceneTemp, ~, reconImageLinearTemp] = sceneFromFile(gammaCorrection(multistartStruct.reconImages{ii}, reconConeMosaic.Display), 'rgb', ...
+        meanLuminanceCdPerM2, reconConeMosaic.Display);
 
     % Show stimulus, init, and recon
     theFig = figure; clf;
-    set(theFig,'Position',[300 400 1150 1150]);
-    theAxes = subplot(3,3,1);
+    set(theFig,'Position',[300 400 1000 1200]);
+    theAxes = subplot(4,3,1);
     % visualizeScene(stimulusScene, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
     imshow(stimulusImageRGB);
     title('Stimulus Image');
 
-    theAxes = subplot(3,3,2);
+    theAxes = subplot(4,3,2);
     %visualizeScene(initSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
     imshow(gammaCorrection(multistartStruct.initImages{ii}, forwardConeMosaic.Display));
     title('Initial Image');
 
-    theAxes = subplot(3,3,3);
+    theAxes = subplot(4,3,3);
     %visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
     imshow(gammaCorrection(multistartStruct.reconImages{ii}, forwardConeMosaic.Display));
     title('Reconstructed Image');
 
     % Show forward mosaic
-    theAxes = subplot(3,3,4);
+    theAxes = subplot(4,3,4);
     figureHandle = theFig; 
     forwardConeMosaic.visualizeMosaic(figureHandle,theAxes);
     title('Forward Mosaic');
 
-    % Excitations
-    theAxes = subplot(3,3,5);
+    % Excitations in mosaic form
+    theAxes = subplot(4,3,5);
     figureHandle = theFig; 
     forwardConeMosaic.Mosaic.visualize(...
     'figureHandle', figureHandle, ...
@@ -315,19 +315,79 @@ for ii = 1:length(multistartStruct.initTypes)
     'activationRange', [0 max(forwardExcitationsToStimulusUse)], ...
     'plotTitle',  titleStr);
 
-    % Plot predicted versus stim excitations
-    subplot(3,3,6); hold on;
+    % Show recon mosaic
+    theAxes = subplot(4,3,6);
+    figureHandle = theFig; 
+    reconConeMosaic.visualizeMosaic(figureHandle,theAxes);
+    title('Recon Mosaic');
+
+    % Make sure excitations used match what comes back from multistart
+    if (any(forwardExcitationsToStimulusUse * scaleFactor ~= multistartStruct.coneVec))
+        error('Inconsistency in excitations driving reconstruction');
+    end
+
+    % Plot predicted from recon versus stim excitations
+    subplot(4,3,7); hold on;
     minVal = 0.9*min([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)]);
     maxVal = 1.1*max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)]);
     plot(multistartStruct.coneVec,multistartStruct.reconPreds(:,ii),'ro','MarkerFaceColor','r','MarkerSize',6);
     xlabel('Measured Excitations');
-    ylabel('Predicted Exciations');
+    ylabel('Predicted Excitations');
     xlim([minVal maxVal]); ylim([minVal maxVal]);
     axis('square');
     title({sprintf('Recon %d, init %s',ii,multistartStruct.initTypes{ii}) ; sprintf('Iters = %d',pr.maxReconIterations) });
 
+    % Compute forward excitations from reconstruction render
+    % and compare with stimulus excitations
+    forwardOITemp = oiCompute(reconSceneTemp,forwardOI);
+    subplot(4,3,8); hold on; hold on;
+    if (pr.reconstructfromRenderMatrix)
+        title('Recon from render matrix');
+        forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
+    else
+        title('Reconstruction from ISETBio');
+        forwardExcitationsToReconTemp = squeeze(forwardConeMosaic.Mosaic.compute(forwardOITemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+    end
+    plot(forwardExcitationsToStimulusUse,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
+    axis('square');
+    minVal = 0.9*min([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
+    maxVal = 1.1*max([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
+    plot([minVal maxVal],[minVal maxVal],'k');
+    xlim([minVal maxVal]); ylim([minVal maxVal]);
+    xlabel('Excitations to stimulus');
+    ylabel('Forward excitations to recon');
+
+    % Compute recon excitations from reconstruction
+    % and compare with stimulus excitations
+    reconOITemp = oiCompute(reconSceneTemp,reconOI);
+    subplot(4,3,9); hold on;
+    reconExcitationsToReconCheck = reconRenderMatrix*reconImageLinearTemp(:);
+    if (pr.reconstructfromRenderMatrix)
+        title('Recon from render matrix');
+        reconExcitationsToReconTemp = reconExcitationsToReconCheck;
+    else
+        title('Recon from ISETBio');
+        reconExcitationsToReconTemp = squeeze(reconConeMosaic.Mosaic.compute(reconOITemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+    end
+    plot(forwardExcitationsToStimulusUse,reconExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
+    axis('square');
+    minVal = 0.9*min([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
+    maxVal = 1.1*max([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
+    plot([minVal maxVal],[minVal maxVal],'k');
+    xlim([minVal maxVal]); ylim([minVal maxVal]);
+    xlabel('Excitations to stimulus');
+    ylabel('Recon excitations to recon');
+
+    % Check that we know what we are doing.  Small difference may be gamma
+    % correction and inverse gamma correction between the two predictions
+    if (max(abs(multistartStruct.reconPreds(:,ii)-reconExcitationsToReconCheck)./reconExcitationsToReconCheck) > 1e-3)
+        figure; clf; hold on;
+        plot(multistartStruct.reconPreds(:,ii),reconExcitationsToReconCheck,'ro','MarkerFaceColor','r','MarkerSize',10);
+        error('Hmm. Excitations to recon not the same in two places');
+    end
+
     % Priors, likelihoods, and losses
-    subplot(3,3,7);
+    subplot(4,3,10);
     bar([1]', ...
         [multistartStruct.initLogPriors(ii)  ; ...
          multistartStruct.reconLogPriors(ii) ; ...
@@ -352,7 +412,7 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 
     % Likelihoods
-    subplot(3,3,8);
+    subplot(4,3,11);
     bar([1]', ...
         [multistartStruct.initLogLikelihoods(ii)  ; ...
          multistartStruct.reconLogLikelihoods(ii) ; ...
@@ -377,7 +437,7 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 
     % Loss value (negative, so plus is good)
-    subplot(3,3,9);
+    subplot(4,3,12);
     bar([1]', ...
         [-multistartStruct.initLosses(ii)  ; ...
          -multistartStruct.reconLosses(ii) ; ...
@@ -423,6 +483,7 @@ saveas(gcf,fullfile(cnv.outputDir,'Recon.jpg'),'jpg');
 % Compute forward excitations from reconstruction
 % and compare with stimulus excitations
 forwardOI = oiCompute(reconScene,forwardOI);
+figure; clf; hold on;
 if (pr.reconstructfromRenderMatrix)
     title('Reconstruction from forward render matrix');
     forwardExcitationsToRecon = squeeze(forwardRenderMatrix*reconImageLinear(:));
@@ -430,19 +491,19 @@ else
     title('Reconstruction from forward ISETBio');
     forwardExcitationsToRecon = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
 end
-figure; clf; hold on;
 plot(forwardExcitationsToStimulusUse,forwardExcitationsToRecon,'ro','MarkerFaceColor','r','MarkerSize',10);
 axis('square');
 maxVal = max([forwardExcitationsToStimulusUse; forwardExcitationsToRecon]);
 plot([0 maxVal],[0 maxVal],'k');
 xlim([0 maxVal]); ylim([0 maxVal]);
 xlabel('Excitations to stimulus');
-ylabel('Excitations to reconstruction');
-saveas(gcf,fullfile(cnv.outputDir,'StimulusVsForwardReconExcitations.jpg'),'jpg');
+ylabel('Forward excitations to reconstruction');
+saveas(gcf,fullfile(cnv.outputDir,'StimulusVsReconForwardExcitations.jpg'),'jpg');
 
 % Compute recon excitations from reconstruction
 % and compare with stimulus excitations
 reconOI = oiCompute(reconScene,reconOI);
+figure; clf; hold on;
 if (pr.reconstructfromRenderMatrix)
     title('Reconstruction from recon render matrix');
     reconExcitationsToRecon = squeeze(reconRenderMatrix*reconImageLinear(:));
@@ -450,16 +511,14 @@ else
     title('Reconstruction from recon ISETBio');
     reconExcitationsToRecon = squeeze(reconConeMosaic.Mosaic.compute(reconOI, 'opticalImagePositionDegs', 'mosaic-centered'));
 end
-figure; clf; hold on;
 plot(forwardExcitationsToStimulusUse,reconExcitationsToRecon,'ro','MarkerFaceColor','r','MarkerSize',10);
 axis('square');
 maxVal = max([forwardExcitationsToStimulusUse; reconExcitationsToRecon]);
 plot([0 maxVal],[0 maxVal],'k');
 xlim([0 maxVal]); ylim([0 maxVal]);
 xlabel('Excitations to stimulus');
-ylabel('Excitations to reconstruction');
+ylabel('Recon excitations to reconstruction');
 saveas(gcf,fullfile(cnv.outputDir,'StimulusVsReconReconExcitations.jpg'),'jpg');
-
 
 % fprintf(fid,'Stimulus: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
 %     -stimNegLogPrior,-stimNegLogLikely,-(stimNegLogPrior+stimNegLogLikely));
