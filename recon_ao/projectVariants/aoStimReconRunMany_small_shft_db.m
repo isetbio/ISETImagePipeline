@@ -105,7 +105,7 @@ prBase.uniformStartVals = [];
 
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = true;
-prBase.reconAORender = true;
+prBase.reconAORender = false;
 prBase.forwardPupilDiamMM = 7;
 prBase.reconPupilDiamMM = 3;
 
