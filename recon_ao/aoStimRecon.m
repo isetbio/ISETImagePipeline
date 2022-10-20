@@ -373,7 +373,7 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Check that we know what we are doing.  Small difference may be gamma
     % correction and inverse gamma correction between the two predictions
-    if (max(abs(multistartStruct.reconPreds(:,ii)-reconExcitationsToReconCheck)./reconExcitationsToReconCheck) > 1e-3)
+    if (max(abs(multistartStruct.reconPreds(:,ii)-reconExcitationsToReconCheck)./reconExcitationsToReconCheck) > 0.5e-3)
         figure; clf; hold on;
         plot(multistartStruct.reconPreds(:,ii),reconExcitationsToReconCheck,'ro','MarkerFaceColor','r','MarkerSize',10);
         saveas(gcf,fullfile(cnv.outputDir,sprintf('ReconExcitationsCheckError%d.jpg',ii)),'jpg');

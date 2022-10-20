@@ -50,7 +50,7 @@ prBase.reconRandSeed = false;
 prBase.forwardEccVars = false;
 prBase.reconEccVars = false;
 prBase.reconstructfromRenderMatrix = true;
-prBase.addPoissonNoise = true;
+prBase.addPoissonNoise = false;
 
 %% Stimulus parameters.
 %
@@ -61,7 +61,7 @@ stimSizeDegsList = [2/60];
 prBase.stimBgVal = 0.2;
 stimRValList = [0.8];
 stimGValList = [0.8];
-stimBValList = [0.05];
+stimBValList = [0.2];
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -107,11 +107,11 @@ prBase.uniformStartVals = [];
 prBase.forwardAORender = true;
 prBase.reconAORender = true;
 prBase.forwardPupilDiamMM = 7;
-prBase.reconPupilDiamMM = 7;
+prBase.reconPupilDiamMM = 3;
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.06]; % 0.05 0.1]; 
-reconDefocusDioptersList = [0.06];   % 0.05 0.1];
+reconDefocusDioptersList = [0.00];   % 0.05 0.1];
 
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
