@@ -376,7 +376,9 @@ for ii = 1:length(multistartStruct.initTypes)
     if (max(abs(multistartStruct.reconPreds(:,ii)-reconExcitationsToReconCheck)./reconExcitationsToReconCheck) > 1e-3)
         figure; clf; hold on;
         plot(multistartStruct.reconPreds(:,ii),reconExcitationsToReconCheck,'ro','MarkerFaceColor','r','MarkerSize',10);
-        error('Hmm. Excitations to recon not the same in two places');
+        saveas(gcf,fullfile(cnv.outputDir,sprintf('ReconExcitationsCheckError%d.jpg',ii)),'jpg');
+        figure(theFig);
+        %error('Hmm. Excitations to recon not the same in two places');
     end
 
     % Priors, likelihoods, and losses
