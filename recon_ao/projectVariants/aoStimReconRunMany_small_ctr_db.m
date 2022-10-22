@@ -99,11 +99,11 @@ prBase.uniformStartVals = [];
 prBase.forwardAORender = true;
 prBase.reconAORender = false;
 prBase.forwardPupilDiamMM = 7;
-prBase.reconPupilDiamMM = 5;
+prBase.reconPupilDiamMM = 4;
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.06]; % 0.05 0.1]; 
-reconDefocusDioptersList = [0.00];   % 0.05 0.1];
+reconDefocusDioptersList = [0.1];   % 0.05 0.1];
 
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
