@@ -55,13 +55,13 @@ prBase.addPoissonNoise = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [24/60 5/60 2/60];
+stimSizeDegsList = [2/60 1/60];
 
 % RGB values (before gamma correction) 
 prBase.stimBgVal = 0.2;
-stimRValList = [0.8];
-stimGValList = [0.8];
-stimBValList = [0.2];
+stimRValList = [0.8 0.8 0.8];
+stimGValList = [0.8 0.7 0.6];
+stimBValList = [0.2 0.2 0.2];
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -99,7 +99,7 @@ prBase.uniformStartVals = [];
 prBase.forwardAORender = true;
 prBase.reconAORender = false;
 prBase.forwardPupilDiamMM = 7;
-prBase.reconPupilDiamMM = 3;
+prBase.reconPupilDiamMM = 5;
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.06]; % 0.05 0.1]; 
@@ -108,8 +108,8 @@ reconDefocusDioptersList = [0.00];   % 0.05 0.1];
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS"
-forwardChromList = ["chromNorm"]; 
-reconChromList =   ["chromNorm"];
+forwardChromList = ["chromNorm" "chromNorm" "chromNorm"]; 
+reconChromList =   ["chromNorm" "chromDeut" "chromProt"];
 
 % Force build and save of render structures.  This
 % only affects this script, and will typically be false.
