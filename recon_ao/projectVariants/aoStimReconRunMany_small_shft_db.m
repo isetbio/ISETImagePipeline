@@ -60,7 +60,7 @@ stimSizeDegsList = [2/60];
 % RGB values (before gamma correction) 
 prBase.stimBgVal = 0.2;
 stimRValList = [0.8];
-stimGValList = [0.8];
+stimGValList = [0.7];
 stimBValList = [0.2];
 
 % Check that all channels receive same number of inputs
