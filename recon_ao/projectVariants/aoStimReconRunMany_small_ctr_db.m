@@ -55,7 +55,7 @@ prBase.addPoissonNoise = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [2/60 1/60];
+stimSizeDegsList = [5/60 2/60 1/60];
 
 % RGB values (before gamma correction) 
 prBase.stimBgVal = 0.2;
@@ -108,7 +108,7 @@ reconDefocusDioptersList = [0.1];   % 0.05 0.1];
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS"
-forwardChromList = ["chromNorm" "chromNorm" "chromNorm"]; 
+forwardChromList = ["chromNorm" "chromDeut" "chromProt"]; 
 reconChromList =   ["chromNorm" "chromDeut" "chromProt"];
 
 % Force build and save of render structures.  This
