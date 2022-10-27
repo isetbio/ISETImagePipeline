@@ -50,6 +50,7 @@ prBase.reconRandSeed = false;
 prBase.forwardEccVars = false;
 prBase.reconEccVars = false;
 prBase.reconstructfromRenderMatrix = true;
+prBase.addPoissonNoise = false;
 
 %% Stimulus parameters.
 %
@@ -58,10 +59,10 @@ stimSizeDegsList = 0.5; %[24/60];
 
 % RGB values (before gamma correction) 
 prBase.stimBgVal = 0.1;
-stimRValList = [1.1048e-02 8.2258e-01];
-stimGValList = [6.1803e-01 3.4322e-01];
-stimBValList = [9.6667e-01 9.7158e-01];
-
+stimRValList = [0.20 0.5497]; %[1.1048e-02 8.2258e-01];
+stimGValList = [0.40 0.2403]; %[6.1803e-01 3.4322e-01];
+stimBValList = [0.90 0.9021]; %[9.6667e-01 9.7158e-01];
+ 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
     error('Stimulus value lists must have same length');
@@ -87,18 +88,19 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.005; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 1000;
+prBase.maxReconIterations = 5000;
 prBase.whiteNoiseStarts = 0;
-prBase.pinkNoiseStarts = 0;
+prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = false;
-prBase.uniformStartVals = [ [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]' ];
+prBase.uniformStartVals = [];% [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]' ];
 
-% Use AO in forward rendering? Should consider mix-and-match 
-%
-% This determines pupil diameter which typically differs in AO 
+% Use AO in forward rendering? And determine optics pupil size
+% Default pairs are true/7 and false/3
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
+prBase.forwardPupilDiamMM = 3;
+prBase.reconPupilDiamMM = 3;
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
@@ -149,7 +151,7 @@ for ss = 1:length(stimSizeDegsList)
 end
 
 %% Build render structures we need if they are not cached
-parfor pp = 1:length(regPara)
+for pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come
     % out of lists precreated above.
