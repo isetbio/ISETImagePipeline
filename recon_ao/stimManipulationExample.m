@@ -260,10 +260,12 @@ stimExcitations = M_PrimaryToExcitations*stimLinear;
 if (forceMEqualL)
     % Set up parameters for the optimization
     maximizeVec = [1 0 0];
-    constraintEqA = [1 -1 0 ; 0 0 1];
-    constraintEqb = [0 1.516*10^15]';
-    lambda = 0.01;
-    primaryHeadroom = 0.00;
+%     constraintEqA = [1 -1 0 ; 0 0 1];
+%     constraintEqb = [0 1.4*10^15]';
+    constraintEqA = [1 -1 0];
+    constraintEqb = [0];
+    lambda = 0.0001;
+    primaryHeadroom = 0.092;
     stimMEqualLLinear = ...
         FindPrimaryConstrainExcitations(baseImageForForce,M_PrimaryToExcitations,primaryHeadroom,maximizeVec,constraintEqA,constraintEqb,lambda);
     stimMEqualLExcitations = M_PrimaryToExcitations*stimMEqualLLinear;
@@ -289,12 +291,14 @@ if (forceMEqualL)
 end
 
 %% Visualize scene and compute
-visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
+% visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
+figure; clf; imshow(stimulusImageRGB);
+title('Original Image');
 theOI = oiCompute(stimulusScene, theOI);
 origMosaicExcitations = theMosaic.compute(theOI);
 
 %% Perturb M cone component of the directl computed cone excitations
-perturbAmount = 0.30;
+perturbAmount = 0.15;
 perturbDirectExcitations = stimExcitations - [0 (perturbAmount * stimExcitations(2)) 0]';
 perturbDirectLinear = M_ExcitationsToPrimary*perturbDirectExcitations;
 if (any(perturbDirectLinear < 0) || any(perturbDirectLinear > 1))
@@ -310,7 +314,9 @@ perturbImageRGB(:, :, 3) = perturbRGB(3);
 [perturbScene, ~, perturbImageLinear] = sceneFromFile(perturbImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, theDisplay);
 perturbScene = sceneSet(perturbScene, 'fov', fieldSizeDegs);
-visualizeScene(perturbScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
+%visualizeScene(perturbScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
+figure; clf; imshow(perturbImageRGB);
+title('Perturb Image');
 perturbOI = oiCompute(theOI,perturbScene);
 perturbMosaicExcitations = theMosaic.compute(perturbOI);
 
