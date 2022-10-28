@@ -36,7 +36,7 @@ prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
 
 %% Spatial parameters
-% 
+%
 % Common to forward and recon models
 prBase.nPixels = 100;
 prBase.trueCenter = round(prBase.nPixels/2);
@@ -57,25 +57,35 @@ prBase.addPoissonNoise = true;
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
 stimSizeDegsList = 0.5; %[24/60];
 
-% RGB values 
+% RGB values
 %
 % This shows how to read in an image and set it up to be reconstructed.
 % The example is for a Matlab indexed image.  If it were a straight RGB
 % image this would be even easier.
-prBase.imageName = 'mandrill';
-rawImage = load([prBase.imageName '.mat']);
-theImageRGB = zeros(size(rawImage.X,1),size(rawImage.X,2),3);
-for ii = 1:size(rawImage.X,1)
-    for jj = 1:size(rawImage.X,2)
-        for kk = 1:3
-            theImageRGB(ii,jj,kk) = rawImage.map(rawImage.X(ii,jj),kk);
+%
+%prBase.imageName = 'mandrill';
+%prBase.imageType = 'matindexed';
+prBase.imageName = 'zebra';
+prBase.imageType = 'tif';
+switch (prBase.imageType)
+    case 'tif'
+        theImageRGB = imread(fullfile(prBase.aoReconDir,'images',[prBase.imageName '.tif']),'tif');
+        prBase.stimBgVal = imresize(theImageRGB,'OutputSize',[prBase.nPixels prBase.nPixels]);
+    case 'matindexed'
+        rawImage = load([prBase.imageName '.mat']);
+        theImageRGB = zeros(size(rawImage.X,1),size(rawImage.X,2),3);
+        for ii = 1:size(rawImage.X,1)
+            for jj = 1:size(rawImage.X,2)
+                for kk = 1:3
+                    theImageRGB(ii,jj,kk) = rawImage.map(rawImage.X(ii,jj),kk);
+                end
+            end
         end
-    end
+        prBase.stimBgVal = imresize(theImageRGB,'OutputSize',[prBase.nPixels prBase.nPixels]);
 end
 
-% We store the image in the stimBgVal field, which asStimRecon understands.
+% We store the image in the stimBgVal field above, which asStimRecon understands.
 % We dummy up R, G, and BVal lists to have one entry each.
-prBase.stimBgVal = imresize(theImageRGB,'OutputSize',[prBase.nPixels prBase.nPixels]);
 stimRValList = [1];
 stimGValList = [1];
 stimBValList = [1];
@@ -86,7 +96,7 @@ if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= leng
 end
 
 % Input desired x and y position for stimulus to be centered over. Function
-% will end if values exceed pixel limits. 
+% will end if values exceed pixel limits.
 %
 % Position specified in pixels, could consider specifying in degrees.
 centerXPosition = [prBase.trueCenter];
@@ -119,13 +129,13 @@ prBase.forwardPupilDiamMM = 3;
 prBase.reconPupilDiamMM = 3;
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
+forwardDefocusDioptersList = [0.00];% 0.05 0.1];
 reconDefocusDioptersList = [0.00];% 0.05 0.1];
 
 % Mosaic chromatic type, options are:
-%    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
+%    "chromNorm", "chromProt", "chromDeut", "chromTrit",
 %    "chromAllL", "chromAllM", "chromAllS"
-forwardChromList = ["chromDeut" "chromNorm" "chromNorm"]; 
+forwardChromList = ["chromDeut" "chromNorm" "chromNorm"];
 reconChromList =   ["chromDeut" "chromDeut" "chromNorm"];
 
 % Force build and save of render structures.  This
