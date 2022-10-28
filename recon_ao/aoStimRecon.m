@@ -145,7 +145,11 @@ meanLuminanceCdPerM2 = [];
 stimulusScene = sceneSet(stimulusScene, 'fov', cnv.fieldSizeDegs);
 %visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
 figure; clf; imshow(stimulusImageRGB);
-title('Stimulus Image');
+if (length(pr.stimBgVal) > 1)
+    title({'Stimulus Image' ; pr.imageName});
+else
+    title({'Stimulus Image' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
+end
 saveas(gcf,fullfile(cnv.outputDir,'Stimulus.jpg'),'jpg');
 
 %% Compute forward retinal image and excitations using ISETBio
