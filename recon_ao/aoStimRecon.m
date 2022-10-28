@@ -284,8 +284,12 @@ for ii = 1:length(multistartStruct.initTypes)
     theAxes = subplot(4,3,1);
     % visualizeScene(stimulusScene, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
     imshow(stimulusImageRGB);
-    title('Stimulus Image');
-
+    if (length(pr.stimBgVal) > 1)
+        title({'Stimulus Image' ; pr.imageName});
+    else
+        title({'Stimulus Image' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
+    end
+    
     theAxes = subplot(4,3,2);
     %visualizeScene(initSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
     imshow(gammaCorrection(multistartStruct.initImages{ii}, forwardConeMosaic.Display));
