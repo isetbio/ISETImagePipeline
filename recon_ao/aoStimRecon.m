@@ -483,48 +483,47 @@ figure; clf; imshow(gammaCorrection(multistartStruct.reconImages{reconIndex}, fo
 title('Reconstructed Image');
 saveas(gcf,fullfile(cnv.outputDir,'Recon.jpg'),'jpg');
 
-% Compute forward excitations from reconstruction
-% and compare with stimulus excitations
-forwardOI = oiCompute(reconScene,forwardOI);
-figure; clf; hold on;
-if (pr.reconstructfromRenderMatrix)
-    title('Recon from render matrix');
-    forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
-else
-    title('Reconstruction from ISETBio');
-    forwardExcitationsToReconTemp = squeeze(forwardConeMosaic.Mosaic.compute(forwardOITemp, 'opticalImagePositionDegs', 'mosaic-centered'));
-end
-plot(forwardExcitationsToStimulusUse*scaleFactor,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
-axis('square');
-minVal = 0.9*min([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
-maxVal = 1.1*max([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
-plot([minVal maxVal],[minVal maxVal],'k');
-xlim([minVal maxVal]); ylim([minVal maxVal]);
-xlabel('Unscaled (pupil) forward excitations to stimulus');
-ylabel('Forward excitations to recon');
-saveas(gcf,fullfile(cnv.outputDir,'StimulusVsReconForwardExcitations.jpg'),'jpg');
-
-% Compute recon excitations from reconstruction
-% and compare with stimulus excitations
-reconOI = oiCompute(reconScene,reconOI);
-figure; clf; hold on;
-reconExcitationsToReconCheck = reconRenderMatrix*reconImageLinearTemp(:);
-if (pr.reconstructfromRenderMatrix)
-    title('Recon from render matrix');
-    reconExcitationsToReconTemp = reconExcitationsToReconCheck;
-else
-    title('Recon from ISETBio');
-    reconExcitationsToReconTemp = squeeze(reconConeMosaic.Mosaic.compute(reconOITemp, 'opticalImagePositionDegs', 'mosaic-centered'));
-end
-plot(forwardExcitationsToStimulusUse*scaleFactor,reconExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
-axis('square');
-minVal = 0.9*min([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
-maxVal = 1.1*max([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
-plot([minVal maxVal],[minVal maxVal],'k');
-xlim([minVal maxVal]); ylim([minVal maxVal]);
-xlabel('Scaled (pupil) excitations to stimulus');
-ylabel('Recon excitations to recon');
-saveas(gcf,fullfile(cnv.outputDir,'StimulusVsReconReconExcitations.jpg'),'jpg');
+% % Compute forward excitations from reconstruction
+% % and compare with stimulus excitations
+% figure; clf; hold on;
+% if (pr.reconstructfromRenderMatrix)
+%     title('Recon from render matrix');
+%     forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
+% else
+%     title('Reconstruction from ISETBio');
+%     forwardExcitationsToReconTemp = squeeze(forwardConeMosaic.Mosaic.compute(forwardOITemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+% end
+% plot(forwardExcitationsToStimulusUse*scaleFactor,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
+% axis('square');
+% minVal = 0.9*min([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
+% maxVal = 1.1*max([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
+% plot([minVal maxVal],[minVal maxVal],'k');
+% xlim([minVal maxVal]); ylim([minVal maxVal]);
+% xlabel('Unscaled (pupil) forward excitations to stimulus');
+% ylabel('Forward excitations to recon');
+% saveas(gcf,fullfile(cnv.outputDir,'StimulusVsReconForwardExcitations.jpg'),'jpg');
+% 
+% % Compute recon excitations from reconstruction
+% % and compare with stimulus excitations
+% reconOI = oiCompute(reconScene,reconOI);
+% figure; clf; hold on;
+% reconExcitationsToReconCheck = reconRenderMatrix*reconImageLinearTemp(:);
+% if (pr.reconstructfromRenderMatrix)
+%     title('Recon from render matrix');
+%     reconExcitationsToReconTemp = reconExcitationsToReconCheck;
+% else
+%     title('Recon from ISETBio');
+%     reconExcitationsToReconTemp = squeeze(reconConeMosaic.Mosaic.compute(reconOITemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+% end
+% plot(forwardExcitationsToStimulusUse*scaleFactor,reconExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
+% axis('square');
+% minVal = 0.9*min([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
+% maxVal = 1.1*max([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
+% plot([minVal maxVal],[minVal maxVal],'k');
+% xlim([minVal maxVal]); ylim([minVal maxVal]);
+% xlabel('Scaled (pupil) excitations to stimulus');
+% ylabel('Recon excitations to recon');
+% saveas(gcf,fullfile(cnv.outputDir,'StimulusVsReconReconExcitations.jpg'),'jpg');
 
 % fprintf(fid,'Stimulus: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
 %     -stimNegLogPrior,-stimNegLogLikely,-(stimNegLogPrior+stimNegLogLikely));
