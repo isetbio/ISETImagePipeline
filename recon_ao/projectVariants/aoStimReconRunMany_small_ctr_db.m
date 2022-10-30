@@ -55,13 +55,17 @@ prBase.addPoissonNoise = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [5/60 2/60 1/60];
+% stimSizeDegsList = [5/60 2/60 1/60];
+stimSizeDegsList = 24/60;
 
 % RGB values (before gamma correction) 
 prBase.stimBgVal = 0.2;
-stimRValList = [0.8 0.8 0.8];
-stimGValList = [0.8 0.7 0.6];
-stimBValList = [0.2 0.2 0.2];
+% stimRValList = [0.8 0.8 0.8];
+% stimGValList = [0.8 0.7 0.6];
+% stimBValList = [0.2 0.2 0.2];
+stimRValList = 0.6;
+stimGValList = 0.6;
+stimBValList = 0.1;
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
