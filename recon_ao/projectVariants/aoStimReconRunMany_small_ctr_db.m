@@ -10,7 +10,7 @@
 %   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
 %   09/22/22  chr  Convert to its own dichrom file
 %   09/27/22  chr  Incorporate inputs for stimulus centering position
-%   10/05/22  dhb  Lots of changes for parall
+%   10/05/22  dhb  Lots of changes for parallel
 
 %% Clear
 clear; close all;
@@ -98,8 +98,8 @@ prBase.uniformStartVals = [];
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = true;
 prBase.reconAORender = false;
-prBase.forwardPupilDiamMM = 7;
-prBase.reconPupilDiamMM = 4;
+prBase.forwardPupilDiamMM = 6;
+prBase.reconPupilDiamMM = 3;
 prBase.forwardSubjectID = 6;
 prBase.forwardZernikeDataBase = 'Polans2015';
 prBase.reconSubjectID = 6;
