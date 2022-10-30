@@ -31,14 +31,14 @@ cnv.forwardPupilDiamMM = pr.forwardPupilDiamMM;
 if (pr.forwardAORender)
     cnv.forwardAOStr = ['AO' num2str(cnv.forwardPupilDiamMM)];
 else
-    cnv.forwardAOStr = ['NOAO' num2str(cnv.forwardPupilDiamMM)];
+    cnv.forwardAOStr = ['NOAO' num2str(cnv.forwardPupilDiamMM) '_' pr.forwardZernikeDataBase '_' num2str(pr.forwardSubjectID)];
 end
 
 cnv.reconPupilDiamMM = pr.reconPupilDiamMM;
 if (pr.reconAORender)
     cnv.reconAOStr = ['AO' num2str(cnv.reconPupilDiamMM)];
 else
-    cnv.reconAOStr = ['NOAO' num2str(cnv.reconPupilDiamMM)];
+    cnv.reconAOStr = ['NOAO' num2str(cnv.reconPupilDiamMM) '_' pr.reconZernikeDataBase '_' num2str(pr.reconSubjectID)];
 end
 
 switch (pr.displayName)
@@ -75,14 +75,20 @@ end
 
 % Render structure name
 if (pr.forwardAORender)
-    cnv.forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s_%d.mat',pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,cnv.forwardPupilDiamMM,pr.forwardDefocusDiopters, cnv.forwardSeedStr, pr.forwardChrom, pr.forwardEccVars);
+    cnv.forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s_%d.mat', ...
+        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,cnv.forwardPupilDiamMM,pr.forwardDefocusDiopters,cnv.forwardSeedStr, pr.forwardChrom, pr.forwardEccVars);
 else
-    cnv.forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s_%d.mat',pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,cnv.forwardPupilDiamMM,pr.forwardDefocusDiopters, cnv.forwardSeedStr, pr.forwardChrom, pr.forwardEccVars);
+    cnv.forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%d_%s_%s_%d.mat', ...
+        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,cnv.forwardPupilDiamMM,pr.forwardDefocusDiopters,pr.forwardZernikeDataBase,pr.forwardSubjectID, ...
+        cnv.forwardSeedStr, pr.forwardChrom, pr.forwardEccVars);
 end
 if (pr.reconAORender)
-    cnv.reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s_%d.mat',pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,cnv.reconPupilDiamMM,pr.reconDefocusDiopters, cnv.reconSeedStr, pr.reconChrom, pr.reconEccVars);
+    cnv.reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_AO_%0.2f_%s_%s_%d.mat', ...
+        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,cnv.reconPupilDiamMM,pr.reconDefocusDiopters, cnv.reconSeedStr, pr.reconChrom, pr.reconEccVars);
 else
-    cnv.reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%s_%d.mat',pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,cnv.reconPupilDiamMM,pr.reconDefocusDiopters, cnv.reconSeedStr, pr.reconChrom, pr.reconEccVars);
+    cnv.reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%d_NOAO_%0.2f_%s_%d_%s_%s_%d.mat', ...
+        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,cnv.reconPupilDiamMM,pr.reconDefocusDiopters, pr.reconZernikeDataBase,pr.reconSubjectID, ...
+        cnv.reconSeedStr, pr.reconChrom, pr.reconEccVars);
 end
 
 % Output directory name
