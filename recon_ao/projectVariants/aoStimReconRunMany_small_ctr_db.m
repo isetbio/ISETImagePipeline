@@ -59,13 +59,13 @@ prBase.addPoissonNoise = false;
 stimSizeDegsList = 24/60;
 
 % RGB values (before gamma correction) 
-prBase.stimBgVal = 0.2;
+prBase.stimBgVal = 0.1;
 % stimRValList = [0.8 0.8 0.8];
 % stimGValList = [0.8 0.7 0.6];
 % stimBValList = [0.2 0.2 0.2];
-stimRValList = 0.6;
-stimGValList = 0.6;
-stimBValList = 0.1;
+stimRValList = 0.4899;
+stimGValList = 0.4287;
+stimBValList = 0.0612;
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -92,12 +92,13 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.005; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 10000;
+prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = false;
 prBase.uniformStartVals = [];
+prBase.boundedSearch = true;
 
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = true;
@@ -109,15 +110,15 @@ prBase.forwardZernikeDataBase = 'Polans2015';
 prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Polans2015';
 
-% Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.06]; % 0.05 0.1]; 
-reconDefocusDioptersList = [0];   % 0.05 0.1];
-
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS"
 forwardChromList = ["chromNorm" "chromDeut" "chromProt"]; 
 reconChromList =   ["chromNorm" "chromDeut" "chromProt"];
+
+% Residual defocus for forward and recon rendering, of equal sizes
+forwardDefocusDioptersList = [0.06]; % 0.05 0.1]; 
+reconDefocusDioptersList = [0];   % 0.05 0.1];
 
 % Force build and save of render structures.  This
 % only affects this script, and will typically be false.
