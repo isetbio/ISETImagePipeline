@@ -56,7 +56,7 @@ prBase.addPoissonNoise = false;
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
 % stimSizeDegsList = [5/60 2/60 1/60];
-stimSizeDegsList = 24/60;
+stimSizeDegsList = [24/60 5/60 2/60 1/60];
 
 % RGB values (before gamma correction) 
 prBase.stimBgVal = 0.1;
@@ -90,7 +90,7 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.005; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+regParaList = [0.01 0.005 0.001 0.0001]; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
 prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
@@ -100,7 +100,7 @@ prBase.stimulusStart = false;
 prBase.uniformStartVals = [];
 prBase.boundedSearch = true;
 
-% Use AO in forward rendering? And determine optics pupil size
+% Forward and recon basic mosaic and optics properties.
 prBase.forwardAORender = true;
 prBase.reconAORender = false;
 prBase.forwardPupilDiamMM = 6;
@@ -113,12 +113,14 @@ prBase.reconZernikeDataBase = 'Polans2015';
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS"
-forwardChromList = ["chromNorm" "chromDeut" "chromProt"]; 
-reconChromList =   ["chromNorm" "chromDeut" "chromProt"];
+% forwardChromList = ["chromNorm" "chromDeut" "chromProt"]; 
+% reconChromList =   ["chromNorm" "chromDeut" "chromProt"];
+forwardChromList = ["chromNorm"];
+reconChromList =   ["chromNorm"];
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.06]; % 0.05 0.1]; 
-reconDefocusDioptersList = [0];   % 0.05 0.1];
+reconDefocusDioptersList = [0];      % 0.05 0.1];
 
 % Force build and save of render structures.  This
 % only affects this script, and will typically be false.

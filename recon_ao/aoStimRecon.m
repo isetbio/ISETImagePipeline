@@ -421,7 +421,11 @@ for ii = 1:length(multistartStruct.initTypes)
     theAxes = subplot(3,6,7);
     %visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
     imshow(gammaCorrection(multistartStruct.reconImages{ii}, forwardConeMosaic.Display));
-    title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR,maxReconG,maxReconB)});
+    if (pr.boundedSearch)
+        title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR,maxReconG,maxReconB) ; 'Bounded search'});
+    else
+        title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR,maxReconG,maxReconB) ; 'Unbounded search'});
+    end
 
     % Contour plot of recon PSF
     theAxes = subplot(3,6,8);
