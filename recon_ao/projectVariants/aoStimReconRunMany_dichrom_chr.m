@@ -62,15 +62,12 @@ stimSizeDegsList = 0.5; %[24/60];
 
 % RGB values (before gamma correction) 
 prBase.stimBgVal = 0.1;
-% stimRValList = [0.20 0.5497]; %[1.1048e-02 8.2258e-01];
-% stimGValList = [0.40 0.2403]; %[6.1803e-01 3.4322e-01];
-% stimBValList = [0.90 0.9021]; %[9.6667e-01 9.7158e-01];
 
 % This is an L=M with some headroom, and then deuteranopic
 % confusions at 0.002, 0.005, 0.02, and 0.15 perturbation
-stimRValList = [0.3032 0.3072 0.3127 0.3400 0.5181 ];
-stimGValList = [0.3127 0.3115 0.3092 0.2979 0.1701 ];
-stimBValList = [0.9529 0.9529 0.9529 0.9531 0.9542 ];
+stimRValList = [0.3032 0.5181 ];
+stimGValList = [0.3127 0.1701 ];
+stimBValList = [0.9529 0.9542 ];
  
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -97,7 +94,7 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.005; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 5000;
+prBase.maxReconIterations = 10000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
