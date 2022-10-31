@@ -15,16 +15,13 @@
 %% Clear
 clear; close all;
 
+%% Set defaults in prBase
+prBase = prBaseDefaults;
+
 %% Version editor string
 %
 % Helps us keep different calcs separate
 prBase.versEditor = 'dichrom_image';
-
-%% Point at directory with data files for this subproject
-%
-% This will allow us to load in project specific precomputed information.
-% Also records initials of version editors, otherwise set to 'main'
-prBase.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 
 %% Parameters
 %
@@ -55,9 +52,12 @@ prBase.addPoissonNoise = true;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
+%
+% Because we're specifying an image below, this is a dummy parameter
+% in this script.
 stimSizeDegsList = 0.5; %[24/60];
 
-% RGB values
+% RGB values.  Here we reconstruct a specified image.
 %
 % This shows how to read in an image and set it up to be reconstructed.
 % The example is for a Matlab indexed image.  If it were a straight RGB
@@ -99,6 +99,9 @@ end
 % will end if values exceed pixel limits.
 %
 % Position specified in pixels, could consider specifying in degrees.
+%
+% Because we're specifying an image, this is a dummy parameter and the
+% list should have length 1.
 centerXPosition = [prBase.trueCenter];
 centerYPosition = [prBase.trueCenter];
 prBase.stimCenter = [centerXPosition ; centerYPosition];
@@ -115,18 +118,23 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.005; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 10000;
+prBase.maxReconIterations = 5000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = true;
 prBase.uniformStartVals = []; %[ [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]' ];
+prBase.boundedSearch = true;
 
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
 prBase.forwardPupilDiamMM = 3;
 prBase.reconPupilDiamMM = 3;
+prBase.forwardSubjectID = 6;
+prBase.forwardZernikeDataBase = 'Polans2015';
+prBase.reconSubjectID = 6;
+prBase.reconZernikeDataBase = 'Polans2015';
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.00];% 0.05 0.1];
@@ -194,7 +202,7 @@ for pp = 1:length(regPara)
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
-            cnv.forwardNewCones, pr.forwardEccVars);
+            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase);
         save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure');
         forwardRenderStructure = renderStructure; clear renderStructure;
     end
@@ -205,7 +213,7 @@ for pp = 1:length(regPara)
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
-            cnv.reconNewCones, pr.reconEccVars);
+            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase);
         save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure');
         reconRenderStructure = renderStructure; clear renderStructure;
     end

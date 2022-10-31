@@ -15,16 +15,13 @@
 %% Clear
 clear; close all;
 
+%% Set defaults in prBase
+prBase = prBaseDefaults;
+
 %% Version editor string
 %
 % Helps us keep different calcs separate
 prBase.versEditor = 'small_shft_db';
-
-%% Point at directory with data files for this subproject
-%
-% This will allow us to load in project specific precomputed information.
-% Also records initials of version editors, otherwise set to 'main'
-prBase.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 
 %% Parameters
 %
@@ -57,22 +54,22 @@ prBase.addPoissonNoise = false;
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
 stimSizeDegsList = [2/60];
 
-% RGB values (before gamma correction) 
-prBase.stimBgVal = 0.2;
-stimRValList = [0.8];
-stimGValList = [0.7];
-stimBValList = [0.2];
+% RGB values (before gamma correction)
+prBase.stimBgVal = 0.1;
+% stimRValList = [0.8 0.8 0.8];
+% stimGValList = [0.8 0.7 0.6];
+% stimBValList = [0.2 0.2 0.2];
+stimRValList = 0.4899;
+stimGValList = 0.4287;
+stimBValList = 0.0612;
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
     error('Stimulus value lists must have same length');
 end
 
-% centerXPosition = (prBase.trueCenter) + (-5:5) * 5;
-% centerYPosition = prBase.trueCenter+ (-5:5) * 5;
-% prBase.stimCenter = [centerXPosition ; centerYPosition];
-% deltaCenterList = [prBase.stimCenter - prBase.trueCenter];
-
+%% Positions
+%
 % Input desired x and y position for stimulus to be centered over. Function
 % will end if values exceed pixel limits. 
 %
@@ -96,28 +93,33 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.005; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 10000;
+prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = false;
 prBase.uniformStartVals = [];
+prBase.boundedSearch = true;
 
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = true;
 prBase.reconAORender = false;
-prBase.forwardPupilDiamMM = 7;
+prBase.forwardPupilDiamMM = 6;
 prBase.reconPupilDiamMM = 3;
-
-% Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.06]; % 0.05 0.1]; 
-reconDefocusDioptersList = [0.00];   % 0.05 0.1];
+prBase.forwardSubjectID = 6;
+prBase.forwardZernikeDataBase = 'Polans2015';
+prBase.reconSubjectID = 6;
+prBase.reconZernikeDataBase = 'Polans2015';
 
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS"
 forwardChromList = ["chromNorm"]; 
 reconChromList =   ["chromNorm"];
+
+% Residual defocus for forward and recon rendering, of equal sizes
+forwardDefocusDioptersList = [0.06]; % 0.05 0.1]; 
+reconDefocusDioptersList = [0.00];   % 0.05 0.1];
 
 % Force build and save of render structures.  This
 % only affects this script, and will typically be false.
@@ -175,7 +177,7 @@ for pp = 1:length(regPara)
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
-            cnv.forwardNewCones, pr.forwardEccVars);
+            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase);
         save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure');
         forwardRenderStructure = renderStructure; clear renderStructure;
     end
@@ -186,7 +188,7 @@ for pp = 1:length(regPara)
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
-            cnv.reconNewCones, pr.reconEccVars);
+            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase);
         save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure');
         reconRenderStructure = renderStructure; clear renderStructure;
     end

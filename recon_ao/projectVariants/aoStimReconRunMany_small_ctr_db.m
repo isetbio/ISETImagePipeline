@@ -15,16 +15,13 @@
 %% Clear
 clear; close all;
 
+%% Set defaults in prBase
+prBase = prBaseDefaults;
+
 %% Version editor string
 %
 % Helps us keep different calcs separate
 prBase.versEditor = 'small_ctr_db';
-
-%% Point at directory with data files for this subproject
-%
-% This will allow us to load in project specific precomputed information.
-% Also records initials of version editors, otherwise set to 'main'
-prBase.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 
 %% Parameters
 %

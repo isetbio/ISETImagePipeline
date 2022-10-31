@@ -15,16 +15,13 @@
 %% Clear
 clear; close all;
 
+%% Set defaults in prBase
+prBase = prBaseDefaults;
+
 %% Version editor string
 %
 % Helps us keep different calcs separate
 prBase.versEditor = 'dichrom_db';
-
-%% Point at directory with data files for this subproject
-%
-% This will allow us to load in project specific precomputed information.
-% Also records initials of version editors, otherwise set to 'main'
-prBase.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 
 %% Parameters
 %
@@ -59,9 +56,9 @@ stimSizeDegsList = 0.5; %[24/60];
 
 % RGB values (before gamma correction) 
 prBase.stimBgVal = 0.1;
-stimRValList = [1.1048e-02 8.2258e-01];
-stimGValList = [6.1803e-01 3.4322e-01];
-stimBValList = [9.6667e-01 9.7158e-01];
+stimRValList = [0.3032 0.5181 ];
+stimGValList = [0.3127 0.1701 ];
+stimBValList = [0.9529 0.9542 ];
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -86,7 +83,7 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.001; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+regParaList = 0.005; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
 prBase.maxReconIterations = 5000;
 prBase.whiteNoiseStarts = 0;
@@ -94,12 +91,17 @@ prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = false;
 prBase.uniformStartVals = []; %[ [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]' ];
+prBase.boundedSearch = true;
 
-% Use AO in forward rendering? And determine optics pupil size
+% Forward and recon basic mosaic and optics properties.
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
 prBase.forwardPupilDiamMM = 3;
 prBase.reconPupilDiamMM = 3;
+prBase.forwardSubjectID = 6;
+prBase.forwardZernikeDataBase = 'Polans2015';
+prBase.reconSubjectID = 6;
+prBase.reconZernikeDataBase = 'Polans2015';
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
@@ -167,7 +169,7 @@ for pp = 1:length(regPara)
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
-            cnv.forwardNewCones, pr.forwardEccVars);
+            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase);
         save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure');
         forwardRenderStructure = renderStructure; clear renderStructure;
     end
@@ -178,7 +180,7 @@ for pp = 1:length(regPara)
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
-            cnv.reconNewCones, pr.reconEccVars);
+            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase);
         save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure');
         reconRenderStructure = renderStructure; clear renderStructure;
     end

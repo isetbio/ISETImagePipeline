@@ -15,6 +15,9 @@
 %% Clear
 clear; close all;
 
+%% Set defaults in prBase
+prBase = prBaseDefaults;
+
 %% Version editor string
 %
 % Helps us keep different calcs separate
@@ -100,13 +103,17 @@ prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = false;
 prBase.uniformStartVals = [];% [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]' ];
+prBase.boundedSearch = true;
 
-% Use AO in forward rendering? And determine optics pupil size
-% Default pairs are true/7 and false/3
+% Forward and recon basic mosaic and optics properties.
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
 prBase.forwardPupilDiamMM = 3;
 prBase.reconPupilDiamMM = 3;
+prBase.forwardSubjectID = 6;
+prBase.forwardZernikeDataBase = 'Polans2015';
+prBase.reconSubjectID = 6;
+prBase.reconZernikeDataBase = 'Polans2015';
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
@@ -174,7 +181,7 @@ for pp = 1:length(regPara)
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
-            cnv.forwardNewCones, pr.forwardEccVars);
+            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase);
         save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure');
         forwardRenderStructure = renderStructure; clear renderStructure;
     end
@@ -185,7 +192,7 @@ for pp = 1:length(regPara)
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
-            cnv.reconNewCones, pr.reconEccVars);
+            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase);
         save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure');
         reconRenderStructure = renderStructure; clear renderStructure;
     end
