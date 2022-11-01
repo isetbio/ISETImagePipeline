@@ -87,7 +87,7 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = [0.01 0.005 0.001 0.0001]; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+regParaList = [0.1 0.01 0.005 0.001]; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
 prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
@@ -95,7 +95,7 @@ prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = false;
 prBase.uniformStartVals = [];
-prBase.boundedSearch = true;
+prBase.boundedSearch = false;
 
 % Forward and recon basic mosaic and optics properties.
 prBase.forwardAORender = true;
@@ -110,10 +110,10 @@ prBase.reconZernikeDataBase = 'Polans2015';
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS"
-% forwardChromList = ["chromNorm" "chromDeut" "chromProt"]; 
-% reconChromList =   ["chromNorm" "chromDeut" "chromProt"];
-forwardChromList = ["chromNorm"];
-reconChromList =   ["chromNorm"];
+forwardChromList = ["chromNorm" "chromDeut" "chromProt"]; 
+reconChromList =   ["chromNorm" "chromDeut" "chromProt"];
+% forwardChromList = ["chromNorm"];
+% reconChromList =   ["chromNorm"];
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.06]; % 0.05 0.1]; 

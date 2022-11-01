@@ -254,12 +254,17 @@ if (pr.stimulusStart)
 end
 
 % Run the estimator
+if (pr.boundedSearch)
+    ub = 1;
+else
+    ub = 100;
+end
 [multistartStruct,~,reconIndex] = estimator.runMultistartEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
     'maxIter', pr.maxReconIterations, 'display', 'iter', 'gpu', false, ...
     'nWhiteStart', pr.whiteNoiseStarts, 'nPinkStart', pr.pinkNoiseStarts, ...
     'nSparsePriorPatchStart', pr.sparsePriorPatchStarts, 'sparsePrior', prior, ...
     'specifiedStarts', specifiedStarts, ...
-    'bounded', pr.boundedSearch);
+    'ub', ub);
 
 % Diagnose reconstructions
 % txtFileName = fullfile(cnv.outputDir,'ReconProbInfo.txt');
