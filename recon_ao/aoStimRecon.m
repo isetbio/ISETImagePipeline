@@ -150,6 +150,7 @@ if (length(pr.stimBgVal) > 1)
 else
     title({'Stimulus Image' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
 end
+set(gcf,'Position',[500,500,500,400]);
 saveas(gcf,fullfile(cnv.outputDir,'Stimulus.jpg'),'jpg');
 
 %% Compute forward retinal image and excitations using ISETBio
@@ -266,13 +267,6 @@ end
     'specifiedStarts', specifiedStarts, ...
     'ub', ub);
 
-% Diagnose reconstructions
-% txtFileName = fullfile(cnv.outputDir,'ReconProbInfo.txt');
-% if (exist(txtFileName,'file'))
-%     delete(txtFileName);
-% end
-% fid = fopen(txtFileName,'w');
-
 % Evaluate stimulus
 [stimNegLogPrior,~,stimNegLogLikely] = ...
     estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, stimulusImageLinear(:));
@@ -312,18 +306,27 @@ M_xyzTorgb = inv(M_rgbToxyz);
 % stimulusSceneRGB1 = gammaCorrection(CalFormatToImage(stimulusScenergb,m,n),forwardConeMosaic.Display);
 % figure; clf; imshow(stimulusSceneRGB1);
 
+% Summary plot of what happened
 for ii = 1:length(multistartStruct.initTypes)
     % Set up initial scene.
     [initSceneTemp, ~, initImageLinearTemp] = sceneFromFile(gammaCorrection(multistartStruct.initImages{ii}, forwardConeMosaic.Display), 'rgb', ...
         meanLuminanceCdPerM2, forwardConeMosaic.Display);
 
+    % Handle bounded search for display
+    reconScaleFactor(ii) = max(multistartStruct.reconImages{ii}(:));
+    if (reconScaleFactor(ii) < 1)
+        reconScaleFactor(ii) = 1;
+    end   
+
     % Get the reconstruction as RGB image and find maxima
-    reconRGBTemp = gammaCorrection(multistartStruct.reconImages{ii}, reconConeMosaic.Display);
-    maxReconR = max(max(reconRGBTemp(:,:,1)));
-    maxReconG = max(max(reconRGBTemp(:,:,2)));
-    maxReconB = max(max(reconRGBTemp(:,:,3)));
+    reconRGB{ii} = gammaCorrection(multistartStruct.reconImages{ii}/reconScaleFactor(ii), reconConeMosaic.Display);
+    maxReconR(ii) = max(max(reconRGB{ii}(:,:,1)));
+    maxReconG(ii) = max(max(reconRGB{ii}(:,:,2)));
+    maxReconB(ii) = max(max(reconRGB{ii}(:,:,3)));
     [reconSceneTemp, ~, reconImageLinearTemp] = sceneFromFile(reconRGBTemp, 'rgb', ...
         meanLuminanceCdPerM2, reconConeMosaic.Display);
+    sceneSet(reconSceneTemp,'photons',sceneGet(reconSceneTemp,'photons')*reconScaleFactor(ii));
+    reconImageLinearTemp = reconImageLinearTemp*reconScaleFactor(ii);
 
     % Get forward and reconstruction OI's computed on reconstruction
     forwardOI = oiCompute(stimulusScene,forwardOI);
@@ -425,11 +428,11 @@ for ii = 1:length(multistartStruct.initTypes)
 
     theAxes = subplot(3,6,7);
     %visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
-    imshow(gammaCorrection(multistartStruct.reconImages{ii}, forwardConeMosaic.Display));
+    imshow(reconRGB{ii});
     if (pr.boundedSearch)
-        title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR,maxReconG,maxReconB) ; 'Bounded search'});
+        title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR(ii),maxReconG(ii),maxReconB(ii)) ; 'Bounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
     else
-        title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR,maxReconG,maxReconB) ; 'Unbounded search'});
+        title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR(ii),maxReconG(ii),maxReconB(ii)) ; 'Unbounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
     end
 
     % Contour plot of recon PSF
@@ -500,8 +503,6 @@ for ii = 1:length(multistartStruct.initTypes)
     end
     plot(forwardExcitationsToStimulusUse*scaleFactor,reconExcitationsToStimulusTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
     axis('square');
-    %minVal = 0.9*min([forwardExcitationsToStimulusUse*scaleFactor; forwardExcitationsToReconTemp]);
-    %maxVal = 1.1*max([forwardExcitationsToStimulusUse*scaleFactor; forwardExcitationsToReconTemp]);
     minVal = 0.9*min([forwardExcitationsToStimulusUse*scaleFactor;reconExcitationsToStimulusTemp]);
     maxVal = 1.1*max([forwardExcitationsToStimulusUse*scaleFactor;reconExcitationsToStimulusTemp]);
     plot([minVal maxVal],[minVal maxVal],'k');
@@ -522,8 +523,6 @@ for ii = 1:length(multistartStruct.initTypes)
     %plot(forwardExcitationsToStimulusUse*scaleFactor,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
     plot(forwardExcitationsToStimulusUse,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
     axis('square');
-    %minVal = 0.9*min([forwardExcitationsToStimulusUse*scaleFactor; forwardExcitationsToReconTemp]);
-    %maxVal = 1.1*max([forwardExcitationsToStimulusUse*scaleFactor; forwardExcitationsToReconTemp]);
     minVal = 0.9*min([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
     maxVal = 1.1*max([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
     plot([minVal maxVal],[minVal maxVal],'k');
@@ -651,86 +650,16 @@ for ii = 1:length(multistartStruct.initTypes)
         saveas(gcf,fullfile(cnv.outputDir,sprintf('ReconSummary.jpg',ii)),'jpg');
     end
 end
-% fclose(fid);
 
-% Save best
-[reconScene, ~, reconImageLinear] = sceneFromFile(gammaCorrection(multistartStruct.reconImages{reconIndex}, forwardConeMosaic.Display), 'rgb', ...
-        meanLuminanceCdPerM2, forwardConeMosaic.Display);
-reconScene = sceneSet(reconScene, 'fov', cnv.fieldSizeDegs);
-% visualizeScene(reconScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
-figure; clf; imshow(gammaCorrection(multistartStruct.reconImages{reconIndex}, forwardConeMosaic.Display));
-title('Reconstructed Image');
+% Save best reconstruction image
+figure;  imshow(reconRGB{reconIndex});
+if (pr.boundedSearch)
+    title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR(reconIndex),maxReconG(reconIndex),maxReconB(reconIndex)) ; 'Bounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(reconIndex))});
+else
+    title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR(reconIndex),maxReconG(reconIndex),maxReconB(reconIndex)) ; 'Unbounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(reconIndex))});
+end
+set(gcf,'Position',[500,500,500,400]);
 saveas(gcf,fullfile(cnv.outputDir,'Recon.jpg'),'jpg');
-
-% % Compute forward excitations from reconstruction
-% % and compare with stimulus excitations
-% figure; clf; hold on;
-% if (pr.reconstructfromRenderMatrix)
-%     title('Recon from render matrix');
-%     forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
-% else
-%     title('Reconstruction from ISETBio');
-%     forwardExcitationsToReconTemp = squeeze(forwardConeMosaic.Mosaic.compute(forwardOITemp, 'opticalImagePositionDegs', 'mosaic-centered'));
-% end
-% plot(forwardExcitationsToStimulusUse*scaleFactor,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
-% axis('square');
-% minVal = 0.9*min([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
-% maxVal = 1.1*max([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
-% plot([minVal maxVal],[minVal maxVal],'k');
-% xlim([minVal maxVal]); ylim([minVal maxVal]);
-% xlabel('Unscaled (pupil) forward excitations to stimulus');
-% ylabel('Forward excitations to recon');
-% saveas(gcf,fullfile(cnv.outputDir,'StimulusVsReconForwardExcitations.jpg'),'jpg');
-% 
-% % Compute recon excitations from reconstruction
-% % and compare with stimulus excitations
-% reconOI = oiCompute(reconScene,reconOI);
-% figure; clf; hold on;
-% reconExcitationsToReconCheck = reconRenderMatrix*reconImageLinearTemp(:);
-% if (pr.reconstructfromRenderMatrix)
-%     title('Recon from render matrix');
-%     reconExcitationsToReconTemp = reconExcitationsToReconCheck;
-% else
-%     title('Recon from ISETBio');
-%     reconExcitationsToReconTemp = squeeze(reconConeMosaic.Mosaic.compute(reconOITemp, 'opticalImagePositionDegs', 'mosaic-centered'));
-% end
-% plot(forwardExcitationsToStimulusUse*scaleFactor,reconExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
-% axis('square');
-% minVal = 0.9*min([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
-% maxVal = 1.1*max([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
-% plot([minVal maxVal],[minVal maxVal],'k');
-% xlim([minVal maxVal]); ylim([minVal maxVal]);
-% xlabel('Scaled (pupil) excitations to stimulus');
-% ylabel('Recon excitations to recon');
-% saveas(gcf,fullfile(cnv.outputDir,'StimulusVsReconReconExcitations.jpg'),'jpg');
-
-% fprintf(fid,'Stimulus: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
-%     -stimNegLogPrior,-stimNegLogLikely,-(stimNegLogPrior+stimNegLogLikely));
-% fprintf(fid,'Recon1: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
-%     -recon1NegLogPrior,-recon1NegLogLikely,-(recon1NegLogPrior+recon1NegLogLikely));
-% fprintf(fid,'Recon1 initial loss %0.6g; recon1 solution loss %0.6g; fractional difference (init less soln; should be pos): %0.6g\n', ...
-%     recon1InitLoss,recon1SolnLoss,(recon1InitLoss-recon1SolnLoss)/abs(recon1InitLoss));
-% fprintf(fid,'Recon2: reg weighted log prior %0.6g; estimate part of log likelihood %0.6g; sum %0.6g\n', ...
-%     -recon2NegLogPrior,-recon2NegLogLikely,-(recon2NegLogPrior+recon2NegLogLikely));
-% fprintf(fid,'Recon2 initial loss %0.6g; recon2 solution loss %0.6g; fractional difference (init less soln; should be pos): %0.6g\n', ...
-%     recon2InitLoss,recon2SolnLoss,(recon2InitLoss-recon2SolnLoss)/abs(recon2InitLoss));
-% fprintf(fid,reconWhichStr);
-% fprintf(fid,'Each of the following should be *higher* for a valid reconstruction\n');
-% if (-stimNegLogPrior > -reconNegLogPrior)
-%     fprintf(fid,'\tReconstruction prior *lower* than stimulus\n');
-% else
-%     fprintf(fid,'\tReconstruction prior *higher* than stimulus\n');
-% end
-% if (-stimNegLogLikely > -reconNegLogLikely)
-%     fprintf(fid,'\tStimulus likelihood *higher* than reconstruction\n');
-% else
-%     fprintf(fid,'\tStimulus likelihood *lower* than reconstruction\n');
-% end
-% if (-(stimNegLogPrior+stimNegLogLikely) > -(reconNegLogPrior+reconNegLogLikely))
-%     fprintf(fid,'\tReconstruction neg objective *lower* than stimulus\n');
-% else
-%     fprintf(fid,'\tReconstruction neg objective *higher* than stimulus\n');
-% end
 
 %% Save workspace
 close all;
