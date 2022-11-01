@@ -40,7 +40,7 @@ prBase.trueCenter = round(prBase.nPixels/2);
 
 %% Mosaic parameters
 prBase.fieldSizeMinutes = 30;
-prBase.eccXDegs = 2.0;
+prBase.eccXDegs = 0.0;
 prBase.eccYDegs = 0.0;
 prBase.forwardRandSeed = false;
 prBase.reconRandSeed = false;

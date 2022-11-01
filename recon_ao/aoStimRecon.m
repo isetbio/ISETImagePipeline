@@ -360,13 +360,13 @@ for ii = 1:length(multistartStruct.initTypes)
     set(theFig,'Position',[100 400 2500 1500]);
 
     % Initial image
-    theAxes = subplot(3,6,6);
+    theAxes = subplot(3,7,7);
     %visualizeScene(initSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
     imshow(gammaCorrection(multistartStruct.initImages{ii}, forwardConeMosaic.Display));
     title({sprintf('Recon %d, init %s',ii,multistartStruct.initTypes{ii}) ; sprintf('Iters = %d',pr.maxReconIterations) });
 
     % Visualize stimulus
-    theAxes = subplot(3,6,1);
+    theAxes = subplot(3,7,1);
     % visualizeScene(stimulusScene, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
     imshow(stimulusImageRGB);
     if (length(pr.stimBgVal) > 1)
@@ -376,7 +376,7 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 
     % Contour plot of forward PSF
-    theAxes = subplot(3,6,2);
+    theAxes = subplot(3,7,2);
     cmap = brewermap(1024,'blues');
     alpha = 0.75;
     contourLineColor = [0.2 0.2 0.2];
@@ -400,24 +400,24 @@ for ii = 1:length(multistartStruct.initTypes)
         'lineWidth', 1.5);
     % xlim([min(psfSupportTemp{1}(1,:))   max(psfSupportTemp{1}(1,:))]);
     % ylim([min(psfSupportTemp{2}(:,1)) ; max(psfSupportTemp{2}(:,1))]);
-    xlim([-0.05 0.05]); ylim([-0.05 0.05]);
+    xlim([-0.05 0.05]); ylim([-0.05 0.05]); axis('square');
     title('Forward lum weighted PSF');
     xlabel('X (degs)'); ylabel('Y (degs)');
 
     % Optical image of stimulus
-    theAxes = subplot(3,6,3);
+    theAxes = subplot(3,7,3);
     % visualizeOpticalImage(forwardOI, 'axesHandle',theAxes,'avoidAutomaticRGBscaling', true, 'displayRadianceMaps', false);
     imshow(forwardOIRGB);
     title(forwardOITitleStr);
 
     % Show forward mosaic
-    theAxes = subplot(3,6,4);
+    theAxes = subplot(3,7,4);
     figureHandle = theFig; 
     forwardConeMosaic.visualizeMosaic(figureHandle,theAxes);
     title('Forward Mosaic');
 
     % Forward excitations used for recon in mosaic form
-    theAxes = subplot(3,6,5);
+    theAxes = subplot(3,7,5);
     figureHandle = theFig; 
     forwardConeMosaic.Mosaic.visualize(...
     'figureHandle', figureHandle, ...
@@ -426,7 +426,16 @@ for ii = 1:length(multistartStruct.initTypes)
     'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
     'plotTitle',  'Scaled (pupil) forward excitations');
 
-    theAxes = subplot(3,6,7);
+    theAxes = subplot(3,7,6);
+    figureHandle = theFig; 
+    forwardConeMosaic.Mosaic.visualize(...
+    'figureHandle', figureHandle, ...
+    'axesHandle', theAxes, ...
+    'activation', reshape(multistartStruct.coneVec,1,1,length(forwardExcitationsToStimulusUse)), ...
+    'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
+    'plotTitle',  'Scaled (pupil) forward excitations','labelCones',false);
+
+    theAxes = subplot(3,7,8);
     %visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
     imshow(reconRGB{ii});
     if (pr.boundedSearch)
@@ -436,7 +445,7 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 
     % Contour plot of recon PSF
-    theAxes = subplot(3,6,8);
+    theAxes = subplot(3,7,9);
     cmap = brewermap(1024,'blues');
     alpha = 0.75;
     contourLineColor = [0.2 0.2 0.2];
@@ -460,24 +469,24 @@ for ii = 1:length(multistartStruct.initTypes)
         'lineWidth', 1.5);
     % xlim([min(psfSupportTemp{1}(1,:))   max(psfSupportTemp{1}(1,:))]);
     % ylim([min(psfSupportTemp{2}(:,1)) ; max(psfSupportTemp{2}(:,1))]);
-    xlim([-0.05 0.05]); ylim([-0.05 0.05]);
+    xlim([-0.05 0.05]); ylim([-0.05 0.05]); axis('square');
     title('Recon lum weighted PSF');
     xlabel('X (degs)'); ylabel('Y (degs)');
     
     % Optical image of recon
-    theAxes = subplot(3,6,9);
+    theAxes = subplot(3,7,10);
     % visualizeOpticalImage(reconOIToReconTemp, 'axesHandle',theAxes,'avoidAutomaticRGBscaling', true, 'displayRadianceMaps', false);
     imshow(reconOIRGB);
     title(reconOITitleStr);
 
     % Show recon mosaic
-    theAxes = subplot(3,6,10);
+    theAxes = subplot(3,7,11);
     figureHandle = theFig; 
     reconConeMosaic.visualizeMosaic(figureHandle,theAxes);
     title('Recon Mosaic');
 
     % Recon excitations to recon in mosaic form
-    theAxes = subplot(3,6,11);
+    theAxes = subplot(3,7,12);
     figureHandle = theFig; 
     reconConeMosaic.Mosaic.visualize(...
     'figureHandle', figureHandle, ...
@@ -486,6 +495,15 @@ for ii = 1:length(multistartStruct.initTypes)
     'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
     'plotTitle',  'Recon excitations');
 
+    theAxes = subplot(3,7,13);
+    figureHandle = theFig; 
+    reconConeMosaic.Mosaic.visualize(...
+    'figureHandle', figureHandle, ...
+    'axesHandle', theAxes, ...
+    'activation', reshape(multistartStruct.reconPreds(:,ii),1,1,length(forwardExcitationsToStimulusUse)), ...
+    'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
+    'plotTitle',  'Recon excitations','labelCones',false);
+
     % Make sure excitations used match what comes back from multistart
     if (any(forwardExcitationsToStimulusUse * scaleFactor ~= multistartStruct.coneVec))
         error('Inconsistency in excitations driving reconstruction');
@@ -493,7 +511,7 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Compute recon excitations to stimulus and compare with
     % scaled forward excitations to stimulus.
-    subplot(3,6, 13); hold on; 
+    subplot(3,7,15); hold on; 
     if (pr.reconstructfromRenderMatrix)
         title({'Recon excittions to stim' ; 'Excitations from render matrix'});
         forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
@@ -512,7 +530,7 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Compute forward excitations from reconstruction
     % and compare with scaled stimulus excitations
-    subplot(3,6,14); hold on; 
+    subplot(3,7,16); hold on; 
     if (pr.reconstructfromRenderMatrix)
         title({'Forward excitations to recon' ; 'Excitations from render matrix'});
         forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
@@ -532,7 +550,7 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Compute recon excitations from reconstruction
     % and compare with scaled stimulus excitations
-    subplot(3,6,15); hold on;
+    subplot(3,7,17); hold on;
     reconExcitationsToReconCheck = reconRenderMatrix*reconImageLinearTemp(:);
     if (pr.reconstructfromRenderMatrix)
         title({'Recon excitations to recon' ; 'Excitations from render matrix'});
@@ -568,7 +586,7 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 
     % Priors, likelihoods, and losses
-    subplot(3,6,16);
+    subplot(3,7,18);
     bar([1]', ...
         [multistartStruct.initLogPriors(ii)  ; ...
          multistartStruct.reconLogPriors(ii) ; ...
@@ -593,7 +611,7 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 
     % Likelihoods
-    subplot(3,6,17);
+    subplot(3,7,19);
     bar([1]', ...
         [multistartStruct.initLogLikelihoods(ii)  ; ...
          multistartStruct.reconLogLikelihoods(ii) ; ...
@@ -618,7 +636,7 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 
     % Loss value (negative, so plus is good)
-    subplot(3,6,18);
+    subplot(3,7,20);
     bar([1]', ...
         [-multistartStruct.initLosses(ii)  ; ...
          -multistartStruct.reconLosses(ii) ; ...
