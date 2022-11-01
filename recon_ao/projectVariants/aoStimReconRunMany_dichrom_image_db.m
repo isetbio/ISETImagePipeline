@@ -21,7 +21,7 @@ prBase = prBaseDefaults;
 %% Version editor string
 %
 % Helps us keep different calcs separate
-prBase.versEditor = 'dichrom_image';
+prBase.versEditor = 'dichrom_image_db';
 
 %% Parameters
 %
