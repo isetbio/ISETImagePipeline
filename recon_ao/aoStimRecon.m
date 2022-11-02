@@ -323,7 +323,7 @@ for ii = 1:length(multistartStruct.initTypes)
     maxReconR(ii) = max(max(reconRGB{ii}(:,:,1)));
     maxReconG(ii) = max(max(reconRGB{ii}(:,:,2)));
     maxReconB(ii) = max(max(reconRGB{ii}(:,:,3)));
-    [reconSceneTemp, ~, reconImageLinearTemp] = sceneFromFile(reconRGBTemp, 'rgb', ...
+    [reconSceneTemp, ~, reconImageLinearTemp] = sceneFromFile(reconRGB{ii}, 'rgb', ...
         meanLuminanceCdPerM2, reconConeMosaic.Display);
     sceneSet(reconSceneTemp,'photons',sceneGet(reconSceneTemp,'photons')*reconScaleFactor(ii));
     reconImageLinearTemp = reconImageLinearTemp*reconScaleFactor(ii);
