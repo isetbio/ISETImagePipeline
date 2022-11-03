@@ -74,7 +74,7 @@ switch (prBase.imageType)
         theImageRGB = imread(fullfile(prBase.aoReconDir,'images',[prBase.imageName '.tif']),'tif');
         prBase.stimBgVal = imresize(theImageRGB,'OutputSize',[prBase.nPixels prBase.nPixels]);
     case 'png'
-        theImageRGB = imread([prBase.imageName '.' prBase.imageType]);
+        theImageRGB = double(imread([prBase.imageName '.' prBase.imageType]))/255;
         prBase.stimBgVal = imresize(theImageRGB,'OutputSize',[prBase.nPixels prBase.nPixels]);
     case 'matindexed'
         rawImage = load([prBase.imageName '.mat']);
@@ -123,11 +123,11 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.005; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 2000;
+prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
-prBase.stimulusStart = true;
+prBase.stimulusStart = false;
 prBase.uniformStartVals = []; %[ [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]' ];
 prBase.boundedSearch = true;
 
