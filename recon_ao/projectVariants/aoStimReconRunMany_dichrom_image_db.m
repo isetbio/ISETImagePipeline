@@ -47,7 +47,7 @@ prBase.reconRandSeed = false;
 prBase.forwardEccVars = false;
 prBase.reconEccVars = false;
 prBase.reconstructfromRenderMatrix = true;
-prBase.addPoissonNoise = true;
+prBase.addPoissonNoise = false;
 
 %% Stimulus parameters.
 %
@@ -74,7 +74,7 @@ switch (prBase.imageType)
         theImageRGB = imread(fullfile(prBase.aoReconDir,'images',[prBase.imageName '.tif']),'tif');
         prBase.stimBgVal = imresize(theImageRGB,'OutputSize',[prBase.nPixels prBase.nPixels]);
     case 'png'
-        theImageRGB = double(imread([prBase.imageName '.' prBase.imageType]))/255;
+        theImageRGB = imread([prBase.imageName '.' prBase.imageType]);
         prBase.stimBgVal = imresize(theImageRGB,'OutputSize',[prBase.nPixels prBase.nPixels]);
     case 'matindexed'
         rawImage = load([prBase.imageName '.mat']);
