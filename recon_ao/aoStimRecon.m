@@ -681,4 +681,4 @@ saveas(gcf,fullfile(cnv.outputDir,'Recon.jpg'),'jpg');
 
 %% Save workspace
 close all;
-save(fullfile(cnv.outputDir,'xRunOutput.mat', '-v7.3'));
+save(fullfile(cnv.outputDir,'xRunOutput.mat'), '-v7.3');
