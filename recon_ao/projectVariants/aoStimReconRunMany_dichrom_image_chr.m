@@ -209,6 +209,12 @@ for pp = 1:length(regPara)
             pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
             cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase);
         save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure');
+        sizeCheck = whos('renderStructure');
+        if sizeCheck.bytes < 2e9
+            save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure');
+        else
+            save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure', '-v7.3');
+        end
         forwardRenderStructure = renderStructure; clear renderStructure;
     end
 
@@ -219,7 +225,12 @@ for pp = 1:length(regPara)
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
             cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase);
-        save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure');
+        sizeCheck = whos('renderStructure');
+        if sizeCheck.bytes < 2e9
+            save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure');
+        else
+            save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure', '-v7.3');
+        end
         reconRenderStructure = renderStructure; clear renderStructure;
     end
 end
