@@ -129,16 +129,16 @@ prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = false;
 prBase.uniformStartVals = []; %[ [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]' ];
-prBase.boundedSearch = true;
+prBase.boundedSearch = false;
 
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-prBase.forwardPupilDiamMM = 3;
+prBase.forwardPupilDiamMM = 2;
 prBase.reconPupilDiamMM = 4;
-prBase.forwardSubjectID = 6;
+prBase.forwardSubjectID = 1;
 prBase.forwardZernikeDataBase = 'Polans2015';
-prBase.reconSubjectID = 6;
+prBase.reconSubjectID = 1;
 prBase.reconZernikeDataBase = 'Polans2015';
 
 % Residual defocus for forward and recon rendering, of equal sizes
