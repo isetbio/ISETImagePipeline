@@ -55,6 +55,39 @@ prBase.reconEccVars = false;
 prBase.reconstructfromRenderMatrix = true;
 prBase.addPoissonNoise = false;
 
+% Mosaic chromatic type, options are:
+%    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
+%    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
+%    Currently established quadSeq1 - quadSeq1
+forwardChromList = ["quadSeq1"]; 
+reconChromList =   ["quadSeq1"];
+
+% Build new sequence by entering percent as decimal of L cones wanted in each region
+% across each of the quadrants. The remaining percent will be made of M cones.
+% Entries should start with outermost regions first and progress inward
+prBase.quads(1).name = 'buildQuadSeq';
+prBase.quads(1).value = true;
+if(prBase.quads(1).value)
+    prBase.quads(2).name = 'Quad1'; prBase.quads(2).percentL = [1]; 
+    prBase.quads(3).name = 'Quad2'; prBase.quads(3).percentL = [0.5];
+    prBase.quads(4).name = 'Quad3'; prBase.quads(4).percentL = [1 0];
+    prBase.quads(5).name = 'Quad4'; prBase.quads(5).percentL = [0 1 0]; 
+    prBase.quads(2).xbounds = [0 prBase.fieldSizeMinutes/60/2] + prBase.eccXDegs; 
+    prBase.quads(3).xbounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccXDegs; 
+    prBase.quads(4).xbounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccXDegs; 
+    prBase.quads(5).xbounds = [0 prBase.fieldSizeMinutes/60/2] + prBase.eccXDegs; 
+    prBase.quads(2).ybounds = [0 prBase.fieldSizeMinutes/60/2] + prBase.eccYDegs;
+    prBase.quads(3).ybounds = [0 prBase.fieldSizeMinutes/60/2] + prBase.eccYDegs;
+    prBase.quads(4).ybounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccYDegs;
+    prBase.quads(5).ybounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccYDegs;
+end
+
+
+% Force build and save of render structures.  This
+% only affects this script, and will typically be false.
+buildNewForward = false;
+buildNewRecon = false;
+
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
@@ -65,9 +98,9 @@ prBase.stimBgVal = 0.1;
 
 % This is an L=M with some headroom, and then deuteranopic
 % confusions at 0.002, 0.005, 0.02, and 0.15 perturbation
-stimRValList = [0.3032 0.5181 ];
-stimGValList = [0.3127 0.1701 ];
-stimBValList = [0.9529 0.9542 ];
+stimRValList = [0.3032 0.5181];
+stimGValList = [0.3127 0.1701];
+stimBValList = [0.9529 0.9542];
  
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -115,17 +148,6 @@ prBase.reconZernikeDataBase = 'Polans2015';
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
 reconDefocusDioptersList = [0.00];% 0.05 0.1];
-
-% Mosaic chromatic type, options are:
-%    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
-%    "chromAllL", "chromAllM", "chromAllS"
-forwardChromList = ["chromDeut" "chromNorm" "chromNorm"]; 
-reconChromList =   ["chromDeut" "chromDeut" "chromNorm"];
-
-% Force build and save of render structures.  This
-% only affects this script, and will typically be false.
-buildNewForward = false;
-buildNewRecon = false;
 
 %% Set up list conditions
 runIndex = 1;
@@ -178,8 +200,8 @@ for pp = 1:length(regPara)
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
-            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase);
-        save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure');
+            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase, pr.quads);
+        save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure', '-v7.3');
         forwardRenderStructure = renderStructure; clear renderStructure;
     end
 
@@ -189,8 +211,8 @@ for pp = 1:length(regPara)
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
-            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase);
-        save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure');
+            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase, pr.quads);
+        save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure', '-v7.3');
         reconRenderStructure = renderStructure; clear renderStructure;
     end
 end
