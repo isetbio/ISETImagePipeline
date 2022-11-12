@@ -62,16 +62,34 @@ prBase.addPoissonNoise = false;
 forwardChromList = ["quadSeq1"]; 
 reconChromList =   ["quadSeq1"];
 
-% Build new sequence by entering percent as decimal of L cones wanted in each region
-% across each of the quadrants. The remaining percent will be made of M cones.
-% Entries should start with outermost regions first and progress inward
+% Build new sequence by
 prBase.quads(1).name = 'buildQuadSeq';
 prBase.quads(1).value = true;
+
 if(prBase.quads(1).value)
-    prBase.quads(2).name = 'Quad1'; prBase.quads(2).percentL = [1]; 
-    prBase.quads(3).name = 'Quad2'; prBase.quads(3).percentL = [0.5];
-    prBase.quads(4).name = 'Quad3'; prBase.quads(4).percentL = [1 0];
-    prBase.quads(5).name = 'Quad4'; prBase.quads(5).percentL = [0 1 0]; 
+    % Initialize storage structure with information on each quadrant
+    prBase.quads(2).name = 'Quad1'; 
+    prBase.quads(3).name = 'Quad2'; 
+    prBase.quads(4).name = 'Quad3'; 
+    prBase.quads(5).name = 'Quad4'; 
+
+    % Enter desired percent as decimal of L cones per region across
+    % quadrants. The remaining percent will be made of M cones. Entries 
+    % should start with outermost regions first and progress inward
+    prBase.quads(2).percentL = [1]; 
+    prBase.quads(3).percentL = [0.5];
+    prBase.quads(4).percentL = [1 0];
+    prBase.quads(5).percentL = [0 1 0]; 
+
+    % Enter desired percent as decimal of S cones per region across
+    % quadrants. Follows same form as above
+    prBase.quads(2).percentS = [0.03]; 
+    prBase.quads(3).percentS = [0.03];
+    prBase.quads(4).percentS = [0.03 0.01];
+    prBase.quads(5).percentS = [0.03 0.02 0.01]; 
+
+    % Establish initial region boundaries in the x and y direction for all
+    % four quadrants based on FOV
     prBase.quads(2).xbounds = [0 prBase.fieldSizeMinutes/60/2] + prBase.eccXDegs; 
     prBase.quads(3).xbounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccXDegs; 
     prBase.quads(4).xbounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccXDegs; 
