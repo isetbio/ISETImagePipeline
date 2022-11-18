@@ -23,18 +23,12 @@ prBase = prBaseDefaults;
 % Helps us keep different calcs separate
 prBase.versEditor = 'small_quads_chr';
 
-%% Point at directory with data files for this subproject
-%
-% This will allow us to load in project specific precomputed information.
-% Also records initials of version editors, otherwise set to 'main'
-prBase.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
-
 %% Parameters
 %
 % Display, options are:
 %    'conventional'    - A conventional display
 %    'mono'            - A display with monochromatic primaries
-prBase.displayName = 'conventional';
+prBase.displayName = 'mono';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
 
@@ -46,7 +40,7 @@ prBase.trueCenter = round(prBase.nPixels/2);
 
 %% Mosaic parameters
 prBase.fieldSizeMinutes = 30;
-prBase.eccXDegs = 2.0;
+prBase.eccXDegs = 1.0;
 prBase.eccYDegs = 0.0;
 prBase.forwardRandSeed = false;
 prBase.reconRandSeed = false;
@@ -58,12 +52,12 @@ prBase.addPoissonNoise = false;
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
-%    Currently established quadSeq1 - quadSeq2
-forwardChromList = ["quadSeq1", "quadSeq2"]; 
-reconChromList =   ["quadSeq1", "quadSeq2"];
+%    Currently established quadSeq1 - quadSeq4
+forwardChromList = ["quadSeq3"]; 
+reconChromList =   ["quadSeq3"];
 
 % Build new sequence by
-prBase.quads(1).name = 'buildQuadSeq';
+prBase.quads(1).name = 'useQuadSeq';
 prBase.quads(1).value = true;
 
 if(prBase.quads(1).value)
@@ -109,16 +103,16 @@ buildNewRecon = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [2/60 1/60];
+stimSizeDegsList = [1/60 3/60];
 
 % RGB values (before gamma correction)
-prBase.stimBgVal = 0.1;
+prBase.stimBgVal = 1;
 % stimRValList = [0.8 0.8 0.8];
 % stimGValList = [0.8 0.7 0.6];
 % stimBValList = [0.2 0.2 0.2];
-stimRValList = 0.80;
-stimGValList = 0.65;
-stimBValList = 0.1;
+stimRValList = [1 0.8];
+stimGValList = [1 0.65];
+stimBValList = [0 0.1];
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -132,11 +126,11 @@ end
 %
 % Position specified in pixels, could consider specifying in minutes.
 pixelsPerMinute = prBase.nPixels/prBase.fieldSizeMinutes;
-% shiftInMinutesList = [-10:2:10];
-% shiftInPixelsList = round(pixelsPerMinute*shiftInMinutesList);
-shiftInPixelsList = round(prBase.nPixels / 4);
-centerXPosition = prBase.trueCenter + shiftInPixelsList;
-centerYPosition = prBase.trueCenter + shiftInPixelsList;
+shiftInMinutesList = [-3:1:3];
+shiftInPixelsList = round(pixelsPerMinute*shiftInMinutesList);
+quadCenters = round(prBase.nPixels / 4);
+centerXPosition = prBase.trueCenter + quadCenters + shiftInPixelsList;
+centerYPosition = prBase.trueCenter + quadCenters * ones(size(centerXPosition));
 prBase.stimCenter = [centerXPosition ; centerYPosition];
 deltaCenterList = [prBase.stimCenter - prBase.trueCenter];
 
