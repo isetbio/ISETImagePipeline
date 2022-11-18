@@ -40,12 +40,12 @@ prBase.trueCenter = round(prBase.nPixels/2);
 
 %% Mosaic parameters
 prBase.fieldSizeMinutes = 30;
-prBase.eccXDegs = 1.0;
+prBase.eccXDegs = 2.0;
 prBase.eccYDegs = 0.0;
 prBase.forwardRandSeed = false;
 prBase.reconRandSeed = false;
-prBase.forwardEccVars = true;
-prBase.reconEccVars = true;
+prBase.forwardEccVars = false;
+prBase.reconEccVars = false;
 prBase.reconstructfromRenderMatrix = true;
 prBase.addPoissonNoise = false;
 
@@ -103,16 +103,18 @@ buildNewRecon = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [1/60 3/60];
+stimSizeDegsList = [0.5/60 1/60 2/60];
 
 % RGB values (before gamma correction)
 prBase.stimBgVal = 1;
 % stimRValList = [0.8 0.8 0.8];
 % stimGValList = [0.8 0.7 0.6];
 % stimBValList = [0.2 0.2 0.2];
-stimRValList = [1 0.8];
-stimGValList = [1 0.65];
-stimBValList = [0 0.1];
+stimRValList = [1 0.80 0.4899];
+stimGValList = [1 0.65 0.4287];
+stimBValList = [0 0.10 0.0612];
+
+
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -151,12 +153,12 @@ prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = false;
 prBase.uniformStartVals = [];
-prBase.boundedSearch = true;
+prBase.boundedSearch = false;
 
 % Use AO in forward rendering? And determine optics pupil size
-prBase.forwardAORender = false;
+prBase.forwardAORender = true;
 prBase.reconAORender = false;
-prBase.forwardPupilDiamMM = 3;
+prBase.forwardPupilDiamMM = 6;
 prBase.reconPupilDiamMM = 3;
 prBase.forwardSubjectID = 6;
 prBase.forwardZernikeDataBase = 'Polans2015';
@@ -164,7 +166,7 @@ prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Polans2015';
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
+forwardDefocusDioptersList = [0.06];% 0.05 0.1]; 
 reconDefocusDioptersList = [0.00];% 0.05 0.1];
 
 %% Set up list conditions
