@@ -53,8 +53,8 @@ prBase.addPoissonNoise = false;
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
 %    Currently established quadSeq1 - quadSeq4
-forwardChromList = ["quadSeq3"]; 
-reconChromList =   ["quadSeq3"];
+forwardChromList = ["quadSeq3", "quadSeq4"]; 
+reconChromList =   ["quadSeq3", "quadSeq4"];
 
 % Build new sequence by
 prBase.quads(1).name = 'useQuadSeq';
