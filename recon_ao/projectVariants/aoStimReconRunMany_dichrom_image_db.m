@@ -10,7 +10,11 @@
 %   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
 %   09/22/22  chr  Convert to its own dichrom file
 %   09/27/22  chr  Incorporate inputs for stimulus centering position
-%   10/05/22  dhb  Lots of changes for parall
+%   10/05/22  dhb  Lots of changes for parallel
+
+%% These are the optics Lingqi used in his paper
+% These are foveal optics and not from wavefront measurements
+%oiCreate('human', pupilSize)
 
 %% Clear
 clear; close all;
@@ -62,21 +66,30 @@ stimSizeDegsList = 0.5; %[24/60];
 % This shows how to read in an image and set it up to be reconstructed.
 % The example is for a Matlab indexed image.  If it were a straight RGB
 % image this would be even easier.
-%
-%prBase.imageName = 'mandrill';
-%prBase.imageType = 'matindexed';
-% prBase.imageName = 'zebra';
-% prBase.imageType = 'tif';
-prBase.imageName = 'onion';
-prBase.imageType = 'png';
+prBase.imageName = 'puppy';
+prBase.imageType = 'jpeg';
 switch (prBase.imageType)
+    case 'jpeg'
+        % JPEG options include 'butterfly', 'dragonfly', 'panda', 'pizza'
+        % 'puppy', and 'sunflower'.  Not all of these images are square, so
+        % we select out the largest square in the center before resizing.
+        theImageRGB = imread(fullfile(prBase.aoReconDir,'images',[prBase.imageName '.jpeg']),'jpeg');
+        [m,n,k] = size(theImageRGB);
+        minDim = min([m,n]); 
+        mSpace = minDim/2; nSpace = minDim/2;
+        lowM = round(m/2-mSpace)+1; highM = lowM+minDim-1; lowN = round(n/2-nSpace)+1; highN = lowN+minDim-1;
+        prBase.stimBgVal = imresize(theImageRGB(lowM:highM,lowN:highN,:),'OutputSize',[prBase.nPixels prBase.nPixels]);
+        %figure; imshow(prBase.stimBgVal);
     case 'tif'
+        % Options are 'zebra'
         theImageRGB = imread(fullfile(prBase.aoReconDir,'images',[prBase.imageName '.tif']),'tif');
         prBase.stimBgVal = imresize(theImageRGB,'OutputSize',[prBase.nPixels prBase.nPixels]);
     case 'png'
+        % Options are 'onion'
         theImageRGB = imread([prBase.imageName '.' prBase.imageType]);
         prBase.stimBgVal = imresize(theImageRGB,'OutputSize',[prBase.nPixels prBase.nPixels]);
     case 'matindexed'
+        % Options are 'mandrill'
         rawImage = load([prBase.imageName '.mat']);
         theImageRGB = zeros(size(rawImage.X,1),size(rawImage.X,2),3);
         for ii = 1:size(rawImage.X,1)
