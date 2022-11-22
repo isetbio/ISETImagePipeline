@@ -142,17 +142,23 @@ prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = false;
 prBase.uniformStartVals = []; %[ [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]' ];
-prBase.boundedSearch = true;
+prBase.boundedSearch = false;
 
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
 prBase.forwardPupilDiamMM = 3;
 prBase.reconPupilDiamMM = 3;
+
+% Define optics.  Subject only matters if we use a database.
+% prBase.forwardSubjectID = 6;
+% prBase.forwardZernikeDataBase = 'Polans2015';
+% prBase.reconSubjectID = 6;
+% prBase.reconZernikeDataBase = 'Polans2015';
 prBase.forwardSubjectID = 6;
-prBase.forwardZernikeDataBase = 'Polans2015';
+prBase.forwardZernikeDataBase = 'MarimontWandell';
 prBase.reconSubjectID = 6;
-prBase.reconZernikeDataBase = 'Polans2015';
+prBase.reconZernikeDataBase = 'MarimontWandell';
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.00];% 0.05 0.1];
@@ -163,6 +169,10 @@ reconDefocusDioptersList = [0.00];% 0.05 0.1];
 %    "chromAllL", "chromAllM", "chromAllS"
 forwardChromList = ["chromDeut" "chromNorm" "chromNorm"];
 reconChromList =   ["chromDeut" "chromDeut" "chromNorm"];
+
+% Turn off quads for these calculations
+prBase.quads(1).name = 'useQuadSeq';
+prBase.quads(1).value = false;
 
 % Force build and save of render structures.  This
 % only affects this script, and will typically be false.
@@ -220,7 +230,7 @@ for pp = 1:length(regPara)
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
-            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase);
+            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase, pr.quads);
         save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure');
         forwardRenderStructure = renderStructure; clear renderStructure;
     end
