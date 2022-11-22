@@ -169,8 +169,6 @@ saveas(gcf,fullfile(cnv.outputDir,'Stimulus.jpg'),'jpg');
 %
 % We may or may not reconstruct from these
 forwardOI = oiCompute(stimulusScene,forwardOI);
-visualizeOpticalImage(forwardOI, 'avoidAutomaticRGBscaling', true);
-saveas(gcf,fullfile(cnv.outputDir,'forwardStimulusRetinalImage.jpg'),'jpg');
 forwardExcitationsToStimulusISETBio = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
 
 % Check forward exciations calculation another way.  Also shows another way
@@ -436,7 +434,7 @@ for ii = 1:length(multistartStruct.initTypes)
     'axesHandle', theAxes, ...
     'activation', reshape(multistartStruct.coneVec,1,1,length(forwardExcitationsToStimulusUse)), ...
     'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
-    'plotTitle',  'Scaled (pupil) forward excitations');
+    'plotTitle',  'Scaled (pupil) forward excitations','labelConesInActivationMap', false);
 
     theAxes = subplot(3,7,6);
     figureHandle = theFig; 
@@ -445,7 +443,7 @@ for ii = 1:length(multistartStruct.initTypes)
     'axesHandle', theAxes, ...
     'activation', reshape(multistartStruct.coneVec,1,1,length(forwardExcitationsToStimulusUse)), ...
     'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
-    'plotTitle',  'Scaled (pupil) forward excitations','labelCones',false);
+    'plotTitle',  'Scaled (pupil) forward excitations','labelConesInActivationMap', true);
 
     theAxes = subplot(3,7,8);
     %visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
