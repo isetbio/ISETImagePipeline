@@ -59,7 +59,7 @@ prBase.addPoissonNoise = false;
 %
 % Because we're specifying an image below, this is a dummy parameter
 % in this script.
-stimSizeDegsList = 0.5; %[24/60];
+stimSizeDegsList = 1; %[24/60];
 
 % RGB values.  Here we reconstruct a specified image.
 %
