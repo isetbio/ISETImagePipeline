@@ -134,7 +134,7 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = [0.05 0.01 0.005 0.001 0.0005 0.0001 0.00005]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+regParaList = [0.05 0.01 0.005 0.001 0.0005 0.0001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 4;
 prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
