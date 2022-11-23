@@ -39,11 +39,11 @@ prBase.displayGammaGamma = 2;
 %% Spatial parameters
 %
 % Common to forward and recon models
-prBase.nPixels = 100;
+prBase.nPixels = 128;
 prBase.trueCenter = round(prBase.nPixels/2);
 
 %% Mosaic parameters
-prBase.fieldSizeMinutes = 30;
+prBase.fieldSizeMinutes = 60;
 prBase.eccXDegs = 0.0;
 prBase.eccYDegs = 0.0;
 prBase.forwardRandSeed = false;
@@ -59,7 +59,7 @@ prBase.addPoissonNoise = false;
 %
 % Because we're specifying an image below, this is a dummy parameter
 % in this script.
-stimSizeDegsList = 1; %[24/60];
+stimSizeDegsList = 0;
 
 % RGB values.  Here we reconstruct a specified image.
 %
@@ -134,7 +134,7 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.005; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+regParaList = [0.005 0.001 0.0005]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
 prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
@@ -167,8 +167,10 @@ reconDefocusDioptersList = [0.00];% 0.05 0.1];
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
 %    "chromAllL", "chromAllM", "chromAllS"
-forwardChromList = ["chromDeut" "chromNorm" "chromNorm"];
-reconChromList =   ["chromDeut" "chromDeut" "chromNorm"];
+% forwardChromList = ["chromDeut" "chromNorm" "chromNorm"];
+% reconChromList =   ["chromDeut" "chromDeut" "chromNorm"];
+forwardChromList = ["chromNorm"];
+reconChromList =   ["chromNorm"];
 
 % Turn off quads for these calculations
 prBase.quads(1).name = 'useQuadSeq';
@@ -231,7 +233,7 @@ for pp = 1:length(regPara)
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
             cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase, pr.quads);
-        save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure');
+        save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure','-v7.3');
         forwardRenderStructure = renderStructure; clear renderStructure;
     end
 
@@ -242,7 +244,7 @@ for pp = 1:length(regPara)
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
             cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase);
-        save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure');
+        save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure','-v7.3');
         reconRenderStructure = renderStructure; clear renderStructure;
     end
 end
