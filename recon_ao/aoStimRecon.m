@@ -331,6 +331,7 @@ for ii = 1:length(multistartStruct.initTypes)
     if (reconScaleFactor(ii) < 1)
         reconScaleFactor(ii) = 1;
     end   
+    stimulusRGBScaled{ii} = gammaCorrection(stimulusImageLinear/reconScaleFactor(ii), reconConeMosaic.Display);
 
     % Set up initial scene.
     [initSceneTemp, ~, initImageLinearTemp] = sceneFromFile(gammaCorrection(multistartStruct.initImages{ii}, forwardConeMosaic.Display), 'rgb', ...
@@ -387,11 +388,19 @@ for ii = 1:length(multistartStruct.initTypes)
     % Visualize stimulus
     theAxes = subplot(3,7,1);
     % visualizeScene(stimulusScene, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
-    imshow(stimulusImageRGB);
+    imshow(stimulusRGBScaled{ii});
+
     if (length(pr.stimBgVal) > 1)
-        title({'Stimulus Image' ; 'Not scaled with recon' ; pr.imageName});
+        title({'Stimulus Image' ; 'Scaled with recon' ; pr.imageName});
     else
-        title({'Stimulus Image' ; 'Not scaled with recon' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
+        title({'Stimulus Image' ; 'Scaled with recon' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
+    end
+    if (ii == reconIndex)
+        tempFig = figure; clf;
+        imshow(stimulusRGBScaled{ii});
+        saveas(tempFig,fullfile(cnv.outputDir,'stimulusScaled.jpg'));
+        close(tempFig);
+        figure(theFig);
     end
 
     % Contour plot of forward PSF
@@ -468,9 +477,9 @@ for ii = 1:length(multistartStruct.initTypes)
     %visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
     imshow(reconRGB{ii});
     if (pr.boundedSearch)
-        title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR(ii),maxReconG(ii),maxReconB(ii)) ; 'Bounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
+        title({'Reconstructed Image' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxReconR(ii),maxReconG(ii),maxReconB(ii)) ; 'Bounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
     else
-        title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR(ii),maxReconG(ii),maxReconB(ii)) ; 'Unbounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
+        title({'Reconstructed Image' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxReconR(ii),maxReconG(ii),maxReconB(ii)) ; 'Unbounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
     end
 
     % Contour plot of recon PSF
@@ -739,7 +748,8 @@ end
 set(gcf,'Position',[500,500,500,400]);
 saveas(gcf,fullfile(cnv.outputDir,'Recon.jpg'),'jpg');
 
-%% Save workspace
+%% Save workspace without really big variables
 close all;
-clear forwardRenderMatrix reconRenderMatrix
+clear forwardRenderMatrix reconRenderMatrix reconSceneTemp forwardOI reconOIToReconTemp psfDataStruct forwardOIToReconTemp forwardOIRGB
+clear reconRGB stimulusRGBScaled
 save(fullfile(cnv.outputDir,'xRunOutput.mat'), '-v7.3');
