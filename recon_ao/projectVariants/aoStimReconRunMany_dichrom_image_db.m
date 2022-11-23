@@ -134,8 +134,8 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = [0.005 0.001 0.0005]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
-prBase.stride = 2;
+regParaList = [0.05 0.01 0.005 0.001 0.0005 0.0001 0.00005]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+prBase.stride = 4;
 prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
@@ -155,9 +155,9 @@ prBase.reconPupilDiamMM = 3;
 % prBase.forwardZernikeDataBase = 'Polans2015';
 % prBase.reconSubjectID = 6;
 % prBase.reconZernikeDataBase = 'Polans2015';
-prBase.forwardSubjectID = 6;
+prBase.forwardSubjectID = 0;
 prBase.forwardZernikeDataBase = 'MarimontWandell';
-prBase.reconSubjectID = 6;
+prBase.reconSubjectID = 0;
 prBase.reconZernikeDataBase = 'MarimontWandell';
 
 % Residual defocus for forward and recon rendering, of equal sizes
