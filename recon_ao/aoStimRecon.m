@@ -156,14 +156,16 @@ meanLuminanceCdPerM2 = [];
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 stimulusScene = sceneSet(stimulusScene, 'fov', cnv.fieldSizeDegs);
 %visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
-figure; clf; imshow(stimulusImageRGB);
-if (length(pr.stimBgVal) > 1)
-    title({'Stimulus Image' ; pr.imageName});
-else
-    title({'Stimulus Image' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
-end
-set(gcf,'Position',[500,500,500,400]);
-saveas(gcf,fullfile(cnv.outputDir,'Stimulus.jpg'),'jpg');
+% figure; clf;
+% imshow(stimulusImageRGB);
+% if (length(pr.stimBgVal) > 1)
+%     title({'Stimulus Image' ; pr.imageName});
+% else
+%     title({'Stimulus Image' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
+% end
+% set(gcf,'Position',[500,500,500,400]);
+% saveas(gcf,fullfile(cnv.outputDir,'Stimulus.jpg'),'jpg');
+imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.jpg'),'jpg');
 
 %% Compute forward retinal image and excitations using ISETBio
 %
@@ -395,17 +397,18 @@ for ii = 1:length(multistartStruct.initTypes)
         title({'Stimulus Image' ; 'Scaled with recon' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
     end
     if (ii == reconIndex)
-        tempFig = figure; clf;
-        imshow(stimulusRGBScaled{ii});
-        if (length(pr.stimBgVal) > 1)
-            title({'Stimulus Image' ; 'Scaled with recon' ; pr.imageName});
-        else
-            title({'Stimulus Image' ; 'Scaled with recon' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
-        end
-        set(tempFig,'Position',[500,500,500,400]);
-        saveas(tempFig,fullfile(cnv.outputDir,'StimulusScaled.jpg'));
-        close(tempFig);
-        figure(theFig);
+        imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDir,'StimulusScaled.jpg'),'jpg');
+        % tempFig = figure; clf;
+        % imshow(stimulusRGBScaled{ii});
+        % if (length(pr.stimBgVal) > 1)
+        %     title({'Stimulus Image' ; 'Scaled with recon' ; pr.imageName});
+        % else
+        %     title({'Stimulus Image' ; 'Scaled with recon' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
+        % end
+        % set(tempFig,'Position',[500,500,500,400]);
+        % saveas(tempFig,fullfile(cnv.outputDir,'StimulusScaled.jpg'));
+        % close(tempFig);
+        % figure(theFig);
     end
 
     % Contour plot of forward PSF
@@ -744,14 +747,16 @@ for ii = 1:length(multistartStruct.initTypes)
 end
 
 % Save best reconstruction image
-figure;  imshow(reconRGB{reconIndex});
-if (pr.boundedSearch)
-    title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR(reconIndex),maxReconG(reconIndex),maxReconB(reconIndex)) ; 'Bounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(reconIndex))});
-else
-    title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR(reconIndex),maxReconG(reconIndex),maxReconB(reconIndex)) ; 'Unbounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(reconIndex))});
-end
-set(gcf,'Position',[500,500,500,400]);
-saveas(gcf,fullfile(cnv.outputDir,'Recon.jpg'),'jpg');
+% figure;
+% imshow(reconRGB{reconIndex});
+% if (pr.boundedSearch)
+%     title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR(reconIndex),maxReconG(reconIndex),maxReconB(reconIndex)) ; 'Bounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(reconIndex))});
+% else
+%     title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR(reconIndex),maxReconG(reconIndex),maxReconB(reconIndex)) ; 'Unbounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(reconIndex))});
+% end
+% set(gcf,'Position',[500,500,500,400]);
+% saveas(gcf,fullfile(cnv.outputDir,'Recon.jpg'),'jpg');
+imwrite(reconRGB{reconIndex},fullfile(cnv.outputDir,'Recon.jpg'),'jpg');
 
 %% Save workspace without really big variables
 close all;
