@@ -389,7 +389,6 @@ for ii = 1:length(multistartStruct.initTypes)
     theAxes = subplot(3,7,1);
     % visualizeScene(stimulusScene, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
     imshow(stimulusRGBScaled{ii});
-
     if (length(pr.stimBgVal) > 1)
         title({'Stimulus Image' ; 'Scaled with recon' ; pr.imageName});
     else
@@ -398,7 +397,13 @@ for ii = 1:length(multistartStruct.initTypes)
     if (ii == reconIndex)
         tempFig = figure; clf;
         imshow(stimulusRGBScaled{ii});
-        saveas(tempFig,fullfile(cnv.outputDir,'stimulusScaled.jpg'));
+        if (length(pr.stimBgVal) > 1)
+            title({'Stimulus Image' ; 'Scaled with recon' ; pr.imageName});
+        else
+            title({'Stimulus Image' ; 'Scaled with recon' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
+        end
+        set(tempFig,'Position',[500,500,500,400]);
+        saveas(tempFig,fullfile(cnv.outputDir,'StimulusScaled.jpg'));
         close(tempFig);
         figure(theFig);
     end
