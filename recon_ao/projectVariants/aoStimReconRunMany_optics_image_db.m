@@ -147,8 +147,8 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-forwardPupilDiamListMM = [2 3 4 2 3 4];
-reconPupilDiamListMM =   [2 3 4 3 3 3];
+forwardPupilDiamListMM = [2 3 4 2 4];
+reconPupilDiamListMM =   [2 3 4 3 3];
 
 % Define optics.  Subject only matters if we use a database.
 %
@@ -263,7 +263,7 @@ parfor pp = 1:length(regPara)
     % out of lists above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom);
+        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
