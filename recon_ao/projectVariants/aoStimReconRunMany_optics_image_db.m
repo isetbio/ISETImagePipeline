@@ -12,10 +12,6 @@
 %   09/27/22  chr  Incorporate inputs for stimulus centering position
 %   10/05/22  dhb  Lots of changes for parallel
 
-%% These are the optics Lingqi used in his paper
-% These are foveal optics and not from wavefront measurements
-%oiCreate('human', pupilSize)
-
 %% Clear
 clear; close all;
 

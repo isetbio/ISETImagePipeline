@@ -1,4 +1,4 @@
-%% aoStimReconMany
+%% aoStimAnalyze
 %
 % Description:
 %    Call aoStimRecon with many combinations of parameters.
@@ -6,11 +6,7 @@
 % See also: aoStimRecon
 
 % History:
-%   08/15/22  dhb  Wrote after converting aoStimRecon to a function
-%   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
-%   09/22/22  chr  Convert to its own dichrom file
-%   09/27/22  chr  Incorporate inputs for stimulus centering position
-%   10/05/22  dhb  Lots of changes for parallel
+%   11/27/22 dhb  Wrote analysis version.
 
 %% Clear
 clear; close all;
@@ -21,7 +17,7 @@ prBase = prBaseDefaults;
 %% Version editor string
 %
 % Helps us keep different calcs separate
-prBase.versEditor = 'dichrom_image_db';
+prBase.versEditor = 'optics_image_db';
 
 %% Parameters
 %
@@ -130,7 +126,7 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.00001; %[0.05 0.01 0.005 0.001 0.0005 0.0001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+regParaList = 0.0005; %[0.05 0.01 0.005 0.001 0.0005 0.0001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 4;
 prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
@@ -143,18 +139,20 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-prBase.forwardPupilDiamMM = 3;
-prBase.reconPupilDiamMM = 3;
+forwardPupilDiamListMM = [2 3 4 2 4];
+reconPupilDiamListMM =   [2 3 4 3 3];
 
 % Define optics.  Subject only matters if we use a database.
-% prBase.forwardSubjectID = 6;
-% prBase.forwardZernikeDataBase = 'Polans2015';
-% prBase.reconSubjectID = 6;
-% prBase.reconZernikeDataBase = 'Polans2015';
-prBase.forwardSubjectID = 0;
-prBase.forwardZernikeDataBase = 'MarimontWandell';
-prBase.reconSubjectID = 0;
-prBase.reconZernikeDataBase = 'MarimontWandell';
+%
+% Databases are 'Polans2015' and 'Artal2012'
+prBase.forwardSubjectID = 6;
+prBase.forwardZernikeDataBase = 'Artal2012';
+prBase.reconSubjectID = 6;
+prBase.reconZernikeDataBase = 'Artal2012';
+% prBase.forwardSubjectID = 0;
+% prBase.forwardZernikeDataBase = 'MarimontWandell';
+% prBase.reconSubjectID = 0;
+% prBase.reconZernikeDataBase = 'MarimontWandell';
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.00];% 0.05 0.1];
@@ -185,24 +183,29 @@ for ss = 1:length(stimSizeDegsList)
             for ff = 1:length(forwardDefocusDioptersList)
                 for rr = 1:length(regParaList)
                     for dd = 1:length(forwardChromList)
+                        for pp = 1:length(forwardPupilDiamListMM)
 
-                        stimSizeDegs(runIndex) = stimSizeDegsList(ss);
+                            stimSizeDegs(runIndex) = stimSizeDegsList(ss);
 
-                        stimRVal(runIndex) = stimRValList(cc);
-                        stimGVal(runIndex) = stimGValList(cc);
-                        stimBVal(runIndex) = stimBValList(cc);
+                            stimRVal(runIndex) = stimRValList(cc);
+                            stimGVal(runIndex) = stimGValList(cc);
+                            stimBVal(runIndex) = stimBValList(cc);
 
-                        stimCenter(:,runIndex) = deltaCenterList(:,yy);
+                            stimCenter(:,runIndex) = deltaCenterList(:,yy);
 
-                        forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
-                        reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
+                            forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
+                            reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
 
-                        regPara(runIndex) = regParaList(rr);
+                            regPara(runIndex) = regParaList(rr);
 
-                        forwardChrom(runIndex) = forwardChromList(dd);
-                        reconChrom(runIndex) = reconChromList(dd);
+                            forwardChrom(runIndex) = forwardChromList(dd);
+                            reconChrom(runIndex) = reconChromList(dd);
 
-                        runIndex = runIndex + 1;
+                            forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
+                            reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
+
+                            runIndex = runIndex + 1;
+                        end
                     end
                 end
             end
@@ -217,7 +220,7 @@ for pp = 1:length(regPara)
     % out of lists precreated above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom);
+        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
@@ -252,7 +255,7 @@ parfor pp = 1:length(regPara)
     % out of lists above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom);
+        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
