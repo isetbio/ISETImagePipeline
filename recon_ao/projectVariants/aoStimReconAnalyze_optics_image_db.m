@@ -139,8 +139,8 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-forwardPupilDiamListMM = [2 3 4 2 4];
-reconPupilDiamListMM =   [2 3 4 3 3];
+forwardPupilDiamListMM = [2 3 4];
+reconPupilDiamListMM =   [3 3 3];
 
 % Define optics.  Subject only matters if we use a database.
 %
@@ -213,43 +213,8 @@ for ss = 1:length(stimSizeDegsList)
     end
 end
 
-%% Build render structures we need if they are not cached
-for pp = 1:length(regPara)
-
-    % Set up paramters structure for this loop, filling in fields that come
-    % out of lists precreated above.
-    pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
-        stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM);
-
-    % Compute convenience parameters
-    cnv = computeConvenienceParams(pr);
-
-    % Build foward cone mosaic and render matrix if needed
-    if (buildNewForward || ~exist(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'file'))
-        renderStructure = buildRenderStruct(pr.aoReconDir , pr.eccXDegs, pr.eccYDegs, ...
-            pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters, ...
-            cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
-            pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
-            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase, pr.quads);
-        save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure','-v7.3');
-        forwardRenderStructure = renderStructure; clear renderStructure;
-    end
-
-    % Build recon cone mosaic and render structure if needed
-    if (buildNewRecon || ~exist(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'file'))
-        renderStructure = buildRenderStruct(pr.aoReconDir , pr.eccXDegs, pr.eccYDegs, ...
-            pr.fieldSizeMinutes/60, pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters, ...
-            cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
-            pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
-            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase);
-        save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure','-v7.3');
-        reconRenderStructure = renderStructure; clear renderStructure;
-    end
-end
-
 % Run the reconstructions in parallel
-parfor pp = 1:length(regPara)
+for pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come
     % out of lists above.
@@ -261,5 +226,11 @@ parfor pp = 1:length(regPara)
     cnv = computeConvenienceParams(pr);
 
     % Call the driving function
-    aoStimRecon(pr,cnv);
+    theData = load(fullfile(cnv.outputDir,'xRunOutput.mat'));
+    theData.stimulusImageLinear
+    theData.reconImageLinearTemp
+    theData.multistartStruct.reconLogLikelihoods(theData.reconIndex)
+    theData.multistartStruct.reconLogPriors(theData.reconIndex);
+    theData.multistartStruct).reconLosses(theData.reconIndex);
+
 end

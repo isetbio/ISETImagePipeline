@@ -254,7 +254,7 @@ estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
 % Estimate
 %
 % Scale excitations to take into account difference in forward and recon
-% pupil sizes.  This helps keep things in range.
+% sizes.  This helps keep things in range.
 meanLuminanceCdPerM2 = [];
 scaleFactor = (cnv.reconPupilDiamMM/cnv.forwardPupilDiamMM)^2;
 
@@ -761,5 +761,5 @@ imwrite(reconRGB{reconIndex},fullfile(cnv.outputDir,'Recon.jpg'),'jpg');
 %% Save workspace without really big variables
 close all;
 clear forwardRenderMatrix reconRenderMatrix reconSceneTemp forwardOI reconOIToReconTemp psfDataStruct forwardOIToReconTemp forwardOIRGB
-clear reconRGB stimulusRGBScaled
+clear reconRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
 save(fullfile(cnv.outputDir,'xRunOutput.mat'), '-v7.3');
