@@ -216,7 +216,7 @@ for pp = 1:length(regPara)
     % out of lists precreated above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom);
+        forwardChrom,reconChrom, prBase.forwardPupilDiamMM, prBase.reconPupilDiamMM);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
@@ -251,7 +251,7 @@ parfor pp = 1:length(regPara)
     % out of lists above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom);
+        forwardChrom,reconChrom, prBase.forwardPupilDiamMM, prBase.reconPupilDiamMM);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
