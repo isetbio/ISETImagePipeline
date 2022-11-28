@@ -111,7 +111,7 @@ if (length(pr.stimBgVal) > 1)
 else
     cnv.outputSubName = sprintf('%0.1f_%0.6f_%d_%0.4f_%0.4f_%0.4f_%0.4f_%s_%s_%d_%s_%d_%d_%d_%s_%d_%s', ...
         60*pr.stimSizeDegs, pr.regPara,pr.stride,pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal, cnv.exciteSource, pr.forwardChrom, pr.forwardEccVars, pr.reconChrom, pr.reconEccVars, ...
-        pr.stimCenter(1),pr.stimCenter(2),noiseStr,pr.boundedSearch, stimQuadsName;
+        pr.stimCenter(1),pr.stimCenter(2),noiseStr,pr.boundedSearch, stimQuadsName);
 end
 cnv.outputDir = fullfile(pr.aoReconDir ,cnv.outputMainName,cnv.outputSubName);
 
