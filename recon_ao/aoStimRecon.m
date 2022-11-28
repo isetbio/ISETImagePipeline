@@ -101,8 +101,8 @@ if (length(pr.stimBgVal) == 1)
         % Then adjust based on selected quadrants in RunMany
         quadXShift = [1 -1 -1 1];
         quadYShift = [1 1 -1 -1];
-        fullXQuads = quadXShift' .* pr.quadSelect;
-        fullYQuads = quadYShift' .* pr.quadSelect; 
+        quadXShift = quadXShift(pr.quadSelect);
+        quadYShift = quadYShift(pr.quadSelect);
 
     else
         % Otherwise create one stimulus in the center of the mosaic
@@ -110,44 +110,41 @@ if (length(pr.stimBgVal) == 1)
         quadYShift = 0;
     end
     
-    for qs = 1:length(fullXQuads)
-        % For each pattern of quadrant activation
-        for qf = 1:length(fullXQuads(:,qs))
-            % Create stimulus to populate the invidivual quadrants
-            % Stimulus size in retinal degrees should not exceed 'cnv.fieldSizeDegs'
-            stimSizeFraction = pr.stimSizeDegs / cnv.fieldSizeDegs;
-            if (stimSizeFraction > 1)
-                error('Stimulus size too big given field size');
-            end
-            idxLB = round(pr.nPixels * (0.5 - stimSizeFraction / 2));
-            if (idxLB < 1)
-                idxLB = 1;
-            end
-            idxUB = round(pr.nPixels * (0.5 + stimSizeFraction / 2));
-            if (idxUB > pr.nPixels)
-                idxUB = pr.nPixels;
-            end
-        
-            % Shift the stimulus to be centered on desired values
-            idxXRange = (idxLB:idxUB) + pr.stimCenter(1) * fullXQuads(qf, qs);
-            idxYRange = (idxLB:idxUB) + pr.stimCenter(2) * fullYQuads(qf, qs);
-        
-            % Check stimulus position. Ends function and deletes the created
-            % directory if the stimulus position exceeds bounds.
-            if min(idxYRange) <= 0 || max(idxYRange) > pr.nPixels ...
-                    || min(idxXRange) <= 0 || max(idxXRange) > pr.nPixels
-                warning(['Stimulus centered on ' int2str(pr.stimCenter' + pr.trueCenter) ...
-                    ' exceeds bounds. Beginning next simulation']);
-                rmdir(cnv.outputDir, 's');
-                close all
-                return
-            end
-        
-            % Set image pixels
-            stimulusImageRGB(idxYRange, idxXRange, 1) = pr.stimRVal;
-            stimulusImageRGB(idxYRange, idxXRange, 2) = pr.stimGVal;
-            stimulusImageRGB(idxYRange, idxXRange, 3) = pr.stimBVal;
+    for qs = 1:length(quadXShift)
+        % Create stimulus to populate the invidivual quadrants
+        % Stimulus size in retinal degrees should not exceed 'cnv.fieldSizeDegs'
+        stimSizeFraction = pr.stimSizeDegs / cnv.fieldSizeDegs;
+        if (stimSizeFraction > 1)
+            error('Stimulus size too big given field size');
         end
+        idxLB = round(pr.nPixels * (0.5 - stimSizeFraction / 2));
+        if (idxLB < 1)
+            idxLB = 1;
+        end
+        idxUB = round(pr.nPixels * (0.5 + stimSizeFraction / 2));
+        if (idxUB > pr.nPixels)
+            idxUB = pr.nPixels;
+        end
+    
+        % Shift the stimulus to be centered on desired values
+        idxXRange = (idxLB:idxUB) + pr.stimCenter(1) * quadXShift(qs);
+        idxYRange = (idxLB:idxUB) + pr.stimCenter(2) * quadYShift(qs);
+    
+        % Check stimulus position. Ends function and deletes the created
+        % directory if the stimulus position exceeds bounds.
+        if min(idxYRange) <= 0 || max(idxYRange) > pr.nPixels ...
+                || min(idxXRange) <= 0 || max(idxXRange) > pr.nPixels
+            warning(['Stimulus centered on ' int2str(pr.stimCenter' + pr.trueCenter) ...
+                ' exceeds bounds. Beginning next simulation']);
+            rmdir(cnv.outputDir, 's');
+            close all
+            return
+        end
+    
+        % Set image pixels
+        stimulusImageRGB(idxYRange, idxXRange, 1) = pr.stimRVal;
+        stimulusImageRGB(idxYRange, idxXRange, 2) = pr.stimGVal;
+        stimulusImageRGB(idxYRange, idxXRange, 3) = pr.stimBVal;
     end
 % Otherwise, treat passed pr.stimBgVal as an actual image
 else
