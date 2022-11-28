@@ -94,6 +94,13 @@ if(prBase.quads(1).value)
     prBase.quads(5).ybounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccYDegs;
 end
 
+% Select which quadrants from the above to activate
+prBase.quadSelect = [[true true true true];...
+    [true false false false];...
+    [false true false false];...
+    [false false true false];...
+    [false false false true]]';
+
 
 % Force build and save of render structures.  This
 % only affects this script, and will typically be false.
@@ -103,16 +110,16 @@ buildNewRecon = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [0.5/60 1/60 2/60];
+stimSizeDegsList = [1/60];
 
 % RGB values (before gamma correction)
 prBase.stimBgVal = 1;
 % stimRValList = [0.8 0.8 0.8];
 % stimGValList = [0.8 0.7 0.6];
 % stimBValList = [0.2 0.2 0.2];
-stimRValList = [1 0.80 0.4899];
-stimGValList = [1 0.65 0.4287];
-stimBValList = [0 0.10 0.0612];
+stimRValList = [1];
+stimGValList = [1];
+stimBValList = [0];
 
 
 
