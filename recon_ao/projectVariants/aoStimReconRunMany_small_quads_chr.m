@@ -184,24 +184,29 @@ for ss = 1:length(stimSizeDegsList)
             for ff = 1:length(forwardDefocusDioptersList)
                 for rr = 1:length(regParaList)
                     for dd = 1:length(forwardChromList)
+                        for pp = 1:length(forwardPupilDiamListMM)
 
-                        stimSizeDegs(runIndex) = stimSizeDegsList(ss);
+                            stimSizeDegs(runIndex) = stimSizeDegsList(ss);
 
-                        stimRVal(runIndex) = stimRValList(cc);
-                        stimGVal(runIndex) = stimGValList(cc);
-                        stimBVal(runIndex) = stimBValList(cc);
+                            stimRVal(runIndex) = stimRValList(cc);
+                            stimGVal(runIndex) = stimGValList(cc);
+                            stimBVal(runIndex) = stimBValList(cc);
 
-                        stimCenter(:,runIndex) = deltaCenterList(:,yy);
+                            stimCenter(:,runIndex) = deltaCenterList(:,yy);
 
-                        forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
-                        reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
+                            forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
+                            reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
 
-                        regPara(runIndex) = regParaList(rr);
+                            regPara(runIndex) = regParaList(rr);
 
-                        forwardChrom(runIndex) = forwardChromList(dd);
-                        reconChrom(runIndex) = reconChromList(dd);
+                            forwardChrom(runIndex) = forwardChromList(dd);
+                            reconChrom(runIndex) = reconChromList(dd);
 
-                        runIndex = runIndex + 1;
+                            forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
+                            reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
+
+                            runIndex = runIndex + 1;
+                        end
                     end
                 end
             end
@@ -216,7 +221,7 @@ for pp = 1:length(regPara)
     % out of lists precreated above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom, prBase.forwardPupilDiamMM, prBase.reconPupilDiamMM);
+        forwardChrom,reconChrom, forwardPupilDiamMM, reconPupilDiamMM);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
@@ -251,7 +256,7 @@ parfor pp = 1:length(regPara)
     % out of lists above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom, prBase.forwardPupilDiamMM, prBase.reconPupilDiamMM);
+        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
