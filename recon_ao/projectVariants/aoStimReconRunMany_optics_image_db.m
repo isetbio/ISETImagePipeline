@@ -143,8 +143,8 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-forwardPupilDiamListMM = [3 2.5 3.5 2.5 3.5]; %[2 3 4 2 4];
-reconPupilDiamListMM =   [3 2.5 3.5 3   3];   %[2 3 4 3 3];
+forwardPupilDiamListMM = [3 3   3   3]; %[2 3 4 2 4];
+reconPupilDiamListMM =   [2 2.5 3.5 4];   %[2 3 4 3 3];
 
 % Define optics.  Subject only matters if we use a database.
 %
