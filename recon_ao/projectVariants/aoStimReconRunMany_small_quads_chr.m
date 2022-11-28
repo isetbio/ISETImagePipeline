@@ -53,8 +53,8 @@ prBase.addPoissonNoise = false;
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
 %    Currently established quadSeq1 - quadSeq4
-forwardChromList = ["quadSeq3", "quadSeq4"]; 
-reconChromList =   ["quadSeq3", "quadSeq4"];
+forwardChromList = ["quadSeq3", "quadSeq4", "chromNorm"]; 
+reconChromList =   ["quadSeq3", "quadSeq4", "chromNorm"];
 
 % Build new sequence by
 prBase.quads(1).name = 'useQuadSeq';
@@ -101,7 +101,6 @@ quadSelectList = [[true true true true]]';%...
 %     [false false true false];...
 %     [false false false true]]';
 
-
 % Force build and save of render structures.  This
 % only affects this script, and will typically be false.
 buildNewForward = false;
@@ -110,18 +109,13 @@ buildNewRecon = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [1/60];
+stimSizeDegsList = [1/60 2/60];
 
 % RGB values (before gamma correction)
 prBase.stimBgVal = 0.1;
-% stimRValList = [0.8 0.8 0.8];
-% stimGValList = [0.8 0.7 0.6];
-% stimBValList = [0.2 0.2 0.2];
 stimRValList = [1];
 stimGValList = [1];
 stimBValList = [0];
-
-
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -152,8 +146,8 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.005; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
-prBase.stride = 2;
+regParaList = 0.0005; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+prBase.stride = 4;
 prBase.maxReconIterations = 1500;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
