@@ -139,8 +139,8 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-forwardPupilDiamListMM = [2 2.5 3 3.5 4];
-reconPupilDiamListMM =   [3 3   3 3 3 3];
+forwardPupilDiamListMM = [3 3   3 3   3];
+reconPupilDiamListMM =   [2 2.5 3 3.5 4];
 
 % Define optics.  Subject only matters if we use a database.
 %
@@ -226,6 +226,7 @@ for pp = 1:length(regPara)
     cnv = computeConvenienceParams(pr);
 
     % Call the driving function
+    fprintf('Loading data file %d of %d\n',pp,length(regPara));
     theData = load(fullfile(cnv.outputDir,'xRunOutput.mat'));
     stimulusImageRGB{pp} = theData.stimulusImageRGB;
     stimulusImageLinear{pp} = theData.stimulusImageLinear;
@@ -234,4 +235,12 @@ for pp = 1:length(regPara)
     reconLogPriors(pp) = theData.multistartStruct.reconLogPriors(theData.reconIndex);
     reconLosses(pp) = theData.multistartStruct.reconLosses(theData.reconIndex);
     reconScaleFactor(pp) = theData.reconScaleFactor(theData.reconIndex);
+    forwardExcitations(:,pp) = theData.forwardExcitationsToStimulusUse;
+    reconExcitations(:,pp) = theData.multistartStruct.reconPreds(:,theData.reconIndex);
+    R = corrcoef(forwardExcitations(:,pp),reconExcitations(:,pp));
+    corrs(pp) = R(1,2);
 end
+figure; plot(reconPupilDiamMM,-reconLosses,'ro'); title('Loss');
+figure; plot(reconPupilDiamMM,reconLogPriors,'ro'); title('Prior');
+figure; plot(reconPupilDiamMM,reconLogLikelihoods,'ro'); title('Likelihood');
+figure; plot(reconPupilDiamMM,corrs,'ro'); title('Correlation');
