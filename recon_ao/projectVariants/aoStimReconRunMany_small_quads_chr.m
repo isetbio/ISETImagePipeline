@@ -172,6 +172,13 @@ prBase.forwardZernikeDataBase = 'Polans2015';
 prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Polans2015';
 
+% For sake of making back compatible, need to go through and reevaluate
+% where Pupil Diam is being set (currently have prBase, cnv, and the
+% version below) 
+forwardPupilDiamListMM = [6];
+reconPupilDiamListMM =   [3];
+
+
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.06];% 0.05 0.1]; 
 reconDefocusDioptersList = [0.00];% 0.05 0.1];
