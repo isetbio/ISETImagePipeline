@@ -84,10 +84,10 @@ end
 
 %% Show forward and recon cone mosaics
 forwardConeMosaic.visualizeMosaic();
-saveas(gcf,fullfile(cnv.outputDir,'forwardMosaic.jpg'),'jpg');
+saveas(gcf,fullfile(cnv.outputDir,'forwardMosaic.tiff'),'tiff');
 
 reconConeMosaic.visualizeMosaic();
-saveas(gcf,fullfile(cnv.outputDir,'reconMosaic.jpg'),'jpg');
+saveas(gcf,fullfile(cnv.outputDir,'reconMosaic.tiff'),'tiff');
 
 %% Generate an image stimulus
 %
@@ -155,8 +155,6 @@ else
     end
 end
 
-
-
 % Show the stimulus by creating an ISETBio scene
 meanLuminanceCdPerM2 = [];
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
@@ -171,8 +169,8 @@ stimulusScene = sceneSet(stimulusScene, 'fov', cnv.fieldSizeDegs);
 %     title({'Stimulus Image' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
 % end
 % set(gcf,'Position',[500,500,500,400]);
-% saveas(gcf,fullfile(cnv.outputDir,'Stimulus.jpg'),'jpg');
-imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.jpg'),'jpg');
+% saveas(gcf,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
+imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 
 %% Compute forward retinal image and excitations using ISETBio
 %
@@ -211,7 +209,7 @@ xlim([0 maxVal]); ylim([0 maxVal]);
 xlabel('Excitations to stimulus ISETBio');
 ylabel('Excitations to stimulus render matrix');
 title('Mean excitations ISETBio and render matrix');
-saveas(gcf,fullfile(cnv.outputDir,'ISETBioVsRenderMatrixExciations.jpg'),'jpg');
+saveas(gcf,fullfile(cnv.outputDir,'ISETBioVsRenderMatrixExciations.tiff'),'tiff');
 
 %% Choose which excitations to reconstruct form
 if (pr.reconstructfromRenderMatrix)
@@ -240,14 +238,14 @@ forwardConeMosaic.Mosaic.visualize(...
     'activation', reshape(forwardExcitationsToStimulusUse,1,1,length(forwardExcitationsToStimulusUse)), ...
     'activationRange', [0 max(forwardExcitationsToStimulusUse)], ...
     'plotTitle',  titleStr,'labelConesInActivationMap', false);
-saveas(gcf,fullfile(cnv.outputDir,'forwardMosaicExcitations.jpg'),'jpg');
+saveas(gcf,fullfile(cnv.outputDir,'forwardMosaicExcitations.tiff'),'tiff');
 forwardConeMosaic.Mosaic.visualize(...
     'figureHandle', figureHandle, ...
     'axesHandle', axesHandle, ...
     'activation', reshape(forwardExcitationsToStimulusUse,1,1,length(forwardExcitationsToStimulusUse)), ...
     'activationRange', [0 max(forwardExcitationsToStimulusUse)], ...
     'plotTitle',  titleStr,'labelConesInActivationMap', true);
-saveas(gcf,fullfile(cnv.outputDir,'forwardMosaicExcitationsTypes.jpg'),'jpg');
+saveas(gcf,fullfile(cnv.outputDir,'forwardMosaicExcitationsTypes.tiff'),'tiff');
 
 %% Run reconstruction
 %
@@ -404,7 +402,7 @@ for ii = 1:length(multistartStruct.initTypes)
         title({'Stimulus Image' ; 'Scaled with recon' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
     end
     if (ii == reconIndex)
-        imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDir,'StimulusScaled.jpg'),'jpg');
+        imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDir,'StimulusScaled.tiff'),'tiff');
         % tempFig = figure; clf;
         % imshow(stimulusRGBScaled{ii});
         % if (length(pr.stimBgVal) > 1)
@@ -413,7 +411,7 @@ for ii = 1:length(multistartStruct.initTypes)
         %     title({'Stimulus Image' ; 'Scaled with recon' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
         % end
         % set(tempFig,'Position',[500,500,500,400]);
-        % saveas(tempFig,fullfile(cnv.outputDir,'StimulusScaled.jpg'));
+        % saveas(tempFig,fullfile(cnv.outputDir,'StimulusScaled.tiff'));
         % close(tempFig);
         % figure(theFig);
     end
@@ -474,7 +472,7 @@ for ii = 1:length(multistartStruct.initTypes)
             'axesHandle', [], ...
             'withSuperimposedOpticalImage', forwardOI, ...
             'plotTitle','Forward OI on Forward Mosaic','superimposedOIAlpha',0.7);
-        saveas(tempFig,fullfile(cnv.outputDir,sprintf('forwardOIOnForwardMosaic.jpg',ii)),'jpg');
+        saveas(tempFig,fullfile(cnv.outputDir,sprintf('forwardOIOnForwardMosaic.tiff',ii)),'tiff');
         close(tempFig);
         figure(theFig);
     end
@@ -553,7 +551,7 @@ for ii = 1:length(multistartStruct.initTypes)
             'axesHandle', [], ...
             'withSuperimposedOpticalImage', reconOIToReconTemp, ...
             'plotTitle','Recon OI on Recon Mosaic','superimposedOIAlpha',0.7);
-        saveas(tempFig,fullfile(cnv.outputDir,sprintf('reconOIOnReconMosaic.jpg',ii)),'jpg');
+        saveas(tempFig,fullfile(cnv.outputDir,sprintf('reconOIOnReconMosaic.tiff',ii)),'tiff');
         close(tempFig);
         figure(theFig);
     end
@@ -575,7 +573,7 @@ for ii = 1:length(multistartStruct.initTypes)
             'activation', reshape(multistartStruct.reconPreds(:,ii),1,1,length(forwardExcitationsToStimulusUse)), ...
             'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
             'plotTitle',  'Recon excitations','labelConesInActivationMap', false);
-        saveas(tempFig,fullfile(cnv.outputDir,sprintf('reconMosaicExcitations.jpg',ii)),'jpg');
+        saveas(tempFig,fullfile(cnv.outputDir,sprintf('reconMosaicExcitations.tiff',ii)),'tiff');
         clf;
         reconConeMosaic.Mosaic.visualize(...
             'figureHandle', tempFig, ...
@@ -583,7 +581,7 @@ for ii = 1:length(multistartStruct.initTypes)
             'activation', reshape(multistartStruct.reconPreds(:,ii),1,1,length(forwardExcitationsToStimulusUse)), ...
             'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
             'plotTitle',  'Recon excitations','labelConesInActivationMap', true);
-        saveas(tempFig,fullfile(cnv.outputDir,sprintf('reconMosaicExcitationsTypes.jpg',ii)),'jpg');
+        saveas(tempFig,fullfile(cnv.outputDir,sprintf('reconMosaicExcitationsTypes.tiff',ii)),'tiff');
         close(tempFig);
         figure(theFig);
     end
@@ -665,7 +663,7 @@ for ii = 1:length(multistartStruct.initTypes)
         title('Excitations to recon in two ways');
         xlabel('Excitations from multistart struct');
         ylabel('Excitations from aoStimRecon')
-        saveas(gcf,fullfile(cnv.outputDir,sprintf('ReconExcitationsCheckError%d.jpg',ii)),'jpg');
+        saveas(gcf,fullfile(cnv.outputDir,sprintf('ReconExcitationsCheckError%d.tiff',ii)),'tiff');
         figure(theFig);
     end
 
@@ -745,11 +743,11 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 
     % Save
-    saveas(gcf,fullfile(cnv.outputDir,sprintf('Recon%dSummary.jpg',ii)),'jpg');
+    saveas(gcf,fullfile(cnv.outputDir,sprintf('Recon%dSummary.tiff',ii)),'tiff');
 
     % Save summary of best recon in its own file
     if (ii == reconIndex)
-        saveas(gcf,fullfile(cnv.outputDir,sprintf('ReconSummary.jpg',ii)),'jpg');
+        saveas(gcf,fullfile(cnv.outputDir,sprintf('ReconSummary.tiff',ii)),'tiff');
     end
 end
 
@@ -762,8 +760,8 @@ end
 %     title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR(reconIndex),maxReconG(reconIndex),maxReconB(reconIndex)) ; 'Unbounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(reconIndex))});
 % end
 % set(gcf,'Position',[500,500,500,400]);
-% saveas(gcf,fullfile(cnv.outputDir,'Recon.jpg'),'jpg');
-imwrite(reconRGB{reconIndex},fullfile(cnv.outputDir,'Recon.jpg'),'jpg');
+% saveas(gcf,fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
+imwrite(reconRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
 
 %% Save workspace without really big variables
 close all;
