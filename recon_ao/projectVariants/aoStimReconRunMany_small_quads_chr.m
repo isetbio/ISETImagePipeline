@@ -95,11 +95,11 @@ if(prBase.quads(1).value)
 end
 
 % Select which quadrants from the above to activate
-quadSelectList = [[true true true true];...
-    [true false false false];...
-    [false true false false];...
-    [false false true false];...
-    [false false false true]]';
+quadSelectList = [[true true true true]]';%...
+%     [true false false false];...
+%     [false true false false];...
+%     [false false true false];...
+%     [false false false true]]';
 
 
 % Force build and save of render structures.  This
@@ -135,7 +135,7 @@ end
 %
 % Position specified in pixels, could consider specifying in minutes.
 pixelsPerMinute = prBase.nPixels/prBase.fieldSizeMinutes;
-shiftInMinutesList = [0];
+shiftInMinutesList = [-3:1:3];
 shiftInPixelsList = round(pixelsPerMinute*shiftInMinutesList);
 quadCenters = round(prBase.nPixels / 4);
 centerXPosition = prBase.trueCenter + quadCenters + shiftInPixelsList;
@@ -192,7 +192,7 @@ for ss = 1:length(stimSizeDegsList)
                 for rr = 1:length(regParaList)
                     for dd = 1:length(forwardChromList)
                         for pp = 1:length(forwardPupilDiamListMM)
-                            for qq = 1:length(quadSelectList)
+                            for qq = 1:length(quadSelectList(1,:))
     
                                 stimSizeDegs(runIndex) = stimSizeDegsList(ss);
     
@@ -268,7 +268,7 @@ parfor pp = 1:length(regPara)
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
         forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM);
-    pr.quadSelect = quadSelect(pp);
+    pr.quadSelect = quadSelect(:,pp);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);

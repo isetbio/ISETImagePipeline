@@ -100,7 +100,7 @@ if (length(pr.stimBgVal) == 1)
         % Apply sign changes to orient in proper Cartesian Quadrant
         % Then adjust based on selected quadrants in RunMany
         quadXShift = [1 -1 -1 1];
-        quadYShift = [1 1 -1 -1];
+        quadYShift = [-1 -1 1 1];
         quadXShift = quadXShift(pr.quadSelect);
         quadYShift = quadYShift(pr.quadSelect);
 
