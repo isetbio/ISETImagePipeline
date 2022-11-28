@@ -139,8 +139,8 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-forwardPupilDiamListMM = [2 3 4];
-reconPupilDiamListMM =   [3 3 3];
+forwardPupilDiamListMM = [2 2.5 3 3.5 4];
+reconPupilDiamListMM =   [3 3   3 3 3 3];
 
 % Define optics.  Subject only matters if we use a database.
 %
@@ -227,10 +227,11 @@ for pp = 1:length(regPara)
 
     % Call the driving function
     theData = load(fullfile(cnv.outputDir,'xRunOutput.mat'));
-    theData.stimulusImageLinear
-    theData.reconImageLinearTemp
-    theData.multistartStruct.reconLogLikelihoods(theData.reconIndex)
-    theData.multistartStruct.reconLogPriors(theData.reconIndex);
-    theData.multistartStruct).reconLosses(theData.reconIndex);
-
+    stimulusImageRGB{pp} = theData.stimulusImageRGB;
+    stimulusImageLinear{pp} = theData.stimulusImageLinear;
+    reconImageLinear = theData.reconImageLinearTemp;
+    reconLogLikelihoods(pp) = theData.multistartStruct.reconLogLikelihoods(theData.reconIndex);
+    reconLogPriors(pp) = theData.multistartStruct.reconLogPriors(theData.reconIndex);
+    reconLosses(pp) = theData.multistartStruct.reconLosses(theData.reconIndex);
+    reconScaleFactor(pp) = theData.reconScaleFactor(theData.reconIndex);
 end
