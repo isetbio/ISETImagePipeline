@@ -52,9 +52,9 @@ prBase.addPoissonNoise = false;
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
-%    Currently established quadSeq1 - quadSeq4
-forwardChromList = ["quadSeq3", "quadSeq4"]; 
-reconChromList =   ["quadSeq3", "quadSeq4"];
+%    Currently established quadSeq1 - quadSeq5
+forwardChromList = ["quadSeq5"]; 
+reconChromList =   ["quadSeq5"];
 
 % Build new sequence by
 prBase.quads(1).name = 'useQuadSeq';
@@ -94,6 +94,15 @@ if(prBase.quads(1).value)
     prBase.quads(5).ybounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccYDegs;
 end
 
+prBase.quads(6).name = 'overrideQuadSeq';
+prBase.quads(6).value = false;
+
+% Select which quadrants from the above to activate
+quadSelectList = [[true true true true]]';%...
+%     [true false false false];...
+%     [false true false false];...
+%     [false false true false];...
+%     [false false false true]]';
 
 % Force build and save of render structures.  This
 % only affects this script, and will typically be false.
@@ -103,18 +112,13 @@ buildNewRecon = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [0.5/60 1/60 2/60];
+stimSizeDegsList = [1] / 60;
 
 % RGB values (before gamma correction)
-prBase.stimBgVal = 1;
-% stimRValList = [0.8 0.8 0.8];
-% stimGValList = [0.8 0.7 0.6];
-% stimBValList = [0.2 0.2 0.2];
-stimRValList = [1 0.80 0.4899];
-stimGValList = [1 0.65 0.4287];
-stimBValList = [0 0.10 0.0612];
-
-
+prBase.stimBgVal = 0.1;
+stimRValList = [1.0];
+stimGValList = [1.0];
+stimBValList = [0.0];
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -129,11 +133,22 @@ end
 % Position specified in pixels, could consider specifying in minutes.
 pixelsPerMinute = prBase.nPixels/prBase.fieldSizeMinutes;
 shiftInMinutesList = [-3:1:3];
+fullSquareShift = true;
+
+% Convert the shifts to pixel positions
 shiftInPixelsList = round(pixelsPerMinute*shiftInMinutesList);
 quadCenters = round(prBase.nPixels / 4);
 centerXPosition = prBase.trueCenter + quadCenters + shiftInPixelsList;
 centerYPosition = prBase.trueCenter + quadCenters * ones(size(centerXPosition));
 prBase.stimCenter = [centerXPosition ; centerYPosition];
+
+% Loop through created pixel positions if want to create a square grid of
+% movement instead of default horizontal shift
+if (fullSquareShift)
+    centerXPosition = repelem(prBase.stimCenter(1,:), length(shiftInMinutesList));
+    centerYPosition = repmat(prBase.stimCenter(1,:), [1,length(shiftInMinutesList)]);
+    prBase.stimCenter = [centerXPosition; centerYPosition];
+end
 deltaCenterList = [prBase.stimCenter - prBase.trueCenter];
 
 %% Prior parameters
@@ -147,7 +162,7 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.005; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 3000;
+prBase.maxReconIterations = 2000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
@@ -165,9 +180,16 @@ prBase.forwardZernikeDataBase = 'Polans2015';
 prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Polans2015';
 
+% For sake of making back compatible, need to go through and reevaluate
+% where Pupil Diam is being set (currently have prBase, cnv, and the
+% version below) 
+forwardPupilDiamListMM = [6];
+reconPupilDiamListMM =   [3];
+
+
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.06];% 0.05 0.1]; 
-reconDefocusDioptersList = [0.00];% 0.05 0.1];
+reconDefocusDioptersList = [0];% 0.05 0.1];
 
 %% Set up list conditions
 runIndex = 1;
@@ -177,24 +199,33 @@ for ss = 1:length(stimSizeDegsList)
             for ff = 1:length(forwardDefocusDioptersList)
                 for rr = 1:length(regParaList)
                     for dd = 1:length(forwardChromList)
+                        for pp = 1:length(forwardPupilDiamListMM)
+                            for qq = 1:length(quadSelectList(1,:))
+    
+                                stimSizeDegs(runIndex) = stimSizeDegsList(ss);
+    
+                                stimRVal(runIndex) = stimRValList(cc);
+                                stimGVal(runIndex) = stimGValList(cc);
+                                stimBVal(runIndex) = stimBValList(cc);
+    
+                                stimCenter(:,runIndex) = deltaCenterList(:,yy);
+    
+                                forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
+                                reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
+    
+                                regPara(runIndex) = regParaList(rr);
+    
+                                forwardChrom(runIndex) = forwardChromList(dd);
+                                reconChrom(runIndex) = reconChromList(dd);
+    
+                                forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
+                                reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
+    
+                                quadSelect(:,runIndex) = quadSelectList(:,qq);
 
-                        stimSizeDegs(runIndex) = stimSizeDegsList(ss);
-
-                        stimRVal(runIndex) = stimRValList(cc);
-                        stimGVal(runIndex) = stimGValList(cc);
-                        stimBVal(runIndex) = stimBValList(cc);
-
-                        stimCenter(:,runIndex) = deltaCenterList(:,yy);
-
-                        forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
-                        reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
-
-                        regPara(runIndex) = regParaList(rr);
-
-                        forwardChrom(runIndex) = forwardChromList(dd);
-                        reconChrom(runIndex) = reconChromList(dd);
-
-                        runIndex = runIndex + 1;
+                                runIndex = runIndex + 1;
+                            end
+                        end
                     end
                 end
             end
@@ -209,8 +240,8 @@ for pp = 1:length(regPara)
     % out of lists precreated above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom);
-
+        forwardChrom,reconChrom, forwardPupilDiamMM, reconPupilDiamMM);
+    pr.quadSelect = quadSelect(:,pp);
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
 
@@ -244,7 +275,8 @@ parfor pp = 1:length(regPara)
     % out of lists above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom);
+        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM);
+    pr.quadSelect = quadSelect(:,pp);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
