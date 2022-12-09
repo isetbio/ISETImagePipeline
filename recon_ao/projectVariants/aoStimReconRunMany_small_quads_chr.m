@@ -52,9 +52,9 @@ prBase.addPoissonNoise = false;
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
-%    Currently established quadSeq1 - quadSeq4
-forwardChromList = ["quadSeq3", "quadSeq4", "chromNorm"]; 
-reconChromList =   ["quadSeq3", "quadSeq4", "chromNorm"];
+%    Currently established quadSeq1 - quadSeq5
+forwardChromList = ["quadSeq5"]; 
+reconChromList =   ["quadSeq5"];
 
 % Build new sequence by
 prBase.quads(1).name = 'useQuadSeq';
@@ -94,6 +94,9 @@ if(prBase.quads(1).value)
     prBase.quads(5).ybounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccYDegs;
 end
 
+prBase.quads(6).name = 'overrideQuadSeq';
+prBase.quads(6).value = false;
+
 % Select which quadrants from the above to activate
 quadSelectList = [[true true true true]]';%...
 %     [true false false false];...
@@ -109,13 +112,13 @@ buildNewRecon = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [1/60 2/60];
+stimSizeDegsList = [1] / 60;
 
 % RGB values (before gamma correction)
 prBase.stimBgVal = 0.1;
-stimRValList = [1];
-stimGValList = [1];
-stimBValList = [0];
+stimRValList = [1.0];
+stimGValList = [1.0];
+stimBValList = [0.0];
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -130,11 +133,22 @@ end
 % Position specified in pixels, could consider specifying in minutes.
 pixelsPerMinute = prBase.nPixels/prBase.fieldSizeMinutes;
 shiftInMinutesList = [-3:1:3];
+fullSquareShift = true;
+
+% Convert the shifts to pixel positions
 shiftInPixelsList = round(pixelsPerMinute*shiftInMinutesList);
 quadCenters = round(prBase.nPixels / 4);
 centerXPosition = prBase.trueCenter + quadCenters + shiftInPixelsList;
 centerYPosition = prBase.trueCenter + quadCenters * ones(size(centerXPosition));
 prBase.stimCenter = [centerXPosition ; centerYPosition];
+
+% Loop through created pixel positions if want to create a square grid of
+% movement instead of default horizontal shift
+if (fullSquareShift)
+    centerXPosition = repelem(prBase.stimCenter(1,:), length(shiftInMinutesList));
+    centerYPosition = repmat(prBase.stimCenter(1,:), [1,length(shiftInMinutesList)]);
+    prBase.stimCenter = [centerXPosition; centerYPosition];
+end
 deltaCenterList = [prBase.stimCenter - prBase.trueCenter];
 
 %% Prior parameters
@@ -146,9 +160,9 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.0005; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
-prBase.stride = 4;
-prBase.maxReconIterations = 1500;
+regParaList = 0.005; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+prBase.stride = 2;
+prBase.maxReconIterations = 2000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
@@ -175,7 +189,7 @@ reconPupilDiamListMM =   [3];
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.06];% 0.05 0.1]; 
-reconDefocusDioptersList = [0.00];% 0.05 0.1];
+reconDefocusDioptersList = [0];% 0.05 0.1];
 
 %% Set up list conditions
 runIndex = 1;
