@@ -854,6 +854,7 @@ if (pr.quads(1).value)
         xlabel('Scaled (pupil) excitations to stimulus');
         ylabel('Recon excitations to recon');
     end
+    saveas(gcf,fullfile(cnv.outputDir,'reconExcitationstoRecon_Quads.tiff'),'tiff');
 end
 
 % Save best reconstruction image
