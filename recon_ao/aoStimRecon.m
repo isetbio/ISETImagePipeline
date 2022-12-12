@@ -748,61 +748,60 @@ for ii = 1:length(multistartStruct.initTypes)
     % Save summary of best recon in its own file
     if (ii == reconIndex)
         saveas(gcf,fullfile(cnv.outputDir,sprintf('ReconSummary.tiff',ii)),'tiff');
-    end
-end
+        % Manually create the plots based on specific quadrant excitations
+        if (pr.quads(1).value)
+            theQuadsFig = figure; clf;
+            set(theQuadsFig,'Position',[100 400 1000 2000]);
+            quadOrder = [2 1 3 4];
 
-% Manually create the plots based on specific quadrant excitations
-if (pr.quads(1).value)
-    theFig = figure; clf;
-    set(theFig,'Position',[100 400 1000 2000]);
-   
-    quad1Ind = find(...
-    forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) > pr.eccXDegs & ...
-    forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) > pr.eccYDegs);
-    subplot(2,2,quadOrder(2)); hold on;
-    plot(forwardExcitationsToStimulusUse(quad1Ind)*scaleFactor,reconExcitationsToReconTemp(quad1Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
+            quad1Ind = find(...
+                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) > pr.eccXDegs & ...
+                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) > pr.eccYDegs);
+            subplot(2,2,quadOrder(2)); hold on;
+            plot(forwardExcitationsToStimulusUse(quad1Ind)*scaleFactor,reconExcitationsToReconTemp(quad1Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
 
-    quad2Ind = find(...
-    forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) < pr.eccXDegs & ...
-    forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) > pr.eccYDegs);
-    subplot(2,2,quadOrder(1)); hold on;
-    plot(forwardExcitationsToStimulusUse(quad2Ind)*scaleFactor,reconExcitationsToReconTemp(quad2Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
+            quad2Ind = find(...
+                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) < pr.eccXDegs & ...
+                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) > pr.eccYDegs);
+            subplot(2,2,quadOrder(1)); hold on;
+            plot(forwardExcitationsToStimulusUse(quad2Ind)*scaleFactor,reconExcitationsToReconTemp(quad2Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
 
-    quad3Ind = find(...
-    forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) < pr.eccXDegs & ...
-    forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) < pr.eccYDegs);
-    subplot(2,2,quadOrder(3)); hold on;
-    plot(forwardExcitationsToStimulusUse(quad3Ind)*scaleFactor,reconExcitationsToReconTemp(quad3Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
+            quad3Ind = find(...
+                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) < pr.eccXDegs & ...
+                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) < pr.eccYDegs);
+            subplot(2,2,quadOrder(3)); hold on;
+            plot(forwardExcitationsToStimulusUse(quad3Ind)*scaleFactor,reconExcitationsToReconTemp(quad3Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
 
-    quad4Ind = find(...
-    forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) > pr.eccXDegs & ...
-    forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) < pr.eccYDegs);
-    subplot(2,2,quadOrder(4)); hold on;
-    plot(forwardExcitationsToStimulusUse(quad4Ind)*scaleFactor,reconExcitationsToReconTemp(quad4Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
+            quad4Ind = find(...
+                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) > pr.eccXDegs & ...
+                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) < pr.eccYDegs);
+            subplot(2,2,quadOrder(4)); hold on;
+            plot(forwardExcitationsToStimulusUse(quad4Ind)*scaleFactor,reconExcitationsToReconTemp(quad4Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
 
-    quadOrder = [2 1 3 4];
+            for i=1:4
+                subplot(2,2,quadOrder(i)); hold on;
 
-    for i=1:4
-        subplot(2,2,quadOrder(i)); hold on;
-    
-        if (pr.reconstructfromRenderMatrix)
-            title({['Quadrant ' num2str(i)]; 'Recon excitations to recon' ; 'Excitations from render matrix'});
-            reconExcitationsToReconTemp = reconExcitationsToReconCheck;
-            disp(quadOrder(i))
-        else
-            title({['Quadrant ' num2str(i)]; 'Recon excitations to recon' ; 'Excitations from ISETBio'});
-            reconExcitationsToReconTemp = squeeze(reconConeMosaic.Mosaic.compute(reconOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+                if (pr.reconstructfromRenderMatrix)
+                    title({['Quadrant ' num2str(i)]; 'Recon excitations to recon' ; 'Excitations from render matrix'});
+                    reconExcitationsToReconTemp = reconExcitationsToReconCheck;
+                else
+                    title({['Quadrant ' num2str(i)]; 'Recon excitations to recon' ; 'Excitations from ISETBio'});
+                    reconExcitationsToReconTemp = squeeze(reconConeMosaic.Mosaic.compute(reconOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+                end
+                axis('square');
+                minVal = 0.9*min([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
+                maxVal = 1.1*max([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
+                plot([minVal maxVal],[minVal maxVal],'k');
+                xlim([minVal maxVal]); ylim([minVal maxVal]);
+                xlabel('Scaled (pupil) excitations to stimulus');
+                ylabel('Recon excitations to recon');
+            end
+            saveas(gcf,fullfile(cnv.outputDir,'reconExcitationstoRecon_Quads.tiff'),'tiff');
         end
-        axis('square');
-        minVal = 0.9*min([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
-        maxVal = 1.1*max([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
-        plot([minVal maxVal],[minVal maxVal],'k');
-        xlim([minVal maxVal]); ylim([minVal maxVal]);
-        xlabel('Scaled (pupil) excitations to stimulus');
-        ylabel('Recon excitations to recon');
     end
-    saveas(gcf,fullfile(cnv.outputDir,'reconExcitationstoRecon_Quads.tiff'),'tiff');
 end
+
+
 
 % Save best reconstruction image
 % figure;

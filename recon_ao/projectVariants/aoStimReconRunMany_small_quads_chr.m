@@ -53,8 +53,8 @@ prBase.addPoissonNoise = false;
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
 %    Currently established quadSeq1 - quadSeq5
-forwardChromList = ["quadSeq5"]; 
-reconChromList =   ["quadSeq5"];
+forwardChromList = ["quadSeq4"]; 
+reconChromList =   ["quadSeq4"];
 
 % Build new sequence by
 prBase.quads(1).name = 'useQuadSeq';
@@ -112,13 +112,13 @@ buildNewRecon = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [1] / 60;
+stimSizeDegsList = 1 / 60;
 
 % RGB values (before gamma correction)
 prBase.stimBgVal = 0.1;
-stimRValList = [1.0];
-stimGValList = [1.0];
-stimBValList = [0.0];
+stimRValList = [1.0]% 1.0 0.0 0.80 0.80 0.60];
+stimGValList = [1.0]% 0.0 1.0 0.65 0.45 0.65];
+stimBValList = [0.0]% 0.0 0.0 0.10 0.10 0.10];
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -132,8 +132,8 @@ end
 %
 % Position specified in pixels, could consider specifying in minutes.
 pixelsPerMinute = prBase.nPixels/prBase.fieldSizeMinutes;
-shiftInMinutesList = [-3:1:3];
-fullSquareShift = true;
+shiftInMinutesList = [0];
+fullSquareShift = false;
 
 % Convert the shifts to pixel positions
 shiftInPixelsList = round(pixelsPerMinute*shiftInMinutesList);
@@ -162,7 +162,7 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.005; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 2000;
+prBase.maxReconIterations = 5;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
@@ -172,9 +172,9 @@ prBase.boundedSearch = false;
 
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = true;
-prBase.reconAORender = false;
+prBase.reconAORender = true;
 prBase.forwardPupilDiamMM = 6;
-prBase.reconPupilDiamMM = 3;
+prBase.reconPupilDiamMM = 6;
 prBase.forwardSubjectID = 6;
 prBase.forwardZernikeDataBase = 'Polans2015';
 prBase.reconSubjectID = 6;
@@ -184,12 +184,12 @@ prBase.reconZernikeDataBase = 'Polans2015';
 % where Pupil Diam is being set (currently have prBase, cnv, and the
 % version below) 
 forwardPupilDiamListMM = [6];
-reconPupilDiamListMM =   [3];
+reconPupilDiamListMM =   [6];
 
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.06];% 0.05 0.1]; 
-reconDefocusDioptersList = [0];% 0.05 0.1];
+forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
+reconDefocusDioptersList = [0.00];% 0.05 0.1];
 
 %% Set up list conditions
 runIndex = 1;
