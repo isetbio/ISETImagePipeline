@@ -15,7 +15,9 @@
 %% Clear
 clear; close all;
 
-%% Set up parpool with threads.  Faster
+% Set up parpool with threads
+%
+% Faster, if it works, in 2022b and later.  Need ver check.
 % poolobj = gcp('nocreate');
 % if (isempty(poolobj))
 %     parpool('threads');
