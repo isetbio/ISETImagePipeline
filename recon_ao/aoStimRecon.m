@@ -265,10 +265,6 @@ clear reconRenderMatrix
 estimator = PoissonSparseEstimator(reconRenderMatrixPupilScaled, inv(prior.regBasis), ...
     prior.mu', pr.regPara, pr.stride, [pr.nPixels pr.nPixels 3]);
 
-% Estimate
-%
-
-
 % Set up uniform field starts
 specifiedStarts = {};
 for uu = 1:length(pr.uniformStartVals)
