@@ -609,7 +609,7 @@ for ii = 1:length(multistartStruct.initTypes)
     end
     plot(forwardExcitationsToStimulusUse,reconExcitationsToStimulusTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
     axis('square');
-    minVal = 0.9*min([forwardExcitationsToStimulusUsereconExcitationsToStimulusTemp]);
+    minVal = 0.9*min([forwardExcitationsToStimulusUse;reconExcitationsToStimulusTemp]);
     maxVal = 1.1*max([forwardExcitationsToStimulusUse;reconExcitationsToStimulusTemp]);
     plot([minVal maxVal],[minVal maxVal],'k');
     xlim([minVal maxVal]); ylim([minVal maxVal]);
