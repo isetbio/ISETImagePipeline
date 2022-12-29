@@ -69,7 +69,7 @@ forwardConeMosaic = forwardRenderStructure.theConeMosaic;
 forwardOI = forwardConeMosaic.PSF;
 
 % Set recon variables from loaded/built structure
-reconRenderMatrixPupilScaled = reconRenderStructure.renderMatrix;
+reconRenderMatrix = reconRenderStructure.renderMatrix;
 reconConeMosaic = reconRenderStructure.theConeMosaic;
 reconOI = reconConeMosaic.PSF;
 
@@ -259,7 +259,7 @@ prior = load(fullfile(pr.aoReconDir, 'priors', sparsePriorName));
 meanLuminanceCdPerM2 = [];
 pupilSizeScaleFactor = (cnv.reconPupilDiamMM/cnv.forwardPupilDiamMM)^2;
 reconRenderMatrixPupilScaled = reconRenderMatrix/pupilSizeScaleFactor;
-clear reconRenderMatrix
+clear reconRenderMatrix;
 
 % Construct image estimator
 estimator = PoissonSparseEstimator(reconRenderMatrixPupilScaled, inv(prior.regBasis), ...
