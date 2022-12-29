@@ -99,8 +99,13 @@ else
 end
 
 % Determine which quadrants are stimulated for small quads
-stimQuads = (find(pr.quadSelect' ~= 0));
-stimQuadsName = sprintf('%d',stimQuads');
+if isfield(pr,'quadSelect')
+    stimQuads = (find(pr.quadSelect' ~= 0));
+    stimQuadsName = sprintf('%d',stimQuads');
+else
+    stimQuads = [];
+    stimQuadsName = '';
+end
 
 cnv.outputMainName = sprintf('%s_%s_%s_%0.2f_%0.2f_%d_%d_%s_%s', ...
     pr.versEditor,cnv.forwardAOStr,cnv.reconAOStr,pr.forwardDefocusDiopters,pr.reconDefocusDiopters,pr.nPixels,pr.fieldSizeMinutes,pr.displayName,pr.sparsePriorStr);
