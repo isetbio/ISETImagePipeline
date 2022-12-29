@@ -353,7 +353,9 @@ for ii = 1:length(multistartStruct.initTypes)
     maxReconB(ii) = max(max(reconRGB{ii}(:,:,3)));
     [reconSceneTemp, ~, reconImageLinearTemp] = sceneFromFile(reconRGB{ii}, 'rgb', ...
         meanLuminanceCdPerM2, reconConeMosaic.Display);
-    sceneSet(reconSceneTemp,'photons',sceneGet(reconSceneTemp,'photons')*reconScaleFactor(ii));
+
+    % Adjust recon scene for recon scale factor and pupil size scale factor
+    sceneSet(reconSceneTemp,'photons',sceneGet(reconSceneTemp,'photons')*reconScaleFactor(ii)/pupilSizeScaleFactor);
     reconSceneTemp = sceneSet(reconSceneTemp, 'fov', cnv.fieldSizeDegs);
     reconImageLinearTemp = reconImageLinearTemp*reconScaleFactor(ii);
 
@@ -361,7 +363,8 @@ for ii = 1:length(multistartStruct.initTypes)
     % difference in pupil size into account with reconOI.
     forwardOI = oiCompute(stimulusScene,forwardOI);
     forwardOIToReconTemp = oiCompute(reconSceneTemp,forwardOI);
-    reconOIToReconTemp = oiCompute(reconSceneTemp/pupilSizeScaleFactor,reconOI);
+    
+    reconOIToReconTemp = oiCompute(reconSceneTemp,reconOI);
 
     % Get recon excitations to stimulus
     reconExcitationsToStimulusTemp = reconRenderMatrixPupilScaled*stimulusImageLinear(:);
