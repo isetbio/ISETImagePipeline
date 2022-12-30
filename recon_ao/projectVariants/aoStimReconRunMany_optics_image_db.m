@@ -31,6 +31,7 @@ prBase.versEditor = 'optics_image_db';
 prBase.displayName = 'conventional';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
+prBase.displayScaleFactor = 10;
 
 %% Spatial parameters
 %
@@ -143,8 +144,8 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-forwardPupilDiamListMM = [3 3   3   3]; 
-reconPupilDiamListMM =   [2 2.5 3.5 4];  
+forwardPupilDiamListMM = [3 3   3 3   3]; 
+reconPupilDiamListMM =   [2 2.5 3 3.5 4];  
 
 % Define optics.  Subject only matters if we use a database.
 %
@@ -233,8 +234,8 @@ for pp = 1:length(regPara)
     if (buildNewForward || ~exist(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'file'))
         renderStructure = buildRenderStruct(pr.aoReconDir , pr.eccXDegs, pr.eccYDegs, ...
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters, ...
-            cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
-            pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
+            cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits,  ...
+            pr.displayGammaGamma, pr.displayScaleFactor, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
             cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase, pr.quads);
         save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure','-v7.3');
         forwardRenderStructure = renderStructure; clear renderStructure;

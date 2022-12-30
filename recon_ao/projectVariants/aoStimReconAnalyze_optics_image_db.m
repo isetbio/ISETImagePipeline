@@ -27,6 +27,7 @@ prBase.versEditor = 'optics_image_db';
 prBase.displayName = 'conventional';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
+prBase.displayScaleFactor = 10;
 
 %% Spatial parameters
 %
