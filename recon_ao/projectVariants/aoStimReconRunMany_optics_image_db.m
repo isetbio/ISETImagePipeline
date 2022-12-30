@@ -31,7 +31,7 @@ prBase.versEditor = 'optics_image_db';
 prBase.displayName = 'conventional';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
-prBase.displayScaleFactor = 10;
+displayScaleFactorList = [1 10];
 
 %% Spatial parameters
 %
@@ -189,6 +189,7 @@ for ss = 1:length(stimSizeDegsList)
                 for rr = 1:length(regParaList)
                     for dd = 1:length(forwardChromList)
                         for pp = 1:length(forwardPupilDiamListMM)
+                            for dsf = 1:length(displayScaleFactorList)
 
                             stimSizeDegs(runIndex) = stimSizeDegsList(ss);
 
@@ -209,6 +210,8 @@ for ss = 1:length(stimSizeDegsList)
                             forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
                             reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
 
+                            displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
+
                             runIndex = runIndex + 1;
                         end
                     end
@@ -225,7 +228,7 @@ for pp = 1:length(regPara)
     % out of lists precreated above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM);
+        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
