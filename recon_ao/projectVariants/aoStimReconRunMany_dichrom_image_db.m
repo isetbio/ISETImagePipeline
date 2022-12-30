@@ -15,6 +15,12 @@
 %% Clear
 clear; close all;
 
+%% Control size of parpool, otherwise may crush memory
+thePool = gcp('nocreate');
+if (isempty(thePool))
+    parpool(5);
+end
+
 %% Set defaults in prBase
 prBase = prBaseDefaults;
 
@@ -31,6 +37,7 @@ prBase.versEditor = 'dichrom_image_db';
 prBase.displayName = 'conventional';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
+displayScaleFactorList = [10];
 
 %% Spatial parameters
 %
@@ -130,7 +137,7 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.00001; %[0.05 0.01 0.005 0.001 0.0005 0.0001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+regParaList = [0.01 0.005 0.001 0.0005];
 prBase.stride = 4;
 prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
@@ -146,19 +153,17 @@ prBase.reconAORender = false;
 prBase.forwardPupilDiamMM = 3;
 prBase.reconPupilDiamMM = 3;
 
-% Define optics.  Subject only matters if we use a database.
-% prBase.forwardSubjectID = 6;
-% prBase.forwardZernikeDataBase = 'Polans2015';
-% prBase.reconSubjectID = 6;
-% prBase.reconZernikeDataBase = 'Polans2015';
+% Define optics.  Subject only matters if we use a database.  Ignored for
+% Marimont and Wandell.  For database, subjectID of 0 means diffraction
+% limited.
 prBase.forwardSubjectID = 0;
 prBase.forwardZernikeDataBase = 'MarimontWandell';
 prBase.reconSubjectID = 0;
 prBase.reconZernikeDataBase = 'MarimontWandell';
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.00];% 0.05 0.1];
-reconDefocusDioptersList = [0.00];% 0.05 0.1];
+forwardDefocusDioptersList = [0.00];
+reconDefocusDioptersList =   [0.00];
 
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
@@ -185,24 +190,33 @@ for ss = 1:length(stimSizeDegsList)
             for ff = 1:length(forwardDefocusDioptersList)
                 for rr = 1:length(regParaList)
                     for dd = 1:length(forwardChromList)
+                        for pp = 1:length(forwardPupilDiamListMM)
+                            for dsf = 1:length(displayScaleFactorList)
 
-                        stimSizeDegs(runIndex) = stimSizeDegsList(ss);
+                                stimSizeDegs(runIndex) = stimSizeDegsList(ss);
 
-                        stimRVal(runIndex) = stimRValList(cc);
-                        stimGVal(runIndex) = stimGValList(cc);
-                        stimBVal(runIndex) = stimBValList(cc);
+                                stimRVal(runIndex) = stimRValList(cc);
+                                stimGVal(runIndex) = stimGValList(cc);
+                                stimBVal(runIndex) = stimBValList(cc);
 
-                        stimCenter(:,runIndex) = deltaCenterList(:,yy);
+                                stimCenter(:,runIndex) = deltaCenterList(:,yy);
 
-                        forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
-                        reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
+                                forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
+                                reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
 
-                        regPara(runIndex) = regParaList(rr);
+                                regPara(runIndex) = regParaList(rr);
 
-                        forwardChrom(runIndex) = forwardChromList(dd);
-                        reconChrom(runIndex) = reconChromList(dd);
+                                forwardChrom(runIndex) = forwardChromList(dd);
+                                reconChrom(runIndex) = reconChromList(dd);
 
-                        runIndex = runIndex + 1;
+                                forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
+                                reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
+
+                                displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
+
+                                runIndex = runIndex + 1;
+                            end
+                        end
                     end
                 end
             end

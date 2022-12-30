@@ -153,17 +153,15 @@ prBase.reconAORender = false;
 forwardPupilDiamListMM = [3 3   3 3   3];
 reconPupilDiamListMM =   [2 2.5 3 3.5 4];
 
-% Define optics.  Subject only matters if we use a database.
+% Define optics.  Subject only matters if we use a database.  Ignored for
+% Marimont and Wandell.  For database, subjectID of 0 means diffraction
+% limited.
 %
 % Databases are 'Polans2015' and 'Artal2012'
 prBase.forwardSubjectID = 6;
 prBase.forwardZernikeDataBase = 'Artal2012';
 prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Artal2012';
-% prBase.forwardSubjectID = 0;
-% prBase.forwardZernikeDataBase = 'MarimontWandell';
-% prBase.reconSubjectID = 0;
-% prBase.reconZernikeDataBase = 'MarimontWandell';
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = zeros(size([-2 -1.5 -1 0.5 0 0.5 1 1.5 2]));
