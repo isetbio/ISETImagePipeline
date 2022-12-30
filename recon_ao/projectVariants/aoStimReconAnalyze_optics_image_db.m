@@ -27,7 +27,7 @@ prBase.versEditor = 'optics_image_db';
 prBase.displayName = 'conventional';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
-prBase.displayScaleFactor = 10;
+displayScaleFactorList = [10];
 
 %% Spatial parameters
 %
@@ -68,7 +68,7 @@ switch (prBase.imageType)
         % we select out the largest square in the center before resizing.
         theImageRGB = imread(fullfile(prBase.aoReconDir,'images',[prBase.imageName '.jpeg']),'jpeg');
         [m,n,k] = size(theImageRGB);
-        minDim = min([m,n]); 
+        minDim = min([m,n]);
         mSpace = minDim/2; nSpace = minDim/2;
         lowM = round(m/2-mSpace)+1; highM = lowM+minDim-1; lowN = round(n/2-nSpace)+1; highN = lowN+minDim-1;
         prBase.stimBgVal = imresize(theImageRGB(lowM:highM,lowN:highN,:),'OutputSize',[prBase.nPixels prBase.nPixels]);
@@ -139,8 +139,8 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-forwardPupilDiamListMM = [3 3   3 3   3]; 
-reconPupilDiamListMM =   [2 2.5 3 3.5 4];  
+forwardPupilDiamListMM = [3 3   3 3   3];
+reconPupilDiamListMM =   [2 2.5 3 3.5 4];
 
 % Define optics.  Subject only matters if we use a database.
 %
@@ -184,27 +184,31 @@ for ss = 1:length(stimSizeDegsList)
                 for rr = 1:length(regParaList)
                     for dd = 1:length(forwardChromList)
                         for pp = 1:length(forwardPupilDiamListMM)
+                            for dsf = 1:length(displayScaleFactorList)
 
-                            stimSizeDegs(runIndex) = stimSizeDegsList(ss);
+                                stimSizeDegs(runIndex) = stimSizeDegsList(ss);
 
-                            stimRVal(runIndex) = stimRValList(cc);
-                            stimGVal(runIndex) = stimGValList(cc);
-                            stimBVal(runIndex) = stimBValList(cc);
+                                stimRVal(runIndex) = stimRValList(cc);
+                                stimGVal(runIndex) = stimGValList(cc);
+                                stimBVal(runIndex) = stimBValList(cc);
 
-                            stimCenter(:,runIndex) = deltaCenterList(:,yy);
+                                stimCenter(:,runIndex) = deltaCenterList(:,yy);
 
-                            forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
-                            reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
+                                forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
+                                reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
 
-                            regPara(runIndex) = regParaList(rr);
+                                regPara(runIndex) = regParaList(rr);
 
-                            forwardChrom(runIndex) = forwardChromList(dd);
-                            reconChrom(runIndex) = reconChromList(dd);
+                                forwardChrom(runIndex) = forwardChromList(dd);
+                                reconChrom(runIndex) = reconChromList(dd);
 
-                            forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
-                            reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
+                                forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
+                                reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
 
-                            runIndex = runIndex + 1;
+                                displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
+
+                                runIndex = runIndex + 1;
+                            end
                         end
                     end
                 end
