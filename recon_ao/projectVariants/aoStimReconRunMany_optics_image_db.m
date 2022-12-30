@@ -15,6 +15,12 @@
 %% Clear
 clear; close all;
 
+%% Control size of parpool, otherwise may crush memory
+thePool = gcp('nocreate');
+if (isempty(thePool))
+    parpool(5);
+end
+
 %% Set defaults in prBase
 prBase = prBaseDefaults;
 

@@ -217,14 +217,14 @@ for ss = 1:length(stimSizeDegsList)
     end
 end
 
-% Run the reconstructions in parallel
+% Analyze the reconstructions.  Gather data from each.
 for pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come
     % out of lists above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM);
+        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);

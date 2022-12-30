@@ -52,6 +52,12 @@ else
         pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters);
 end
 
+% Set forward variables from loaded/built structure. Scale matrix with display factor.
+forwardRenderMatrix = forwardRenderStructure.renderMatrix*pr.displayScaleFactor;
+forwardConeMosaic = forwardRenderStructure.theConeMosaic;
+forwardOI = forwardConeMosaic.PSF;
+clear forwardRenderStructure;
+
 % Grab recon cone mosaic and render matrix
 if (~exist(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'file'))
     error('Recon render strucure not cached');
@@ -63,25 +69,17 @@ else
         pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters);
 end
 
-% Set forward variables from loaded/built structure. Scale matrix with display factor.
-forwardRenderMatrix = forwardRenderStructure.renderMatrix*pr.displayScaleFactor;
-forwardConeMosaic = forwardRenderStructure.theConeMosaic;
-forwardOI = forwardConeMosaic.PSF;
-
 % Set recon variables from loaded/built structure. Scale matrix with display factor.
 reconRenderMatrix = reconRenderStructure.renderMatrix*pr.displayScaleFactor;
 reconConeMosaic = reconRenderStructure.theConeMosaic;
 reconOI = reconConeMosaic.PSF;
+clear reconRenderStructure;
 
 % Scale display to match scaling of render matrices above.
 forwardConeMosaic.Display = displaySet(forwardConeMosaic.Display,'spd primaries',displayGet(forwardConeMosaic.Display,'spd primaries')*pr.displayScaleFactor);
 forwardConeMosaic.Display.ambient = displayGet(forwardConeMosaic.Display,'black spd')*pr.displayScaleFactor;
 reconConeMosaic.Display = displaySet(reconConeMosaic.Display,'spd primaries',displayGet(reconConeMosaic.Display,'spd primaries')*pr.displayScaleFactor);
 reconConeMosaic.Display.ambient = displayGet(reconConeMosaic.Display,'black spd')*pr.displayScaleFactor;
-
-% Clear raw forward render structure
-clear forwardRenderStructure;
-clear reconRenderStructure;
 
 %% Setup output directories
 if (~exist(cnv.outputDir,'dir'))
