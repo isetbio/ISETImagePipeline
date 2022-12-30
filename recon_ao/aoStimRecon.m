@@ -63,15 +63,21 @@ else
         pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters);
 end
 
-% Set forward variables from loaded/built structure
-forwardRenderMatrix = forwardRenderStructure.renderMatrix;
+% Set forward variables from loaded/built structure. Scale matrix with display factor.
+forwardRenderMatrix = forwardRenderStructure.renderMatrix*pr.displayScaleFactor;
 forwardConeMosaic = forwardRenderStructure.theConeMosaic;
 forwardOI = forwardConeMosaic.PSF;
 
-% Set recon variables from loaded/built structure
-reconRenderMatrix = reconRenderStructure.renderMatrix;
+% Set recon variables from loaded/built structure. Scale matrix with display factor.
+reconRenderMatrix = reconRenderStructure.renderMatrix*pr.displayScaleFactor;
 reconConeMosaic = reconRenderStructure.theConeMosaic;
 reconOI = reconConeMosaic.PSF;
+
+% Scale display to match scaling of render matrices above.
+forwardConeMosaic.Display = displaySet(forwardConeMosaic.Display,'spd primaries',displayGet(forwardConeMosaic.Display,'spd primaries')*pr.displayScaleFactor);
+forwardConeMosaic.Display.ambient = displayGet(forwardConeMosaic.Display,'black spd')*pr.displayScaleFactor;
+reconConeMosaic.Display = displaySet(reconConeMosaic.Display,'spd primaries',displayGet(reconConeMosaic.Display,'spd primaries')*pr.displayScaleFactor);
+reconConeMosaic.Display.ambient = displayGet(reconConeMosaic.Display,'black spd')*pr.displayScaleFactor;
 
 % Clear raw forward render structure
 clear forwardRenderStructure;
