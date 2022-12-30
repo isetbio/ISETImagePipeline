@@ -37,7 +37,7 @@ prBase.versEditor = 'optics_image_db';
 prBase.displayName = 'conventional';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
-displayScaleFactorList = [1 10];
+displayScaleFactorList = [1];
 
 %% Spatial parameters
 %
@@ -166,8 +166,8 @@ prBase.reconZernikeDataBase = 'Artal2012';
 % prBase.reconZernikeDataBase = 'MarimontWandell';
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.00];% 0.05 0.1];
-reconDefocusDioptersList = [0.00];% 0.05 0.1];
+forwardDefocusDioptersList = zeros(size([-2 -1.5 -1 0.5 0 0.5 1 1.5 2]));
+reconDefocusDioptersList =              [-2 -1.5 -1 0.5 0 0.5 1 1.5 2];
 
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
