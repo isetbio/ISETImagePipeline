@@ -150,8 +150,8 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-prBase.forwardPupilDiamMM = 3;
-prBase.reconPupilDiamMM = 3;
+forwardPupilDiamListMM = 3;
+reconPupilDiamListMM =   3;
 
 % Define optics.  Subject only matters if we use a database.  Ignored for
 % Marimont and Wandell.  For database, subjectID of 0 means diffraction
@@ -231,7 +231,8 @@ for pp = 1:length(regPara)
     % out of lists precreated above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom);
+        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
+
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
@@ -266,7 +267,7 @@ parfor pp = 1:length(regPara)
     % out of lists above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom);
+        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
