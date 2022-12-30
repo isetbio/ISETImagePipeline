@@ -15,14 +15,6 @@
 %% Clear
 clear; close all;
 
-% Set up parpool with threads
-%
-% Faster, if it works, in 2022b and later.  Need ver check.
-% poolobj = gcp('nocreate');
-% if (isempty(poolobj))
-%     parpool('threads');
-% end
-
 %% Set defaults in prBase
 prBase = prBaseDefaults;
 
@@ -151,8 +143,8 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-forwardPupilDiamListMM = 3; %[3 3   3   3]; %[2 3 4 2 4];
-reconPupilDiamListMM = 3;   %[2 2.5 3.5 4];   %[2 3 4 3 3];
+forwardPupilDiamListMM = [3 3   3   3]; 
+reconPupilDiamListMM =   [2 2.5 3.5 4];  
 
 % Define optics.  Subject only matters if we use a database.
 %
@@ -261,7 +253,7 @@ for pp = 1:length(regPara)
 end
 
 % Run the reconstructions in parallel
-for pp = 1:length(regPara)
+parfor pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come
     % out of lists above.
