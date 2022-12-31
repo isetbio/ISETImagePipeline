@@ -159,16 +159,14 @@ else
     end
 end
 
-% Show the stimulus by creating an ISETBio scene.  Rescale input image
-% if an inputImageScaleFactor field is present.
+% Create an ISETBio scene.  Rescale input image
+% according to pr.inputImageScaleFactor.
 meanLuminanceCdPerM2 = [];
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
-if isfield(pr,'inputImageScaleFactor')
-    stimulusImageRGB = gammaCorrection(stimulusImageLinear*pr.inputImgeScaleFactor, reconConeMosaic.Display);
-    [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
-        meanLuminanceCdPerM2, forwardConeMosaic.Display);
-end
+stimulusImageRGB = gammaCorrection(stimulusImageLinear*pr.inputImageScaleFactor, reconConeMosaic.Display);
+[stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
+    meanLuminanceCdPerM2, forwardConeMosaic.Display);
 stimulusScene = sceneSet(stimulusScene, 'fov', cnv.fieldSizeDegs);
 imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 
@@ -409,9 +407,9 @@ for ii = 1:length(multistartStruct.initTypes)
     theAxes = subplot(3,7,1);
     imshow(stimulusRGBScaled{ii});
     if (length(pr.stimBgVal) > 1)
-        title({'Stimulus Image' ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; pr.imageName});
+        title({sprintf('Stimulus Image, input scale %0.4f',pr.inputImageScaleFactor) ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; pr.imageName});
     else
-        title({'Stimulus Image' ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
+        title({sprintf('Stimulus Image, input scale %0.4f',pr.inputImageScaleFactor)  ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
     end
     if (ii == reconIndex)
         imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDir,'StimulusScaled.tiff'),'tiff');

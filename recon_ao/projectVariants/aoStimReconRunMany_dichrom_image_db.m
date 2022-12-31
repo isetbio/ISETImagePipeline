@@ -141,7 +141,7 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.0001; %[0.01 0.005 0.001 0.00075 0.0005 0.0001];
+regParaList = [0.01 0.005 0.001 0.00075 0.0005 0.0001];
 prBase.stride = 4;
 prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
@@ -154,7 +154,7 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-forwardPupilDiamListMM = 3;
+forwardPupilDiamListMM = 3;Fstimu
 reconPupilDiamListMM =   3;
 
 % Define optics.  Subject only matters if we use a database.  Ignored for
@@ -180,6 +180,7 @@ reconChromList =   ["chromDeut" "chromDeut" "chromNorm"];
 % Turn off quads for these calculations
 prBase.quads(1).name = 'useQuadSeq';
 prBase.quads(1).value = false;
+prBase.quads(6).value = false;
 
 % Force build and save of render structures.  This
 % only affects this script, and will typically be false.

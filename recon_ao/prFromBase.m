@@ -20,5 +20,11 @@ pr.forwardPupilDiamMM = forwardPupilDiamMM(index);
 pr.reconPupilDiamMM = reconPupilDiamMM(index);
 pr.displayScaleFactor = displayScaleFactor(index);
 
+% Make sure some new fields have a value if not specified
+% by the caller.
+if ~isfield(pr,'inputImageScaleFactor')
+    pr.inputImageScaleFactor = 1;
+end
+
 
 end
