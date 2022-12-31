@@ -159,21 +159,17 @@ else
     end
 end
 
-% Show the stimulus by creating an ISETBio scene
+% Show the stimulus by creating an ISETBio scene.  Rescale input image
+% if an inputImageScaleFactor field is present.
 meanLuminanceCdPerM2 = [];
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
+if isfield(pr,'inputImageScaleFactor')
+    stimulusImageRGB = gammaCorrection(stimulusImageLinear*pr.inputImgeScaleFactor, reconConeMosaic.Display);
+    [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
+        meanLuminanceCdPerM2, forwardConeMosaic.Display);
+end
 stimulusScene = sceneSet(stimulusScene, 'fov', cnv.fieldSizeDegs);
-%visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
-% figure; clf;
-% imshow(stimulusImageRGB);
-% if (length(pr.stimBgVal) > 1)
-%     title({'Stimulus Image' ; pr.imageName});
-% else
-%     title({'Stimulus Image' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
-% end
-% set(gcf,'Position',[500,500,500,400]);
-% saveas(gcf,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 
 %% Compute forward retinal image and excitations using ISETBio

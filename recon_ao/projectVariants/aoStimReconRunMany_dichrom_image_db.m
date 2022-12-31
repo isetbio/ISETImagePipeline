@@ -64,6 +64,10 @@ prBase.addPoissonNoise = false;
 % in this script.
 stimSizeDegsList = 0;
 
+% Can scale input image.  This is a way of keeping all images in bounds
+% if reconstruction goes out of bounds.
+prBase.inputImageScaleFactor = 0.7;
+
 % RGB values.  Here we reconstruct a specified image.
 %
 % This shows how to read in an image and set it up to be reconstructed.
