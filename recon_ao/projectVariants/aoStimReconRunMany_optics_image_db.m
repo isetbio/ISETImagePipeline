@@ -164,8 +164,8 @@ prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Artal2012';
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = zeros(size([-2 -1.5 -1 0.5 0 0.5 1 1.5 2]));
-reconDefocusDioptersList =              [-2 -1.5 -1 0.5 0 0.5 1 1.5 2];
+forwardDefocusDioptersList = zeros(size([-2 -1.5 -1 -0.5 0 0.5 1 1.5 2]));
+reconDefocusDioptersList =              [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
 
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
