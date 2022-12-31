@@ -368,7 +368,7 @@ for ii = 1:length(multistartStruct.initTypes)
     % Adjust recon scene back up for recon scale factor and pupil size
     % scale factor. This puts into into the same scaling as the stimulus
     % scene, adjusted for pupil diameter.
-    sceneSet(reconSceneTemp,'photons',sceneGet(reconSceneTemp,'photons')*reconScaleFactor(ii)/pupilSizeScaleFactor);
+    reconSceneTemp = sceneSet(reconSceneTemp,'photons',sceneGet(reconSceneTemp,'photons')*reconScaleFactor(ii)/pupilSizeScaleFactor);
     reconSceneTemp = sceneSet(reconSceneTemp, 'fov', cnv.fieldSizeDegs);
     reconImageLinearTemp = reconImageLinearTemp*reconScaleFactor(ii);
 
