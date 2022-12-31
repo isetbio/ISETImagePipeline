@@ -137,7 +137,7 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = [0.01 0.005 0.001 0.0005];
+regParaList = 0.0001; %[0.01 0.005 0.001 0.00075 0.0005 0.0001];
 prBase.stride = 4;
 prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
@@ -168,10 +168,10 @@ reconDefocusDioptersList =   [0.00];
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
 %    "chromAllL", "chromAllM", "chromAllS"
-% forwardChromList = ["chromDeut" "chromNorm" "chromNorm"];
-% reconChromList =   ["chromDeut" "chromDeut" "chromNorm"];
-forwardChromList = ["chromNorm"];
-reconChromList =   ["chromNorm"];
+forwardChromList = ["chromDeut" "chromNorm" "chromNorm"];
+reconChromList =   ["chromDeut" "chromDeut" "chromNorm"];
+% forwardChromList = ["chromNorm"];
+% reconChromList =   ["chromNorm"];
 
 % Turn off quads for these calculations
 prBase.quads(1).name = 'useQuadSeq';
