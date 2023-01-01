@@ -154,7 +154,7 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-forwardPupilDiamListMM = 3;Fstimu
+forwardPupilDiamListMM = 3;
 reconPupilDiamListMM =   3;
 
 % Define optics.  Subject only matters if we use a database.  Ignored for
