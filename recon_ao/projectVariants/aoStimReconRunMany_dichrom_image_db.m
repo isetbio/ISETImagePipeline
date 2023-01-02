@@ -47,7 +47,7 @@ prBase.trueCenter = round(prBase.nPixels/2);
 
 %% Mosaic parameters
 prBase.fieldSizeMinutes = 60;
-prBase.eccXDegs = 0.0;
+prBase.eccXDegs = 2.0;
 prBase.eccYDegs = 0.0;
 prBase.forwardRandSeed = false;
 prBase.reconRandSeed = false;
@@ -141,9 +141,9 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = [0.01 0.005 0.001 0.00075 0.0005 0.0001];
+regParaList = 0.001; %[0.01 0.005 0.001 0.00075 0.0005 0.0001];
 prBase.stride = 4;
-prBase.maxReconIterations = 1000;
+prBase.maxReconIterations = 2000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
@@ -160,10 +160,10 @@ reconPupilDiamListMM =   3;
 % Define optics.  Subject only matters if we use a database.  Ignored for
 % Marimont and Wandell.  For database, subjectID of 0 means diffraction
 % limited.
-prBase.forwardSubjectID = 0;
-prBase.forwardZernikeDataBase = 'MarimontWandell';
-prBase.reconSubjectID = 0;
-prBase.reconZernikeDataBase = 'MarimontWandell';
+prBase.forwardSubjectID = 6;
+prBase.forwardZernikeDataBase = 'Polans2015';
+prBase.reconSubjectID = 6;
+prBase.reconZernikeDataBase = 'Polans2015';
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.00];
@@ -175,7 +175,7 @@ reconDefocusDioptersList =   [0.00];
 forwardChromList = ["chromDeut" "chromNorm" "chromNorm"];
 reconChromList =   ["chromDeut" "chromDeut" "chromNorm"];
 % forwardChromList = ["chromNorm"];
-% reconChromList =   ["chromNorm"];
+% reconChromList =   ["chromDeut"];
 
 % Turn off quads for these calculations
 prBase.quads(1).name = 'useQuadSeq';
