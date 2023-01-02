@@ -352,16 +352,16 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Get the reconstruction as RGB image and find maxima.  This is scaled
     % down as needed so that the recon RGB is in range 0-1.
-    reconRGB{ii} = gammaCorrection(multistartStruct.reconImages{ii}/reconScaleFactor(ii), reconConeMosaic.Display);
-    maxReconR(ii) = max(max(reconRGB{ii}(:,:,1)));
-    maxReconG(ii) = max(max(reconRGB{ii}(:,:,2)));
-    maxReconB(ii) = max(max(reconRGB{ii}(:,:,3)));
-    [reconSceneTemp, ~, reconImageLinearTemp] = sceneFromFile(reconRGB{ii}, 'rgb', ...
-        meanLuminanceCdPerM2, reconConeMosaic.Display);
+    reconScaledRGB{ii} = gammaCorrection(multistartStruct.reconImages{ii}/reconScaleFactor(ii), reconConeMosaic.Display);
+    maxReconScaledR(ii) = max(max(reconScaledRGB{ii}(:,:,1)));
+    maxReconScaledG(ii) = max(max(reconScaledRGB{ii}(:,:,2)));
+    maxReconScaledB(ii) = max(max(reconScaledRGB{ii}(:,:,3)));
 
-    % Adjust recon scene back up for recon scale factor and pupil size
+    % Adjust recon scene back up for recon scale factor and adjust for pupil size
     % scale factor. This puts into into the same scaling as the stimulus
     % scene, adjusted for pupil diameter.
+    [reconSceneTemp, ~, reconImageLinearTemp] = sceneFromFile(reconScaledRGB{ii}, 'rgb', ...
+        meanLuminanceCdPerM2, reconConeMosaic.Display);
     reconSceneTemp = sceneSet(reconSceneTemp,'photons',sceneGet(reconSceneTemp,'photons')*reconScaleFactor(ii)/pupilSizeScaleFactor);
     reconSceneTemp = sceneSet(reconSceneTemp, 'fov', cnv.fieldSizeDegs);
     reconImageLinearTemp = reconImageLinearTemp*reconScaleFactor(ii);
@@ -487,11 +487,11 @@ for ii = 1:length(multistartStruct.initTypes)
 
     theAxes = subplot(3,7,8);
     %visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
-    imshow(reconRGB{ii});
+    imshow(reconScaledRGB{ii});
     if (pr.boundedSearch)
-        title({sprintf('Reconstructed Image, reg %0.5f',pr.regPara) ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxReconR(ii),maxReconG(ii),maxReconB(ii)) ; 'Bounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
+        title({sprintf('Reconstructed Image, reg %0.5f',pr.regPara) ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxReconScaledR(ii),maxReconScaledG(ii),maxReconScaledB(ii)) ; 'Bounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
     else
-        title({sprintf('Reconstructed Image, reg %0.5f',pr.regPara) ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxReconR(ii),maxReconG(ii),maxReconB(ii)) ; 'Unbounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
+        title({sprintf('Reconstructed Image, reg %0.5f',pr.regPara) ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxReconScaledR(ii),maxReconScaledG(ii),maxReconScaledB(ii)) ; 'Unbounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
     end
 
     % Contour plot of recon PSF
@@ -802,10 +802,10 @@ for ii = 1:length(multistartStruct.initTypes)
 end
 
 % Save best reconstruction image
-imwrite(reconRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
+imwrite(reconScaledRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
 
 %% Save workspace without really big variables
 close all;
 clear forwardRenderMatrix reconRenderMatrixPupilScaled reconSceneTemp forwardOI reconOIToReconTemp psfDataStruct forwardOIToReconTemp forwardOIRGB
-clear reconRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
+clear reconScaledRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
 save(fullfile(cnv.outputDir,'xRunOutput.mat'), '-v7.3');
