@@ -143,7 +143,7 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.001; %[0.01 0.005 0.001 0.00075 0.0005 0.0001];
 prBase.stride = 4;
-prBase.maxReconIterations = 5000;
+prBase.maxReconIterations = 20000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
@@ -237,7 +237,6 @@ for pp = 1:length(regPara)
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
         forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
-
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
