@@ -19,6 +19,29 @@ prBase = prBaseDefaults;
 % Helps us keep different calcs separate
 prBase.versEditor = 'optics_image_db';
 
+%% These parameters are the ones to vary
+whichCase = 3;
+switch (whichCase)
+    case 1
+        displayScaleFactorList = [10];
+        forwardPupilDiamListMM = [3 3   3 3   3];
+        reconPupilDiamListMM =   [2 2.5 3 3.5 4];
+        forwardDefocusDioptersList = zeros(size([-2 -1.5 -1 -0.5 0 0.5 1 1.5 2]));
+        reconDefocusDioptersList =              [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
+    case 2
+        displayScaleFactorList = [10];
+        forwardPupilDiamListMM = [3 3   3 3   3];
+        reconPupilDiamListMM =   [2 2.5 3 3.5 4];
+        forwardDefocusDioptersList = 0.5*ones(size([-2 -1.5 -1 -0.5 0 0.5 1 1.5 2]));
+        reconDefocusDioptersList =                 [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
+    case 3
+        displayScaleFactorList = [1];
+        forwardPupilDiamListMM = [3 3   3 3   3];
+        reconPupilDiamListMM =   [2 2.5 3 3.5 4];
+        forwardDefocusDioptersList = 0.5*ones(size([-2 -1.5 -1 -0.5 0 0.5 1 1.5 2]));
+        reconDefocusDioptersList =                 [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
+end
+
 %% Parameters
 %
 % Display, options are:
@@ -27,7 +50,6 @@ prBase.versEditor = 'optics_image_db';
 prBase.displayName = 'conventional';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
-displayScaleFactorList = [10];
 
 %% Spatial parameters
 %
@@ -139,8 +161,6 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-forwardPupilDiamListMM = [3 3   3 3   3];
-reconPupilDiamListMM =   [2 2.5 3 3.5 4];
 
 % Define optics.  Subject only matters if we use a database.
 %
@@ -154,9 +174,7 @@ prBase.reconZernikeDataBase = 'Artal2012';
 % prBase.reconSubjectID = 0;
 % prBase.reconZernikeDataBase = 'MarimontWandell';
 
-% Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.00];% 0.05 0.1];
-reconDefocusDioptersList = [0.00];% 0.05 0.1];
+
 
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
@@ -241,10 +259,57 @@ for pp = 1:length(regPara)
     reconScaleFactor(pp) = theData.reconScaleFactor(theData.reconIndex);
     forwardExcitations(:,pp) = theData.forwardExcitationsToStimulusUse;
     reconExcitations(:,pp) = theData.multistartStruct.reconPreds(:,theData.reconIndex);
+    runForwardPupilDiameterMM(pp) = pr.forwardPupilDiamMM;
+    runReconPupilDiameterMM(pp)= pr.reconPupilDiamMM;
+    runForwardDefocusDiopters(pp) = pr.forwardDefocusDiopters;
+    runReconDefocusDiopters(pp) = pr.reconDefocusDiopters;
     R = corrcoef(forwardExcitations(:,pp),reconExcitations(:,pp));
     corrs(pp) = R(1,2);
 end
-figure; plot(reconPupilDiamMM,-reconLosses,'ro'); title('Loss');
-figure; plot(reconPupilDiamMM,reconLogPriors,'ro'); title('Prior');
-figure; plot(reconPupilDiamMM,reconLogLikelihoods,'ro'); title('Likelihood');
-figure; plot(reconPupilDiamMM,corrs,'ro'); title('Correlation');
+
+% Get the forward values used
+forwardPupilVal = unique(runForwardPupilDiameterMM);
+if (length(forwardPupilVal) ~= 1)
+    error('More than one forward pupil value');
+end
+forwardDefocusVal = unique(runForwardDefocusDiopters);
+if (length(forwardDefocusVal) ~= 1)
+    error('More than one forward defocus value');
+end
+index = find(runReconPupilDiameterMM == forwardPupilVal & runReconDefocusDiopters == forwardDefocusVal);
+negLogLossAtForwardVals = -reconLosses(index);
+
+% Get the set of recon pupil values used
+reconPupilVals = unique(runReconPupilDiameterMM);
+reconDefocusVals = unique(runReconDefocusDiopters);
+for xx = 1:length(reconPupilVals)
+    for yy = 1:length(reconDefocusVals)
+        X(xx,yy) = reconPupilVals(xx);
+        Y(xx,yy) = reconDefocusVals(yy);
+        index = find(runReconPupilDiameterMM == reconPupilVals(xx) & runReconDefocusDiopters == reconDefocusVals(yy));
+        Z(xx,yy) = -reconLosses(index);
+    end
+end
+
+% Plot the negative log loss surface
+figure; hold on
+surf(X,Y,Z);
+
+% Indicate location of max neg log loss
+[~,index] = max(-reconLosses);
+plot3(runReconPupilDiameterMM(index),runReconDefocusDiopters(index),-reconLosses(index),'ro','MarkerFaceColor','r','MarkerSize',12);
+
+% Indicate forward vals
+plot3(forwardPupilVal,forwardDefocusVal,negLogLossAtForwardVals,'go','MarkerFaceColor','g','MarkerSize',8);
+
+% Tidy up plot
+zlim([0.9*max(-reconLosses), 1.1*max(-reconLosses)]);
+xlabel('Pupil Diameter MM');
+ylabel('Defocus Diopters');
+title('Neg Log Loss');    
+view(-20,60);
+
+% figure; plot(reconPupilDiamMM,-reconLosses,'ro'); title('Loss');
+% figure; plot(reconPupilDiamMM,reconLogPriors,'ro'); title('Prior');
+% figure; plot(reconPupilDiamMM,reconLogLikelihoods,'ro'); title('Likelihood');
+% figure; plot(reconPupilDiamMM,corrs,'ro'); title('Correlation');

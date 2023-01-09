@@ -118,6 +118,6 @@ else
         60*pr.stimSizeDegs,pr.eccXDegs,pr.eccYDegs,pr.regPara,pr.stride,pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal, cnv.exciteSource, pr.forwardChrom, pr.forwardEccVars, pr.reconChrom, pr.reconEccVars, ...
         pr.stimCenter(1),pr.stimCenter(2),noiseStr,pr.boundedSearch, stimQuadsName);
 end
-cnv.outputDir = fullfile(pr.aoReconDir ,cnv.outputMainName,cnv.outputSubName);
+cnv.outputDir = fullfile(pr.aoReconDir, pr.versEditor, cnv.outputMainName, cnv.outputSubName);
 
 end

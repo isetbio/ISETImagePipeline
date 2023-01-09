@@ -42,11 +42,11 @@ sparsePriorName = [pr.sparsePriorStr 'SparsePrior.mat'];
 % is correct at the calling level.
 %
 % Grab foward cone mosaic and render matrix
-if (~exist(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'file'))
+if (~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'file'))
     error('Forward render strucure not cached')
 else
     clear forwardRenderStructure;
-    load(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure');
+    load(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(forwardRenderStructure, pr.eccXDegs, pr.eccYDegs, cnv.fieldSizeDegs, ...
         pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters);
@@ -59,11 +59,11 @@ forwardOI = forwardConeMosaic.PSF;
 clear forwardRenderStructure;
 
 % Grab recon cone mosaic and render matrix
-if (~exist(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'file'))
+if (~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'file'))
     error('Recon render strucure not cached');
 else
     clear reconRenderStructure;
-    load(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure');
+    load(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(reconRenderStructure, pr.eccXDegs, pr.eccYDegs, cnv.fieldSizeDegs, ...
         pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters);
@@ -808,4 +808,5 @@ imwrite(reconScaledRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
 close all;
 clear forwardRenderMatrix reconRenderMatrixPupilScaled reconSceneTemp forwardOI reconOIToReconTemp psfDataStruct forwardOIToReconTemp forwardOIRGB
 clear reconScaledRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
+clear reconImageLinearTemp psfSupportTemp initImageLinearTemp
 save(fullfile(cnv.outputDir,'xRunOutput.mat'), '-v7.3');
