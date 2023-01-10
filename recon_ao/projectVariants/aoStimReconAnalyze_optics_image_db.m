@@ -20,7 +20,7 @@ prBase = prBaseDefaults;
 prBase.versEditor = 'optics_image_db';
 
 %% These parameters are the ones to vary
-whichCase = 3;
+whichCase = 5;
 switch (whichCase)
     case 1
         displayScaleFactorList = [10];
@@ -28,18 +28,36 @@ switch (whichCase)
         reconPupilDiamListMM =   [2 2.5 3 3.5 4];
         forwardDefocusDioptersList = zeros(size([-2 -1.5 -1 -0.5 0 0.5 1 1.5 2]));
         reconDefocusDioptersList =              [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
+        prBase.addPoissonNoise = false;
     case 2
         displayScaleFactorList = [10];
         forwardPupilDiamListMM = [3 3   3 3   3];
         reconPupilDiamListMM =   [2 2.5 3 3.5 4];
         forwardDefocusDioptersList = 0.5*ones(size([-2 -1.5 -1 -0.5 0 0.5 1 1.5 2]));
         reconDefocusDioptersList =                 [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
+        prBase.addPoissonNoise = false;
     case 3
         displayScaleFactorList = [1];
         forwardPupilDiamListMM = [3 3   3 3   3];
         reconPupilDiamListMM =   [2 2.5 3 3.5 4];
         forwardDefocusDioptersList = 0.5*ones(size([-2 -1.5 -1 -0.5 0 0.5 1 1.5 2]));
         reconDefocusDioptersList =                 [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
+        prBase.addPoissonNoise = false;
+    case 4
+        displayScaleFactorList = [10];
+        reconPupilDiamListMM =   [2 2.5 3 3.5 4];
+        forwardPupilDiamListMM = 3.5*ones(size(reconPupilDiamListMM));
+        reconDefocusDioptersList =                 [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
+        forwardDefocusDioptersList = -0.5*ones(size(reconDefocusDioptersList));
+        prBase.addPoissonNoise = true;
+    case 5
+        displayScaleFactorList = [1];
+        reconPupilDiamListMM =   [2 2.5 3 3.5 4];
+        forwardPupilDiamListMM = 3.5*ones(size(reconPupilDiamListMM));
+        reconDefocusDioptersList =                 [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
+        forwardDefocusDioptersList = -0.5*ones(size(reconDefocusDioptersList));
+        prBase.addPoissonNoise = true;
+
 end
 
 %% Parameters
@@ -252,7 +270,7 @@ for pp = 1:length(regPara)
     theData = load(fullfile(cnv.outputDir,'xRunOutput.mat'));
     stimulusImageRGB{pp} = theData.stimulusImageRGB;
     stimulusImageLinear{pp} = theData.stimulusImageLinear;
-    reconImageLinear = theData.reconImageLinearTemp;
+    % reconImageLinear = theData.reconImageLinearTemp;
     reconLogLikelihoods(pp) = theData.multistartStruct.reconLogLikelihoods(theData.reconIndex);
     reconLogPriors(pp) = theData.multistartStruct.reconLogPriors(theData.reconIndex);
     reconLosses(pp) = theData.multistartStruct.reconLosses(theData.reconIndex);
