@@ -807,6 +807,9 @@ imwrite(reconScaledRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
 %% Save workspace without really big variables
 close all;
 clear forwardRenderMatrix reconRenderMatrixPupilScaled reconSceneTemp forwardOI reconOIToReconTemp psfDataStruct forwardOIToReconTemp forwardOIRGB
+clear estimator
 clear reconScaledRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
 clear reconImageLinearTemp psfSupportTemp initImageLinearTemp
+clear tempFig theAxes theFIg axesHandle temp initSceneTemp
+clear forwardConeMosaic reconConeMosaic
 save(fullfile(cnv.outputDir,'xRunOutput.mat'), '-v7.3');
