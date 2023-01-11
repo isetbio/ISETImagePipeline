@@ -16,6 +16,8 @@ function fixOutput(name)
 fprintf('\tLoading ... ')
 load(name)
 fprintf('loaded ... ')
+clear forwardRenderMatrix reconRenderMatrixPupilScaled reconSceneTemp forwardOI reconOIToReconTemp psfDataStruct forwardOIToReconTemp forwardOIRGB
+clear reconScaledRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
 clear estimator
 clear reconImageLinearTemp psfSupportTemp initImageLinearTemp
 clear tempFig theAxes theFIg axesHandle temp initSceneTemp
