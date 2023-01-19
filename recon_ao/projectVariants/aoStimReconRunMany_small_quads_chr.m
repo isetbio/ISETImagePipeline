@@ -104,7 +104,8 @@ end
 prBase.quads(6).name = 'overrideQuadSeq';
 prBase.quads(6).value = true;
 
-% prBase.kConeIndices = [564 505 493 479 528 565 572 585 570];
+% Add indices of cones to be silenced. 
+prBase.kConeIndices = [1 2 3 4 5 6 7 8 9];
 
 % Select which quadrants from the above to activate
 quadSelectList = [[true true true true]]';%...
@@ -121,13 +122,13 @@ buildNewRecon = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = 1 / 60;
+stimSizeDegsList = 2 / 60;
 
 % RGB values (before gamma correction)
 prBase.stimBgVal = 0.1;
-stimRValList = [1.0]% 1.0 0.0 0.80 0.80 0.60];
-stimGValList = [1.0]% 0.0 1.0 0.65 0.45 0.65];
-stimBValList = [0.0]% 0.0 0.0 0.10 0.10 0.10];
+stimRValList = [1.0]; % 1.0 0.0 0.80 0.80 0.60];
+stimGValList = [1.0]; % 0.0 1.0 0.65 0.45 0.65];
+stimBValList = [0.0]; % 0.0 0.0 0.10 0.10 0.10];
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -172,7 +173,7 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.005; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 2000;
+prBase.maxReconIterations = 5;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
@@ -199,8 +200,8 @@ prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Polans2015';
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.05 0.05 0.05];% 0.05 0.1]; 
-reconDefocusDioptersList = [0.12 0.18 0.24];% 0.05 0.1];
+forwardDefocusDioptersList = [0.05];% 0.05 0.1]; 
+reconDefocusDioptersList = [0.12];% 0.05 0.1];
 
 %% Set up list conditions
 runIndex = 1;
@@ -284,7 +285,7 @@ for pp = 1:length(regPara)
 end
 
 % Run the reconstructions in parallel
-parfor pp = 1:length(regPara)
+for pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come
     % out of lists above.
