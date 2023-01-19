@@ -177,11 +177,13 @@ imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 % We may or may not reconstruct from these
 forwardOI = oiCompute(stimulusScene,forwardOI);
 forwardExcitationsToStimulusISETBio = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
+forwardExcitationsToStimulusISETBio(:,:,pr.kConeIndices) = 0 * forwardExcitationsToStimulusISETBio(:,:,pr.kConeIndices);
 
 % Check forward exciations calculation another way.  Also shows another way
 % to visualize the retinal image, but this only is done when the check
 % fails.
 forwardExcitationsToStimulusCheck = forwardConeMosaic.compute(stimulusImageRGB);
+forwardExcitationsToStimulusCheck(:,:,pr.kConeIndices) = 0 * forwardExcitationsToStimulusCheck(:,:,pr.kConeIndices);
 
 if (max(abs(forwardExcitationsToStimulusCheck-forwardExcitationsToStimulusISETBio)) ~= 0)
     forwardConeMosaic.visualizeOI()
@@ -599,7 +601,10 @@ for ii = 1:length(multistartStruct.initTypes)
         forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
     else
         title({'Recon excittions to stim' ; 'Excitations from ISETBio'});
-        forwardExcitationsToReconTemp = squeeze(forwardConeMosaic.Mosaic.compute(forwardOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+%         forwardExcitationsToReconTemp = squeeze(forwardConeMosaic.Mosaic.compute(forwardOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+        forwardExcitationsToReconTemp = forwardConeMosaic.Mosaic.compute(forwardOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered');
+        forwardExcitationsToReconTemp(:,:,pr.kConeIndices) = 0 * forwardExcitationsToReconTemp(:,:,pr.kConeIndices);
+        forwardExcitationsToReconTemp = squeeze(forwardExcitationsToReconTemp);
     end
     plot(forwardExcitationsToStimulusUse*scaleFactor,reconExcitationsToStimulusTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
     axis('square');
@@ -618,7 +623,10 @@ for ii = 1:length(multistartStruct.initTypes)
         forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
     else
         title({'Forward excitations to recon' ; 'Excitations from ISETBio'});
-        forwardExcitationsToReconTemp = squeeze(forwardConeMosaic.Mosaic.compute(forwardOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+%         forwardExcitationsToReconTemp = squeeze(forwardConeMosaic.Mosaic.compute(forwardOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+        forwardExcitationsToReconTemp = (forwardConeMosaic.Mosaic.compute(forwardOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+        forwardExcitationsToReconTemp(:,:,pr.kConeIndices) = 0 * forwardExcitationsToReconTemp(:,:,pr.kConeIndices);
+        forwardExcitationsToReconTemp = squeeze(forwardExcitationsToReconTemp);
     end
     %plot(forwardExcitationsToStimulusUse*scaleFactor,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
     plot(forwardExcitationsToStimulusUse,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
@@ -639,7 +647,10 @@ for ii = 1:length(multistartStruct.initTypes)
         reconExcitationsToReconTemp = reconExcitationsToReconCheck;
     else
         title({'Recon excitations to recon' ; 'Excitations from ISETBio'});
-        reconExcitationsToReconTemp = squeeze(reconConeMosaic.Mosaic.compute(reconOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+%         reconExcitationsToReconTemp = squeeze(reconConeMosaic.Mosaic.compute(reconOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+        reconExcitationsToReconTemp = (reconConeMosaic.Mosaic.compute(reconOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+        reconExcitationsToReconTemp(:,:,pr.kConeIndices) = 0 * reconExcitationsToReconTemp(:,:,pr.kConeIndices);
+        reconExcitationsToReconTemp = squeeze(reconExcitationsToReconTemp);
     end
     plot(forwardExcitationsToStimulusUse*scaleFactor,reconExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
     axis('square');
@@ -751,7 +762,7 @@ for ii = 1:length(multistartStruct.initTypes)
         % Manually create the plots based on specific quadrant excitations
         if (pr.quads(1).value)
             theQuadsFig = figure; clf;
-            set(theQuadsFig,'Position',[100 400 1000 2000]);
+            set(theQuadsFig,'Position',[100 400 2500 1500]);
             quadOrder = [2 1 3 4];
 
             quad1Ind = find(...
@@ -786,7 +797,10 @@ for ii = 1:length(multistartStruct.initTypes)
                     reconExcitationsToReconTemp = reconExcitationsToReconCheck;
                 else
                     title({['Quadrant ' num2str(i)]; 'Recon excitations to recon' ; 'Excitations from ISETBio'});
-                    reconExcitationsToReconTemp = squeeze(reconConeMosaic.Mosaic.compute(reconOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+%                     reconExcitationsToReconTemp = squeeze(reconConeMosaic.Mosaic.compute(reconOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+                    reconExcitationsToReconTemp = (reconConeMosaic.Mosaic.compute(reconOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+                    reconExcitationsToReconTemp(:,:,pr.kConeIndices) = 0 * reconExcitationsToReconTemp(:,:,pr.kConeIndices);
+                    reconExcitationsToReconTemp = squeeze(reconExcitationsToReconTemp);
                 end
                 axis('square');
                 minVal = 0.9*min([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
@@ -817,6 +831,11 @@ imwrite(reconRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
 
 %% Save workspace without really big variables
 close all;
-clear forwardRenderMatrix reconRenderMatrix reconSceneTemp forwardOI reconOIToReconTemp psfDataStruct forwardOIToReconTemp forwardOIRGB
-clear reconRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
+close all;
+clear forwardRenderMatrix reconRenderMatrixPupilScaled reconSceneTemp forwardOI reconOIToReconTemp psfDataStruct forwardOIToReconTemp forwardOIRGB
+clear estimator
+clear reconScaledRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
+clear reconImageLinearTemp psfSupportTemp initImageLinearTemp
+clear tempFig theAxes theFIg axesHandle temp initSceneTemp
+clear forwardConeMosaic reconConeMosaic
 save(fullfile(cnv.outputDir,'xRunOutput.mat'), '-v7.3');

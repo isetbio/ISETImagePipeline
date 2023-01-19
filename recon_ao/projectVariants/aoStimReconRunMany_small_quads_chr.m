@@ -52,9 +52,9 @@ prBase.addPoissonNoise = false;
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
-%    Currently established quadSeq1 - quadSeq5
-forwardChromList = ["quadSeq4"]; 
-reconChromList =   ["quadSeq4"];
+%    Currently established quadSeq1 - quadSeq6
+forwardChromList = ["quadSeq5"]; 
+reconChromList =   ["quadSeq5"];
 
 % Build new sequence by
 prBase.quads(1).name = 'useQuadSeq';
@@ -70,17 +70,17 @@ if(prBase.quads(1).value)
     % Enter desired percent as decimal of L cones per region across
     % quadrants. The remaining percent will be made of M cones. Entries 
     % should start with outermost regions first and progress inward
-    prBase.quads(2).percentL = [0 0]; 
-    prBase.quads(3).percentL = [0 0];
-    prBase.quads(4).percentL = [1 1 0];
-    prBase.quads(5).percentL = [1 1 0]; 
+    prBase.quads(2).percentL = [0.45]; 
+    prBase.quads(3).percentL = [0.50];
+    prBase.quads(4).percentL = [0.55];
+    prBase.quads(5).percentL = [0.60]; 
 
     % Enter desired percent as decimal of S cones per region across
     % quadrants. Follows same form as above
-    prBase.quads(2).percentS = [0.00 0.00]; 
-    prBase.quads(3).percentS = [0.03 0.03];
-    prBase.quads(4).percentS = [0.03 0.05 0.00];
-    prBase.quads(5).percentS = [0.00 0.00 0.00]; 
+    prBase.quads(2).percentS = [0.10]; 
+    prBase.quads(3).percentS = [0.10];
+    prBase.quads(4).percentS = [0.10];
+    prBase.quads(5).percentS = [0.10]; 
 
     % Establish initial region boundaries in the x and y direction for all
     % four quadrants based on FOV
@@ -95,7 +95,9 @@ if(prBase.quads(1).value)
 end
 
 prBase.quads(6).name = 'overrideQuadSeq';
-prBase.quads(6).value = false;
+prBase.quads(6).value = true;
+
+% prBase.kConeIndices = [564 505 493 479 528 565 572 585 570];
 
 % Select which quadrants from the above to activate
 quadSelectList = [[true true true true]]';%...
@@ -132,14 +134,15 @@ end
 %
 % Position specified in pixels, could consider specifying in minutes.
 pixelsPerMinute = prBase.nPixels/prBase.fieldSizeMinutes;
-shiftInMinutesList = [0];
+shiftInMinutesList = [-3];
 fullSquareShift = false;
 
 % Convert the shifts to pixel positions
 shiftInPixelsList = round(pixelsPerMinute*shiftInMinutesList);
 quadCenters = round(prBase.nPixels / 4);
 centerXPosition = prBase.trueCenter + quadCenters + shiftInPixelsList;
-centerYPosition = prBase.trueCenter + quadCenters * ones(size(centerXPosition));
+centerYPosition = prBase.trueCenter + quadCenters + (shiftInPixelsList(1)*ones(size(centerXPosition)));
+%%%% Change the above back to a plus when switching to multiple runs!!!!
 prBase.stimCenter = [centerXPosition ; centerYPosition];
 
 % Loop through created pixel positions if want to create a square grid of
@@ -162,7 +165,7 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.005; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 5;
+prBase.maxReconIterations = 2000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
@@ -188,8 +191,8 @@ reconPupilDiamListMM =   [6];
 
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
-reconDefocusDioptersList = [0.00];% 0.05 0.1];
+forwardDefocusDioptersList = [0.05 0.05 0.05];% 0.05 0.1]; 
+reconDefocusDioptersList = [0.12 0.18 0.24];% 0.05 0.1];
 
 %% Set up list conditions
 runIndex = 1;
