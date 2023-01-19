@@ -10,10 +10,16 @@
 %   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
 %   09/22/22  chr  Convert to its own dichrom file
 %   09/27/22  chr  Incorporate inputs for stimulus centering position
-%   10/05/22  dhb  Lots of changes for parall
+%   10/05/22  dhb  Lots of changes for parallel
 
 %% Clear
 clear; close all;
+
+%% Control size of parpool, otherwise may crush memory
+% thePool = gcp('nocreate');
+% if (isempty(thePool))
+%     parpool(5);
+% end
 
 %% Set defaults in prBase
 prBase = prBaseDefaults;
@@ -31,6 +37,7 @@ prBase.versEditor = 'small_quads_chr';
 prBase.displayName = 'mono';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
+displayScaleFactorList = [1];
 
 %% Spatial parameters
 % 
@@ -175,20 +182,21 @@ prBase.boundedSearch = false;
 
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = true;
+prBase.forwardNoLCA = true;
 prBase.reconAORender = true;
-prBase.forwardPupilDiamMM = 6;
-prBase.reconPupilDiamMM = 6;
+prBase.reconNoLCA = false;
+reconPupilDiamListMM =   6;
+forwardPupilDiamListMM = 6;
+
+% Define optics.  Subject only matters if we use a database.  Ignored for
+% Marimont and Wandell.  For database, subjectID of 0 means diffraction
+% limited.
+%
+% Databases are 'Polans2015' and 'Artal2012'
 prBase.forwardSubjectID = 6;
 prBase.forwardZernikeDataBase = 'Polans2015';
 prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Polans2015';
-
-% For sake of making back compatible, need to go through and reevaluate
-% where Pupil Diam is being set (currently have prBase, cnv, and the
-% version below) 
-forwardPupilDiamListMM = [6];
-reconPupilDiamListMM =   [6];
-
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.05 0.05 0.05];% 0.05 0.1]; 
@@ -204,29 +212,33 @@ for ss = 1:length(stimSizeDegsList)
                     for dd = 1:length(forwardChromList)
                         for pp = 1:length(forwardPupilDiamListMM)
                             for qq = 1:length(quadSelectList(1,:))
-    
-                                stimSizeDegs(runIndex) = stimSizeDegsList(ss);
-    
-                                stimRVal(runIndex) = stimRValList(cc);
-                                stimGVal(runIndex) = stimGValList(cc);
-                                stimBVal(runIndex) = stimBValList(cc);
-    
-                                stimCenter(:,runIndex) = deltaCenterList(:,yy);
-    
-                                forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
-                                reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
-    
-                                regPara(runIndex) = regParaList(rr);
-    
-                                forwardChrom(runIndex) = forwardChromList(dd);
-                                reconChrom(runIndex) = reconChromList(dd);
-    
-                                forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
-                                reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
-    
-                                quadSelect(:,runIndex) = quadSelectList(:,qq);
+                                for dsf = 1:length(displayScaleFactorList)
 
-                                runIndex = runIndex + 1;
+                                    stimSizeDegs(runIndex) = stimSizeDegsList(ss);
+
+                                    stimRVal(runIndex) = stimRValList(cc);
+                                    stimGVal(runIndex) = stimGValList(cc);
+                                    stimBVal(runIndex) = stimBValList(cc);
+
+                                    stimCenter(:,runIndex) = deltaCenterList(:,yy);
+
+                                    forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
+                                    reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
+
+                                    regPara(runIndex) = regParaList(rr);
+
+                                    forwardChrom(runIndex) = forwardChromList(dd);
+                                    reconChrom(runIndex) = reconChromList(dd);
+
+                                    forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
+                                    reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
+
+                                    quadSelect(:,runIndex) = quadSelectList(:,qq);
+
+                                    displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
+
+                                    runIndex = runIndex + 1;
+                                end
                             end
                         end
                     end
@@ -243,30 +255,30 @@ for pp = 1:length(regPara)
     % out of lists precreated above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom, forwardPupilDiamMM, reconPupilDiamMM);
+        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
     pr.quadSelect = quadSelect(:,pp);
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
 
     % Build foward cone mosaic and render matrix if needed
-    if (buildNewForward || ~exist(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'file'))
+    if (buildNewForward || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'file'))
         renderStructure = buildRenderStruct(pr.aoReconDir , pr.eccXDegs, pr.eccYDegs, ...
-            pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters, ...
-            cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
+            pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardNoLCA, pr.forwardDefocusDiopters, ...
+            cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits,  ...
             pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
             cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase, pr.quads);
-        save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure', '-v7.3');
+        save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure','-v7.3');
         forwardRenderStructure = renderStructure; clear renderStructure;
     end
 
     % Build recon cone mosaic and render structure if needed
-    if (buildNewRecon || ~exist(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'file'))
+    if (buildNewRecon || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'file'))
         renderStructure = buildRenderStruct(pr.aoReconDir , pr.eccXDegs, pr.eccYDegs, ...
-            pr.fieldSizeMinutes/60, pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters, ...
+            pr.fieldSizeMinutes/60, pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconNoLCA, pr.reconDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
             cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase, pr.quads);
-        save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure', '-v7.3');
+        save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure','-v7.3');
         reconRenderStructure = renderStructure; clear renderStructure;
     end
 end
@@ -278,7 +290,7 @@ parfor pp = 1:length(regPara)
     % out of lists above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM);
+        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
     pr.quadSelect = quadSelect(:,pp);
 
     % Compute convenience parameters

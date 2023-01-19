@@ -19,6 +19,47 @@ prBase = prBaseDefaults;
 % Helps us keep different calcs separate
 prBase.versEditor = 'optics_image_db';
 
+%% These parameters are the ones to vary
+whichCase = 5;
+switch (whichCase)
+    case 1
+        displayScaleFactorList = [10];
+        forwardPupilDiamListMM = [3 3   3 3   3];
+        reconPupilDiamListMM =   [2 2.5 3 3.5 4];
+        forwardDefocusDioptersList = zeros(size([-2 -1.5 -1 -0.5 0 0.5 1 1.5 2]));
+        reconDefocusDioptersList =              [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
+        prBase.addPoissonNoise = false;
+    case 2
+        displayScaleFactorList = [10];
+        forwardPupilDiamListMM = [3 3   3 3   3];
+        reconPupilDiamListMM =   [2 2.5 3 3.5 4];
+        forwardDefocusDioptersList = 0.5*ones(size([-2 -1.5 -1 -0.5 0 0.5 1 1.5 2]));
+        reconDefocusDioptersList =                 [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
+        prBase.addPoissonNoise = false;
+    case 3
+        displayScaleFactorList = [1];
+        forwardPupilDiamListMM = [3 3   3 3   3];
+        reconPupilDiamListMM =   [2 2.5 3 3.5 4];
+        forwardDefocusDioptersList = 0.5*ones(size([-2 -1.5 -1 -0.5 0 0.5 1 1.5 2]));
+        reconDefocusDioptersList =                 [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
+        prBase.addPoissonNoise = false;
+    case 4
+        displayScaleFactorList = [10];
+        reconPupilDiamListMM =   [2 2.5 3 3.5 4];
+        forwardPupilDiamListMM = 3.5*ones(size(reconPupilDiamListMM));
+        reconDefocusDioptersList =                 [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
+        forwardDefocusDioptersList = -0.5*ones(size(reconDefocusDioptersList));
+        prBase.addPoissonNoise = true;
+    case 5
+        displayScaleFactorList = [1];
+        reconPupilDiamListMM =   [2 2.5 3 3.5 4];
+        forwardPupilDiamListMM = 3.5*ones(size(reconPupilDiamListMM));
+        reconDefocusDioptersList =                 [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
+        forwardDefocusDioptersList = -0.5*ones(size(reconDefocusDioptersList));
+        prBase.addPoissonNoise = true;
+
+end
+
 %% Parameters
 %
 % Display, options are:
@@ -67,7 +108,7 @@ switch (prBase.imageType)
         % we select out the largest square in the center before resizing.
         theImageRGB = imread(fullfile(prBase.aoReconDir,'images',[prBase.imageName '.jpeg']),'jpeg');
         [m,n,k] = size(theImageRGB);
-        minDim = min([m,n]); 
+        minDim = min([m,n]);
         mSpace = minDim/2; nSpace = minDim/2;
         lowM = round(m/2-mSpace)+1; highM = lowM+minDim-1; lowN = round(n/2-nSpace)+1; highN = lowN+minDim-1;
         prBase.stimBgVal = imresize(theImageRGB(lowM:highM,lowN:highN,:),'OutputSize',[prBase.nPixels prBase.nPixels]);
@@ -124,7 +165,6 @@ prBase.sparsePriorStr = 'conventional';
 
 %% Reconstruction parameters
 %
-% Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.0005; %[0.05 0.01 0.005 0.001 0.0005 0.0001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 4;
@@ -139,8 +179,6 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
 prBase.reconAORender = false;
-forwardPupilDiamListMM = [3 3   3 3   3];
-reconPupilDiamListMM =   [2 2.5 3 3.5 4];
 
 % Define optics.  Subject only matters if we use a database.
 %
@@ -154,9 +192,7 @@ prBase.reconZernikeDataBase = 'Artal2012';
 % prBase.reconSubjectID = 0;
 % prBase.reconZernikeDataBase = 'MarimontWandell';
 
-% Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.00];% 0.05 0.1];
-reconDefocusDioptersList = [0.00];% 0.05 0.1];
+
 
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
@@ -184,27 +220,31 @@ for ss = 1:length(stimSizeDegsList)
                 for rr = 1:length(regParaList)
                     for dd = 1:length(forwardChromList)
                         for pp = 1:length(forwardPupilDiamListMM)
+                            for dsf = 1:length(displayScaleFactorList)
 
-                            stimSizeDegs(runIndex) = stimSizeDegsList(ss);
+                                stimSizeDegs(runIndex) = stimSizeDegsList(ss);
 
-                            stimRVal(runIndex) = stimRValList(cc);
-                            stimGVal(runIndex) = stimGValList(cc);
-                            stimBVal(runIndex) = stimBValList(cc);
+                                stimRVal(runIndex) = stimRValList(cc);
+                                stimGVal(runIndex) = stimGValList(cc);
+                                stimBVal(runIndex) = stimBValList(cc);
 
-                            stimCenter(:,runIndex) = deltaCenterList(:,yy);
+                                stimCenter(:,runIndex) = deltaCenterList(:,yy);
 
-                            forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
-                            reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
+                                forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
+                                reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
 
-                            regPara(runIndex) = regParaList(rr);
+                                regPara(runIndex) = regParaList(rr);
 
-                            forwardChrom(runIndex) = forwardChromList(dd);
-                            reconChrom(runIndex) = reconChromList(dd);
+                                forwardChrom(runIndex) = forwardChromList(dd);
+                                reconChrom(runIndex) = reconChromList(dd);
 
-                            forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
-                            reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
+                                forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
+                                reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
 
-                            runIndex = runIndex + 1;
+                                displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
+
+                                runIndex = runIndex + 1;
+                            end
                         end
                     end
                 end
@@ -213,14 +253,14 @@ for ss = 1:length(stimSizeDegsList)
     end
 end
 
-% Run the reconstructions in parallel
+% Analyze the reconstructions.  Gather data from each.
 for pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come
     % out of lists above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM);
+        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
@@ -230,17 +270,64 @@ for pp = 1:length(regPara)
     theData = load(fullfile(cnv.outputDir,'xRunOutput.mat'));
     stimulusImageRGB{pp} = theData.stimulusImageRGB;
     stimulusImageLinear{pp} = theData.stimulusImageLinear;
-    reconImageLinear = theData.reconImageLinearTemp;
+    % reconImageLinear = theData.reconImageLinearTemp;
     reconLogLikelihoods(pp) = theData.multistartStruct.reconLogLikelihoods(theData.reconIndex);
     reconLogPriors(pp) = theData.multistartStruct.reconLogPriors(theData.reconIndex);
     reconLosses(pp) = theData.multistartStruct.reconLosses(theData.reconIndex);
     reconScaleFactor(pp) = theData.reconScaleFactor(theData.reconIndex);
     forwardExcitations(:,pp) = theData.forwardExcitationsToStimulusUse;
     reconExcitations(:,pp) = theData.multistartStruct.reconPreds(:,theData.reconIndex);
+    runForwardPupilDiameterMM(pp) = pr.forwardPupilDiamMM;
+    runReconPupilDiameterMM(pp)= pr.reconPupilDiamMM;
+    runForwardDefocusDiopters(pp) = pr.forwardDefocusDiopters;
+    runReconDefocusDiopters(pp) = pr.reconDefocusDiopters;
     R = corrcoef(forwardExcitations(:,pp),reconExcitations(:,pp));
     corrs(pp) = R(1,2);
 end
-figure; plot(reconPupilDiamMM,-reconLosses,'ro'); title('Loss');
-figure; plot(reconPupilDiamMM,reconLogPriors,'ro'); title('Prior');
-figure; plot(reconPupilDiamMM,reconLogLikelihoods,'ro'); title('Likelihood');
-figure; plot(reconPupilDiamMM,corrs,'ro'); title('Correlation');
+
+% Get the forward values used
+forwardPupilVal = unique(runForwardPupilDiameterMM);
+if (length(forwardPupilVal) ~= 1)
+    error('More than one forward pupil value');
+end
+forwardDefocusVal = unique(runForwardDefocusDiopters);
+if (length(forwardDefocusVal) ~= 1)
+    error('More than one forward defocus value');
+end
+index = find(runReconPupilDiameterMM == forwardPupilVal & runReconDefocusDiopters == forwardDefocusVal);
+negLogLossAtForwardVals = -reconLosses(index);
+
+% Get the set of recon pupil values used
+reconPupilVals = unique(runReconPupilDiameterMM);
+reconDefocusVals = unique(runReconDefocusDiopters);
+for xx = 1:length(reconPupilVals)
+    for yy = 1:length(reconDefocusVals)
+        X(xx,yy) = reconPupilVals(xx);
+        Y(xx,yy) = reconDefocusVals(yy);
+        index = find(runReconPupilDiameterMM == reconPupilVals(xx) & runReconDefocusDiopters == reconDefocusVals(yy));
+        Z(xx,yy) = -reconLosses(index);
+    end
+end
+
+% Plot the negative log loss surface
+figure; hold on
+surf(X,Y,Z);
+
+% Indicate location of max neg log loss
+[~,index] = max(-reconLosses);
+plot3(runReconPupilDiameterMM(index),runReconDefocusDiopters(index),-reconLosses(index),'ro','MarkerFaceColor','r','MarkerSize',12);
+
+% Indicate forward vals
+plot3(forwardPupilVal,forwardDefocusVal,negLogLossAtForwardVals,'go','MarkerFaceColor','g','MarkerSize',8);
+
+% Tidy up plot
+zlim([0.9*max(-reconLosses), 1.1*max(-reconLosses)]);
+xlabel('Pupil Diameter MM');
+ylabel('Defocus Diopters');
+title('Neg Log Loss');    
+view(-20,60);
+
+% figure; plot(reconPupilDiamMM,-reconLosses,'ro'); title('Loss');
+% figure; plot(reconPupilDiamMM,reconLogPriors,'ro'); title('Prior');
+% figure; plot(reconPupilDiamMM,reconLogLikelihoods,'ro'); title('Likelihood');
+% figure; plot(reconPupilDiamMM,corrs,'ro'); title('Correlation');

@@ -99,20 +99,25 @@ else
 end
 
 % Determine which quadrants are stimulated for small quads
-stimQuads = (find(pr.quadSelect' ~= 0));
-stimQuadsName = sprintf('%d',stimQuads');
+if isfield(pr,'quadSelect')
+    stimQuads = (find(pr.quadSelect' ~= 0));
+    stimQuadsName = sprintf('%d',stimQuads');
+else
+    stimQuads = [];
+    stimQuadsName = 'noquad';
+end
 
-cnv.outputMainName = sprintf('%s_%s_%s_%0.2f_%0.2f_%d_%d_%s_%s', ...
-    pr.versEditor,cnv.forwardAOStr,cnv.reconAOStr,pr.forwardDefocusDiopters,pr.reconDefocusDiopters,pr.nPixels,pr.fieldSizeMinutes,pr.displayName,pr.sparsePriorStr);
+cnv.outputMainName = sprintf('%s_%s_%s_%0.2f_%0.2f_%d_%d_%s_%0.2f_%s', ...
+    pr.versEditor,cnv.forwardAOStr,cnv.reconAOStr,pr.forwardDefocusDiopters,pr.reconDefocusDiopters,pr.nPixels,pr.fieldSizeMinutes,pr.displayName,pr.displayScaleFactor,pr.sparsePriorStr);
 if (length(pr.stimBgVal) > 1)
-    cnv.outputSubName = sprintf('%0.1f_%0.6f_%d_%s_%s_%s_%d_%s_%d_%d_%d_%s_%d_%s', ...
-        60*pr.stimSizeDegs, pr.regPara,pr.stride,pr.imageName,cnv.exciteSource, pr.forwardChrom, pr.forwardEccVars, pr.reconChrom, pr.reconEccVars, ...
+    cnv.outputSubName = sprintf('%0.1f_%0.1f_%0.1f_%0.6f_%d_%s_%s_%s_%d_%s_%d_%d_%d_%s_%d_%s', ...
+        60*pr.stimSizeDegs,pr.eccXDegs,pr.eccYDegs,pr.regPara,pr.stride,pr.imageName,cnv.exciteSource, pr.forwardChrom, pr.forwardEccVars, pr.reconChrom, pr.reconEccVars, ...
         pr.stimCenter(1),pr.stimCenter(2),noiseStr,pr.boundedSearch, stimQuadsName);
 else
-    cnv.outputSubName = sprintf('%0.1f_%0.6f_%d_%0.4f_%0.4f_%0.4f_%0.4f_%s_%s_%d_%s_%d_%d_%d_%s_%d_%s', ...
-        60*pr.stimSizeDegs, pr.regPara,pr.stride,pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal, cnv.exciteSource, pr.forwardChrom, pr.forwardEccVars, pr.reconChrom, pr.reconEccVars, ...
+    cnv.outputSubName = sprintf('%0.1f_%0.1f_%0.1f_%0.6f_%d_%0.4f_%0.4f_%0.4f_%0.4f_%s_%s_%d_%s_%d_%d_%d_%s_%d_%s', ...
+        60*pr.stimSizeDegs,pr.eccXDegs,pr.eccYDegs,pr.regPara,pr.stride,pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal, cnv.exciteSource, pr.forwardChrom, pr.forwardEccVars, pr.reconChrom, pr.reconEccVars, ...
         pr.stimCenter(1),pr.stimCenter(2),noiseStr,pr.boundedSearch, stimQuadsName);
 end
-cnv.outputDir = fullfile(pr.aoReconDir ,cnv.outputMainName,cnv.outputSubName);
+cnv.outputDir = fullfile(pr.aoReconDir, pr.versEditor, cnv.outputMainName, cnv.outputSubName);
 
 end

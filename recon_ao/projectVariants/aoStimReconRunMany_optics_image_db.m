@@ -15,6 +15,12 @@
 %% Clear
 clear; close all;
 
+%% Control size of parpool, otherwise may crush memory
+thePool = gcp('nocreate');
+if (isempty(thePool))
+    parpool(5);
+end
+
 %% Set defaults in prBase
 prBase = prBaseDefaults;
 
@@ -31,6 +37,7 @@ prBase.versEditor = 'optics_image_db';
 prBase.displayName = 'conventional';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
+displayScaleFactorList = [1 10];
 
 %% Spatial parameters
 %
@@ -71,7 +78,7 @@ switch (prBase.imageType)
         % we select out the largest square in the center before resizing.
         theImageRGB = imread(fullfile(prBase.aoReconDir,'images',[prBase.imageName '.jpeg']),'jpeg');
         [m,n,k] = size(theImageRGB);
-        minDim = min([m,n]); 
+        minDim = min([m,n]);
         mSpace = minDim/2; nSpace = minDim/2;
         lowM = round(m/2-mSpace)+1; highM = lowM+minDim-1; lowN = round(n/2-nSpace)+1; highN = lowN+minDim-1;
         prBase.stimBgVal = imresize(theImageRGB(lowM:highM,lowN:highN,:),'OutputSize',[prBase.nPixels prBase.nPixels]);
@@ -132,7 +139,7 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.0005; %[0.05 0.01 0.005 0.001 0.0005 0.0001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 4;
-prBase.maxReconIterations = 1000;
+prBase.maxReconIterations = 2000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
@@ -142,25 +149,25 @@ prBase.boundedSearch = false;
 
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = false;
+prBase.forwardNoLCA = false;
 prBase.reconAORender = false;
-forwardPupilDiamListMM = [3 3   3   3]; %[2 3 4 2 4];
-reconPupilDiamListMM =   [2 2.5 3.5 4];   %[2 3 4 3 3];
+prBase.reconNoLCA = false;
+reconPupilDiamListMM =   [2 2.5 3 3.5 4];
+forwardPupilDiamListMM = 3.5*ones(size(reconPupilDiamListMM));
 
-% Define optics.  Subject only matters if we use a database.
+% Define optics.  Subject only matters if we use a database.  Ignored for
+% Marimont and Wandell.  For database, subjectID of 0 means diffraction
+% limited.
 %
 % Databases are 'Polans2015' and 'Artal2012'
 prBase.forwardSubjectID = 6;
 prBase.forwardZernikeDataBase = 'Artal2012';
 prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Artal2012';
-% prBase.forwardSubjectID = 0;
-% prBase.forwardZernikeDataBase = 'MarimontWandell';
-% prBase.reconSubjectID = 0;
-% prBase.reconZernikeDataBase = 'MarimontWandell';
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.00];% 0.05 0.1];
-reconDefocusDioptersList = [0.00];% 0.05 0.1];
+reconDefocusDioptersList =                  [-2 -1.5 -1 -0.5 0 0.5 1 1.5 2];
+forwardDefocusDioptersList = -0.5*ones(size(reconDefocusDioptersList    ));
 
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
@@ -188,27 +195,31 @@ for ss = 1:length(stimSizeDegsList)
                 for rr = 1:length(regParaList)
                     for dd = 1:length(forwardChromList)
                         for pp = 1:length(forwardPupilDiamListMM)
+                            for dsf = 1:length(displayScaleFactorList)
 
-                            stimSizeDegs(runIndex) = stimSizeDegsList(ss);
+                                stimSizeDegs(runIndex) = stimSizeDegsList(ss);
 
-                            stimRVal(runIndex) = stimRValList(cc);
-                            stimGVal(runIndex) = stimGValList(cc);
-                            stimBVal(runIndex) = stimBValList(cc);
+                                stimRVal(runIndex) = stimRValList(cc);
+                                stimGVal(runIndex) = stimGValList(cc);
+                                stimBVal(runIndex) = stimBValList(cc);
 
-                            stimCenter(:,runIndex) = deltaCenterList(:,yy);
+                                stimCenter(:,runIndex) = deltaCenterList(:,yy);
 
-                            forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
-                            reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
+                                forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
+                                reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
 
-                            regPara(runIndex) = regParaList(rr);
+                                regPara(runIndex) = regParaList(rr);
 
-                            forwardChrom(runIndex) = forwardChromList(dd);
-                            reconChrom(runIndex) = reconChromList(dd);
+                                forwardChrom(runIndex) = forwardChromList(dd);
+                                reconChrom(runIndex) = reconChromList(dd);
 
-                            forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
-                            reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
+                                forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
+                                reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
 
-                            runIndex = runIndex + 1;
+                                displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
+
+                                runIndex = runIndex + 1;
+                            end
                         end
                     end
                 end
@@ -224,16 +235,16 @@ for pp = 1:length(regPara)
     % out of lists precreated above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM);
+        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
 
     % Build foward cone mosaic and render matrix if needed
-    if (buildNewForward || ~exist(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'file'))
+    if (buildNewForward || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'file'))
         renderStructure = buildRenderStruct(pr.aoReconDir , pr.eccXDegs, pr.eccYDegs, ...
-            pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters, ...
-            cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
+            pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardNoLCA, pr.forwardDefocusDiopters, ...
+            cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits,  ...
             pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
             cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase, pr.quads);
         save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure','-v7.3');
@@ -241,12 +252,12 @@ for pp = 1:length(regPara)
     end
 
     % Build recon cone mosaic and render structure if needed
-    if (buildNewRecon || ~exist(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'file'))
+    if (buildNewRecon || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'file'))
         renderStructure = buildRenderStruct(pr.aoReconDir , pr.eccXDegs, pr.eccYDegs, ...
-            pr.fieldSizeMinutes/60, pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters, ...
+            pr.fieldSizeMinutes/60, pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconNoLCA, pr.reconDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
-            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase);
+            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase, pr.quads);
         save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure','-v7.3');
         reconRenderStructure = renderStructure; clear renderStructure;
     end
@@ -259,7 +270,7 @@ parfor pp = 1:length(regPara)
     % out of lists above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM);
+        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
 
     % Compute convenience parameters
     cnv = computeConvenienceParams(pr);

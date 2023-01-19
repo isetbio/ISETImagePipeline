@@ -42,40 +42,44 @@ sparsePriorName = [pr.sparsePriorStr 'SparsePrior.mat'];
 % is correct at the calling level.
 %
 % Grab foward cone mosaic and render matrix
-if (~exist(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'file'))
+if (~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'file'))
     error('Forward render strucure not cached')
 else
     clear forwardRenderStructure;
-    load(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure');
+    load(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(forwardRenderStructure, pr.eccXDegs, pr.eccYDegs, cnv.fieldSizeDegs, ...
         pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters);
 end
 
+% Set forward variables from loaded/built structure. Scale matrix with display factor.
+forwardRenderMatrix = forwardRenderStructure.renderMatrix*pr.displayScaleFactor;
+forwardConeMosaic = forwardRenderStructure.theConeMosaic;
+forwardOI = forwardConeMosaic.PSF;
+clear forwardRenderStructure;
+
 % Grab recon cone mosaic and render matrix
-if (~exist(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'file'))
+if (~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'file'))
     error('Recon render strucure not cached');
 else
     clear reconRenderStructure;
-    load(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure');
+    load(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(reconRenderStructure, pr.eccXDegs, pr.eccYDegs, cnv.fieldSizeDegs, ...
         pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters);
 end
 
-% Set forward variables from loaded/built structure
-forwardRenderMatrix = forwardRenderStructure.renderMatrix;
-forwardConeMosaic = forwardRenderStructure.theConeMosaic;
-forwardOI = forwardConeMosaic.PSF;
-
-% Set recon variables from loaded/built structure
-reconRenderMatrix = reconRenderStructure.renderMatrix;
+% Set recon variables from loaded/built structure. Scale matrix with display factor.
+reconRenderMatrix = reconRenderStructure.renderMatrix*pr.displayScaleFactor;
 reconConeMosaic = reconRenderStructure.theConeMosaic;
 reconOI = reconConeMosaic.PSF;
-
-% Clear raw forward render structure
-clear forwardRenderStructure;
 clear reconRenderStructure;
+
+% Scale display to match scaling of render matrices above.
+forwardConeMosaic.Display = displaySet(forwardConeMosaic.Display,'spd primaries',displayGet(forwardConeMosaic.Display,'spd primaries')*pr.displayScaleFactor);
+forwardConeMosaic.Display.ambient = displayGet(forwardConeMosaic.Display,'black spd')*pr.displayScaleFactor;
+reconConeMosaic.Display = displaySet(reconConeMosaic.Display,'spd primaries',displayGet(reconConeMosaic.Display,'spd primaries')*pr.displayScaleFactor);
+reconConeMosaic.Display.ambient = displayGet(reconConeMosaic.Display,'black spd')*pr.displayScaleFactor;
 
 %% Setup output directories
 if (~exist(cnv.outputDir,'dir'))
@@ -155,21 +159,15 @@ else
     end
 end
 
-% Show the stimulus by creating an ISETBio scene
+% Create an ISETBio scene.  Rescale input image
+% according to pr.inputImageScaleFactor.
 meanLuminanceCdPerM2 = [];
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
+stimulusImageRGB = gammaCorrection(stimulusImageLinear*pr.inputImageScaleFactor, reconConeMosaic.Display);
+[stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
+    meanLuminanceCdPerM2, forwardConeMosaic.Display);
 stimulusScene = sceneSet(stimulusScene, 'fov', cnv.fieldSizeDegs);
-%visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
-% figure; clf;
-% imshow(stimulusImageRGB);
-% if (length(pr.stimBgVal) > 1)
-%     title({'Stimulus Image' ; pr.imageName});
-% else
-%     title({'Stimulus Image' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
-% end
-% set(gcf,'Position',[500,500,500,400]);
-% saveas(gcf,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 
 %% Compute forward retinal image and excitations using ISETBio
@@ -254,16 +252,18 @@ saveas(gcf,fullfile(cnv.outputDir,'forwardMosaicExcitationsTypes.tiff'),'tiff');
 % Load prior
 prior = load(fullfile(pr.aoReconDir, 'priors', sparsePriorName));
 
-% Construct image estimator
-estimator = PoissonSparseEstimator(reconRenderMatrix, inv(prior.regBasis), ...
-    prior.mu', pr.regPara, pr.stride, [pr.nPixels pr.nPixels 3]);
-
-% Estimate
-%
-% Scale excitations to take into account difference in forward and recon
-% sizes.  This helps keep things in range.
+% Scale factor to take into account difference in forward and recon
+% sizes. We adjust the recon render matrix by this factor so
+% that pupil size doesn't affect reconstruction purely by the
+% scalar change in excitations.
 meanLuminanceCdPerM2 = [];
-scaleFactor = (cnv.reconPupilDiamMM/cnv.forwardPupilDiamMM)^2;
+pupilSizeScaleFactor = (cnv.reconPupilDiamMM/cnv.forwardPupilDiamMM)^2;
+reconRenderMatrixPupilScaled = reconRenderMatrix/pupilSizeScaleFactor;
+clear reconRenderMatrix;
+
+% Construct image estimator
+estimator = PoissonSparseEstimator(reconRenderMatrixPupilScaled, inv(prior.regBasis), ...
+    prior.mu', pr.regPara, pr.stride, [pr.nPixels pr.nPixels 3]);
 
 % Set up uniform field starts
 specifiedStarts = {};
@@ -286,7 +286,7 @@ if (pr.boundedSearch)
 else
     ub = 100;
 end
-[multistartStruct,~,reconIndex] = estimator.runMultistartEstimate(forwardExcitationsToStimulusUse * scaleFactor, ...
+[multistartStruct,~,reconIndex] = estimator.runMultistartEstimate(forwardExcitationsToStimulusUse, ...
     'maxIter', pr.maxReconIterations, 'display', 'iter', 'gpu', false, ...
     'nWhiteStart', pr.whiteNoiseStarts, 'nPinkStart', pr.pinkNoiseStarts, ...
     'nSparsePriorPatchStart', pr.sparsePriorPatchStarts, 'sparsePrior', prior, ...
@@ -295,7 +295,7 @@ end
 
 % Evaluate stimulus
 [stimNegLogPrior,~,stimNegLogLikely] = ...
-    estimator.evalEstimate(forwardExcitationsToStimulusUse * scaleFactor, stimulusImageLinear(:));
+    estimator.evalEstimate(forwardExcitationsToStimulusUse, stimulusImageLinear(:));
 stimLoss = stimNegLogPrior + stimNegLogLikely;
 
 % Get information we need to render scenes from their spectra through
@@ -335,35 +335,47 @@ M_xyzTorgb = inv(M_rgbToxyz);
 % Summary plot of what happened
 for ii = 1:length(multistartStruct.initTypes)
 
-    % Handle bounded search for display
+    % Handle bounded search for display.  We scale down the stimulus image
+    % by the scale factor needed to bring the reconstruction into range
+    % 0-1.
     reconScaleFactor(ii) = max(multistartStruct.reconImages{ii}(:));
     if (reconScaleFactor(ii) < 1)
         reconScaleFactor(ii) = 1;
     end   
     stimulusRGBScaled{ii} = gammaCorrection(stimulusImageLinear/reconScaleFactor(ii), reconConeMosaic.Display);
+    maxStimulusScaledR(ii) = max(max(stimulusRGBScaled{ii}(:,:,1)));
+    maxStimulusScaledG(ii) = max(max(stimulusRGBScaled{ii}(:,:,2)));
+    maxStimulusScaledB(ii) = max(max(stimulusRGBScaled{ii}(:,:,3)));
 
-    % Set up initial scene.
+    % Set up initial scene, that is scene from the initialization.  We just want a look at this,
+    % so we don't fuss much with scaling.
     [initSceneTemp, ~, initImageLinearTemp] = sceneFromFile(gammaCorrection(multistartStruct.initImages{ii}, forwardConeMosaic.Display), 'rgb', ...
         meanLuminanceCdPerM2, forwardConeMosaic.Display);
 
-    % Get the reconstruction as RGB image and find maxima
-    reconRGB{ii} = gammaCorrection(multistartStruct.reconImages{ii}/reconScaleFactor(ii), reconConeMosaic.Display);
-    maxReconR(ii) = max(max(reconRGB{ii}(:,:,1)));
-    maxReconG(ii) = max(max(reconRGB{ii}(:,:,2)));
-    maxReconB(ii) = max(max(reconRGB{ii}(:,:,3)));
-    [reconSceneTemp, ~, reconImageLinearTemp] = sceneFromFile(reconRGB{ii}, 'rgb', ...
+    % Get the reconstruction as RGB image and find maxima.  This is scaled
+    % down as needed so that the recon RGB is in range 0-1.
+    reconScaledRGB{ii} = gammaCorrection(multistartStruct.reconImages{ii}/reconScaleFactor(ii), reconConeMosaic.Display);
+    maxReconScaledR(ii) = max(max(reconScaledRGB{ii}(:,:,1)));
+    maxReconScaledG(ii) = max(max(reconScaledRGB{ii}(:,:,2)));
+    maxReconScaledB(ii) = max(max(reconScaledRGB{ii}(:,:,3)));
+
+    % Adjust recon scene back up for recon scale factor and adjust for pupil size
+    % scale factor. This puts into into the same scaling as the stimulus
+    % scene, adjusted for pupil diameter.
+    [reconSceneTemp, ~, reconImageLinearTemp] = sceneFromFile(reconScaledRGB{ii}, 'rgb', ...
         meanLuminanceCdPerM2, reconConeMosaic.Display);
-    sceneSet(reconSceneTemp,'photons',sceneGet(reconSceneTemp,'photons')*reconScaleFactor(ii));
+    reconSceneTemp = sceneSet(reconSceneTemp,'photons',sceneGet(reconSceneTemp,'photons')*reconScaleFactor(ii)/pupilSizeScaleFactor);
     reconSceneTemp = sceneSet(reconSceneTemp, 'fov', cnv.fieldSizeDegs);
     reconImageLinearTemp = reconImageLinearTemp*reconScaleFactor(ii);
 
-    % Get forward and reconstruction OI's computed on reconstruction
+    % Get forward and reconstruction OI's computed on reconstruction.  Take
+    % difference in pupil size into account with reconOI.
     forwardOI = oiCompute(stimulusScene,forwardOI);
-    forwardOIToReconTemp = oiCompute(reconSceneTemp,forwardOI);
+    forwardOIToReconTemp = oiCompute(reconSceneTemp,forwardOI);  
     reconOIToReconTemp = oiCompute(reconSceneTemp,reconOI);
 
     % Get recon excitations to stimulus
-    reconExcitationsToStimulusTemp = reconRenderMatrix*stimulusImageLinear(:);
+    reconExcitationsToStimulusTemp = reconRenderMatrixPupilScaled*stimulusImageLinear(:);
 
     % Render OIs on display as best we can.  Getting the scale factor right
     % from first principles is hard because it depends on the radiance ->
@@ -371,11 +383,11 @@ for ii = 1:length(multistartStruct.initTypes)
     % scale both OI's we want to visualize to the same range.  We also
     % assume they are both the same size.
     [forwardOIxyz,m,n] = ImageToCalFormat(oiGet(forwardOI,'xyz'));
-    forwardOIrgb = M_xyzTorgb*forwardOIxyz*scaleFactor;
-    forwardOITitleStr = {'Min/max (arb units) of scaled (pupil) forward OI image:' ; sprintf(' %0.4f, %0.4f\n',min(forwardOIrgb(:)),max(forwardOIrgb(:)))};
+    forwardOIrgb = M_xyzTorgb*forwardOIxyz;
+    forwardOITitleStr = {sprintf('Min/max (arb units) of forward OI image:  %0.4f, %0.4f\n',min(forwardOIrgb(:)),max(forwardOIrgb(:)))};
     [reconOIxyz,m,n] = ImageToCalFormat(oiGet(reconOIToReconTemp,'xyz'));
     reconOIrgb = M_xyzTorgb*reconOIxyz;
-    reconOITitleStr = {'Min/max (arb units) of recon OI image:' ; sprintf('Min/max of recon OI image: %0.2f, %0.2f\n',min(reconOIrgb(:)),max(reconOIrgb(:)))};
+    reconOITitleStr = {sprintf('Min/max (arb units) of recon OI image: %0.4f, %0.3f\n',min(reconOIrgb(:)),max(reconOIrgb(:)))};
     oiScaleFactor = max([forwardOIrgb(:) ; reconOIrgb(:)]);
     forwardOIrgb = forwardOIrgb/oiScaleFactor;
     forwardOIrgb(forwardOIrgb < 0) = 0;
@@ -390,32 +402,19 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Initial image
     theAxes = subplot(3,7,7);
-    %visualizeScene(initSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
     imshow(gammaCorrection(multistartStruct.initImages{ii}, forwardConeMosaic.Display));
     title({sprintf('Recon %d, init %s',ii,multistartStruct.initTypes{ii}) ; sprintf('Iters = %d',pr.maxReconIterations) });
 
     % Visualize stimulus
     theAxes = subplot(3,7,1);
-    % visualizeScene(stimulusScene, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
     imshow(stimulusRGBScaled{ii});
     if (length(pr.stimBgVal) > 1)
-        title({'Stimulus Image' ; 'Scaled with recon' ; pr.imageName});
+        title({sprintf('Stimulus Image, input scale %0.4f',pr.inputImageScaleFactor) ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; pr.imageName});
     else
-        title({'Stimulus Image' ; 'Scaled with recon' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
+        title({sprintf('Stimulus Image, input scale %0.4f',pr.inputImageScaleFactor)  ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
     end
     if (ii == reconIndex)
         imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDir,'StimulusScaled.tiff'),'tiff');
-        % tempFig = figure; clf;
-        % imshow(stimulusRGBScaled{ii});
-        % if (length(pr.stimBgVal) > 1)
-        %     title({'Stimulus Image' ; 'Scaled with recon' ; pr.imageName});
-        % else
-        %     title({'Stimulus Image' ; 'Scaled with recon' ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
-        % end
-        % set(tempFig,'Position',[500,500,500,400]);
-        % saveas(tempFig,fullfile(cnv.outputDir,'StimulusScaled.tiff'));
-        % close(tempFig);
-        % figure(theFig);
     end
 
     % Contour plot of forward PSF
@@ -486,15 +485,15 @@ for ii = 1:length(multistartStruct.initTypes)
     'axesHandle', theAxes, ...
     'activation', reshape(multistartStruct.coneVec,1,1,length(forwardExcitationsToStimulusUse)), ...
     'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
-    'plotTitle',  'Scaled (pupil) forward excitations','labelConesInActivationMap', false);
+    'plotTitle',  'Forward excitations','labelConesInActivationMap', false);
 
     theAxes = subplot(3,7,8);
     %visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
-    imshow(reconRGB{ii});
+    imshow(reconScaledRGB{ii});
     if (pr.boundedSearch)
-        title({'Reconstructed Image' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxReconR(ii),maxReconG(ii),maxReconB(ii)) ; 'Bounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
+        title({sprintf('Reconstructed Image, reg %0.5f',pr.regPara) ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxReconScaledR(ii),maxReconScaledG(ii),maxReconScaledB(ii)) ; 'Bounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
     else
-        title({'Reconstructed Image' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxReconR(ii),maxReconG(ii),maxReconB(ii)) ; 'Unbounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
+        title({sprintf('Reconstructed Image, reg %0.5f',pr.regPara) ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxReconScaledR(ii),maxReconScaledG(ii),maxReconScaledB(ii)) ; 'Unbounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
     end
 
     % Contour plot of recon PSF
@@ -589,7 +588,7 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 
     % Make sure excitations used match what comes back from multistart
-    if (any(forwardExcitationsToStimulusUse * scaleFactor ~= multistartStruct.coneVec))
+    if (any(forwardExcitationsToStimulusUse ~= multistartStruct.coneVec))
         error('Inconsistency in excitations driving reconstruction');
     end
 
@@ -606,13 +605,13 @@ for ii = 1:length(multistartStruct.initTypes)
         forwardExcitationsToReconTemp(:,:,pr.kConeIndices) = 0 * forwardExcitationsToReconTemp(:,:,pr.kConeIndices);
         forwardExcitationsToReconTemp = squeeze(forwardExcitationsToReconTemp);
     end
-    plot(forwardExcitationsToStimulusUse*scaleFactor,reconExcitationsToStimulusTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
+    plot(forwardExcitationsToStimulusUse,reconExcitationsToStimulusTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
     axis('square');
-    minVal = 0.9*min([forwardExcitationsToStimulusUse*scaleFactor;reconExcitationsToStimulusTemp]);
-    maxVal = 1.1*max([forwardExcitationsToStimulusUse*scaleFactor;reconExcitationsToStimulusTemp]);
+    minVal = 0.9*min([forwardExcitationsToStimulusUse;reconExcitationsToStimulusTemp]);
+    maxVal = 1.1*max([forwardExcitationsToStimulusUse;reconExcitationsToStimulusTemp]);
     plot([minVal maxVal],[minVal maxVal],'k');
     xlim([minVal maxVal]); ylim([minVal maxVal]);
-    xlabel('Scaled (pupil) forward excitations to stimulus');
+    xlabel('Forward excitations to stimulus');
     ylabel('Recon excitations to stimulus');
 
     % Compute forward excitations from reconstruction
@@ -635,13 +634,13 @@ for ii = 1:length(multistartStruct.initTypes)
     maxVal = 1.1*max([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
     plot([minVal maxVal],[minVal maxVal],'k');
     xlim([minVal maxVal]); ylim([minVal maxVal]);
-    xlabel('Unscaled (pupil) forward excitations to stimulus');
+    xlabel('Forward excitations to stimulus');
     ylabel('Forward excitations to recon');
 
     % Compute recon excitations from reconstruction
     % and compare with scaled stimulus excitations
     subplot(3,7,17); hold on;
-    reconExcitationsToReconCheck = reconRenderMatrix*reconImageLinearTemp(:);
+    reconExcitationsToReconCheck = reconRenderMatrixPupilScaled*reconImageLinearTemp(:);
     if (pr.reconstructfromRenderMatrix)
         title({'Recon excitations to recon' ; 'Excitations from render matrix'});
         reconExcitationsToReconTemp = reconExcitationsToReconCheck;
@@ -652,13 +651,13 @@ for ii = 1:length(multistartStruct.initTypes)
         reconExcitationsToReconTemp(:,:,pr.kConeIndices) = 0 * reconExcitationsToReconTemp(:,:,pr.kConeIndices);
         reconExcitationsToReconTemp = squeeze(reconExcitationsToReconTemp);
     end
-    plot(forwardExcitationsToStimulusUse*scaleFactor,reconExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
+    plot(forwardExcitationsToStimulusUse,reconExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
     axis('square');
-    minVal = 0.9*min([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
-    maxVal = 1.1*max([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
+    minVal = 0.9*min([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
+    maxVal = 1.1*max([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
     plot([minVal maxVal],[minVal maxVal],'k');
     xlim([minVal maxVal]); ylim([minVal maxVal]);
-    xlabel('Scaled (pupil) excitations to stimulus');
+    xlabel('Forward excitations to stimulus');
     ylabel('Recon excitations to recon');
 
     % Check that we know what we are doing.  Small difference may be gamma
@@ -759,7 +758,8 @@ for ii = 1:length(multistartStruct.initTypes)
     % Save summary of best recon in its own file
     if (ii == reconIndex)
         saveas(gcf,fullfile(cnv.outputDir,sprintf('ReconSummary.tiff',ii)),'tiff');
-        % Manually create the plots based on specific quadrant excitations
+
+        % Manually create plots based on specific quadrant excitations
         if (pr.quads(1).value)
             theQuadsFig = figure; clf;
             set(theQuadsFig,'Position',[100 400 2500 1500]);
@@ -769,25 +769,25 @@ for ii = 1:length(multistartStruct.initTypes)
                 forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) > pr.eccXDegs & ...
                 forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) > pr.eccYDegs);
             subplot(2,2,quadOrder(2)); hold on;
-            plot(forwardExcitationsToStimulusUse(quad1Ind)*scaleFactor,reconExcitationsToReconTemp(quad1Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
+            plot(forwardExcitationsToStimulusUse(quad1Ind),reconExcitationsToReconTemp(quad1Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
 
             quad2Ind = find(...
                 forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) < pr.eccXDegs & ...
                 forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) > pr.eccYDegs);
             subplot(2,2,quadOrder(1)); hold on;
-            plot(forwardExcitationsToStimulusUse(quad2Ind)*scaleFactor,reconExcitationsToReconTemp(quad2Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
+            plot(forwardExcitationsToStimulusUse(quad2Ind),reconExcitationsToReconTemp(quad2Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
 
             quad3Ind = find(...
                 forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) < pr.eccXDegs & ...
                 forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) < pr.eccYDegs);
             subplot(2,2,quadOrder(3)); hold on;
-            plot(forwardExcitationsToStimulusUse(quad3Ind)*scaleFactor,reconExcitationsToReconTemp(quad3Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
+            plot(forwardExcitationsToStimulusUse(quad3Ind),reconExcitationsToReconTemp(quad3Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
 
             quad4Ind = find(...
                 forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) > pr.eccXDegs & ...
                 forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) < pr.eccYDegs);
             subplot(2,2,quadOrder(4)); hold on;
-            plot(forwardExcitationsToStimulusUse(quad4Ind)*scaleFactor,reconExcitationsToReconTemp(quad4Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
+            plot(forwardExcitationsToStimulusUse(quad4Ind),reconExcitationsToReconTemp(quad4Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
 
             for i=1:4
                 subplot(2,2,quadOrder(i)); hold on;
@@ -803,11 +803,11 @@ for ii = 1:length(multistartStruct.initTypes)
                     reconExcitationsToReconTemp = squeeze(reconExcitationsToReconTemp);
                 end
                 axis('square');
-                minVal = 0.9*min([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
-                maxVal = 1.1*max([forwardExcitationsToStimulusUse*scaleFactor; reconExcitationsToReconTemp]);
+                minVal = 0.9*min([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
+                maxVal = 1.1*max([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
                 plot([minVal maxVal],[minVal maxVal],'k');
                 xlim([minVal maxVal]); ylim([minVal maxVal]);
-                xlabel('Scaled (pupil) excitations to stimulus');
+                xlabel('Forward excitations to stimulus');
                 ylabel('Recon excitations to recon');
             end
             saveas(gcf,fullfile(cnv.outputDir,'reconExcitationstoRecon_Quads.tiff'),'tiff');
@@ -815,22 +815,10 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 end
 
-
-
 % Save best reconstruction image
-% figure;
-% imshow(reconRGB{reconIndex});
-% if (pr.boundedSearch)
-%     title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR(reconIndex),maxReconG(reconIndex),maxReconB(reconIndex)) ; 'Bounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(reconIndex))});
-% else
-%     title({'Reconstructed Image' ; sprintf('MaxRGB: %0.4f, %0.4f, %0.4f',maxReconR(reconIndex),maxReconG(reconIndex),maxReconB(reconIndex)) ; 'Unbounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(reconIndex))});
-% end
-% set(gcf,'Position',[500,500,500,400]);
-% saveas(gcf,fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
-imwrite(reconRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
+imwrite(reconScaledRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
 
 %% Save workspace without really big variables
-close all;
 close all;
 clear forwardRenderMatrix reconRenderMatrixPupilScaled reconSceneTemp forwardOI reconOIToReconTemp psfDataStruct forwardOIToReconTemp forwardOIRGB
 clear estimator
