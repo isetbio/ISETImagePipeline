@@ -60,8 +60,8 @@ prBase.addPoissonNoise = false;
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
 %    Currently established quadSeq1 - quadSeq6
-forwardChromList = ["quadSeq5"]; 
-reconChromList =   ["quadSeq5"];
+forwardChromList = ["quadSeq6"]; 
+reconChromList =   ["quadSeq6"];
 
 % Build new sequence by
 prBase.quads(1).name = 'useQuadSeq';
@@ -102,17 +102,14 @@ if(prBase.quads(1).value)
 end
 
 prBase.quads(6).name = 'overrideQuadSeq';
-prBase.quads(6).value = true;
+prBase.quads(6).value = false;
 
 % Add indices of cones to be silenced. 
-prBase.kConeIndices = [1 2 3 4 5 6 7 8 9];
+prBase.kConeIndices = [];
 
-% Select which quadrants from the above to activate
-quadSelectList = [[true true true true]]';%...
-%     [true false false false];...
-%     [false true false false];...
-%     [false false true false];...
-%     [false false false true]]';
+% Select which quadrants from the above to activate, of the order: 
+% Q1 Q2 Q3 Q4 Origin
+quadSelectList = [[true true true true false]]';%...
 
 % Force build and save of render structures.  This
 % only affects this script, and will typically be false.
@@ -122,13 +119,13 @@ buildNewRecon = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = 2 / 60;
+stimSizeDegsList = [2.5 3.5 4.5 5.5 6.5] / 60;
 
 % RGB values (before gamma correction)
 prBase.stimBgVal = 0.1;
-stimRValList = [1.0]; % 1.0 0.0 0.80 0.80 0.60];
-stimGValList = [1.0]; % 0.0 1.0 0.65 0.45 0.65];
-stimBValList = [0.0]; % 0.0 0.0 0.10 0.10 0.10];
+stimRValList = [1.0 1.0 0.0]; 
+stimGValList = [1.0 0.0 1.0]; 
+stimBValList = [0.0 0.0 0.0]; 
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
@@ -142,14 +139,16 @@ end
 %
 % Position specified in pixels, could consider specifying in minutes.
 pixelsPerMinute = prBase.nPixels/prBase.fieldSizeMinutes;
-shiftInMinutesList = [-3];
+shiftInMinutesListX = [0];
+shiftInMinutesListY = [0];
 fullSquareShift = false;
 
 % Convert the shifts to pixel positions
-shiftInPixelsList = round(pixelsPerMinute*shiftInMinutesList);
+shiftInPixelsListX = round(pixelsPerMinute*shiftInMinutesListX);
+shiftInPixelsListY = round(pixelsPerMinute*shiftInMinutesListY);
 quadCenters = round(prBase.nPixels / 4);
-centerXPosition = prBase.trueCenter + quadCenters + shiftInPixelsList;
-centerYPosition = prBase.trueCenter + quadCenters + (shiftInPixelsList(1)*ones(size(centerXPosition)));
+centerXPosition = prBase.trueCenter + quadCenters + shiftInPixelsListX;
+centerYPosition = prBase.trueCenter + quadCenters + shiftInPixelsListY;
 %%%% Change the above back to a plus when switching to multiple runs!!!!
 prBase.stimCenter = [centerXPosition ; centerYPosition];
 
@@ -171,9 +170,9 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.005; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+regParaList = 0.005;
 prBase.stride = 2;
-prBase.maxReconIterations = 5;
+prBase.maxReconIterations = 2000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
@@ -185,9 +184,9 @@ prBase.boundedSearch = false;
 prBase.forwardAORender = true;
 prBase.forwardNoLCA = true;
 prBase.reconAORender = true;
-prBase.reconNoLCA = false;
-reconPupilDiamListMM =   6;
-forwardPupilDiamListMM = 6;
+prBase.reconNoLCA = true;
+reconPupilDiamListMM =   7;
+forwardPupilDiamListMM = 7;
 
 % Define optics.  Subject only matters if we use a database.  Ignored for
 % Marimont and Wandell.  For database, subjectID of 0 means diffraction
@@ -200,8 +199,8 @@ prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Polans2015';
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.05];% 0.05 0.1]; 
-reconDefocusDioptersList = [0.12];% 0.05 0.1];
+forwardDefocusDioptersList = [0.05];
+reconDefocusDioptersList = [0.00];
 
 %% Set up list conditions
 runIndex = 1;
@@ -268,7 +267,7 @@ for pp = 1:length(regPara)
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits,  ...
             pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
             cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase, pr.quads);
-        save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure','-v7.3');
+        save(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'renderStructure','-v7.3');
         forwardRenderStructure = renderStructure; clear renderStructure;
     end
 
@@ -279,12 +278,12 @@ for pp = 1:length(regPara)
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
             cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase, pr.quads);
-        save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure','-v7.3');
+        save(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'renderStructure','-v7.3');
         reconRenderStructure = renderStructure; clear renderStructure;
     end
 end
 
-% Run the reconstructions in parallel
+% THIS SHOULD BE A PARFOR AFTERWARDS DON'T FORGET
 for pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come

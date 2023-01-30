@@ -103,8 +103,8 @@ if (length(pr.stimBgVal) == 1)
     if(pr.quads(1).value)
         % Apply sign changes to orient in proper Cartesian Quadrant
         % Then adjust based on selected quadrants in RunMany
-        quadXShift = [1 -1 -1 1];
-        quadYShift = [-1 -1 1 1];
+        quadXShift = [1 -1 -1 1 0];
+        quadYShift = [-1 -1 1 1 0];
         quadXShift = quadXShift(pr.quadSelect);
         quadYShift = quadYShift(pr.quadSelect);
 
@@ -158,6 +158,9 @@ else
         error('Passed image does not have correct pixel dimension');
     end
 end
+
+%%%%%%%%%%%%%%%
+imshow(stimulusImageRGB);
 
 % Create an ISETBio scene.  Rescale input image
 % according to pr.inputImageScaleFactor.
