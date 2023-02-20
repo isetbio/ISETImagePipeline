@@ -210,11 +210,11 @@ regParaList = 0.1;
 prBase.stride = 2;
 prBase.maxReconIterations = 2000;
 prBase.whiteNoiseStarts = 0;
-prBase.pinkNoiseStarts = 0;
+prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = false;
-% Should note, the line below only works if have multiple start fields 
-prBase.uniformStartVals = [[0.5 0.5 0.5]' [0 0 0.5]'];
+% Should note, the line below only works if have >= 3 starting fields
+prBase.uniformStartVals = [ [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]' ];
 prBase.boundedSearch = false;
 
 % Use AO in forward rendering? And determine optics pupil size
