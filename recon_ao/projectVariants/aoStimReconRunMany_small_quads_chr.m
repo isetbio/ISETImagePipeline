@@ -11,6 +11,7 @@
 %   09/22/22  chr  Convert to its own dichrom file
 %   09/27/22  chr  Incorporate inputs for stimulus centering position
 %   10/05/22  dhb  Lots of changes for parallel
+%   02/20/22  chr  Updates based on Tuten Meeting
 
 %% Clear
 clear; close all;
