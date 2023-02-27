@@ -30,15 +30,19 @@ cnv.fieldSizeDegs = pr.fieldSizeMinutes/60;
 cnv.forwardPupilDiamMM = pr.forwardPupilDiamMM;
 if (pr.forwardAORender)
     cnv.forwardAOStr = ['AO' num2str(cnv.forwardPupilDiamMM)];
+    cnv.forwardAOStrPlt = ['AO' num2str(cnv.forwardPupilDiamMM)];
 else
     cnv.forwardAOStr = ['NOAO' num2str(cnv.forwardPupilDiamMM) '_' pr.forwardZernikeDataBase '_' num2str(pr.forwardSubjectID)];
+    cnv.forwardAOStrPlt = ['NOAO' num2str(cnv.forwardPupilDiamMM) ' ' pr.forwardZernikeDataBase ' ' num2str(pr.forwardSubjectID)];
 end
 
 cnv.reconPupilDiamMM = pr.reconPupilDiamMM;
 if (pr.reconAORender)
     cnv.reconAOStr = ['AO' num2str(cnv.reconPupilDiamMM)];
+    cnv.reconAOStrPlt = ['AO' num2str(cnv.reconPupilDiamMM)];
 else
     cnv.reconAOStr = ['NOAO' num2str(cnv.reconPupilDiamMM) '_' pr.reconZernikeDataBase '_' num2str(pr.reconSubjectID)];
+    cnv.reconAOStrPlt = ['NOAO' num2str(cnv.reconPupilDiamMM) ' ' pr.reconZernikeDataBase ' ' num2str(pr.reconSubjectID)];
 end
 
 switch (pr.displayName)
@@ -95,11 +99,24 @@ else
         pr.reconChrom, pr.reconEccVars, pr.reconNoLCA);
 end
 
-% Output directory name
+% Determine Poisson Noise string
 if (pr.addPoissonNoise)
     noiseStr = 'noise';
 else
     noiseStr = 'nonoise';
+end
+
+% Determine LCA string
+if (pr.forwardNoLCA)
+    cnv.forwardLCAStr = 'NoLCA';
+else
+    cnv.forwardLCAStr = 'LCA';
+end
+
+if (pr.reconNoLCA)
+    cnv.reconLCAStr = 'NoLCA';
+else
+    cnv.reconLCAStr = 'LCA';
 end
 
 % Determine which quadrants are stimulated for small quads
@@ -111,6 +128,8 @@ else
     stimQuadsName = 'noquad';
 end
 
+
+% Output directory names
 cnv.outputMainName = sprintf('%s_%s_%s_%0.2f_%0.2f_%d_%d_%s_%0.2f_%s', ...
     pr.versEditor,cnv.forwardAOStr,cnv.reconAOStr,pr.forwardDefocusDiopters,pr.reconDefocusDiopters,...
     pr.nPixels,pr.fieldSizeMinutes,pr.displayName,pr.displayScaleFactor,pr.sparsePriorStr);

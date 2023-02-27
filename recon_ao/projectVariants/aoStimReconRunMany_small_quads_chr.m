@@ -60,9 +60,9 @@ prBase.addPoissonNoise = false;
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
-%    Currently established quadSeq1 - quadSeq7
-forwardChromList = ["quadSeq7"]; 
-reconChromList =   ["quadSeq7"];
+%    Currently established quadSeq1 - quadSeq8
+forwardChromList = ["quadSeq8"]; 
+reconChromList =   ["quadSeq8"];
 
 % Build new sequence by
 prBase.quads(1).name = 'useQuadSeq';
@@ -103,14 +103,14 @@ if(prBase.quads(1).value)
 end
 
 prBase.quads(6).name = 'overrideQuadSeq';
-prBase.quads(6).value = false;
+prBase.quads(6).value = true;
 
 % Add indices of cones to be silenced. 
 prBase.kConeIndices = [];
 
 % Select which quadrants from the above to activate, of the order: 
 % Q1 Q2 Q3 Q4 Origin
-quadSelectList = [[true true true true false]]';%...
+quadSelectList = [[false false false false true]]';%...
 
 % Force build and save of render structures.  This
 % only affects this script, and will typically be false.
@@ -120,45 +120,55 @@ buildNewRecon = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [1.5 2.5 3.5 4.5 5.5 6.5] / 60;
+stimSizeDegsList = [3.5] / 60;
 
 % RGB values (before gamma correction)
 prBase.stimBgVal = 0.3;
-stimRValList = [1.0];% 1.0 0.0]; 
-stimGValList = [1.0];% 0.0 1.0]; 
-stimBValList = [1.0];% 0.0 0.0]; 
+stimRValList = [1];% 1.0 0.0]; 
+stimGValList = [1];% 0.0 1.0]; 
+stimBValList = [0.0];% 0.0 0.0]; 
 
-% Overwrite stim values to make isoluminant between select channels.
-% Options include: "RGB" "RG" "RB" "GB"
-isoLum = "RG";
+% Overwrite stim values to make isoluminant colors on the RG channel.
+% Allow for offset from the true isoLum values based on variability in
+% staircase procedure where (-) is more red and (+) is more green, 
+% (Intervals of 50s? 100s? 1000s?)
+isoLumRG = false;
+stairStepRG = [0];
 
-% Load the appropriate display
-theDisplayLoad = load(fullfile(prBase.aoReconDir, 'displays', [prBase.displayName 'Display.mat']));
-switch (prBase.displayName)
-    case 'conventional'
-        displayFieldName = 'CRT12BitDisplay';
-    case 'mono'
-        displayFieldName = 'monoDisplay';
-    otherwise
-        error('Unknown display specified');
-end
+if (isoLumRG)
+    % Load the appropriate display
+    theDisplayLoad = load(fullfile(prBase.aoReconDir, 'displays', [prBase.displayName 'Display.mat']));
+    switch (prBase.displayName)
+        case 'conventional'
+            displayFieldName = 'CRT12BitDisplay';
+        case 'mono'
+            displayFieldName = 'monoDisplay';
+        otherwise
+            error('Unknown display specified');
+    end
 
-% Grab the display primary xyz values and pull out luminance, then clear 
-eval(['primariesXYZ = displayGet(theDisplayLoad.' displayFieldName ', ''primaries xyz'');']);
-lumRGB = primariesXYZ(:,2);
-clear theDisplayLoad; clear displayFieldName; clear primariesXYZ
+    % Grab the display primary xyz values and pull out luminance column
+    eval(['primariesXYZ = displayGet(theDisplayLoad.' displayFieldName ', ''primaries xyz'');']);
+    lumRGB = primariesXYZ(:,2);
 
-% Scale factors found by using smaller luminance / larger Luminance from
-% repsective display.
-if contains(isoLum, "RGB")
-    stimRValList = (lumRGB(3) / lumRGB(1)) .* stimBValList;
-    stimGValList = (lumRGB(3) / lumRGB(2)) .* stimBValList;
-elseif contains(isoLum, "RG")
-    stimGValList = (lumRGB(1) / lumRGB(2)) .* stimRValList;
-elseif contains(isoLum, "RB")
-    stimRValList = (lumRGB(3) / lumRGB(1)) .* stimBValList;
-elseif contains(isoLum, "GB")
-    stimGValList = (lumRGB(3) / lumRGB(2)) .* stimBValList;
+    % Create offset vectors for R and G-raw values, then multiply raw value
+    % by luminance ratio between channels. Find index where R and G
+    % channels are most similar and add step if desired
+    isoLumGRaw = 0:0.0001:1; isoLumR = 1 - isoLumGRaw;
+    ratioRG = lumRGB(1) / lumRGB(2);
+    isoLumG = ratioRG .* isoLumGRaw;
+    difRG = abs(isoLumR - isoLumG)';
+    indRG = find(difRG == min(difRG)) + stairStepRG;
+    
+    % Overwrite R and G val list based on isolum conditions. To all three
+    % channels add background stim value. 
+    stimRValList = isoLumR(indRG) + prBase.stimBgVal;
+    stimGValList = isoLumG(indRG) + prBase.stimBgVal; 
+    stimBValList = zeros(1,length(stimRValList)) + prBase.stimBgVal; 
+
+    % Clean workspace
+    clear theDisplayLoad; clear displayFieldName; clear primariesXYZ;
+    clear isoLumR; clear isoLumG; clear isoLumGRaw; clear difRG; clear indRG;
 end
 
 % Check that all channels receive same number of inputs
@@ -208,13 +218,13 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.1;
 prBase.stride = 2;
-prBase.maxReconIterations = 2000;
+prBase.maxReconIterations = 200;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = false;
 % Should note, the line below only works if have >= 3 starting fields
-prBase.uniformStartVals = [ [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]' ];
+prBase.uniformStartVals = []; % [[0.5 0.5 0.5]' [0 0.5 0]' [0 0 0.5]'];
 prBase.boundedSearch = false;
 
 % Use AO in forward rendering? And determine optics pupil size
@@ -222,7 +232,7 @@ prBase.forwardAORender = true;
 prBase.forwardNoLCA = true;
 prBase.reconAORender = false;
 prBase.reconNoLCA = false;
-reconPupilDiamListMM =   3;
+reconPupilDiamListMM =  [2 3 4 5];
 forwardPupilDiamListMM = 7;
 
 % Define optics.  Subject only matters if we use a database.  Ignored for
@@ -237,7 +247,7 @@ prBase.reconZernikeDataBase = 'Polans2015';
 
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.05];
-reconDefocusDioptersList = [0.30];
+reconDefocusDioptersList = [-0.5 -0.25 0.0 0.25 0.5];
 
 %% Set up list conditions
 runIndex = 1;
@@ -299,29 +309,25 @@ for pp = 1:length(regPara)
 
     % Build foward cone mosaic and render matrix if needed
     if (buildNewForward || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'file'))
-        renderStructure = buildRenderStruct(pr.aoReconDir , pr.eccXDegs, pr.eccYDegs, ...
-            pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardNoLCA, pr.forwardDefocusDiopters, ...
-            cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits,  ...
-            pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
-            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase, pr.quads);
+        renderStructure = buildRenderStruct(pr, cnv, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardNoLCA, ...
+            pr.forwardDefocusDiopters, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
+            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase, pr.forwardChrom);
         save(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'renderStructure','-v7.3');
         forwardRenderStructure = renderStructure; clear renderStructure;
     end
 
     % Build recon cone mosaic and render structure if needed
     if (buildNewRecon || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'file'))
-        renderStructure = buildRenderStruct(pr.aoReconDir , pr.eccXDegs, pr.eccYDegs, ...
-            pr.fieldSizeMinutes/60, pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconNoLCA, pr.reconDefocusDiopters, ...
-            cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
-            pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
-            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase, pr.quads);
+        renderStructure = buildRenderStruct(pr, cnv, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconNoLCA, ...
+            pr.reconDefocusDiopters, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
+            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase, pr.reconChrom);
         save(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'renderStructure','-v7.3');
         reconRenderStructure = renderStructure; clear renderStructure;
     end
 end
 
 % THIS SHOULD BE A PARFOR AFTERWARDS DON'T FORGET
-parfor pp = 1:length(regPara)
+for pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come
     % out of lists above.

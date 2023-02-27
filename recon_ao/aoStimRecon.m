@@ -448,7 +448,7 @@ for ii = 1:length(multistartStruct.initTypes)
     % xlim([min(psfSupportTemp{1}(1,:))   max(psfSupportTemp{1}(1,:))]);
     % ylim([min(psfSupportTemp{2}(:,1)) ; max(psfSupportTemp{2}(:,1))]);
     xlim([-0.05 0.05]); ylim([-0.05 0.05]); axis('square');
-    title('Forward lum weighted PSF');
+    title({sprintf('%s',cnv.forwardAOStrPlt); sprintf('%0.2fDD, %s', pr.forwardDefocusDiopters, cnv.forwardLCAStr); 'Forward lum weighted PSF'});
     xlabel('X (degs)'); ylabel('Y (degs)');
 
     % Optical image of stimulus
@@ -530,7 +530,7 @@ for ii = 1:length(multistartStruct.initTypes)
     % xlim([min(psfSupportTemp{1}(1,:))   max(psfSupportTemp{1}(1,:))]);
     % ylim([min(psfSupportTemp{2}(:,1)) ; max(psfSupportTemp{2}(:,1))]);
     xlim([-0.05 0.05]); ylim([-0.05 0.05]); axis('square');
-    title('Recon lum weighted PSF');
+    title({sprintf('%s', cnv.reconAOStrPlt); sprintf('%0.2fDD, %s', pr.reconDefocusDiopters, cnv.reconLCAStr); 'Recon lum weighted PSF'});
     xlabel('X (degs)'); ylabel('Y (degs)');
     
     % Optical image of recon
