@@ -61,8 +61,8 @@ prBase.addPoissonNoise = false;
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
 %    Currently established quadSeq1 - quadSeq8
-forwardChromList = ["quadSeq8"]; 
-reconChromList =   ["quadSeq8"];
+forwardChromList = ["quadSeq8" "quadSeq9"]; 
+reconChromList =   ["quadSeq8" "quadSeq9"];
 
 % Build new sequence by
 prBase.quads(1).name = 'useQuadSeq';
@@ -218,7 +218,7 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = 0.1;
 prBase.stride = 2;
-prBase.maxReconIterations = 200;
+prBase.maxReconIterations = 2000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
@@ -233,7 +233,7 @@ prBase.forwardNoLCA = true;
 prBase.reconAORender = false;
 prBase.reconNoLCA = false;
 reconPupilDiamListMM =  [2 3 4 5];
-forwardPupilDiamListMM = 7;
+forwardPupilDiamListMM = [7 7 7 7];
 
 % Define optics.  Subject only matters if we use a database.  Ignored for
 % Marimont and Wandell.  For database, subjectID of 0 means diffraction
@@ -246,7 +246,7 @@ prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Polans2015';
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.05];
+forwardDefocusDioptersList = [0.05 0.05 0.05 0.05 0.05];
 reconDefocusDioptersList = [-0.5 -0.25 0.0 0.25 0.5];
 
 %% Set up list conditions
@@ -327,7 +327,7 @@ for pp = 1:length(regPara)
 end
 
 % THIS SHOULD BE A PARFOR AFTERWARDS DON'T FORGET
-for pp = 1:length(regPara)
+parfor pp = 1:length(regPara)
 
     % Set up paramters structure for this loop, filling in fields that come
     % out of lists above.
