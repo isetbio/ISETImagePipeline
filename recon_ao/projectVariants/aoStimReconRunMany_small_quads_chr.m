@@ -14,7 +14,7 @@
 %   02/20/23  chr  Updates based on Tuten Meeting
 
 %% Clear
-clear; close all;
+% clear; close all;
 
 %% Control size of parpool, otherwise may crush memory
 % thePool = gcp('nocreate');
@@ -60,9 +60,9 @@ prBase.addPoissonNoise = false;
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
-%    Currently established quadSeq1 - quadSeq8
-forwardChromList = ["quadSeq8" "quadSeq9"]; 
-reconChromList =   ["quadSeq8" "quadSeq9"];
+%    Currently established quadSeq1 - quadSeq34
+forwardChromList = ["quadSeq30" "quadSeq31" "quadSeq32"]; 
+reconChromList =   ["quadSeq30" "quadSeq31" "quadSeq32"];
 
 % Build new sequence by
 prBase.quads(1).name = 'useQuadSeq';
@@ -124,9 +124,9 @@ stimSizeDegsList = [3.5] / 60;
 
 % RGB values (before gamma correction)
 prBase.stimBgVal = 0.3;
-stimRValList = [1];% 1.0 0.0]; 
-stimGValList = [1];% 0.0 1.0]; 
-stimBValList = [0.0];% 0.0 0.0]; 
+stimRValList = [1 0 1];% 1.0 0.0]; 
+stimGValList = [1 1 0];% 0.0 1.0]; 
+stimBValList = [0 0 0];% 0.0 0.0]; 
 
 % Overwrite stim values to make isoluminant colors on the RG channel.
 % Allow for offset from the true isoLum values based on variability in
@@ -232,8 +232,8 @@ prBase.forwardAORender = true;
 prBase.forwardNoLCA = true;
 prBase.reconAORender = false;
 prBase.reconNoLCA = false;
-reconPupilDiamListMM =  [2 3 4 5];
-forwardPupilDiamListMM = [7 7 7 7];
+reconPupilDiamListMM =  [2];
+forwardPupilDiamListMM = [7];
 
 % Define optics.  Subject only matters if we use a database.  Ignored for
 % Marimont and Wandell.  For database, subjectID of 0 means diffraction
@@ -246,8 +246,8 @@ prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Polans2015';
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.05 0.05 0.05 0.05 0.05];
-reconDefocusDioptersList = [-0.5 -0.25 0.0 0.25 0.5];
+forwardDefocusDioptersList = [0.05];
+reconDefocusDioptersList = [0.0];
 
 %% Set up list conditions
 runIndex = 1;
