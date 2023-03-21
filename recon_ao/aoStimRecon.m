@@ -617,7 +617,11 @@ for ii = 1:length(multistartStruct.initTypes)
         forwardExcitationsToReconTemp(pr.kConeIndices) = 0;
         forwardExcitationsToReconTemp = squeeze(forwardExcitationsToReconTemp);
     end
-    plot(forwardExcitationsToStimulusUse,reconExcitationsToStimulusTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
+
+    plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.lConeIndices),reconExcitationsToStimulusTemp(reconConeMosaic.Mosaic.lConeIndices),'ro','MarkerFaceColor','r','MarkerSize',6); hold on;
+    plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.mConeIndices),reconExcitationsToStimulusTemp(reconConeMosaic.Mosaic.mConeIndices),'go','MarkerFaceColor','g','MarkerSize',6); hold on;
+    plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.sConeIndices),reconExcitationsToStimulusTemp(reconConeMosaic.Mosaic.sConeIndices),'bo','MarkerFaceColor','b','MarkerSize',6); hold on; 
+
     axis('square');
     minVal = 0.9*min([forwardExcitationsToStimulusUse;reconExcitationsToStimulusTemp]);
     maxVal = 1.1*max([forwardExcitationsToStimulusUse;reconExcitationsToStimulusTemp]);
@@ -639,7 +643,11 @@ for ii = 1:length(multistartStruct.initTypes)
         forwardExcitationsToReconTemp = squeeze(forwardExcitationsToReconTemp);
     end
     %plot(forwardExcitationsToStimulusUse*scaleFactor,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
-    plot(forwardExcitationsToStimulusUse,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
+    
+    plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.lConeIndices),forwardExcitationsToReconTemp(forwardConeMosaic.Mosaic.lConeIndices),'ro','MarkerFaceColor','r','MarkerSize',6); hold on;
+    plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.mConeIndices),forwardExcitationsToReconTemp(forwardConeMosaic.Mosaic.mConeIndices),'go','MarkerFaceColor','g','MarkerSize',6); hold on;
+    plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.sConeIndices),forwardExcitationsToReconTemp(forwardConeMosaic.Mosaic.sConeIndices),'bo','MarkerFaceColor','b','MarkerSize',6); hold on;
+
     axis('square');
     minVal = 0.9*min([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
     maxVal = 1.1*max([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
@@ -661,7 +669,11 @@ for ii = 1:length(multistartStruct.initTypes)
         reconExcitationsToReconTemp(pr.kConeIndices) = 0;
         reconExcitationsToReconTemp = squeeze(reconExcitationsToReconTemp);
     end
-    plot(forwardExcitationsToStimulusUse,reconExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
+
+    plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.lConeIndices),reconExcitationsToReconTemp(reconConeMosaic.Mosaic.lConeIndices),'ro','MarkerFaceColor','r','MarkerSize',6); hold on;
+    plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.mConeIndices),reconExcitationsToReconTemp(reconConeMosaic.Mosaic.mConeIndices),'go','MarkerFaceColor','g','MarkerSize',6); hold on;
+    plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.sConeIndices),reconExcitationsToReconTemp(reconConeMosaic.Mosaic.sConeIndices),'bo','MarkerFaceColor','b','MarkerSize',6); hold on;
+
     axis('square');
     minVal = 0.9*min([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
     maxVal = 1.1*max([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
@@ -669,6 +681,7 @@ for ii = 1:length(multistartStruct.initTypes)
     xlim([minVal maxVal]); ylim([minVal maxVal]);
     xlabel('Forward excitations to stimulus');
     ylabel('Recon excitations to recon');
+
 
     % Check that we know what we are doing.  Small difference may be gamma
     % correction and inverse gamma correction between the two predictions
