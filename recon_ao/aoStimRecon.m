@@ -399,7 +399,7 @@ for ii = 1:length(multistartStruct.initTypes)
     forwardOIRGB = gammaCorrection(CalFormatToImage(forwardOIrgb,m,n),forwardConeMosaic.Display);
     reconOIrgb = reconOIrgb/oiScaleFactor;
     reconOIrgb(reconOIrgb < 0) = 0;
-    reconOIRGB = gammaCorrection(CalFormatToImage(reconOIrgb,m,n),forwardConeMosaic.Display);
+    reconOIRGB = gammaCorrection(CalFormatToImage(reconOIrgb,m,n),reconConeMosaic.Display);
 
     % Set up summary plot
     theFig = figure; clf;
