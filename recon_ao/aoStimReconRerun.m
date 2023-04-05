@@ -1,4 +1,4 @@
-function aoStimRecon(pr,cnv, rrf)
+function aoStimRecon(pr,cnv,rerunImages)
 % Synopsis:
 %    Driver to run AO recon simulations.
 %
@@ -17,23 +17,13 @@ function aoStimRecon(pr,cnv, rrf)
 %   07/29/22  dhb, chr  Starting to dig into this
 %   08/13/22  dhb   Lots of bookkeeping, cleaning, etc.
 %   08/14/22  dhb   Made it a callable function.
-%   08/17/22  chr   Incorporated separate forward and recon callings
-%   08/19/22  dhb, chr  Edit to clarify and remove stochasticity
+%   08/17/22  chr   Incorporated separate forward and recon callings 
+%   08/19/22  dhb, chr  Edit to clarify and remove stochasticity 
 %   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
 %   09/22/22  chr  Convert to its own dichrom file
 
 %% Close existing figures
 close all;
-
-%% Load file variables if rerunning from old simulations
-if (rrf.rerunImages)
-    varlist = who; %Find the variables that already exist
-    varlist =strjoin(varlist','$|'); %Join into string, separating vars by '|'
-    load(fullfile(rrf.outputDir, 'xRunOutput.mat'), '-regexp', ['^(?!' varlist ')\w']);
-    cnv.renderDir = rrf.renderDir;
-    cnv.outputDir = rrf.outputDir;
-    pr.aoReconDir = rrf.aoReconDir;
-end
 
 %% Point at directory with data files for this subproject
 %
@@ -43,10 +33,12 @@ if (~exist(cnv.renderDir ,'dir'))
     mkdir(cnv.renderDir );
 end
 
+
+
 % Sparse prior name
 sparsePriorName = [pr.sparsePriorStr 'SparsePrior.mat'];
 
-%% Grab render matrices/files
+%% Grab render matrices/files 
 %
 % These need to have been precomputed, and will have been if our code logic
 % is correct at the calling level.
@@ -57,7 +49,7 @@ if (~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructu
 else
     clear forwardRenderStructure;
     load(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'renderStructure');
-    forwardRenderStructure = renderStructure; clear renderStructure;
+    forwardRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(forwardRenderStructure, pr.eccXDegs, pr.eccYDegs, cnv.fieldSizeDegs, ...
         pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters);
 end
@@ -74,7 +66,7 @@ if (~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructure
 else
     clear reconRenderStructure;
     load(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'renderStructure');
-    reconRenderStructure = renderStructure; clear renderStructure;
+    reconRenderStructure = renderStructure; clear renderStructure; 
     grabRenderStruct(reconRenderStructure, pr.eccXDegs, pr.eccYDegs, cnv.fieldSizeDegs, ...
         pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters);
 end
@@ -91,29 +83,25 @@ forwardConeMosaic.Display.ambient = displayGet(forwardConeMosaic.Display,'black 
 reconConeMosaic.Display = displaySet(reconConeMosaic.Display,'spd primaries',displayGet(reconConeMosaic.Display,'spd primaries')*pr.displayScaleFactor);
 reconConeMosaic.Display.ambient = displayGet(reconConeMosaic.Display,'black spd')*pr.displayScaleFactor;
 
-
 %% Setup output directories
 if (~exist(cnv.outputDir,'dir'))
     mkdir(cnv.outputDir);
 end
 
-
 %% Show forward and recon cone mosaics
-if ~(rrf.rerunImages)
-    forwardConeMosaic.visualizeMosaic();
-    saveas(gcf,fullfile(cnv.outputDir,'forwardMosaic.tiff'),'tiff');
+forwardConeMosaic.visualizeMosaic();
+saveas(gcf,fullfile(cnv.outputDir,'forwardMosaic.tiff'),'tiff');
 
-    reconConeMosaic.visualizeMosaic();
-    saveas(gcf,fullfile(cnv.outputDir,'reconMosaic.tiff'),'tiff');
-end
+reconConeMosaic.visualizeMosaic();
+saveas(gcf,fullfile(cnv.outputDir,'reconMosaic.tiff'),'tiff');
 
 %% Generate an image stimulus
 %
 % When pr.stimBgVal is a scalar, we construct a uniform field of
 % appropriate size.
 if (length(pr.stimBgVal) == 1)
-    stimImageRGBnoGam = ones(pr.nPixels, pr.nPixels, 3) * pr.stimBgVal;
-
+    stimulusImageRGB = ones(pr.nPixels, pr.nPixels, 3) * pr.stimBgVal;
+    
     if(pr.quads(1).value)
         % Apply sign changes to orient in proper Cartesian Quadrant
         % Then adjust based on selected quadrants in RunMany
@@ -127,7 +115,7 @@ if (length(pr.stimBgVal) == 1)
         quadXShift = 0;
         quadYShift = 0;
     end
-
+    
     for qs = 1:length(quadXShift)
         % Create stimulus to populate the invidivual quadrants
         % Stimulus size in retinal degrees should not exceed 'cnv.fieldSizeDegs'
@@ -143,11 +131,11 @@ if (length(pr.stimBgVal) == 1)
         if (idxUB > pr.nPixels)
             idxUB = pr.nPixels;
         end
-
+    
         % Shift the stimulus to be centered on desired values
         idxXRange = (idxLB:idxUB) + pr.stimCenter(1) * quadXShift(qs);
         idxYRange = (idxLB:idxUB) + pr.stimCenter(2) * quadYShift(qs);
-
+    
         % Check stimulus position. Ends function and deletes the created
         % directory if the stimulus position exceeds bounds.
         if min(idxYRange) <= 0 || max(idxYRange) > pr.nPixels ...
@@ -158,43 +146,34 @@ if (length(pr.stimBgVal) == 1)
             close all
             return
         end
-
+    
         % Set image pixels
-        stimImageRGBnoGam(idxYRange, idxXRange, 1) = pr.stimRVal;
-        stimImageRGBnoGam(idxYRange, idxXRange, 2) = pr.stimGVal;
-        stimImageRGBnoGam(idxYRange, idxXRange, 3) = pr.stimBVal;
+        stimulusImageRGB(idxYRange, idxXRange, 1) = pr.stimRVal;
+        stimulusImageRGB(idxYRange, idxXRange, 2) = pr.stimGVal;
+        stimulusImageRGB(idxYRange, idxXRange, 3) = pr.stimBVal;
     end
-    % Otherwise, treat passed pr.stimBgVal as an actual image
+% Otherwise, treat passed pr.stimBgVal as an actual image
 else
-    stimImageRGBnoGam = pr.stimBgVal;
-    nPixelsCheck = size(stimImageRGBnoGam,1);
+    stimulusImageRGB = pr.stimBgVal;
+    nPixelsCheck = size(stimulusImageRGB,1);
     if (nPixelsCheck ~= pr.nPixels)
         error('Passed image does not have correct pixel dimension');
     end
 end
 
 %%%%%%%%%%%%%%%
-% imshow(stimImageRGBnoGam);
+imshow(stimulusImageRGB);
 
 % Create an ISETBio scene.  Rescale input image
 % according to pr.inputImageScaleFactor.
 meanLuminanceCdPerM2 = [];
-[stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimImageRGBnoGam, 'rgb', ...
-    meanLuminanceCdPerM2, forwardConeMosaic.Display);
-stimulusImageRGB = gammaCorrection(stimulusImageLinear*pr.inputImageScaleFactor, forwardConeMosaic.Display);
-
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
-
+stimulusImageRGB = gammaCorrection(stimulusImageLinear*pr.inputImageScaleFactor, reconConeMosaic.Display);
+[stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
+    meanLuminanceCdPerM2, forwardConeMosaic.Display);
 stimulusScene = sceneSet(stimulusScene, 'fov', cnv.fieldSizeDegs);
 imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
-
-% Include portion to visualize the image as it should appear through a
-% conventional monitor
-[stimRGBDispCorrected, stimDispCorrectBounds] = correctDispImage(stimImageRGBnoGam, rrf.trueDisplayName, rrf.viewingDisplayName, rrf.stimDispScale, ...
-    pr.aoReconDir, pr.displayGammaBits, pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor);
-imwrite(stimRGBDispCorrected,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
-
 
 %% Compute forward retinal image and excitations using ISETBio
 %
@@ -300,7 +279,7 @@ for uu = 1:length(pr.uniformStartVals)
     temp(:,:,1) = pr.uniformStartVals(1,uu)* ones(pr.nPixels,pr.nPixels);
     temp(:,:,2) = pr.uniformStartVals(2,uu)* ones(pr.nPixels,pr.nPixels);
     temp(:,:,3) = pr.uniformStartVals(3,uu)* ones(pr.nPixels,pr.nPixels);
-    specifiedStarts{uu} = temp(:);
+    specifiedStarts{uu} = temp(:); 
 end
 
 % Start from stimulus?
@@ -308,36 +287,32 @@ if (pr.stimulusStart)
     specifiedStarts{length(specifiedStarts)+1} = stimulusImageLinear(:);
 end
 
-
-if ~(rrf.rerunImages)
-    % Run the estimator
-    if (pr.boundedSearch)
-        ub = 1;
-    else
-        ub = 100;
-    end
-    [multistartStruct,~,reconIndex] = estimator.runMultistartEstimate(forwardExcitationsToStimulusUse, ...
-        'maxIter', pr.maxReconIterations, 'display', 'iter', 'gpu', false, ...
-        'nWhiteStart', pr.whiteNoiseStarts, 'nPinkStart', pr.pinkNoiseStarts, ...
-        'nSparsePriorPatchStart', pr.sparsePriorPatchStarts, 'sparsePrior', prior, ...
-        'specifiedStarts', specifiedStarts, ...
-        'ub', ub);
-
-    % Evaluate stimulus
-    [stimNegLogPrior,~,stimNegLogLikely] = ...
-        estimator.evalEstimate(forwardExcitationsToStimulusUse, stimulusImageLinear(:));
-    stimLoss = stimNegLogPrior + stimNegLogLikely;
-
-    % Get information we need to render scenes from their spectra through
-    % the display.
-    theXYZStruct = load('T_xyz1931');
-    wls = oiGet(forwardOI,'wave');
-    T_xyz = SplineCmf(theXYZStruct.S_xyz1931,683*theXYZStruct.T_xyz1931,wls);
-    M_rgbToxyz = T_xyz*displayGet(forwardConeMosaic.Display,'spd primaries')*(wls(2)-wls(1));
-    % M_rgbToxyz1 = displayGet(forwardConeMosaic.Display,'rgb2xyz');
-    M_xyzTorgb = inv(M_rgbToxyz);
+% Run the estimator
+if (pr.boundedSearch)
+    ub = 1;
+else
+    ub = 100;
 end
+[multistartStruct,~,reconIndex] = estimator.runMultistartEstimate(forwardExcitationsToStimulusUse, ...
+    'maxIter', pr.maxReconIterations, 'display', 'iter', 'gpu', false, ...
+    'nWhiteStart', pr.whiteNoiseStarts, 'nPinkStart', pr.pinkNoiseStarts, ...
+    'nSparsePriorPatchStart', pr.sparsePriorPatchStarts, 'sparsePrior', prior, ...
+    'specifiedStarts', specifiedStarts, ...
+    'ub', ub);
 
+% Evaluate stimulus
+[stimNegLogPrior,~,stimNegLogLikely] = ...
+    estimator.evalEstimate(forwardExcitationsToStimulusUse, stimulusImageLinear(:));
+stimLoss = stimNegLogPrior + stimNegLogLikely;
+
+% Get information we need to render scenes from their spectra through
+% the display.
+theXYZStruct = load('T_xyz1931');
+wls = oiGet(forwardOI,'wave');
+T_xyz = SplineCmf(theXYZStruct.S_xyz1931,683*theXYZStruct.T_xyz1931,wls);
+M_rgbToxyz = T_xyz*displayGet(forwardConeMosaic.Display,'spd primaries')*(wls(2)-wls(1));
+% M_rgbToxyz1 = displayGet(forwardConeMosaic.Display,'rgb2xyz');
+M_xyzTorgb = inv(M_rgbToxyz);
 
 % % Let's make sure we understand how to get the scene.  This all seems
 % % to check out, and is now commented out.
@@ -347,14 +322,14 @@ end
 % displayPrimaries = displayGet(forwardConeMosaic.Display,'spd primaries');
 % stimulusSceneLinearrgbCalFormat = displayPrimaries\stimulusSceneEnergyCalFormat;
 % figure; imshow(gammaCorrection(CalFormatToImage(stimulusSceneLinearrgbCalFormat,m,n),forwardConeMosaic.Display));
-%
+% 
 % % Now compute XYZ from energy spectra and use that to get RGB.
 % % This also works.
-%
+% 
 % stimulusSceneXYZCalFormat = T_xyz*stimulusSceneEnergyCalFormat*(wls(2)-wls(1));
-% stimulusSceneLinearrgb1CalFormat = M_xyzTorgb*stimulusSceneXYZCalFormat;
+% stimulusSceneLinearrgb1CalFormat = M_xyzTorgb*stimulusSceneXYZCalFormat; 
 % figure; imshow(gammaCorrection(CalFormatToImage(stimulusSceneLinearrgb1CalFormat,m,n),forwardConeMosaic.Display));
-%
+% 
 % % And yet one more way, which also looks good.
 % [stimulusScenexyz,m,n] = ImageToCalFormat(sceneGet(stimulusScene,'xyz'));
 % stimulusScenergb = M_xyzTorgb*stimulusScenexyz;
@@ -373,7 +348,7 @@ for ii = 1:length(multistartStruct.initTypes)
     reconScaleFactor(ii) = max(multistartStruct.reconImages{ii}(:));
     if (reconScaleFactor(ii) < 1)
         reconScaleFactor(ii) = 1;
-    end
+    end   
     stimulusRGBScaled{ii} = gammaCorrection(stimulusImageLinear/reconScaleFactor(ii), reconConeMosaic.Display);
     maxStimulusScaledR(ii) = max(max(stimulusRGBScaled{ii}(:,:,1)));
     maxStimulusScaledG(ii) = max(max(stimulusRGBScaled{ii}(:,:,2)));
@@ -403,7 +378,7 @@ for ii = 1:length(multistartStruct.initTypes)
     % Get forward and reconstruction OI's computed on reconstruction.  Take
     % difference in pupil size into account with reconOI.
     forwardOI = oiCompute(stimulusScene,forwardOI);
-    forwardOIToReconTemp = oiCompute(reconSceneTemp,forwardOI);
+    forwardOIToReconTemp = oiCompute(reconSceneTemp,forwardOI);  
     reconOIToReconTemp = oiCompute(reconSceneTemp,reconOI);
 
     % Get recon excitations to stimulus
@@ -433,7 +408,7 @@ for ii = 1:length(multistartStruct.initTypes)
     set(theFig,'Position',[100 400 2500 1500]);
 
     % Initial image
-    theAxes = subplot(3,7,21);
+    theAxes = subplot(3,7,7);
     imshow(gammaCorrection(multistartStruct.initImages{ii}, forwardConeMosaic.Display));
     title({sprintf('Recon %d, init %s',ii,multistartStruct.initTypes{ii}) ; sprintf('Iters = %d',pr.maxReconIterations) });
 
@@ -449,14 +424,6 @@ for ii = 1:length(multistartStruct.initTypes)
         imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDir,'StimulusScaled.tiff'),'tiff');
     end
 
-   % Visualize stimulus after being corrected for Display
-    theAxes = subplot(3,7,7);
-    imshow(stimRGBDispCorrected);
-    title({sprintf('Stim on %s, viewed on %s', rrf.trueDisplayName, rrf.viewingDisplayName); ...
-        sprintf('Min: %0.2f, %0.2f, %0.2f',stimDispCorrectBounds(1,1),stimDispCorrectBounds(1,2),stimDispCorrectBounds(1,3)); ...
-        sprintf('Max: %0.2f, %0.2f, %0.2f',stimDispCorrectBounds(2,1),stimDispCorrectBounds(2,2),stimDispCorrectBounds(2,3))})
-
-
     % Contour plot of forward PSF
     theAxes = subplot(3,7,2);
     cmap = brewermap(1024,'blues');
@@ -470,15 +437,15 @@ for ii = 1:length(multistartStruct.initTypes)
         psfTemp = psfTemp+T_xyz(2,ww)*squeeze(psfPolyTemp(:,:,ww));
     end
     psfDataStruct = struct(...
-        'supportXdegs', psfSupportTemp{1}(1,:), ...  % [1 x xPoints] spatial support vector (x)
-        'supportYdegs', psfSupportTemp{2}(:,1), ...  % [mPoints x 1] spatial support vector (y)
-        'data', psfTemp ...        % [mPoints x nPoints] 2D PSF
-        );
+      'supportXdegs', psfSupportTemp{1}(1,:), ...  % [1 x xPoints] spatial support vector (x)
+      'supportYdegs', psfSupportTemp{2}(:,1), ...  % [mPoints x 1] spatial support vector (y)
+      'data', psfTemp ...        % [mPoints x nPoints] 2D PSF
+    );
     cMosaic.semiTransparentContourPlot(theAxes, ...
-        psfDataStruct.supportXdegs,...
-        psfDataStruct.supportYdegs, ...
-        psfDataStruct.data/max(psfDataStruct.data(:)), ...
-        zLevels, cmap, alpha, contourLineColor, ...
+         psfDataStruct.supportXdegs,...
+         psfDataStruct.supportYdegs, ...
+         psfDataStruct.data/max(psfDataStruct.data(:)), ...
+         zLevels, cmap, alpha, contourLineColor, ...
         'lineWidth', 1.5);
     % xlim([min(psfSupportTemp{1}(1,:))   max(psfSupportTemp{1}(1,:))]);
     % ylim([min(psfSupportTemp{2}(:,1)) ; max(psfSupportTemp{2}(:,1))]);
@@ -494,13 +461,13 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Show forward mosaic
     theAxes = subplot(3,7,4);
-    figureHandle = theFig;
+    figureHandle = theFig; 
     forwardConeMosaic.visualizeMosaic(figureHandle,theAxes);
     title('Forward Mosaic');
 
     % Forward excitations used for recon in mosaic form
     theAxes = subplot(3,7,5);
-    figureHandle = theFig;
+    figureHandle = theFig; 
     forwardConeMosaic.Mosaic.visualize(...
         'figureHandle', figureHandle, ...
         'axesHandle', theAxes, ...
@@ -521,14 +488,14 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 
     theAxes = subplot(3,7,6);
-    figureHandle = theFig;
+    figureHandle = theFig; 
     forwardConeMosaic.Mosaic.visualize(...
-        'figureHandle', figureHandle, ...
-        'axesHandle', theAxes, ...
-        'outlinedConesWithIndices', pr.kConeIndices, ...
-        'activation', reshape(multistartStruct.coneVec,1,1,length(forwardExcitationsToStimulusUse)), ...
-        'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
-        'plotTitle',  'Forward excitations','labelConesInActivationMap', false);
+    'figureHandle', figureHandle, ...
+    'axesHandle', theAxes, ...
+    'outlinedConesWithIndices', pr.kConeIndices, ...
+    'activation', reshape(multistartStruct.coneVec,1,1,length(forwardExcitationsToStimulusUse)), ...
+    'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
+    'plotTitle',  'Forward excitations','labelConesInActivationMap', false);
 
     theAxes = subplot(3,7,8);
     %visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
@@ -538,22 +505,6 @@ for ii = 1:length(multistartStruct.initTypes)
     else
         title({sprintf('Reconstructed Image, reg %0.5f',pr.regPara) ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxReconScaledR(ii),maxReconScaledG(ii),maxReconScaledB(ii)) ; 'Unbounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
     end
-
-
-
-    % Visualize recon after being corrected for Display
-    reconImageRGBnoGam = multistartStruct.reconImages{ii}/reconScaleFactor(ii);
-    [reconRGBDispCorrected, reconDispCorrectBounds] = correctDispImage(reconImageRGBnoGam, rrf.trueDisplayName, rrf.viewingDisplayName, rrf.reconDispScale, ...
-        pr.aoReconDir, pr.displayGammaBits, pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor);
-%     imwrite(stimRGBDispCorrected,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
-
-    theAxes = subplot(3,7,14);
-    imshow(reconRGBDispCorrected);
-    title({sprintf('Recon on %s, viewed on %s', rrf.trueDisplayName, rrf.viewingDisplayName); ...
-        sprintf('Min: %0.2f, %0.2f, %0.2f',reconDispCorrectBounds(1,1),reconDispCorrectBounds(1,2),reconDispCorrectBounds(1,3)); ...
-        sprintf('Max: %0.2f, %0.2f, %0.2f',reconDispCorrectBounds(2,1),reconDispCorrectBounds(2,2),reconDispCorrectBounds(2,3))})
-
-
 
     % Contour plot of recon PSF
     theAxes = subplot(3,7,9);
@@ -568,22 +519,22 @@ for ii = 1:length(multistartStruct.initTypes)
         psfTemp = psfTemp+T_xyz(2,ww)*squeeze(psfPolyTemp(:,:,ww));
     end
     psfDataStruct = struct(...
-        'supportXdegs', psfSupportTemp{1}(1,:), ...  % [1 x xPoints] spatial support vector (x)
-        'supportYdegs', psfSupportTemp{2}(:,1), ...  % [mPoints x 1] spatial support vector (y)
-        'data', psfTemp ...        % [mPoints x nPoints] 2D PSF
-        );
+      'supportXdegs', psfSupportTemp{1}(1,:), ...  % [1 x xPoints] spatial support vector (x)
+      'supportYdegs', psfSupportTemp{2}(:,1), ...  % [mPoints x 1] spatial support vector (y)
+      'data', psfTemp ...        % [mPoints x nPoints] 2D PSF
+    );
     cMosaic.semiTransparentContourPlot(theAxes, ...
-        psfDataStruct.supportXdegs,...
-        psfDataStruct.supportYdegs, ...
-        psfDataStruct.data/max(psfDataStruct.data(:)), ...
-        zLevels, cmap, alpha, contourLineColor, ...
+         psfDataStruct.supportXdegs,...
+         psfDataStruct.supportYdegs, ...
+         psfDataStruct.data/max(psfDataStruct.data(:)), ...
+         zLevels, cmap, alpha, contourLineColor, ...
         'lineWidth', 1.5);
     % xlim([min(psfSupportTemp{1}(1,:))   max(psfSupportTemp{1}(1,:))]);
     % ylim([min(psfSupportTemp{2}(:,1)) ; max(psfSupportTemp{2}(:,1))]);
     xlim([-0.05 0.05]); ylim([-0.05 0.05]); axis('square');
     title({sprintf('%s', cnv.reconAOStrPlt); sprintf('%0.2fDD, %s', pr.reconDefocusDiopters, cnv.reconLCAStr); 'Recon lum weighted PSF'});
     xlabel('X (degs)'); ylabel('Y (degs)');
-
+    
     % Optical image of recon
     theAxes = subplot(3,7,10);
     % visualizeOpticalImage(reconOIToReconTemp, 'axesHandle',theAxes,'avoidAutomaticRGBscaling', true, 'displayRadianceMaps', false);
@@ -592,7 +543,7 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Show recon mosaic
     theAxes = subplot(3,7,11);
-    figureHandle = theFig;
+    figureHandle = theFig; 
     reconConeMosaic.visualizeMosaic(figureHandle,theAxes);
     title('Recon Mosaic');
 
@@ -620,7 +571,7 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Recon excitations
     theAxes = subplot(3,7,13);
-    figureHandle = theFig;
+    figureHandle = theFig; 
     reconConeMosaic.Mosaic.visualize(...
         'figureHandle', figureHandle, ...
         'axesHandle', theAxes, ...
@@ -651,16 +602,14 @@ for ii = 1:length(multistartStruct.initTypes)
         figure(theFig);
     end
 
-    if ~(rrf.rerunImages)
-        % Make sure excitations used match what comes back from multistart
-        if (any(forwardExcitationsToStimulusUse ~= multistartStruct.coneVec))
-            error('Inconsistency in excitations driving reconstruction');
-        end
+    % Make sure excitations used match what comes back from multistart
+    if (any(forwardExcitationsToStimulusUse ~= multistartStruct.coneVec))
+        error('Inconsistency in excitations driving reconstruction');
     end
 
     % Compute recon excitations to stimulus and compare with
     % scaled forward excitations to stimulus.
-    subplot(3,7,15); hold on;
+    subplot(3,7,15); hold on; 
     if (pr.reconstructfromRenderMatrix)
         title({'Recon excittions to stim' ; 'Excitations from render matrix'});
         forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
@@ -673,7 +622,7 @@ for ii = 1:length(multistartStruct.initTypes)
 
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.lConeIndices),reconExcitationsToStimulusTemp(reconConeMosaic.Mosaic.lConeIndices),'ro','MarkerFaceColor','r','MarkerSize',6); hold on;
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.mConeIndices),reconExcitationsToStimulusTemp(reconConeMosaic.Mosaic.mConeIndices),'go','MarkerFaceColor','g','MarkerSize',6); hold on;
-    plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.sConeIndices),reconExcitationsToStimulusTemp(reconConeMosaic.Mosaic.sConeIndices),'bo','MarkerFaceColor','b','MarkerSize',6); hold on;
+    plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.sConeIndices),reconExcitationsToStimulusTemp(reconConeMosaic.Mosaic.sConeIndices),'bo','MarkerFaceColor','b','MarkerSize',6); hold on; 
 
     axis('square');
     minVal = 0.9*min([forwardExcitationsToStimulusUse;reconExcitationsToStimulusTemp]);
@@ -685,7 +634,7 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Compute forward excitations from reconstruction
     % and compare with scaled stimulus excitations
-    subplot(3,7,16); hold on;
+    subplot(3,7,16); hold on; 
     if (pr.reconstructfromRenderMatrix)
         title({'Forward excitations to recon' ; 'Excitations from render matrix'});
         forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
@@ -696,7 +645,7 @@ for ii = 1:length(multistartStruct.initTypes)
         forwardExcitationsToReconTemp = squeeze(forwardExcitationsToReconTemp);
     end
     %plot(forwardExcitationsToStimulusUse*scaleFactor,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
-
+    
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.lConeIndices),forwardExcitationsToReconTemp(forwardConeMosaic.Mosaic.lConeIndices),'ro','MarkerFaceColor','r','MarkerSize',6); hold on;
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.mConeIndices),forwardExcitationsToReconTemp(forwardConeMosaic.Mosaic.mConeIndices),'go','MarkerFaceColor','g','MarkerSize',6); hold on;
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.sConeIndices),forwardExcitationsToReconTemp(forwardConeMosaic.Mosaic.sConeIndices),'bo','MarkerFaceColor','b','MarkerSize',6); hold on;
@@ -757,8 +706,8 @@ for ii = 1:length(multistartStruct.initTypes)
     subplot(3,7,18);
     bar([1]', ...
         [multistartStruct.initLogPriors(ii)  ; ...
-        multistartStruct.reconLogPriors(ii) ; ...
-        -stimNegLogPrior]');
+         multistartStruct.reconLogPriors(ii) ; ...
+         -stimNegLogPrior]');
     set(gca,'XTickLabel',sprintf('Recon %d',ii))
     ylabel('Log Prior');
     axis('square');
@@ -782,8 +731,8 @@ for ii = 1:length(multistartStruct.initTypes)
     subplot(3,7,19);
     bar([1]', ...
         [multistartStruct.initLogLikelihoods(ii)  ; ...
-        multistartStruct.reconLogLikelihoods(ii) ; ...
-        -stimNegLogLikely]');
+         multistartStruct.reconLogLikelihoods(ii) ; ...
+         -stimNegLogLikely]');
     set(gca,'XTickLabel',sprintf('Recon %d',ii))
     ylabel('Log Likelihood');
     axis('square');
@@ -807,8 +756,8 @@ for ii = 1:length(multistartStruct.initTypes)
     subplot(3,7,20);
     bar([1]', ...
         [-multistartStruct.initLosses(ii)  ; ...
-        -multistartStruct.reconLosses(ii) ; ...
-        -stimLoss]');
+         -multistartStruct.reconLosses(ii) ; ...
+         -stimLoss]');
     set(gca,'XTickLabel',sprintf('Recon %d',ii))
     ylabel('Neg Loss');
     axis('square');
@@ -829,11 +778,11 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 
     % Save
-    saveas(gcf,fullfile(cnv.outputDir,sprintf('Recon%dSummaryUpdate.tiff',ii)),'tiff');
+    saveas(gcf,fullfile(cnv.outputDir,sprintf('Recon%dSummary.tiff',ii)),'tiff');
 
     % Save summary of best recon in its own file
     if (ii == reconIndex)
-        saveas(gcf,fullfile(cnv.outputDir,sprintf('ReconSummaryUpdate.tiff',ii)),'tiff');
+        saveas(gcf,fullfile(cnv.outputDir,sprintf('ReconSummary.tiff',ii)),'tiff');
 
         % Manually create plots based on specific quadrant excitations
         if (pr.quads(1).value)
@@ -892,9 +841,6 @@ end
 
 % Save best reconstruction image
 imwrite(reconScaledRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
-imwrite(reconRGBDispCorrected,fullfile(cnv.outputDir,'ReconDispCorrected.tiff'),'tiff');
-
-
 
 %% Save workspace without really big variables
 close all;
@@ -905,4 +851,3 @@ clear reconImageLinearTemp psfSupportTemp initImageLinearTemp
 clear tempFig theAxes theFIg axesHandle temp initSceneTemp
 clear forwardConeMosaic reconConeMosaic
 save(fullfile(cnv.outputDir,'xRunOutput.mat'), '-v7.3');
-end
