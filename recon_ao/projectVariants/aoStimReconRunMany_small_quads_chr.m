@@ -23,20 +23,23 @@
 % end
 
 %% Portion for ReRunning Figures from previous simulations after updates
-rrf.rerunImages = true; 
+rrf = struct; 
+rrf.rerunImages = false; 
 rrf.trueDisplayName = 'mono';
 rrf.viewingDisplayName = 'conventional';
 rrf.stimDispScale = 3; 
 rrf.reconDispScale = 1;
 
+
+% On the i = x:length x should be 4 if on mac, 3 on megalodon
 if (rrf.rerunImages)
     rrf.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
     rrf.versEditor = 'small_quads_chr';
     
-    rrf.wrapDir = fullfile(rrf.aoReconDir , rrf.versEditor, '/StimSize_v5/John');  
+    rrf.wrapDir = fullfile(rrf.aoReconDir , rrf.versEditor, '/StimSize_v5/Rerun');  
     rrf.wrapDirInfo = dir(rrf.wrapDir);
     
-    for i = 4:length(rrf.wrapDirInfo)
+    for i = 3:length(rrf.wrapDirInfo)
         rrf.mainDir = fullfile(rrf.wrapDir, rrf.wrapDirInfo(i).name);
         rrf.mainDirInfo = dir(rrf.mainDir);
 
@@ -152,16 +155,16 @@ elseif ~(rrf.rerunImages)
     
     % RGB values (before gamma correction)
     prBase.stimBgVal = 0.3;
-    stimRValList = [1 0 1];% 1.0 0.0]; 
-    stimGValList = [1 1 0];% 0.0 1.0]; 
-    stimBValList = [0 0 0];% 0.0 0.0]; 
+    stimRValList = [1];% 1.0 0.0]; 
+    stimGValList = [1];% 0.0 1.0]; 
+    stimBValList = [0];% 0.0 0.0]; 
     
     % Overwrite stim values to make isoluminant colors on the RG channel.
     % Allow for offset from the true isoLum values based on variability in
     % staircase procedure where (-) is more red and (+) is more green, 
-    % (Intervals of 50s? 100s? 1000s?)
-    isoLumRG = false;
-    stairStepRG = [0];
+    % (Intervals of 50s? 100s? 1000s?) Range depends on lumScale
+    isoLumRG = true;
+    stairStepRG = 520;% [120 320 520 720 920];
     
     if (isoLumRG)
         % Load the appropriate display
@@ -169,8 +172,10 @@ elseif ~(rrf.rerunImages)
         switch (prBase.displayName)
             case 'conventional'
                 displayFieldName = 'CRT12BitDisplay';
+                lumScale = 4.5;
             case 'mono'
                 displayFieldName = 'monoDisplay';
+                lumScale = 4.5;
             otherwise
                 error('Unknown display specified');
         end
@@ -190,9 +195,9 @@ elseif ~(rrf.rerunImages)
         
         % Overwrite R and G val list based on isolum conditions. To all three
         % channels add background stim value. 
-        stimRValList = isoLumR(indRG) + prBase.stimBgVal;
-        stimGValList = isoLumG(indRG) + prBase.stimBgVal; 
-        stimBValList = zeros(1,length(stimRValList)) + prBase.stimBgVal; 
+        stimRValList = isoLumR(indRG) * lumScale;
+        stimGValList = isoLumG(indRG) * lumScale; 
+        stimBValList = zeros(1,length(stimRValList)) * lumScale; 
     
         % Clean workspace
         clear theDisplayLoad; clear displayFieldName; clear primariesXYZ;
@@ -283,7 +288,7 @@ elseif ~(rrf.rerunImages)
         for cc = 1:length(stimRValList)
             for yy = 1:size(deltaCenterList,2)
                 for ff = 1:length(forwardDefocusDioptersList)
-                    for rrf = 1:length(regParaList)
+                    for rr = 1:length(regParaList)
                         for dd = 1:length(forwardChromList)
                             for pp = 1:length(forwardPupilDiamListMM)
                                 for qq = 1:length(quadSelectList(1,:))
@@ -300,7 +305,7 @@ elseif ~(rrf.rerunImages)
                                         forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
                                         reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
     
-                                        regPara(runIndex) = regParaList(rrf);
+                                        regPara(runIndex) = regParaList(rr);
     
                                         forwardChrom(runIndex) = forwardChromList(dd);
                                         reconChrom(runIndex) = reconChromList(dd);
@@ -355,7 +360,7 @@ elseif ~(rrf.rerunImages)
     end
     
     % THIS SHOULD BE A PARFOR AFTERWARDS DON'T FORGET
-    parfor pp = 1:length(regPara)
+    for pp = 1:length(regPara)
     
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists above.
@@ -368,6 +373,6 @@ elseif ~(rrf.rerunImages)
         cnv = computeConvenienceParams(pr);
     
         % Call the driving function
-        aoStimRecon(pr,cnv);
+        aoStimRecon(pr,cnv, rrf);
     end
 end
