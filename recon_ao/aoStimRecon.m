@@ -111,8 +111,14 @@ end
 %
 % When pr.stimBgVal is a scalar, we construct a uniform field of
 % appropriate size.
-if (length(pr.stimBgVal) == 1)
-    stimImageRGBnoGam = ones(pr.nPixels, pr.nPixels, 3) * pr.stimBgVal;
+if (length(pr.stimBgVal) == 1 || length(pr.stimBgVal) == 3)
+    if (length(pr.stimBgVal) == 1)
+        stimImageRGBnoGam = ones(pr.nPixels, pr.nPixels, 3) * pr.stimBgVal;
+    elseif length(pr.stimBgVal) == 3
+        stimImageRGBnoGam(:,:,1) = ones(pr.nPixels, pr.nPixels) * pr.stimBgVal(1);
+        stimImageRGBnoGam(:,:,2) = ones(pr.nPixels, pr.nPixels) * pr.stimBgVal(2);
+        stimImageRGBnoGam(:,:,3) = ones(pr.nPixels, pr.nPixels) * pr.stimBgVal(3);
+    end
 
     if(pr.quads(1).value)
         % Apply sign changes to orient in proper Cartesian Quadrant
@@ -440,10 +446,10 @@ for ii = 1:length(multistartStruct.initTypes)
     % Visualize stimulus
     theAxes = subplot(3,7,1);
     imshow(stimulusRGBScaled{ii});
-    if (length(pr.stimBgVal) > 1)
+    if (length(pr.stimBgVal) > 3)
         title({sprintf('Stimulus Image, input scale %0.4f',pr.inputImageScaleFactor) ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; pr.imageName});
     else
-        title({sprintf('Stimulus Image, input scale %0.4f',pr.inputImageScaleFactor)  ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal,pr.stimRVal,pr.stimGVal,pr.stimBVal)});
+        title({sprintf('Stimulus Image, input scale %0.4f',pr.inputImageScaleFactor)  ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal(1),pr.stimRVal,pr.stimGVal,pr.stimBVal)});
     end
     if (ii == reconIndex)
         imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDir,'StimulusScaled.tiff'),'tiff');

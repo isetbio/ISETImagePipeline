@@ -14,7 +14,7 @@
 %   02/20/23  chr  Updates based on Tuten Meeting
 
 %% Clear
-% clear; close all;
+clear; close all;
 
 %% Control size of parpool, otherwise may crush memory
 % thePool = gcp('nocreate');
@@ -154,7 +154,7 @@ elseif ~(rrf.rerunImages)
     stimSizeDegsList = [3.5] / 60;
     
     % RGB values (before gamma correction)
-    prBase.stimBgVal = 0.3;
+    prBase.stimBgVal = 1;% [0.1054 0.1832 0.1189]
     stimRValList = [1];% 1.0 0.0]; 
     stimGValList = [1];% 0.0 1.0]; 
     stimBValList = [0];% 0.0 0.0]; 
@@ -164,7 +164,7 @@ elseif ~(rrf.rerunImages)
     % staircase procedure where (-) is more red and (+) is more green, 
     % (Intervals of 50s? 100s? 1000s?) Range depends on lumScale
     isoLumRG = true;
-    stairStepRG = 520;% [120 320 520 720 920];
+    colorStepRG = 0; %535;% [120 320 520 720 920];
     
     if (isoLumRG)
         % Load the appropriate display
@@ -172,10 +172,12 @@ elseif ~(rrf.rerunImages)
         switch (prBase.displayName)
             case 'conventional'
                 displayFieldName = 'CRT12BitDisplay';
-                lumScale = 4.5;
+%                 lumScale = 3;
+                prBase.stimBgVal = [0.1054 0.1832 0.1189];
             case 'mono'
                 displayFieldName = 'monoDisplay';
-                lumScale = 4.5;
+%                 lumScale = 3;
+                prBase.stimBgVal = [0.1054 0.1832 0.1189];
             otherwise
                 error('Unknown display specified');
         end
@@ -187,17 +189,31 @@ elseif ~(rrf.rerunImages)
         % Create offset vectors for R and G-raw values, then multiply raw value
         % by luminance ratio between channels. Find index where R and G
         % channels are most similar and add step if desired
-        isoLumGRaw = 0:0.0001:1; isoLumR = 1 - isoLumGRaw;
-        ratioRG = lumRGB(1) / lumRGB(2);
+        isoLumR = fliplr(0:0.0001:1); isoLumGRaw = 1 - isoLumR;
+        ratioRG = lumRGB(1) / lumRGB(2); alpha = lumRGB(2) / lumRGB(1);
         isoLumG = ratioRG .* isoLumGRaw;
+
+        gMax1 = (1-prBase.stimBgVal(1))/alpha; rMax1 = gMax1 * alpha; 
+        gMax2 = (1-prBase.stimBgVal(2)); rMax2 = gMax2 * alpha; 
+
+        if gMax1 > 1 || rMax1 > 1
+            isoLumR = isoLumR(isoLumR < rMax2);
+            isoLumG = isoLumG(isoLumG < gMax2);
+        elseif gMax2 > 1 || rMax2 > 1
+            isoLumR = isoLumR(isoLumR < rMax1);
+            isoLumG = isoLumG(isoLumG < gMax1);
+        else
+            error('Both calculations with background exceed limits')
+        end
+
         difRG = abs(isoLumR - isoLumG)';
-        indRG = find(difRG == min(difRG)) + stairStepRG;
+        indRG = find(difRG == min(difRG)) + colorStepRG;
         
         % Overwrite R and G val list based on isolum conditions. To all three
         % channels add background stim value. 
-        stimRValList = isoLumR(indRG) * lumScale;
-        stimGValList = isoLumG(indRG) * lumScale; 
-        stimBValList = zeros(1,length(stimRValList)) * lumScale; 
+        stimRValList = isoLumR(indRG) + prBase.stimBgVal(1);
+        stimGValList = isoLumG(indRG) + prBase.stimBgVal(2); 
+        stimBValList = zeros(1,length(stimRValList)) + prBase.stimBgVal(3); 
     
         % Clean workspace
         clear theDisplayLoad; clear displayFieldName; clear primariesXYZ;
