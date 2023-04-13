@@ -92,8 +92,8 @@ elseif ~(rrf.rerunImages)
     %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
     %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
     %    Currently established quadSeq1 - quadSeq34
-    forwardChromList = ["quadSeq35" "quadSeq37" "quadSeq39" "quadSeq41" "quadSeq43" "quadSeq45"]; % Don't forget to run QS34 on 4@0.5
-    reconChromList =   ["quadSeq35" "quadSeq37" "quadSeq39" "quadSeq41" "quadSeq43" "quadSeq45"]; % 36, 38, 40, 42, 44
+    forwardChromList = ["quadSeq37" "quadSeq38" "quadSeq39" "quadSeq40" "quadSeq41" "quadSeq42" "quadSeq43"]; % Don't forget to run QS34 on 4@0.5
+    reconChromList =   ["quadSeq37" "quadSeq38" "quadSeq39" "quadSeq40" "quadSeq41" "quadSeq42" "quadSeq43"]; % 36, 38, 40, 42, 44
     
     % Build new sequence by
     prBase.quads(1).name = 'useQuadSeq';
@@ -162,9 +162,9 @@ elseif ~(rrf.rerunImages)
     % Overwrite stim values to make isoluminant colors on the RG channel.
     % Allow for offset from the true isoLum values based on variability in
     % staircase procedure where (-) is more red and (+) is more green, 
-    % (Intervals of 50s? 100s? 1000s?) Range depends on lumScale
+    % (Intervals of 50s? 100s? 1000s?) 
     isoLumRG = true;
-    colorStepRG = 0; %535;% [120 320 520 720 920];
+    colorStepRG = [-7217 -6000 -4800 -3600 -2400 -1200 0 220 470 720 970 1220 1470 1729];
     
     if (isoLumRG)
         % Load the appropriate display
@@ -172,11 +172,9 @@ elseif ~(rrf.rerunImages)
         switch (prBase.displayName)
             case 'conventional'
                 displayFieldName = 'CRT12BitDisplay';
-%                 lumScale = 3;
                 prBase.stimBgVal = [0.1054 0.1832 0.1189];
             case 'mono'
                 displayFieldName = 'monoDisplay';
-%                 lumScale = 3;
                 prBase.stimBgVal = [0.1054 0.1832 0.1189];
             otherwise
                 error('Unknown display specified');
@@ -197,11 +195,15 @@ elseif ~(rrf.rerunImages)
         gMax2 = (1-prBase.stimBgVal(2)); rMax2 = gMax2 * alpha; 
 
         if gMax1 > 1 || rMax1 > 1
-            isoLumR = isoLumR(isoLumR < rMax2);
-            isoLumG = isoLumG(isoLumG < gMax2);
+%             rBound = find(isoLumR < rMax2);
+%             gBound = find(isoLumG < gMax2);
+%             isoLumR = isoLumR(min(rBound):max(gBound));
+%             isoLumG = isoLumG(min(rBound):max(gBound));
         elseif gMax2 > 1 || rMax2 > 1
-            isoLumR = isoLumR(isoLumR < rMax1);
-            isoLumG = isoLumG(isoLumG < gMax1);
+%             rBound = find(isoLumR < rMax1);
+%             gBound = find(isoLumG < gMax1);
+%             isoLumR = isoLumR(min(rBound):end);%max(gBound));
+%             isoLumG = isoLumG(min(rBound):end);%max(gBound));
         else
             error('Both calculations with background exceed limits')
         end
@@ -376,7 +378,7 @@ elseif ~(rrf.rerunImages)
     end
     
     % THIS SHOULD BE A PARFOR AFTERWARDS DON'T FORGET
-    for pp = 1:length(regPara)
+    parfor pp = 1:length(regPara)
     
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists above.

@@ -197,9 +197,11 @@ imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 
 % Include portion to visualize the image as it should appear through a
 % conventional monitor
-[stimRGBDispCorrected, stimDispCorrectBounds] = correctDispImage(stimImageRGBnoGam, rrf.trueDisplayName, rrf.viewingDisplayName, rrf.stimDispScale, ...
+[stimRGBDispCorrected, stimDispCorrectBounds, stimRGBDispCorrectedBoost] = ...
+    correctDispImage(stimImageRGBnoGam, rrf.trueDisplayName, rrf.viewingDisplayName, rrf.stimDispScale, ...
     pr.aoReconDir, pr.displayGammaBits, pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor);
 imwrite(stimRGBDispCorrected,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
+imwrite(stimRGBDispCorrectedBoost,fullfile(cnv.outputDir,'StimulusDispCorrectedBoost.tiff'),'tiff');
 
 
 %% Compute forward retinal image and excitations using ISETBio
@@ -549,7 +551,8 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Visualize recon after being corrected for Display
     reconImageRGBnoGam = multistartStruct.reconImages{ii}/reconScaleFactor(ii);
-    [reconRGBDispCorrected, reconDispCorrectBounds] = correctDispImage(reconImageRGBnoGam, rrf.trueDisplayName, rrf.viewingDisplayName, rrf.reconDispScale, ...
+    [reconRGBDispCorrected, reconDispCorrectBounds, reconRGBDispCorrectedBoost] = ...
+        correctDispImage(reconImageRGBnoGam, rrf.trueDisplayName, rrf.viewingDisplayName, rrf.reconDispScale, ...
         pr.aoReconDir, pr.displayGammaBits, pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor);
 %     imwrite(stimRGBDispCorrected,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
 
@@ -899,7 +902,7 @@ end
 % Save best reconstruction image
 imwrite(reconScaledRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
 imwrite(reconRGBDispCorrected,fullfile(cnv.outputDir,'ReconDispCorrected.tiff'),'tiff');
-
+imwrite(reconRGBDispCorrectedBoost,fullfile(cnv.outputDir,'ReconDispCorrectedBoost.tiff'),'tiff');
 
 
 %% Save workspace without really big variables
