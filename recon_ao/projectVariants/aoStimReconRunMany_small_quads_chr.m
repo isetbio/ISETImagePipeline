@@ -30,8 +30,6 @@ rrf.viewingDisplayName = 'conventional';
 rrf.stimDispScale = 3; 
 rrf.reconDispScale = 1;
 
-
-% On the i = x:length x should be 4 if on mac, 3 on megalodon
 if (rrf.rerunImages)
     rrf.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
     rrf.versEditor = 'small_quads_chr';
@@ -50,7 +48,6 @@ if (rrf.rerunImages)
             aoStimRecon(pr, cnv, rrf)
         end
     end
-
 
 elseif ~(rrf.rerunImages)
     %% Set defaults in prBase
@@ -91,13 +88,18 @@ elseif ~(rrf.rerunImages)
     % Mosaic chromatic type, options are:
     %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
     %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
-    %    Currently established quadSeq1 - quadSeq34
-    forwardChromList = ["quadSeq37" "quadSeq38" "quadSeq39" "quadSeq40" "quadSeq41" "quadSeq42" "quadSeq43"]; % Don't forget to run QS34 on 4@0.5
-    reconChromList =   ["quadSeq37" "quadSeq38" "quadSeq39" "quadSeq40" "quadSeq41" "quadSeq42" "quadSeq43"]; % 36, 38, 40, 42, 44
+    %    Currently established quadSeq1 - quadSeq56
+    forwardChromList = ["quadSeq46" "quadSeq47" "quadSeq48" "quadSeq49" "quadSeq50" "quadSeq51" "quadSeq52" "quadSeq53" "quadSeq54" "quadSeq55" "quadSeq56"]; % Don't forget to run QS34 on 4@0.5
+    reconChromList =   ["quadSeq46" "quadSeq47" "quadSeq48" "quadSeq49" "quadSeq50" "quadSeq51" "quadSeq52" "quadSeq53" "quadSeq54" "quadSeq55" "quadSeq56"]; % 36, 38, 40, 42, 44
     
     % Build new sequence by
     prBase.quads(1).name = 'useQuadSeq';
     prBase.quads(1).value = true;
+
+    % If want to apply percentages to the full mosaic instead of a
+    % quadrant, set to true and use percentages corresponding to Quadrant 4
+    % (prBase.quads(5))
+    fullMosaicPercent = false;
     
     if(prBase.quads(1).value)
         % Initialize storage structure with information on each quadrant
@@ -112,14 +114,14 @@ elseif ~(rrf.rerunImages)
         prBase.quads(2).percentL = [0.27]; 
         prBase.quads(3).percentL = [0.53];
         prBase.quads(4).percentL = [0.71];
-        prBase.quads(5).percentL = [0.94]; 
+        prBase.quads(5).percentL = [0.00]; 
     
         % Enter desired percent as decimal of S cones per region across
         % quadrants. Follows same form as above
         prBase.quads(2).percentS = [0.05]; 
         prBase.quads(3).percentS = [0.05];
         prBase.quads(4).percentS = [0.05];
-        prBase.quads(5).percentS = [0.05]; 
+        prBase.quads(5).percentS = [0.1]; 
     
         % Establish initial region boundaries in the x and y direction for all
         % four quadrants based on FOV
@@ -131,6 +133,11 @@ elseif ~(rrf.rerunImages)
         prBase.quads(3).ybounds = [0 prBase.fieldSizeMinutes/60/2] + prBase.eccYDegs;
         prBase.quads(4).ybounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccYDegs;
         prBase.quads(5).ybounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccYDegs;
+
+        if (fullMosaicPercent)
+            prBase.quads(5).xbounds = [-prBase.fieldSizeMinutes/60/2 prBase.fieldSizeMinutes/60/2] + prBase.eccXDegs;
+            prBase.quads(5).ybounds = [-prBase.fieldSizeMinutes/60/2 prBase.fieldSizeMinutes/60/2] + prBase.eccYDegs;
+        end
     end
     
     prBase.quads(6).name = 'overrideQuadSeq';
@@ -151,7 +158,7 @@ elseif ~(rrf.rerunImages)
     %% Stimulus parameters.
     %
     % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-    stimSizeDegsList = [3.5] / 60;
+    stimSizeDegsList = [10] / 60;
     
     % RGB values (before gamma correction)
     prBase.stimBgVal = 1;% [0.1054 0.1832 0.1189]
@@ -164,18 +171,18 @@ elseif ~(rrf.rerunImages)
     % staircase procedure where (-) is more red and (+) is more green, 
     % (Intervals of 50s? 100s? 1000s?) 
     isoLumRG = true;
-    colorStepRG = [-7217 -6000 -4800 -3600 -2400 -1200 0 220 470 720 970 1220 1470 1729];
-    
+    colorStepRG = [-1729 -1280 -880 -480 0 240 480 720 960 1200 1440 1680 1729];
+ 
     if (isoLumRG)
         % Load the appropriate display
         theDisplayLoad = load(fullfile(prBase.aoReconDir, 'displays', [prBase.displayName 'Display.mat']));
         switch (prBase.displayName)
             case 'conventional'
                 displayFieldName = 'CRT12BitDisplay';
-                prBase.stimBgVal = [0.1054 0.1832 0.1189];
+                prBase.stimBgVal = [0.1054 0.1832 0.1189]/3;
             case 'mono'
                 displayFieldName = 'monoDisplay';
-                prBase.stimBgVal = [0.1054 0.1832 0.1189];
+                prBase.stimBgVal = [0.1054 0.1832 0.1189]/3;
             otherwise
                 error('Unknown display specified');
         end
@@ -195,15 +202,13 @@ elseif ~(rrf.rerunImages)
         gMax2 = (1-prBase.stimBgVal(2)); rMax2 = gMax2 * alpha; 
 
         if gMax1 > 1 || rMax1 > 1
-%             rBound = find(isoLumR < rMax2);
-%             gBound = find(isoLumG < gMax2);
-%             isoLumR = isoLumR(min(rBound):max(gBound));
-%             isoLumG = isoLumG(min(rBound):max(gBound));
+            rBound = find(isoLumR < rMax2);
+            isoLumR = isoLumR(min(rBound):end);
+            isoLumG = isoLumG(min(rBound):end);
         elseif gMax2 > 1 || rMax2 > 1
-%             rBound = find(isoLumR < rMax1);
-%             gBound = find(isoLumG < gMax1);
-%             isoLumR = isoLumR(min(rBound):end);%max(gBound));
-%             isoLumG = isoLumG(min(rBound):end);%max(gBound));
+            rBound = find(isoLumR < rMax1);
+            isoLumR = isoLumR(min(rBound):end);
+            isoLumG = isoLumG(min(rBound):end);
         else
             error('Both calculations with background exceed limits')
         end
