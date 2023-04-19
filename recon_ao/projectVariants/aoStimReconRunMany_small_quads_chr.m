@@ -89,8 +89,8 @@ elseif ~(rrf.rerunImages)
     %    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
     %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
     %    Currently established quadSeq1 - quadSeq56
-    forwardChromList = ["quadSeq46" "quadSeq47" "quadSeq48" "quadSeq49" "quadSeq50" "quadSeq51" "quadSeq52" "quadSeq53" "quadSeq54" "quadSeq55" "quadSeq56"]; % Don't forget to run QS34 on 4@0.5
-    reconChromList =   ["quadSeq46" "quadSeq47" "quadSeq48" "quadSeq49" "quadSeq50" "quadSeq51" "quadSeq52" "quadSeq53" "quadSeq54" "quadSeq55" "quadSeq56"]; % 36, 38, 40, 42, 44
+    forwardChromList = ["quadSeq57" "quadSeq58" "quadSeq59" "quadSeq60" "quadSeq61" "quadSeq62" "quadSeq63" "quadSeq64" "quadSeq65" "quadSeq66" "quadSeq67" ]; % Don't forget to run QS34 on 4@0.5
+    reconChromList =   ["quadSeq57" "quadSeq58" "quadSeq59" "quadSeq60" "quadSeq61" "quadSeq62" "quadSeq63" "quadSeq64" "quadSeq65" "quadSeq66" "quadSeq67" ]; % 36, 38, 40, 42, 44
     
     % Build new sequence by
     prBase.quads(1).name = 'useQuadSeq';
@@ -158,7 +158,7 @@ elseif ~(rrf.rerunImages)
     %% Stimulus parameters.
     %
     % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-    stimSizeDegsList = [10] / 60;
+    stimSizeDegsList = [3.5] / 60;
     
     % RGB values (before gamma correction)
     prBase.stimBgVal = 1;% [0.1054 0.1832 0.1189]
