@@ -202,7 +202,7 @@ imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
     pr.aoReconDir, pr.displayGammaBits, pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor);
 imwrite(stimRGBDispCorrected,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
 imwrite(stimRGBDispCorrectedBoost,fullfile(cnv.outputDir,'StimulusDispCorrectedBoost.tiff'),'tiff');
-
+keyboard()
 
 %% Compute forward retinal image and excitations using ISETBio
 %
