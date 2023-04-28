@@ -197,12 +197,13 @@ imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 
 % Include portion to visualize the image as it should appear through a
 % conventional monitor
-[stimRGBDispCorrected, stimDispCorrectBounds, stimRGBDispCorrectedBoost] = ...
+[stimRGBDispCorrected, stimDispCorrectBounds, stimRGBDispCorrectedBoost, rgbStatsStim] = ...
     correctDispImage(stimImageRGBnoGam, rrf.trueDisplayName, rrf.viewingDisplayName, rrf.stimDispScale, ...
-    pr.aoReconDir, pr.displayGammaBits, pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor);
+    pr.aoReconDir, pr.displayGammaBits, pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, ...
+    idxXRange, idxYRange);
 imwrite(stimRGBDispCorrected,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
 imwrite(stimRGBDispCorrectedBoost,fullfile(cnv.outputDir,'StimulusDispCorrectedBoost.tiff'),'tiff');
-keyboard()
+
 
 %% Compute forward retinal image and excitations using ISETBio
 %
@@ -551,9 +552,10 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Visualize recon after being corrected for Display
     reconImageRGBnoGam = multistartStruct.reconImages{ii}/reconScaleFactor(ii);
-    [reconRGBDispCorrected, reconDispCorrectBounds, reconRGBDispCorrectedBoost] = ...
+    [reconRGBDispCorrected, reconDispCorrectBounds, reconRGBDispCorrectedBoost, rgbStatsRecon] = ...
         correctDispImage(reconImageRGBnoGam, rrf.trueDisplayName, rrf.viewingDisplayName, rrf.reconDispScale, ...
-        pr.aoReconDir, pr.displayGammaBits, pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor);
+        pr.aoReconDir, pr.displayGammaBits, pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, ...
+        idxXRange, idxYRange);
 %     imwrite(stimRGBDispCorrected,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
 
     theAxes = subplot(3,7,14);

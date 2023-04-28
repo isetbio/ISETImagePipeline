@@ -34,11 +34,9 @@ rrf.reconDispScale = 1;
 if (rrf.slidePlots)
     rows = 12;
     colms = 13;
-    tiledlayout(rows,colms, "TileSpacing", "none", "Padding", "compact")
-    fullindex = fliplr(reshape(1:(rows*colms), colms, rows).');
-    recon = fullindex(2:end,:);
-    stim = fullindex(1,:) .* ones(size(recon));
-    counter = 1;
+    cellRecons = cell(rows-1, colms);
+    stimGrab = [1:colms] *  (rows-1);
+    cellStim = cell(1,colms);
 end
 
 if (rrf.rerunImages)
@@ -49,6 +47,7 @@ if (rrf.rerunImages)
     rrf.wrapDirInfo = dir(rrf.wrapDir);
 
     for i = 4:length(rrf.wrapDirInfo)
+        counter = 1;
         rrf.mainDir = fullfile(rrf.wrapDir, rrf.wrapDirInfo(i).name);
         rrf.mainDirInfo = dir(rrf.mainDir);
        
@@ -57,10 +56,10 @@ if (rrf.rerunImages)
            
             if(rrf.slidePlots)
                 load(fullfile(rrf.outputDir, 'xRunOutput.mat'),"reconRGBDispCorrectedBoost", "stimRGBDispCorrectedBoost")
-                nexttile(stim(counter))
-                imshow(stimRGBDispCorrectedBoost)
-                nexttile(recon(counter))
-                imshow(reconRGBDispCorrectedBoost)
+                if ismember(counter, stimGrab)
+                    cellStim{1, counter/(rows-1)} = stimRGBDispCorrectedBoost;
+                end
+                cellRecons{counter} = reconRGBDispCorrectedBoost;
                 counter = counter + 1;
             else
                 load(fullfile(rrf.outputDir, 'xRunOutput.mat'), "pr", "cnv")
@@ -68,12 +67,16 @@ if (rrf.rerunImages)
                 aoStimRecon(pr, cnv, rrf)
             end
         end
+
+        if (rrf.slidePlots)
+            cellFull = [cellStim; cellRecons];
+            figFull = imtile(cellFull, 'GridSize', [colms, rows]);
+            imshow(imrotate(figFull, -90))
+            saveas(gcf,fullfile(rrf.mainDir,'reconSlidePlot.tiff'),'tiff');
+        end
     end
 
-    if (rrf.slidePlots)
-        set(gcf,'Position', [239 46 1259 886])
-        saveas(gcf,fullfile(rrf.mainDir,'reconSlidePlot.tiff'),'tiff');
-    end
+
 
 
 elseif ~(rrf.rerunImages)
@@ -185,7 +188,7 @@ elseif ~(rrf.rerunImages)
     %% Stimulus parameters.
     %
     % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-    stimSizeDegsList = [2.5] / 60;
+    stimSizeDegsList = [2.5 3.5 4.5 6.5 10.5] / 60;
 
     % RGB values (before gamma correction)
     prBase.stimBgVal = 1;% [0.1054 0.1832 0.1189]
@@ -206,10 +209,10 @@ elseif ~(rrf.rerunImages)
         switch (prBase.displayName)
             case 'conventional'
                 displayFieldName = 'CRT12BitDisplay';
-                prBase.stimBgVal = [0.1054 0.1832 0.1189]/3;
+                prBase.stimBgVal = [0.1054 0.1832 0.1189]/10;
             case 'mono'
                 displayFieldName = 'monoDisplay';
-                prBase.stimBgVal = [0.1054 0.1832 0.1189]/3;
+                prBase.stimBgVal = [0.1054 0.1832 0.1189]/10;
             otherwise
                 error('Unknown display specified');
         end
