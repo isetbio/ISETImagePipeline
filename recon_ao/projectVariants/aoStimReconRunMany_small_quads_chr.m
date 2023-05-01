@@ -136,77 +136,119 @@ if (rrf.rerunImages)
         cellStatsAll(:,end+1)=holder;
 
 
-        % Figure 1
-        figure()
-        subplot(3,1,1)
-        for j=1:length(cellStatsAll)
-            plot(cellStatsAll{2,j}{6,7}, cellStatsAll{2,j}{3,7}, '-o'); hold on;
-        end
-        set(gca, 'XDir', 'reverse')
-        xlabel('L:M Ratio', 'FontSize', 14);
-        ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
-        title('Recon Primary Proportions over Cone Proportions', 'FontSize', 16);
-        legend(fig1Legend);
+%         % Figure 1
+%         figure()
+%         subplot(3,1,1)
+%         for j=1:length(cellStatsAll)
+%             plot(cellStatsAll{2,j}{6,7}, cellStatsAll{2,j}{3,7}, '-o'); hold on;
+%         end
+%         set(gca, 'XDir', 'reverse')
+%         xlabel('L:M Ratio', 'FontSize', 14);
+%         ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+%         title('Recon Primary Proportions over Cone Proportions', 'FontSize', 16);
+%         legend(fig1Legend);
+% 
+%         % Figure 2
+%         subplot(3,1,2)
+%         for i = 1:(rows-1)
+%             tempStore = ones(1,length(cellStatsAll));
+%             for j=1:length(cellStatsAll)
+%                 tempStore(j) = cellStatsAll{2,j}{3,7}(i);
+%             end
+%             plot(cell2mat(cellStatsAll(1,:)), tempStore, '-o'); hold on;
+%         end
+%         xlabel('Stimulus Size (arcmin)', 'FontSize', 14);
+%         ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+%         title('Recon Primary Proportions over Stim Size',  'FontSize', 16);
+%         legend(fig2Legend, 'NumColumns', 2);
+% 
+%         % Figure 3
+%         subplot(3,1,3)
+%         tempStore = ones(1,length(cellStatsAll));
+%         for j=1:length(cellStatsAll)
+%             tempStore(j) = cellStatsAll{2,j}{5,7};
+%         end
+%         plot(cell2mat(cellStatsAll(1,:)), tempStore, '-o'); hold on;
+%         xlabel('Stimulus Size (arcmin)', 'FontSize', 14);
+%         ylabel('Yellow Recon Variation', 'FontSize', 14);
+%         title('Recon Variation over Stim Size', 'FontSize', 16);
+%         set(gcf, 'Position', [335     1   564   976]);
+%         saveas(gcf,fullfile(rrf.wrapDir,'sumStatPlotsYellow.tiff'),'tiff')
 
-        % Figure 2
-        subplot(3,1,2)
-        for i = 1:(rows-1)
-            tempStore = ones(1,length(cellStatsAll));
-            for j=1:length(cellStatsAll)
-                tempStore(j) = cellStatsAll{2,j}{3,7}(i);
-            end
-            plot(cell2mat(cellStatsAll(1,:)), tempStore, '-o'); hold on;
-        end
-        xlabel('Stimulus Size (arcmin)', 'FontSize', 14);
-        ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
-        title('Recon Primary Proportions over Stim Size',  'FontSize', 16);
-        legend(fig2Legend, 'NumColumns', 2);
-
-
-
-        % Figure 3
-        subplot(3,1,3)
-        %         for i = 1:(rows-1)
-        tempStore = ones(1,length(cellStatsAll));
-        for j=1:length(cellStatsAll)
-            tempStore(j) = cellStatsAll{2,j}{5,7};
-        end
-        plot(cell2mat(cellStatsAll(1,:)), tempStore, '-o'); hold on;
-        xlabel('Stimulus Size (arcmin)', 'FontSize', 14);
-        ylabel('Yellow Recon Variation', 'FontSize', 14);
-        title('Recon Variation over Stim Size', 'FontSize', 16);
-
-        
-        set(gcf, 'Position', [335     1   564   976]);
-        saveas(gcf,fullfile(rrf.wrapDir,'sumStatPlotsYellow.tiff'),'tiff')
-
-        for k = 1:length(cellStatsAll)
-            figure()
-            tempStore = ones(1,colms);
-            for i = 1:(rows-1)
-                for j = 1:colms
-                    tempStore(j) = cellStatsAll{2,k}{3,j}(i);
-                end
-                plot(fliplr([1:colms]), tempStore, '-o'); hold on
-            end
-            ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
-            xlabel('Stimulus', 'FontSize', 14);
-            legend(fig2Legend)
-            title(['Recon Progression over Stimuli: ', num2str(cellStatsAll{1,k}), ' arcmin'], 'FontSize', 16)
-            set(gcf, 'Position', [119   321   661   518])
-            saveas(gcf,fullfile(rrf.wrapDir,['reconProgress', num2str(cellStatsAll{1,k}), 'arcmin.tiff']),'tiff')
-        end
 
 
 %         Figure for the stimuli color progression
-%         figure()
-%         plot(fliplr([1:13]), rrgValsStim, '-o')
-%         ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
-%         xlabel('Stimulus', 'FontSize', 14);
+        figure()
+        plot(fliplr([1:colms]), rrgValsStim, '-o')
+        ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+        xlabel('Stimulus Number', 'FontSize', 14);
+        title('Change in Stimulus Appearance', 'FontSize', 16);
+        set(gcf, 'Position', [119   321   661   518]);
+        saveas(gcf,fullfile(rrf.wrapDir,'stimAppearance.tiff'),'tiff');
+
+        % For this, UY corresponds to the stimulus at index 6 (looks
+        % yellow)
+
+        % Figure for the recon color progression
+        for k = 1:length(cellStatsAll)
+            figure()
+            cellStatsAll{3,k} = ones((rows-1),colms);
+            for i = 1:(rows-1)
+                for j = 1:colms
+                    cellStatsAll{3,k}(i,j) = cellStatsAll{2,k}{3,j}(i);
+                end
+            end
+            plot(fliplr([1:colms]), cellStatsAll{3,k}, '-o'); hold on
+            ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+            xlabel('Stimulus Number', 'FontSize', 14);
+            legend(fig2Legend)
+            title(['Change in Recon Appearance: ', num2str(cellStatsAll{1,k}), ' arcmin'], 'FontSize', 16)
+            set(gcf, 'Position', [119   321   661   518]);
+            saveas(gcf,fullfile(rrf.wrapDir,['reconAppearance', num2str(cellStatsAll{1,k}), 'arcmin.tiff']),'tiff');
+        end
 
 
+        % Figure for shift in UY
+        for k = 1:length(cellStatsAll)
+            figure()
+            cellStatsAll{4,k} = ones((rows-1),2);
+            for i = 1:(rows-1)
+                cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}(i,:), fliplr([1:colms]), rrgValsStim(6), 'pchip');
+                cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'spline');
+            end
+            plot(cellStatsAll{2,1}{6,7}, cellStatsAll{4,k}(:,2), '-o'); hold on;
+            xlim([0.1 0.9]); ylim([0 1]);
+            set(gca, 'XDir', 'reverse')
+            ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+            xlabel('L:M Ratio', 'FontSize', 14);
+            title(['Stimulus Appearance for UY Recon: ', num2str(cellStatsAll{1,k}), 'arcmin'], 'FontSize', 16)
 
+            usableLims = cellStatsAll{4,k}(:,2) > 0 & cellStatsAll{4,k}(:,2) < 1;
+            usableLims(1) = false; usableLims(end) = false;
+            dummyVar = cellStatsAll{4,k}(:,2);
+            usablePoints = dummyVar(usableLims);
+            slopeVals = polyfit(1:length(usablePoints), usablePoints, 1);
+            cellStatsAll{5,k} = slopeVals(1);
+            cellStatsAll{6,k} = std(usablePoints);
+            set(gcf, 'Position', [119   321   661   518]);
+            saveas(gcf,fullfile(rrf.wrapDir,['reconUYStim', num2str(cellStatsAll{1,k}), 'arcmin.tiff']),'tiff');
+
+%             y2 = polyval(slopeVals,cellStatsAll{2,1}{6,7});
+%             plot(cellStatsAll{2,1}{6,7}, y2);
+%             dim = [.2 .5 .3 .3];
+%             linFit = -1 * (polyfit(cellStatsAll{2,1}{6,7}, cellStatsAll{4,k}(:,2), 1));
+%             str = ['Linear slope: ', num2str(linFit(1))];
+%             annotation('textbox',dim,'String',str,'FitBoxToText','on');
+
+        end
+
+        %             set(gcf, 'Position', [119   321   661   518]);
+        %             saveas(gcf,fullfile(rrf.wrapDir,['reconAppearance', num2str(cellStatsAll{1,k}), 'arcmin.tiff']),'tiff');
+        save(fullfile(rrf.wrapDir, "cellStatsAll.mat"), "cellStatsAll")
     end
+
+
+
 
 
 elseif ~(rrf.rerunImages)
@@ -249,8 +291,8 @@ elseif ~(rrf.rerunImages)
     %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
     %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
     %    Currently established quadSeq1 - quadSeq56
-    forwardChromList = ["quadSeq77" "quadSeq78" "quadSeq79" "quadSeq80" "quadSeq81" "quadSeq82" "quadSeq83" "quadSeq84" "quadSeq85" "quadSeq86" "quadSeq87" ]; % Don't forget to run QS34 on 4@0.5
-    reconChromList =   ["quadSeq77" "quadSeq78" "quadSeq79" "quadSeq80" "quadSeq81" "quadSeq82" "quadSeq83" "quadSeq84" "quadSeq85" "quadSeq86" "quadSeq87"]; % 36, 38, 40, 42, 44
+    forwardChromList = ["quadSeq88" "quadSeq89" "quadSeq90" "quadSeq91" "quadSeq92" "quadSeq93" "quadSeq94" "quadSeq95" "quadSeq96" "quadSeq97" "quadSeq98" ]; % Don't forget to run QS34 on 4@0.5
+    reconChromList =   ["quadSeq88" "quadSeq89" "quadSeq90" "quadSeq91" "quadSeq92" "quadSeq93" "quadSeq94" "quadSeq95" "quadSeq96" "quadSeq97" "quadSeq98" ]; % 36, 38, 40, 42, 44
 
     % Build new sequence by
     prBase.quads(1).name = 'useQuadSeq';
