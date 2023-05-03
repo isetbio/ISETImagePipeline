@@ -24,7 +24,7 @@ clear; close all;
 
 %% Portion for ReRunning Figures from previous simulations after updates
 rrf = struct;
-rrf.rerunImages = false;
+rrf.rerunImages = true;
 rrf.slidePlots = false;
 rrf.statPlots = false;
 rrf.trueDisplayName = 'mono';
@@ -38,9 +38,9 @@ if (rrf.slidePlots)
     mosaicSpread =  fliplr([0:2:20] / 20); %fliplr([0:8] / 8);
     sizes = [10.0 2.0 3.5 5.0 6.5]; % [10.5 2.5 3.5 4.5 6.5]; 
     fig1Legend = {'2.5 arcmin', '3.5 arcmin', '4.5 arcmin', '6.5 arcmin', '10.5 arcmin'};
-    fig2Legend = {'1.0 L:M', '0.9 L:M', '0.8 L:M', '0.7 L:M', '0.6 L:M', '0.5 L:M', '0.4 L:M', '0.3 L:M', '0.2 L:M', '0.1 L:M', '0 L:M'};
+    fig2Legend = {'90 %L', '80 %L', '70 %L', '60 %L', '50 %L', '40 %L', '30 %L', '20 %L', '10 %L'};
     % {'1.00 L:M', '0.88 L:M', '0.75 L:M', '0.63 L:M', '0.50 L:M','0.38 L:M', '0.25 L:M', '0.13 L:M', '0.00 L:M'};
-
+    zoomLim = 14;
     cellRecons = cell(rows-1, colms);
     cellStatsRecon = cell(size(cellRecons));
 
@@ -71,11 +71,11 @@ if (rrf.rerunImages)
                         "reconRGBDispCorrectedBoost", "stimRGBDispCorrectedBoost", ...
                         "rgbStatsStim", "rgbStatsRecon")
 
-                    cellRecons{counter} = reconRGBDispCorrectedBoost;
+                    cellRecons{counter} = reconRGBDispCorrectedBoost(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
                     cellStatsRecon{counter} = rgbStatsRecon;
 
                     if ismember(counter, stimGrab)
-                        cellStim{1, counter/(rows-1)} = stimRGBDispCorrectedBoost;
+                        cellStim{1, counter/(rows-1)} = stimRGBDispCorrectedBoost(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
                         cellStatsStim{1, counter/(rows-1)} = rgbStatsStim;
                     end
 
@@ -111,7 +111,10 @@ if (rrf.rerunImages)
 
         
         if (rrf.slidePlots)
+            figure()
+%             cellRecons = cellRecons(2:end-1,:);
             cellFull = [cellStim; cellRecons];
+%             figFull = imtile(cellFull, 'GridSize', [colms, (rows-2)]);
             figFull = imtile(cellFull, 'GridSize', [colms, rows]);
             imshow(imrotate(figFull, -90))
             saveas(gcf,fullfile(rrf.mainDir,'reconSlidePlot.tiff'),'tiff');
@@ -190,9 +193,9 @@ if (rrf.rerunImages)
         % yellow)
 
         % Figure for the recon color progression
-        for k = 1:length(cellStatsAll)
+        for k = 1:size(cellStatsAll,2)
             figure()
-            cellStatsAll{3,k} = ones((rows-1),colms);
+            cellStatsAll{3,k} = ones((rows-4),colms);
             for i = 1:(rows-1)
                 for j = 1:colms
                     cellStatsAll{3,k}(i,j) = cellStatsAll{2,k}{3,j}(i);
@@ -201,16 +204,18 @@ if (rrf.rerunImages)
             plot(fliplr([1:colms]), cellStatsAll{3,k}, '-o'); hold on
             ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
             xlabel('Stimulus Number', 'FontSize', 14);
-            legend(fig2Legend)
+            legend(fig2Legend, 'NumColumns',2)   
             title(['Change in Recon Appearance: ', num2str(cellStatsAll{1,k}), ' arcmin'], 'FontSize', 16)
             set(gcf, 'Position', [119   321   661   518]);
-            saveas(gcf,fullfile(rrf.wrapDir,['reconAppearance', num2str(cellStatsAll{1,k}), 'arcmin.tiff']),'tiff');
+%             saveas(gcf,fullfile(rrf.wrapDir,['reconAppearance', num2str(cellStatsAll{1,k}), 'arcmin.tiff']),'tiff');
         end
-
+        
+        % For matlab plots 0.1300    0.1100    0.7750    0.8150
 
         % Figure for shift in UY
-        for k = 1:length(cellStatsAll)
-            figure()
+        figure()
+        for k = 1:1:size(cellStatsAll,2)
+
             cellStatsAll{4,k} = ones((rows-1),2);
             for i = 1:(rows-1)
                 cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}(i,:), fliplr([1:colms]), rrgValsStim(6), 'pchip');
@@ -220,27 +225,31 @@ if (rrf.rerunImages)
             xlim([0.1 0.9]); ylim([0 1]);
             set(gca, 'XDir', 'reverse')
             ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
-            xlabel('L:M Ratio', 'FontSize', 14);
-            title(['Stimulus Appearance for UY Recon: ', num2str(cellStatsAll{1,k}), 'arcmin'], 'FontSize', 16)
-
-            usableLims = cellStatsAll{4,k}(:,2) > 0 & cellStatsAll{4,k}(:,2) < 1;
-            usableLims(1) = false; usableLims(end) = false;
-            dummyVar = cellStatsAll{4,k}(:,2);
-            usablePoints = dummyVar(usableLims);
-            slopeVals = polyfit(1:length(usablePoints), usablePoints, 1);
-            cellStatsAll{5,k} = slopeVals(1);
-            cellStatsAll{6,k} = std(usablePoints);
-            set(gcf, 'Position', [119   321   661   518]);
-            saveas(gcf,fullfile(rrf.wrapDir,['reconUYStim', num2str(cellStatsAll{1,k}), 'arcmin.tiff']),'tiff');
-
-%             y2 = polyval(slopeVals,cellStatsAll{2,1}{6,7});
-%             plot(cellStatsAll{2,1}{6,7}, y2);
-%             dim = [.2 .5 .3 .3];
-%             linFit = -1 * (polyfit(cellStatsAll{2,1}{6,7}, cellStatsAll{4,k}(:,2), 1));
-%             str = ['Linear slope: ', num2str(linFit(1))];
-%             annotation('textbox',dim,'String',str,'FitBoxToText','on');
-
+            xlabel('%L Cones', 'FontSize', 14);
+            title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
         end
+
+        legend(fig1Legend, 'Location', 'southeast')
+        set(gcf, 'Position', [119   321   661   518]);
+        saveas(gcf,fullfile(rrf.wrapDir,['reconUYStim.tiff']),'tiff');
+        %             usableLims = cellStatsAll{4,k}(:,2) > 0 & cellStatsAll{4,k}(:,2) < 1;
+        %             usableLims(1) = false; usableLims(end) = false;
+        %             dummyVar = cellStatsAll{4,k}(:,2);
+        %             usablePoints = dummyVar(usableLims);
+        %             slopeVals = polyfit(1:length(usablePoints), usablePoints, 1);
+        %             cellStatsAll{5,k} = slopeVals(1);
+        %             cellStatsAll{6,k} = std(usablePoints);
+
+
+
+
+        %             y2 = polyval(slopeVals,cellStatsAll{2,1}{6,7});
+        %             plot(cellStatsAll{2,1}{6,7}, y2);
+        %             dim = [.2 .5 .3 .3];
+        %             linFit = -1 * (polyfit(cellStatsAll{2,1}{6,7}, cellStatsAll{4,k}(:,2), 1));
+        %             str = ['Linear slope: ', num2str(linFit(1))];
+        %             annotation('textbox',dim,'String',str,'FitBoxToText','on');
+
 
         %             set(gcf, 'Position', [119   321   661   518]);
         %             saveas(gcf,fullfile(rrf.wrapDir,['reconAppearance', num2str(cellStatsAll{1,k}), 'arcmin.tiff']),'tiff');
@@ -291,8 +300,8 @@ elseif ~(rrf.rerunImages)
     %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
     %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
     %    Currently established quadSeq1 - quadSeq56
-    forwardChromList = ["quadSeq88" "quadSeq89" "quadSeq90" "quadSeq91" "quadSeq92" "quadSeq93" "quadSeq94" "quadSeq95" "quadSeq96" "quadSeq97" "quadSeq98" ]; % Don't forget to run QS34 on 4@0.5
-    reconChromList =   ["quadSeq88" "quadSeq89" "quadSeq90" "quadSeq91" "quadSeq92" "quadSeq93" "quadSeq94" "quadSeq95" "quadSeq96" "quadSeq97" "quadSeq98" ]; % 36, 38, 40, 42, 44
+    forwardChromList = ["quadSeq78" "quadSeq78" "quadSeq79" "quadSeq80" "quadSeq81" "quadSeq82" "quadSeq83" "quadSeq84" "quadSeq85" "quadSeq86" "quadSeq87"]; % Don't forget to run QS34 on 4@0.5
+    reconChromList =   ["quadSeq78" "quadSeq78" "quadSeq79" "quadSeq80" "quadSeq81" "quadSeq82" "quadSeq83" "quadSeq84" "quadSeq85" "quadSeq86" "quadSeq87"]; % 36, 38, 40, 42, 44
 
     % Build new sequence by
     prBase.quads(1).name = 'useQuadSeq';
