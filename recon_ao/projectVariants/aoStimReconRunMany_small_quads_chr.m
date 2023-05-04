@@ -24,7 +24,7 @@ clear; close all;
 
 %% Portion for ReRunning Figures from previous simulations after updates
 rrf = struct;
-rrf.rerunImages = true;
+rrf.rerunImages = false;
 rrf.slidePlots = false;
 rrf.statPlots = false;
 rrf.trueDisplayName = 'mono';
@@ -36,7 +36,7 @@ if (rrf.slidePlots)
     rows = 12;
     colms = 13;
     mosaicSpread =  fliplr([0:2:20] / 20); %fliplr([0:8] / 8);
-    sizes = [10.0 2.0 3.5 5.0 6.5]; % [10.5 2.5 3.5 4.5 6.5]; 
+    sizes = [10.0 3.5]; % [10.5 2.5 3.5 4.5 6.5]; 
     fig1Legend = {'2.5 arcmin', '3.5 arcmin', '4.5 arcmin', '6.5 arcmin', '10.5 arcmin'};
     fig2Legend = {'90 %L', '80 %L', '70 %L', '60 %L', '50 %L', '40 %L', '30 %L', '20 %L', '10 %L'};
     % {'1.00 L:M', '0.88 L:M', '0.75 L:M', '0.63 L:M', '0.50 L:M','0.38 L:M', '0.25 L:M', '0.13 L:M', '0.00 L:M'};
@@ -90,6 +90,10 @@ if (rrf.rerunImages)
             end
         end
 
+
+
+
+
         rrgValsStim = ones(1,colms);
         for k = 1:colms
             cellStats{1,k} = cellStatsStim(k);
@@ -120,6 +124,7 @@ if (rrf.rerunImages)
             saveas(gcf,fullfile(rrf.mainDir,'reconSlidePlot.tiff'),'tiff');
         end
     end
+
 
     if (rrf.statPlots)
         cellStatsAll = cell(1,(length(rrf.wrapDirInfo)-3));
@@ -216,12 +221,12 @@ if (rrf.rerunImages)
         figure()
         for k = 1:1:size(cellStatsAll,2)
 
-            cellStatsAll{4,k} = ones((rows-1),2);
-            for i = 1:(rows-1)
-                cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}(i,:), fliplr([1:colms]), rrgValsStim(6), 'pchip');
-                cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'spline');
+            cellStatsAll{4,k} = ones((rows-3),2);
+            for i = 1:(rows-3)
+                cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}((i+1),:), rrgValsStim, rrgValsStim(7), 'spline');
+%                 cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'pchip');
             end
-            plot(cellStatsAll{2,1}{6,7}, cellStatsAll{4,k}(:,2), '-o'); hold on;
+            plot(cellStatsAll{2,1}{6,7}(2:end-1), cellStatsAll{4,k}(:,1), '-o'); hold on;
             xlim([0.1 0.9]); ylim([0 1]);
             set(gca, 'XDir', 'reverse')
             ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
@@ -300,8 +305,8 @@ elseif ~(rrf.rerunImages)
     %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
     %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
     %    Currently established quadSeq1 - quadSeq56
-    forwardChromList = ["quadSeq78" "quadSeq78" "quadSeq79" "quadSeq80" "quadSeq81" "quadSeq82" "quadSeq83" "quadSeq84" "quadSeq85" "quadSeq86" "quadSeq87"]; % Don't forget to run QS34 on 4@0.5
-    reconChromList =   ["quadSeq78" "quadSeq78" "quadSeq79" "quadSeq80" "quadSeq81" "quadSeq82" "quadSeq83" "quadSeq84" "quadSeq85" "quadSeq86" "quadSeq87"]; % 36, 38, 40, 42, 44
+    forwardChromList = ["quadSeq99" "quadSeq100" "quadSeq101" "quadSeq102" "quadSeq103" "quadSeq104" "quadSeq105" "quadSeq106" "quadSeq107" "quadSeq108" "quadSeq109" ]; % Don't forget to run QS34 on 4@0.5
+    reconChromList =   ["quadSeq99" "quadSeq100" "quadSeq101" "quadSeq102" "quadSeq103" "quadSeq104" "quadSeq105" "quadSeq106" "quadSeq107" "quadSeq108" "quadSeq109" ]; % 36, 38, 40, 42, 44
 
     % Build new sequence by
     prBase.quads(1).name = 'useQuadSeq';
@@ -369,7 +374,7 @@ elseif ~(rrf.rerunImages)
     %% Stimulus parameters.
     %
     % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-    stimSizeDegsList = [2.0 3.5 5.0 6.5 10.5] / 60;
+    stimSizeDegsList = [3.5] / 60;
 
     % RGB values (before gamma correction)
     prBase.stimBgVal = 1;% [0.1054 0.1832 0.1189]
