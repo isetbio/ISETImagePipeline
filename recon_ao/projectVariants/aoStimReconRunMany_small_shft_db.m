@@ -21,20 +21,14 @@ prBase = prBaseDefaults;
 %% Version editor string
 %
 % Helps us keep different calcs separate
-prBase.versEditor = 'dichrom_chr';
-
-%% Point at directory with data files for this subproject
-%
-% This will allow us to load in project specific precomputed information.
-% Also records initials of version editors, otherwise set to 'main'
-prBase.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
+prBase.versEditor = 'small_shft_db';
 
 %% Parameters
 %
 % Display, options are:
 %    'conventional'    - A conventional display
 %    'mono'            - A display with monochromatic primaries
-prBase.displayName = 'conventional';
+prBase.displayName = 'mono';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
 
@@ -55,82 +49,36 @@ prBase.reconEccVars = false;
 prBase.reconstructfromRenderMatrix = true;
 prBase.addPoissonNoise = false;
 
-% Mosaic chromatic type, options are:
-%    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
-%    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
-%    Currently established quadSeq1 - quadSeq1
-forwardChromList = ["quadSeq1"]; 
-reconChromList =   ["quadSeq1"];
-
-% Build new sequence by
-prBase.quads(1).name = 'buildQuadSeq';
-prBase.quads(1).value = true;
-
-if(prBase.quads(1).value)
-    % Initialize storage structure with information on each quadrant
-    prBase.quads(2).name = 'Quad1'; 
-    prBase.quads(3).name = 'Quad2'; 
-    prBase.quads(4).name = 'Quad3'; 
-    prBase.quads(5).name = 'Quad4'; 
-
-    % Enter desired percent as decimal of L cones per region across
-    % quadrants. The remaining percent will be made of M cones. Entries 
-    % should start with outermost regions first and progress inward
-    prBase.quads(2).percentL = [1]; 
-    prBase.quads(3).percentL = [0.5];
-    prBase.quads(4).percentL = [1 0];
-    prBase.quads(5).percentL = [0 1 0]; 
-
-    % Enter desired percent as decimal of S cones per region across
-    % quadrants. Follows same form as above
-    prBase.quads(2).percentS = [0.03]; 
-    prBase.quads(3).percentS = [0.03];
-    prBase.quads(4).percentS = [0.03 0.01];
-    prBase.quads(5).percentS = [0.03 0.02 0.01]; 
-
-    % Establish initial region boundaries in the x and y direction for all
-    % four quadrants based on FOV
-    prBase.quads(2).xbounds = [0 prBase.fieldSizeMinutes/60/2] + prBase.eccXDegs; 
-    prBase.quads(3).xbounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccXDegs; 
-    prBase.quads(4).xbounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccXDegs; 
-    prBase.quads(5).xbounds = [0 prBase.fieldSizeMinutes/60/2] + prBase.eccXDegs; 
-    prBase.quads(2).ybounds = [0 prBase.fieldSizeMinutes/60/2] + prBase.eccYDegs;
-    prBase.quads(3).ybounds = [0 prBase.fieldSizeMinutes/60/2] + prBase.eccYDegs;
-    prBase.quads(4).ybounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccYDegs;
-    prBase.quads(5).ybounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccYDegs;
-end
-
-
-% Force build and save of render structures.  This
-% only affects this script, and will typically be false.
-buildNewForward = false;
-buildNewRecon = false;
-
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = 0.5; %[24/60];
+stimSizeDegsList = [2/60];
 
-% RGB values (before gamma correction) 
+% RGB values (before gamma correction)
 prBase.stimBgVal = 0.1;
+% stimRValList = [0.8 0.8 0.8];
+% stimGValList = [0.8 0.7 0.6];
+% stimBValList = [0.2 0.2 0.2];
+stimRValList = 0.4899;
+stimGValList = 0.4287;
+stimBValList = 0.0612;
 
-% This is an L=M with some headroom, and then deuteranopic
-% confusions at 0.002, 0.005, 0.02, and 0.15 perturbation
-stimRValList = [0.3032 0.5181];
-stimGValList = [0.3127 0.1701];
-stimBValList = [0.9529 0.9542];
- 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
     error('Stimulus value lists must have same length');
 end
 
+%% Positions
+%
 % Input desired x and y position for stimulus to be centered over. Function
 % will end if values exceed pixel limits. 
 %
-% Position specified in pixels, could consider specifying in degrees.
-centerXPosition = [prBase.trueCenter];
-centerYPosition = [prBase.trueCenter];
+% Position specified in pixels, could consider specifying in minutes.
+pixelsPerMinute = prBase.nPixels/prBase.fieldSizeMinutes;
+shiftInMinutesList = [-10:2:10];
+shiftInPixelsList = round(pixelsPerMinute*shiftInMinutesList);
+centerXPosition = prBase.trueCenter + shiftInPixelsList;
+centerYPosition = prBase.trueCenter*ones(size(centerXPosition));
 prBase.stimCenter = [centerXPosition ; centerYPosition];
 deltaCenterList = [prBase.stimCenter - prBase.trueCenter];
 
@@ -143,29 +91,40 @@ prBase.sparsePriorStr = 'conventional';
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.005; %[0.01 0.005 0.001];   % 0.01 0.1 1];
+regParaList = 0.005; %[0.1 0.005 0.001]; %[0.01 0.005 0.001];   % 0.01 0.1 1];
 prBase.stride = 2;
-prBase.maxReconIterations = 10000;
+prBase.maxReconIterations = 1000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = false;
-prBase.uniformStartVals = [];% [0.5 0.5 0.5]'  [0.5 0 0]' [0 0.5 0]' [0 0 0.5]' [0 0 0]' [1 1 1]' ];
+prBase.uniformStartVals = [];
 prBase.boundedSearch = true;
 
-% Forward and recon basic mosaic and optics properties.
-prBase.forwardAORender = false;
+% Use AO in forward rendering? And determine optics pupil size
+prBase.forwardAORender = true;
 prBase.reconAORender = false;
-prBase.forwardPupilDiamMM = 3;
+prBase.forwardPupilDiamMM = 6;
 prBase.reconPupilDiamMM = 3;
 prBase.forwardSubjectID = 6;
 prBase.forwardZernikeDataBase = 'Polans2015';
 prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Polans2015';
 
+% Mosaic chromatic type, options are:
+%    "chromNorm", "chromProt", "chromDeut", "chromTrit", 
+%    "chromAllL", "chromAllM", "chromAllS"
+forwardChromList = ["chromNorm"]; 
+reconChromList =   ["chromNorm"];
+
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.00];% 0.05 0.1]; 
-reconDefocusDioptersList = [0.00];% 0.05 0.1];
+forwardDefocusDioptersList = [0.06]; % 0.05 0.1]; 
+reconDefocusDioptersList = [0.00];   % 0.05 0.1];
+
+% Force build and save of render structures.  This
+% only affects this script, and will typically be false.
+buildNewForward = false;
+buildNewRecon = false;
 
 %% Set up list conditions
 runIndex = 1;
@@ -218,8 +177,8 @@ for pp = 1:length(regPara)
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
-            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase, pr.quads);
-        save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure', '-v7.3');
+            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase);
+        save(fullfile(cnv.renderDir , cnv.forwardRenderStructureName),'renderStructure','-v7.3');
         forwardRenderStructure = renderStructure; clear renderStructure;
     end
 
@@ -229,8 +188,8 @@ for pp = 1:length(regPara)
             pr.fieldSizeMinutes/60, pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters, ...
             cnv.overwriteDisplayGamma, pr.displayName, cnv.displayFieldName, pr.displayGammaBits, ...
             pr.displayGammaGamma, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
-            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase, pr.quads);
-        save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure', '-v7.3');
+            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase);
+        save(fullfile(cnv.renderDir , cnv.reconRenderStructureName),'renderStructure','-v7.3');
         reconRenderStructure = renderStructure; clear renderStructure;
     end
 end
