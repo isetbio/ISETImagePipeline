@@ -7,7 +7,7 @@ if dropbox
     dataBaseDir = getpref('ISETImagePipeline', 'dataDir');
     files = dir(fullfile(dataBaseDir, 'ILSVRC_train', '*.JPEG'));
 else
-    % Special case for the server
+    % Special case for the Simons server
     dataBase = '/home/lingqi/Data/denoiser_recon/utils/dataset/islvrc/train';
     files = dir(fullfile(dataBase, '*.JPEG'));
 end
@@ -90,6 +90,18 @@ gammaInput = linspace(0,1,2^displayGammaBits)';
 gammaOutput = gammaInput.^displayGammaGamma;
 monoDisplay.gamma = gammaOutput(:, [1 1 1]);
 
+% The code above matches how we set up to compute the sparse image prior
+% for the conventional display, and that code picks up again below as
+% indicated by a comment further down.  Here we convert the images from the
+% conventional to the monochromatic (aka AO) monitor preserving their
+% coloirimetric properties as best we can within gamut.  Then we'll drop
+% back into the conventional monitor code.  There is some hard coding here,
+% so that this can be run on the Simons foundation big big big computer
+% wihtout worrying about file path mismatches and missing data.
+% 
+% Note that we do the transormation on linear rgb and do not truncate into
+% range 0-1.  The overflor is not too bad.
+%
 % Generate linear images in monochromatic display space
 imageDataMono = zeros(size(imageData));
 parfor idx = 1:size(imageData, 1)
@@ -116,7 +128,11 @@ averageImage = squeeze(mean(imageDataReshape, 1));
 subplot(1, 3, 3);
 imshow(gammaCorrection(averageImage, monoDisplay));
 
-%% Convertion
+%% Conversion of mean image back to conventional display
+% 
+% The average image for the monochromatic monitor representation looks
+% pretty green.  Here we verify that when we convert that back to the 
+% conventional display it again looks grayish.
 avgCorr = gammaCorrection(averageImage, monoDisplay);
 avgCRT = rgb2aoDisplay(avgCorr, monoDisplay, crtDisplay);
 avgCRTCorr = gammaCorrection(avgCRT, crtDisplay);
@@ -125,9 +141,16 @@ figure();
 imshow(avgCRTCorr);
 
 %% RICA Analysis to learn basis function
+%
+% This is again the old ICA code, but because we
+% (just below) set it loose on the monochromatic display
+% representation, it will be right for images analyzed
+% wrt that monitor.
+%
 % Whitening, with PCA/SVD
 
-% Choose dataset to build the prior for
+% Choose dataset to build the prior for.  This is what
+% grabs the transformed data.
 % imageSet = imageDataLinear;
 imageSet = imageDataMono;
 
