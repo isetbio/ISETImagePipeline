@@ -39,6 +39,11 @@ end
 
 imageData = imageData(1:count - 1, :);
 
+%% RGB image mean
+imageDataReshape = reshape(imageData, [size(imageData, 1), 16, 16, 3]);
+averageImage = squeeze(mean(imageDataReshape, 1));
+imshow(averageImage);
+
 %% Generate linear images (pixel values after display gamma function)
 % RGB to Linear
 % Load specs for a CRT display
@@ -109,7 +114,15 @@ imageDataReshape = reshape(imageDataMono, [size(imageDataMono, 1), 16, 16, 3]);
 averageImage = squeeze(mean(imageDataReshape, 1));
 
 subplot(1, 3, 3);
-imshow(averageImage);
+imshow(gammaCorrection(averageImage, monoDisplay));
+
+%% Convertion
+avgCorr = gammaCorrection(averageImage, monoDisplay);
+avgCRT = rgb2aoDisplay(avgCorr, monoDisplay, crtDisplay);
+avgCRTCorr = gammaCorrection(avgCRT, crtDisplay);
+
+figure();
+imshow(avgCRTCorr);
 
 %% RICA Analysis to learn basis function
 % Whitening, with PCA/SVD
@@ -140,11 +153,13 @@ nFig = 1;
 for i = 1:nRow
     for j = 1:nCol
         subplot(nRow, nCol, nFig);
-        histogram(projs(nFig, :));
+        histogram(projs(nFig, :), 50);
         
         nFig = nFig + 1;
-        xlim([-8, 8])
+        xlim([-10, 10])
         set(gca, 'yscale', 'log'); box off;
+        xlabel('Coefficients');
+        ylabel('Count');
     end
 end
 
