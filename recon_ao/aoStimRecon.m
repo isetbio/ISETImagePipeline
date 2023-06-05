@@ -107,6 +107,11 @@ if ~(rrf.rerunImages)
     saveas(gcf,fullfile(cnv.outputDir,'reconMosaic.tiff'),'tiff');
 end
 
+% Calculate cone proportionality for each mosaic
+coneProp.forward = calcConeProportions(pr, cnv, 'forward', pr.annWidthArc, false);
+coneProp.recon = calcConeProportions(pr, cnv, 'recon', pr.annWidthArc, false);
+
+
 %% Generate an image stimulus
 %
 % When pr.stimBgVal is a scalar, we construct a uniform field of
@@ -195,14 +200,13 @@ stimulusImageRGB = gammaCorrection(stimulusImageLinear*pr.inputImageScaleFactor,
 stimulusScene = sceneSet(stimulusScene, 'fov', cnv.fieldSizeDegs);
 imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 
-% Include portion to visualize the image as it should appear through a
-% conventional monitor
-[stimRGBDispCorrected, stimDispCorrectBounds, stimRGBDispCorrectedBoost, rgbStatsStim, rgbStatsOldStim, rgbStatsNSStim] = ...
-    correctDispImage(stimImageRGBnoGam, rrf.trueDisplayName, rrf.viewingDisplayName, rrf.stimDispScale, ...
-    pr.aoReconDir, pr.displayGammaBits, pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, ...
-    idxXRange, idxYRange);
-imwrite(stimRGBDispCorrected,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
-imwrite(stimRGBDispCorrectedBoost,fullfile(cnv.outputDir,'StimulusDispCorrectedBoost.tiff'),'tiff');
+% Return a struct that contains values corrected for viewing on a display
+% different from that where the stimulation was calculated
+cfvStim = correctForViewing(stimImageRGBnoGam, rrf.startDisplayName, ...
+    rrf.viewingDisplayName, rrf.stimDispScale, pr.aoReconDir, pr.displayGammaBits, ...
+    pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
+imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
+imwrite(cfvStim.imageRGBBoost,fullfile(cnv.outputDir,'StimulusDispCorrectedBoost.tiff'),'tiff');
 
 
 %% Compute forward retinal image and excitations using ISETBio
@@ -460,10 +464,10 @@ for ii = 1:length(multistartStruct.initTypes)
 
    % Visualize stimulus after being corrected for Display
     theAxes = subplot(3,7,7);
-    imshow(stimRGBDispCorrected);
-    title({sprintf('Stim on %s, viewed on %s', rrf.trueDisplayName, rrf.viewingDisplayName); ...
-        sprintf('Min: %0.2f, %0.2f, %0.2f',stimDispCorrectBounds(1,1),stimDispCorrectBounds(1,2),stimDispCorrectBounds(1,3)); ...
-        sprintf('Max: %0.2f, %0.2f, %0.2f',stimDispCorrectBounds(2,1),stimDispCorrectBounds(2,2),stimDispCorrectBounds(2,3))})
+    imshow(cfvStim.imageRGB);
+    title({sprintf('Stim on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
+        sprintf('Min: %0.2f, %0.2f, %0.2f',cfvStim.bounds(1,1),cfvStim.bounds(1,2),cfvStim.bounds(1,3)); ...
+        sprintf('Max: %0.2f, %0.2f, %0.2f',cfvStim.bounds(2,1),cfvStim.bounds(2,2),cfvStim.bounds(2,3))})
 
 
     % Contour plot of forward PSF
@@ -552,17 +556,16 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Visualize recon after being corrected for Display
     reconImageRGBnoGam = multistartStruct.reconImages{ii}/reconScaleFactor(ii);
-    [reconRGBDispCorrected, reconDispCorrectBounds, reconRGBDispCorrectedBoost, rgbStatsRecon, rgbStatsOldRecon, rgbStatsNSRecon] = ...
-        correctDispImage(reconImageRGBnoGam, rrf.trueDisplayName, rrf.viewingDisplayName, rrf.reconDispScale, ...
-        pr.aoReconDir, pr.displayGammaBits, pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, ...
-        idxXRange, idxYRange);
-%     imwrite(stimRGBDispCorrected,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
+    cfvRecon = correctForViewing(reconImageRGBnoGam, rrf.startDisplayName, ...
+        rrf.viewingDisplayName, rrf.reconDispScale, pr.aoReconDir, pr.displayGammaBits, ...
+        pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
+%     imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
 
     theAxes = subplot(3,7,14);
-    imshow(reconRGBDispCorrected);
-    title({sprintf('Recon on %s, viewed on %s', rrf.trueDisplayName, rrf.viewingDisplayName); ...
-        sprintf('Min: %0.2f, %0.2f, %0.2f',reconDispCorrectBounds(1,1),reconDispCorrectBounds(1,2),reconDispCorrectBounds(1,3)); ...
-        sprintf('Max: %0.2f, %0.2f, %0.2f',reconDispCorrectBounds(2,1),reconDispCorrectBounds(2,2),reconDispCorrectBounds(2,3))})
+    imshow(cfvRecon.imageRGB);
+    title({sprintf('Recon on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
+        sprintf('Min: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(1,1),cfvRecon.bounds(1,2),cfvRecon.bounds(1,3)); ...
+        sprintf('Max: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(2,1),cfvRecon.bounds(2,2),cfvRecon.bounds(2,3))})
 
 
 
@@ -903,8 +906,8 @@ end
 
 % Save best reconstruction image
 imwrite(reconScaledRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
-imwrite(reconRGBDispCorrected,fullfile(cnv.outputDir,'ReconDispCorrected.tiff'),'tiff');
-imwrite(reconRGBDispCorrectedBoost,fullfile(cnv.outputDir,'ReconDispCorrectedBoost.tiff'),'tiff');
+imwrite(cfvRecon.imageRGB,fullfile(cnv.outputDir,'ReconDispCorrected.tiff'),'tiff');
+imwrite(cfvRecon.imageRGBBoost,fullfile(cnv.outputDir,'ReconDispCorrectedBoost.tiff'),'tiff');
 
 
 %% Save workspace without really big variables
