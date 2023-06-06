@@ -1,9 +1,9 @@
 %% Base variables for the rrf sequence
 rrf = struct;
 rrf.rerunImages = true;
-rrf.slidePlots = true;
-rrf.statPlots = true;
-rrf.trueDisplayName = 'mono';
+rrf.slidePlots = false;
+rrf.statPlots = false;
+rrf.startDisplayName = 'mono';
 rrf.viewingDisplayName = 'conventional';
 rrf.stimDispScale = 3;
 rrf.reconDispScale = 1;
@@ -67,7 +67,9 @@ rrf.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
                 end
             end
         end
+    end%%%%%
 
+%% 
 
 
 
@@ -101,7 +103,7 @@ rrf.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
             imshow(imrotate(figFull, -90))
             saveas(gcf,fullfile(rrf.mainDir,'reconSlidePlot.tiff'),'tiff');
         end
-    end
+%     end%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
     if (rrf.statPlots)

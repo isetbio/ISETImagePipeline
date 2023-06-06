@@ -192,6 +192,7 @@ end
 meanLuminanceCdPerM2 = [];
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimImageRGBnoGam, 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
+
 stimulusImageRGB = gammaCorrection(stimulusImageLinear*pr.inputImageScaleFactor, forwardConeMosaic.Display);
 
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
@@ -202,7 +203,7 @@ imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 
 % Return a struct that contains values corrected for viewing on a display
 % different from that where the stimulation was calculated
-cfvStim = correctForViewing(stimImageRGBnoGam, rrf.startDisplayName, ...
+cfvStim = correctForViewing(stimulusImageLinear, rrf.startDisplayName, ...
     rrf.viewingDisplayName, rrf.stimDispScale, pr.aoReconDir, pr.displayGammaBits, ...
     pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
 imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
@@ -464,7 +465,7 @@ for ii = 1:length(multistartStruct.initTypes)
 
    % Visualize stimulus after being corrected for Display
     theAxes = subplot(3,7,7);
-    imshow(cfvStim.imageRGB);
+    imshow(cfvStim.imageRGBBoost);
     title({sprintf('Stim on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvStim.bounds(1,1),cfvStim.bounds(1,2),cfvStim.bounds(1,3)); ...
         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvStim.bounds(2,1),cfvStim.bounds(2,2),cfvStim.bounds(2,3))})
@@ -555,14 +556,14 @@ for ii = 1:length(multistartStruct.initTypes)
 
 
     % Visualize recon after being corrected for Display
-    reconImageRGBnoGam = multistartStruct.reconImages{ii}/reconScaleFactor(ii);
-    cfvRecon = correctForViewing(reconImageRGBnoGam, rrf.startDisplayName, ...
+    reconImageLinear = multistartStruct.reconImages{ii};
+    cfvRecon = correctForViewing(reconImageLinear, rrf.startDisplayName, ...
         rrf.viewingDisplayName, rrf.reconDispScale, pr.aoReconDir, pr.displayGammaBits, ...
         pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
 %     imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
 
     theAxes = subplot(3,7,14);
-    imshow(cfvRecon.imageRGB);
+    imshow(cfvRecon.imageRGBBoost);
     title({sprintf('Recon on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(1,1),cfvRecon.bounds(1,2),cfvRecon.bounds(1,3)); ...
         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(2,1),cfvRecon.bounds(2,2),cfvRecon.bounds(2,3))})
