@@ -1,4 +1,4 @@
-function aoStimRecon(pr,cnv, rrf)
+function aoStimRecon(pr, cnv, rrf)
 % Synopsis:
 %    Driver to run AO recon simulations.
 %

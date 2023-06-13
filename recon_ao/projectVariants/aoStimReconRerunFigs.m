@@ -44,7 +44,7 @@ if (rrf.montage)
 
     % Input sizes for stimuli used and progression of L proportionality
     % across mosaics tested.
-    sizes = [3.5 ];
+    sizes = [3.5 10.5];
     mosaicSpread =  fliplr([0:2:20] / 20); %fliplr([0:8] / 8);
 
     % Impose some pixel limitation for the image zoom on the montage when
@@ -77,6 +77,16 @@ end
 rrf.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 rrf.versEditor = 'small_quads_chr';
 
+% When reading directories there are initial filler entries (., ..,
+% DS_Store). The script should ignore these fillers and start with actual
+% output directories, but the number changes between mac/megalodon. 
+if contains(rrf.aoReconDir, 'megalodon')
+    firstEntry = 3;
+else
+    firstEntry = 4;
+end
+
+
 % Assign the proper Rerun wrapper directory with the associated StimSize
 % version and pull out corresponding information. 
 % Each subdirectory should correspond to a different stimulus size
@@ -84,7 +94,7 @@ rrf.wrapDir = fullfile(rrf.aoReconDir , rrf.versEditor, '/StimSize_v6/Rerun');
 rrf.wrapDirInfo = dir(rrf.wrapDir);
 
 % Cycle through each stim size directory 
-for i = 4:length(rrf.wrapDirInfo)
+for i = firstEntry:length(rrf.wrapDirInfo)
 
     % Set up counter to position images along the montage
     counter = 1;
@@ -95,7 +105,7 @@ for i = 4:length(rrf.wrapDirInfo)
     rrf.mainDirInfo = dir(rrf.mainDir);
 
     % Cycle through each output directory
-    for j = 4:length(rrf.mainDirInfo)
+    for j = firstEntry:length(rrf.mainDirInfo)
 
         % If the indexed mainDirInfo value is a valid directory
         if rrf.mainDirInfo(j).isdir
@@ -344,3 +354,520 @@ if (rrf.statPlots)
     %             saveas(gcf,fullfile(rrf.wrapDir,['reconAppearance', num2str(cellStatsAll{1,k}), 'arcmin.tiff']),'tiff');
     save(fullfile(rrf.wrapDir, "cellStatsAll.mat"), "cellStatsAll")
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% TEMP COMMAND WINDOW DUMP
+
+
+
+set(gca,'YLabel',[], 'Yticklabel',[])
+set(gca,'XLabel', [], 'Xticklabel',[])
+set(gcf, 'Position', [119   321   661   518]);
+xlim([(2 - (10/60)/2) (2 + (10/60)/2)])
+ylim([(0 - (10/60)/2) (0 + (10/60)/2)])
+open correctDispImage.m
+open aoStimRecon.m
+aoStimReconRunMany_small_quads_chr
+load('/Volumes/ExtData/Data/Aguirre-Brainard Lab Dropbox/Carlos Rodriguez/IBIO_analysis/ISETImagePipeline/aoRecon/small_quads_chr/StimSize_v6/Rerun/bckgrn10arc3.5_small_quads_chr_AO7_NOAO2_Polans2015_6_0.05_0.00_50_30_mono_1.00_conventional/3.5_2.0_0.0_0.100000_2_0.0105_0.3563_0.1550_0.0119_renderMatrix_quadSeq67_0_1_quadSeq67_0_0_13_13_nonoise_0_5/xRunOutput.mat')
+aoStimReconRunMany_small_quads_chr
+load('/Volumes/ExtData/Data/Aguirre-Brainard Lab Dropbox/Carlos Rodriguez/IBIO_analysis/ISETImagePipeline/aoRecon/small_quads_chr/StimSize_v6/Rerun/bckgrn10arc10_small_quads_chr_AO7_NOAO2_Polans2015_6_0.05_0.00_50_30_mono_1.00_conventional/10.0_2.0_0.0_0.100000_2_0.0105_0.3563_0.1550_0.0119_renderMatrix_quadSeq67_0_1_quadSeq67_0_0_13_13_nonoise_0_5/xRunOutput.mat')
+load('/Volumes/ExtData/Data/Aguirre-Brainard Lab Dropbox/Carlos Rodriguez/IBIO_analysis/ISETImagePipeline/aoRecon/small_quads_chr/StimSize_v6/Rerun/bckgrn10arc6.5_small_quads_chr_AO7_NOAO2_Polans2015_6_0.05_0.00_50_30_mono_1.00_conventional/6.5_2.0_0.0_0.100000_2_0.0105_0.3563_0.1550_0.0119_renderMatrix_quadSeq67_0_1_quadSeq67_0_0_13_13_nonoise_0_5/xRunOutput.mat')
+clear all
+load('/Volumes/ExtData/Data/Aguirre-Brainard Lab Dropbox/Carlos Rodriguez/IBIO_analysis/ISETImagePipeline/aoRecon/small_quads_chr/StimSize_v6/Rerun/bckgrn10arc6.5_small_quads_chr_AO7_NOAO2_Polans2015_6_0.05_0.00_50_30_mono_1.00_conventional/6.5_2.0_0.0_0.100000_2_0.0105_0.3563_0.1550_0.0119_renderMatrix_quadSeq67_0_1_quadSeq67_0_0_13_13_nonoise_0_5/xRunOutput.mat')
+load('/Volumes/ExtData/Data/Aguirre-Brainard Lab Dropbox/Carlos Rodriguez/IBIO_analysis/ISETImagePipeline/aoRecon/small_quads_chr/StimSize_v6/Rerun/bckgrn10arc10_small_quads_chr_AO7_NOAO2_Polans2015_6_0.05_0.00_50_30_mono_1.00_conventional/10.0_2.0_0.0_0.100000_2_0.0105_0.0105_0.2273_0.0119_renderMatrix_quadSeq57_0_1_quadSeq57_0_0_13_13_nonoise_0_5/xRunOutput.mat')
+aoStimReconRunMany_small_quads_chr
+rrf.statPlots = true;
+aoStimReconRunMany_small_quads_chr
+cellStatsAll = cell(1,(length(rrf.wrapDirInfo)-3));
+for i = 4:length(rrf.wrapDirInfo)
+rrf.mainDir = fullfile(rrf.wrapDir, rrf.wrapDirInfo(i).name);
+load(fullfile(rrf.mainDir, 'cellStats.mat'));
+cellStatsAll{i-3} = cellStats;
+end
+cellStatsAll = [num2cell(sizes);cellStatsAll];
+sizes = [10.0 3.5]; % [10.5 2.5 3.5 4.5 6.5];
+cellStatsAll = [num2cell(sizes);cellStatsAll];
+% names starting with "10" before "2"
+holder=cellStatsAll(:,1);
+cellStatsAll=cellStatsAll(:,2:end);
+cellStatsAll(:,end+1)=holder;
+figure()
+plot(fliplr([1:colms]), rrgValsStim, '-o')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('Stimulus Number', 'FontSize', 14);
+title('Change in Stimulus Appearance', 'FontSize', 16);
+set(gcf, 'Position', [119   321   661   518]);
+saveas(gcf,fullfile(rrf.wrapDir,'stimAppearance.tiff'),'tiff');
+for k = 1:size(cellStatsAll,2)
+figure()
+cellStatsAll{3,k} = ones((rows-4),colms);
+for i = 1:(rows-1)
+for j = 1:colms
+cellStatsAll{3,k}(i,j) = cellStatsAll{2,k}{3,j}(i);
+end
+end
+plot(fliplr([1:colms]), cellStatsAll{3,k}, '-o'); hold on
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('Stimulus Number', 'FontSize', 14);
+legend(fig2Legend, 'NumColumns',2)
+title(['Change in Recon Appearance: ', num2str(cellStatsAll{1,k}), ' arcmin'], 'FontSize', 16)
+set(gcf, 'Position', [119   321   661   518]);
+%             saveas(gcf,fullfile(rrf.wrapDir,['reconAppearance', num2str(cellStatsAll{1,k}), 'arcmin.tiff']),'tiff');
+end
+figure()
+for k = 1:1:size(cellStatsAll,2)
+cellStatsAll{4,k} = ones((rows-1),2);
+for i = 1:(rows-1)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}(i,:), fliplr([1:colms]), rrgValsStim(6), 'pchip');
+cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'spline');
+end
+plot(cellStatsAll{2,1}{6,7}, cellStatsAll{4,k}(:,2), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('%L Cones', 'FontSize', 14);
+title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
+end
+figure()
+for k = 1:1:size(cellStatsAll,2)
+cellStatsAll{4,k} = ones((rows-1),2);
+for i = 1:(rows-1)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}(i,:), fliplr([1:colms]), rrgValsStim(6), 'spline');
+cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'spline');
+end
+plot(cellStatsAll{2,1}{6,7}, cellStatsAll{4,k}(:,2), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('%L Cones', 'FontSize', 14);
+title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
+end
+figure()
+for k = 1:1:size(cellStatsAll,2)
+cellStatsAll{4,k} = ones((rows-1),2);
+for i = 1:(rows-1)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}(i,:), fliplr([1:colms]), rrgValsStim(6), 'pchip');
+cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'pchip');
+end
+plot(cellStatsAll{2,1}{6,7}, cellStatsAll{4,k}(:,2), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('%L Cones', 'FontSize', 14);
+title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
+end
+figure()
+for k = 2:1:(size(cellStatsAll,2)-1)
+cellStatsAll{4,k} = ones((rows-1),2);
+for i = 1:(rows-1)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}(i,:), fliplr([1:colms]), rrgValsStim(6), 'pchip');
+cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'pchip');
+end
+plot(cellStatsAll{2,1}{6,7}, cellStatsAll{4,k}(:,2), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('%L Cones', 'FontSize', 14);
+title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
+end
+figure()
+for k = 1:1:size(cellStatsAll,2)
+cellStatsAll{4,k} = ones((rows-1),2);
+for i = 2:(rows-2)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}(i,:), fliplr([1:colms]), rrgValsStim(6), 'pchip');
+cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'pchip');
+end
+plot(cellStatsAll{2,1}{6,7}, cellStatsAll{4,k}(:,2), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('%L Cones', 'FontSize', 14);
+title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
+end
+cellStatsAll{4,1}= []
+cellStatsAll{4,2}= []
+figure()
+for k = 1:1:size(cellStatsAll,2)
+cellStatsAll{4,k} = ones((rows-1),2);
+for i = 2:(rows-2)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}(i,:), fliplr([1:colms]), rrgValsStim(6), 'pchip');
+cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'pchip');
+end
+plot(cellStatsAll{2,1}{6,7}, cellStatsAll{4,k}(:,2), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('%L Cones', 'FontSize', 14);
+title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
+end
+rows-2
+2:rows-2
+rows
+1:rows
+rows-1
+i
+1:rows-3
+cellStatsAll{2,1}{6,7}
+figure()
+for k = 1:1:size(cellStatsAll,2)
+cellStatsAll{4,k} = ones((rows-3),2);
+for i = 1:(rows-3)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}((i+1),:), fliplr([1:colms]), rrgValsStim(6), 'pchip');
+cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'pchip');
+end
+plot(cellStatsAll{2,1}{6,7}, cellStatsAll{4,k}(:,2), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('%L Cones', 'FontSize', 14);
+title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
+end
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}((i+1),:), fliplr([1:colms]), rrgValsStim(6), 'pchip');
+cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'pchip');
+rrgValsStim(6)
+rrgValsStim
+figure()
+for k = 1:1:size(cellStatsAll,2)
+cellStatsAll{4,k} = ones((rows-3),2);
+for i = 1:(rows-3)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}((i+1),:), fliplr([1:colms]), rrgValsStim(7), 'pchip');
+cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'pchip');
+end
+plot(cellStatsAll{2,1}{6,7}, cellStatsAll{4,k}(:,2), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('%L Cones', 'FontSize', 14);
+title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
+end
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}((i+1),:), fliplr([1:colms]), rrgValsStim(7), 'pchip');
+cellStatsAll{2,1}{6,7}
+cellStatsAll{3,k}((i+1),:)
+fliplr([1:colms]),
+interp1(cellStatsAll{3,k}((i+1),:), fliplr([1:colms]), rrgValsStim(7), 'pchip')
+interp1(fliplr([1:13])
+fliplr([1:13])
+rrgValsStim
+interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'pchip')
+cellStatsAll{2,1}{6,7}
+cellStatsAll{4,k}(:,2)
+cellStatsAll{4,k}(2:(end-1),2)
+cellStatsAll{4,k}(:,2)
+cellStatsAll{2,1}{6,7}(2:end-1,1)
+cellStatsAll{2,1}{6,7}
+cellStatsAll{2,1}{6,7}(2)
+cellStatsAll{2,1}{6,7}(2:end-1)
+figure()
+for k = 1:1:size(cellStatsAll,2)
+cellStatsAll{4,k} = ones((rows-3),2);
+for i = 1:(rows-3)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}((i+1),:), fliplr([1:colms]), rrgValsStim(7), 'pchip');
+cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'pchip');
+end
+plot(cellStatsAll{2,1}{6,7}(2:end-1), cellStatsAll{4,k}(:,2), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('%L Cones', 'FontSize', 14);
+title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
+end
+rrgValsStim
+cellStatsAll{3,k}
+figure
+plot(fliplr(rrgValsStim), cellStatsAll{3,k}, '-o')
+figure
+plot(fliplr(rrgValsStim), cellStatsAll{3,1}, '-o')
+legend(fig2Legend, 'NumColumns',2)
+hold on
+yline(rrgValsStim(7))
+fliplr([1:colms])
+rrgValsStim
+figure()
+for k = 1:1:size(cellStatsAll,2)
+cellStatsAll{4,k} = ones((rows-3),2);
+for i = 1:(rows-3)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}((i+1),:), rrgValsStim), rrgValsStim(7), 'pchip');
+%                 cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'pchip');
+end
+plot(cellStatsAll{2,1}{6,7}(2:end-1), cellStatsAll{4,k}(:,1), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('%L Cones', 'FontSize', 14);
+title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
+end
+figure()
+for k = 1:1:size(cellStatsAll,2)
+cellStatsAll{4,k} = ones((rows-3),2);
+for i = 1:(rows-3)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}((i+1),:), rrgValsStim, rrgValsStim(7), 'pchip');
+%                 cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'pchip');
+end
+plot(cellStatsAll{2,1}{6,7}(2:end-1), cellStatsAll{4,k}(:,1), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('%L Cones', 'FontSize', 14);
+title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
+end
+% Figure for shift in UY
+figure()
+for k = 1:1:size(cellStatsAll,2)
+cellStatsAll{4,k} = ones((rows-3),2);
+for i = 1:(rows-3)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}((i+1),:), rrgValsStim, rrgValsStim(7), 'spline');
+%                 cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'pchip');
+end
+plot(cellStatsAll{2,1}{6,7}(2:end-1), cellStatsAll{4,k}(:,1), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('%L Cones', 'FontSize', 14);
+title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
+end
+figure
+plot((rrgValsStim), cellStatsAll{3,k}, '-o')
+figure
+plot((rrgValsStim), cellStatsAll{3,1}, '-o')
+hold on
+yline(rrgValsStim(7))
+yline(rrgValsStim(7), '-')
+yline(rrgValsStim(7), '.')
+axis square
+xlim([0 1])
+axis square
+plot(0:0.1:1, 0:0.1:1, '-')
+plot(0:0.1:1, 0:0.1:1, '-k')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+xlabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+ylabel('Reconstruction $\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+xlabel('Stimulus $\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+ylabel('Reconstruction $\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 20);
+xlabel('Stimulus $\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 20);
+xlabel(['Stimulus $\frac{r}{r+g}$'], 'Interpreter', 'latex', 'FontSize', 20);
+xlim([0 1])
+axis square
+plot(0:0.1:1, 0:0.1:1, '.--')
+plot(0:0.1:1, 0:0.1:1, '--k')
+axis square
+Figure for the stimuli color progression
+figure()
+plot(fliplr([1:colms]), rrgValsStim, '-o')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('Stimulus Number', 'FontSize', 14);
+title('Change in Stimulus Appearance', 'FontSize', 16);
+set(gcf, 'Position', [119   321   661   518]);
+%         Figure for the stimuli color progression
+figure()
+plot(fliplr([1:colms]), rrgValsStim, '-o')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('Stimulus Number', 'FontSize', 14);
+title('Change in Stimulus Appearance', 'FontSize', 16);
+set(gcf, 'Position', [119   321   661   518]);
+axis square
+figure
+plot(fliplr(rrgValsStim), cellStatsAll{3,1}, '-o')
+figure
+plot(fliplr(rrgValsStim), cellStatsAll{3,1}{2:10, :}, '-o')
+plot(fliplr(rrgValsStim), cellStatsAll{3,1}(2:10, :), '-o')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('Stimulus Number', 'FontSize', 14);
+legend(fig2Legend, 'NumColumns',2)
+plot(fliplr(rrgValsStim), cellStatsAll{3,1}(2:10, :), '-o')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('Stimulus Number', 'FontSize', 14);
+set(gcf, 'Position', [119   321   661   518]);
+axis square
+xlim([0 1])
+axis square
+plot(0:0.1:1, 0:0.1:1, '--k')
+plot(fliplr(rrgValsStim), cellStatsAll{3,1}(2:10, :), '-o')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('Stimulus Number', 'FontSize', 14);
+xlim([0 1])
+axis square
+plot(0:0.1:1, 0:0.1:1, '--k')
+plot(fliplr(rrgValsStim), cellStatsAll{3,1}(2:10, :), '-o'); hold on
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('Stimulus Number', 'FontSize', 14);
+xlim([0 1])
+set(gcf, 'Position', [119   321   661   518]);
+axis square
+plot(0:0.1:1, 0:0.1:1, '--k')
+plot((rrgValsStim), cellStatsAll{3,1}(2:10, :), '-o'); hold on
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('Stimulus Number', 'FontSize', 14);
+xlim([0 1])
+set(gcf, 'Position', [119   321   661   518]);
+axis square
+plot(0:0.1:1, 0:0.1:1, '--k')
+figure
+plot((rrgValsStim), cellStatsAll{3,1}(2:10, :), '-o'); hold on
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('Stimulus Number', 'FontSize', 14);
+xlim([0 1])
+set(gcf, 'Position', [119   321   661   518]);
+axis square
+plot(0:0.1:1, 0:0.1:1, '--k')
+figure
+plot((rrgValsStim), cellStatsAll{3,1}(2:10, :), '-o'); hold on
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+xlim([0 1])
+set(gcf, 'Position', [119   321   661   518]);
+axis square
+plot(0:0.1:1, 0:0.1:1, '--k')
+figure
+plot((rrgValsStim), cellStatsAll{3,1}(2:10, :), '-o'); hold on
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+xlabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+title(['Reconstruction Quantification: 3.5 arcmin'], 'FontSize', 26)
+xlim([0 1])
+set(gcf, 'Position', [119   321   661   518]);
+axis square
+plot(0:0.1:1, 0:0.1:1, '--k')
+fig1Legend
+fig2Legend
+legend(fig2Legend, 'NumColumns',2, 'Location', 'northwest')
+figure
+plot((rrgValsStim), cellStatsAll{3,2}(2:10, :), '-o'); hold on
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+xlabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+title(['Reconstruction Quantification: 3.5 arcmin'], 'FontSize', 26)
+xlim([0 1])
+set(gcf, 'Position', [119   321   661   518]);
+axis square
+plot(0:0.1:1, 0:0.1:1, '--k')
+legend(fig2Legend, 'NumColumns',2, 'Location', 'northwest')
+figure()
+for k = 1:1:size(cellStatsAll,2)
+cellStatsAll{4,k} = ones((rows-3),2);
+for i = 1:(rows-3)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}((i+1),:), rrgValsStim, rrgValsStim(7), 'spline');
+%                 cellStatsAll{4,k}(i,2) = interp1(fliplr([1:13]), rrgValsStim, cellStatsAll{4,k}(i,1),  'pchip');
+end
+plot(cellStatsAll{2,1}{6,7}(2:end-1), cellStatsAll{4,k}(:,1), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('%L Cones', 'FontSize', 14);
+title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
+end
+fig1Legend = {'2.5 arcmin', '10.5 arcmin'};
+figure()
+for k = 1:1:size(cellStatsAll,2)
+cellStatsAll{4,k} = ones((rows-3),2);
+for i = 1:(rows-3)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}((i+1),:), rrgValsStim, rrgValsStim(7), 'spline');
+end
+plot(cellStatsAll{2,1}{6,7}(2:end-1), cellStatsAll{4,k}(:,1), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('%L Cones', 'FontSize', 14);
+title(['Stimulus Appearance for UY Recon'], 'FontSize', 16)
+end
+axis square
+legend(fig1Legend, 'Location', 'northwest')
+set(gcf, 'Position', [119   321   661   518]);
+fig1Legend = {'2.5 arcmin', '10.5 arcmin'};
+figure()
+for k = 1:1:size(cellStatsAll,2)
+cellStatsAll{4,k} = ones((rows-3),2);
+for i = 1:(rows-3)
+cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}((i+1),:), rrgValsStim, rrgValsStim(7), 'spline');
+end
+plot(cellStatsAll{2,1}{6,7}(2:end-1), cellStatsAll{4,k}(:,1), '-o'); hold on;
+xlim([0.1 0.9]); ylim([0 1]);
+set(gca, 'XDir', 'reverse')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+xlabel('%L Cones', 'FontSize', 24);
+title(['Stimulus Needed for UY across Proportions'], 'FontSize', 26)
+end
+axis square
+legend(fig1Legend, 'Location', 'northwest')
+set(gcf, 'Position', [119   321   661   518]);
+box off
+figure
+plot((rrgValsStim), cellStatsAll{3,1}(2:10, :), '-o'); hold on
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+xlabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+title(['Reconstruction Quantification: 3.5 arcmin'], 'FontSize', 26)
+xlim([0 1])
+set(gcf, 'Position', [119   321   661   518]);
+axis square
+plot(0:0.1:1, 0:0.1:1, '--k')
+legend(fig2Legend, 'NumColumns',2, 'Location', 'northwest')
+figure()
+plot(fliplr([1:colms]), rrgValsStim, '-o')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 22);
+xlabel('Stimulus Number', 'FontSize', 14);
+title('Change in Stimulus Appearance', 'FontSize', 16);
+set(gcf, 'Position', [119   321   661   518]);
+axis square
+figure()
+plot(fliplr([1:colms]), rrgValsStim, '-o')
+ylabel('$\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+xlabel('Stimulus Number', 'FontSize', 24);
+title('Change in Stimulus Appearance', 'FontSize', 26);
+set(gcf, 'Position', [119   321   661   518]);
+axis square
+box off
+box off
+close all
