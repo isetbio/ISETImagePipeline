@@ -66,7 +66,7 @@ prBase.nPixels = 50;
 prBase.trueCenter = round(prBase.nPixels/2);
 
 %% Mosaic parameters
-prBase.fieldSizeMinutes = 90;
+prBase.fieldSizeMinutes = 30;
 prBase.eccXDegs = 2.0;
 prBase.eccYDegs = 0.0;
 prBase.forwardRandSeed = false;
@@ -80,11 +80,11 @@ prBase.addPoissonNoise = false;
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
 %    Currently established quadSeq1 - quadSeq56
-forwardChromList = "chromNorm";%["quadSeq99" "quadSeq100" "quadSeq101" "quadSeq102" "quadSeq103" "quadSeq104" "quadSeq105" "quadSeq106" "quadSeq107" "quadSeq108" "quadSeq109" ]; % Don't forget to run QS34 on 4@0.5
-reconChromList =   "chromNorm";%["quadSeq99" "quadSeq100" "quadSeq101" "quadSeq102" "quadSeq103" "quadSeq104" "quadSeq105" "quadSeq106" "quadSeq107" "quadSeq108" "quadSeq109" ]; % 36, 38, 40, 42, 44
+forwardChromList = "quadSeq62"; %["quadSeq99" "quadSeq100" "quadSeq101" "quadSeq102" "quadSeq103" "quadSeq104" "quadSeq105" "quadSeq106" "quadSeq107" "quadSeq108" "quadSeq109" ]; % Don't forget to run QS34 on 4@0.5
+reconChromList   = "quadSeq62"; %["quadSeq99" "quadSeq100" "quadSeq101" "quadSeq102" "quadSeq103" "quadSeq104" "quadSeq105" "quadSeq106" "quadSeq107" "quadSeq108" "quadSeq109" ]; % 36, 38, 40, 42, 44
 
 % Build new sequence by
-prBase.quads(1).name = 'useQuadSeq';
+prBase.quads(1).name  = 'useQuadSeq';
 prBase.quads(1).value = true;
 
 % If want to apply percentages to the full mosaic instead of a
@@ -131,7 +131,7 @@ if(prBase.quads(1).value)
     end
 end
 
-prBase.quads(6).name = 'overrideQuadSeq';
+prBase.quads(6).name  = 'overrideQuadSeq';
 prBase.quads(6).value = true;
 
 % Add indices of cones to be silenced.
@@ -149,7 +149,7 @@ buildNewRecon = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [60] / 60;
+stimSizeDegsList = [10] / 60;
 
 % RGB values (before gamma correction)
 prBase.stimBgVal = 0.3;% [0.1054 0.1832 0.1189]
@@ -161,8 +161,8 @@ stimBValList = 0.10;%0.1189 ./ [2 4 6 8 10];  %[0];% 0.0 0.0];
 % Allow for offset from the true isoLum values based on variability in
 % staircase procedure where (-) is more red and (+) is more green,
 % (Intervals of 50s? 100s? 1000s?)
-isoLumRG = false;
-colorStepRG = 480; % [-1729 -1280 -880 -480 0 240 480 720 960 1200 1440 1680 1729];
+isoLumRG = true;
+colorStepRG = 240; % [-1729 -1280 -880 -480 0 240 480 720 960 1200 1440 1680 1729];
 
 if (isoLumRG)
     % Load the appropriate display
@@ -257,7 +257,7 @@ deltaCenterList = [prBase.stimCenter - prBase.trueCenter];
 %% Prior parameters
 %
 % conventionalSparsePrior - from the paper, images analyzed on conventional display.
-prBase.sparsePriorStr = 'mono';
+prBase.sparsePriorStr = 'conventional';
 
 %% Reconstruction parameters
 %
@@ -277,9 +277,9 @@ prBase.boundedSearch = false;
 % Use AO in forward rendering? And determine optics pupil size
 prBase.forwardAORender = true;
 prBase.forwardNoLCA = true;
-prBase.reconAORender = true;
-prBase.reconNoLCA = true;
-reconPupilDiamListMM =  [7];
+prBase.reconAORender = false;
+prBase.reconNoLCA = false;
+reconPupilDiamListMM =  [2];
 forwardPupilDiamListMM = [7];
 
 % Define optics.  Subject only matters if we use a database.  Ignored for
@@ -293,7 +293,7 @@ prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Polans2015';
 
 % Residual defocus for forward and recon rendering, of equal sizes
-forwardDefocusDioptersList = [0.0];
+forwardDefocusDioptersList = [0.05];
 reconDefocusDioptersList = [0.0];
 
 %% Set up list conditions

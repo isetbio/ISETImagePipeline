@@ -33,6 +33,7 @@ if (rrf.rerunImages)
     cnv.renderDir = rrf.renderDir;
     cnv.outputDir = rrf.outputDir;
     pr.aoReconDir = rrf.aoReconDir;
+%     pr.annWidthArc = [1; 2; 3];
 end
 
 %% Point at directory with data files for this subproject
@@ -206,8 +207,8 @@ imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 cfvStim = correctForViewing(stimulusImageLinear, rrf.startDisplayName, ...
     rrf.viewingDisplayName, rrf.stimDispScale, pr.aoReconDir, pr.displayGammaBits, ...
     pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
-imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
-imwrite(cfvStim.imageRGBBoost,fullfile(cnv.outputDir,'StimulusDispCorrectedBoost.tiff'),'tiff');
+% imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
+% imwrite(cfvStim.imageRGBBoost,fullfile(cnv.outputDir,'StimulusDispCorrectedBoost.tiff'),'tiff');
 
 
 %% Compute forward retinal image and excitations using ISETBio
@@ -378,7 +379,8 @@ end
 % stimulusSceneRGB1 = gammaCorrection(CalFormatToImage(stimulusScenergb,m,n),forwardConeMosaic.Display);
 % figure; clf; imshow(stimulusSceneRGB1);
 
-% Summary plot of what happened
+
+%% Summary plot of what happened
 for ii = 1:length(multistartStruct.initTypes)
 
     % Handle bounded search for display.  We scale down the stimulus image
@@ -413,6 +415,23 @@ for ii = 1:length(multistartStruct.initTypes)
     reconSceneTemp = sceneSet(reconSceneTemp,'photons',sceneGet(reconSceneTemp,'photons')*reconScaleFactor(ii)/pupilSizeScaleFactor);
     reconSceneTemp = sceneSet(reconSceneTemp, 'fov', cnv.fieldSizeDegs);
     reconImageLinearTemp = reconImageLinearTemp*reconScaleFactor(ii);
+
+
+    % Visualize recon after being corrected for Display
+    reconImageLinear = multistartStruct.reconImages{ii};
+    cfvRecon = correctForViewing(reconImageLinear, rrf.startDisplayName, ...
+        rrf.viewingDisplayName, rrf.reconDispScale, pr.aoReconDir, pr.displayGammaBits, ...
+        pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
+%     imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
+
+
+    % Include portion for scaling of the corrected stim and recon images
+    % based on the max across both, upscaled so the max is reset to 1
+    cfvStim.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]); 
+    cfvRecon.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]); 
+    cfvStim.stimulusRGBScaled{ii} = gammaCorrection(cfvStim.imageRGBNoGamma/cfvStim.scaleFactor(ii), cfvStim.viewingDisplay);
+    cfvRecon.reconScaledRGB{ii} = gammaCorrection(cfvRecon.imageRGBNoGamma/cfvRecon.scaleFactor(ii), cfvRecon.viewingDisplay);
+
 
     % Get forward and reconstruction OI's computed on reconstruction.  Take
     % difference in pupil size into account with reconOI.
@@ -465,7 +484,7 @@ for ii = 1:length(multistartStruct.initTypes)
 
    % Visualize stimulus after being corrected for Display
     theAxes = subplot(3,7,7);
-    imshow(cfvStim.imageRGBBoost);
+    imshow(cfvStim.stimulusRGBScaled{ii});
     title({sprintf('Stim on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvStim.bounds(1,1),cfvStim.bounds(1,2),cfvStim.bounds(1,3)); ...
         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvStim.bounds(2,1),cfvStim.bounds(2,2),cfvStim.bounds(2,3))})
@@ -554,20 +573,12 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 
 
-
-    % Visualize recon after being corrected for Display
-    reconImageLinear = multistartStruct.reconImages{ii};
-    cfvRecon = correctForViewing(reconImageLinear, rrf.startDisplayName, ...
-        rrf.viewingDisplayName, rrf.reconDispScale, pr.aoReconDir, pr.displayGammaBits, ...
-        pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
-%     imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
-
+    % Show corrected recon image 
     theAxes = subplot(3,7,14);
-    imshow(cfvRecon.imageRGBBoost);
+    imshow(cfvRecon.reconScaledRGB{ii});
     title({sprintf('Recon on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(1,1),cfvRecon.bounds(1,2),cfvRecon.bounds(1,3)); ...
         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(2,1),cfvRecon.bounds(2,2),cfvRecon.bounds(2,3))})
-
 
 
     % Contour plot of recon PSF
@@ -904,6 +915,14 @@ for ii = 1:length(multistartStruct.initTypes)
         end
     end
 end
+
+
+
+
+
+% Save the stimulus image after correction and with boosting
+imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
+imwrite(cfvStim.imageRGBBoost,fullfile(cnv.outputDir,'StimulusDispCorrectedBoost.tiff'),'tiff');
 
 % Save best reconstruction image
 imwrite(reconScaledRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
