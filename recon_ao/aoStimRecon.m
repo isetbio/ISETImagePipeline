@@ -921,12 +921,11 @@ end
 
 
 % Save the stimulus image after correction and with boosting
-imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
-imwrite(cfvStim.imageRGBBoost,fullfile(cnv.outputDir,'StimulusDispCorrectedBoost.tiff'),'tiff');
+imwrite(cfvStim.stimulusRGBScaled{ii},fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
 
 % Save best reconstruction image
 imwrite(reconScaledRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
-imwrite(cfvRecon.imageRGB,fullfile(cnv.outputDir,'ReconDispCorrected.tiff'),'tiff');
+imwrite(cfvRecon.reconScaledRGB{ii},fullfile(cnv.outputDir,'ReconDispCorrected.tiff'),'tiff');
 imwrite(cfvRecon.imageRGBBoost,fullfile(cnv.outputDir,'ReconDispCorrectedBoost.tiff'),'tiff');
 
 
