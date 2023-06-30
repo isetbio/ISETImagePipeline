@@ -82,6 +82,26 @@ for i = 1:nRow
     end
 end
 
+%% Scale the basis to normalize variance
+projStd = std(projs, 0, 2);
+normBasis = projBasis ./ projStd;
+projs_norm = normBasis * (imageData' - mu');
+
+% plot the histogram for the coefficients
+nRow = 5; nCol = 5;
+figure();
+nFig = 1;
+for i = 1:nRow
+    for j = 1:nCol
+        subplot(nRow, nCol, nFig);
+        histogram(projs_norm(nFig, :));
+        
+        nFig = nFig + 1;
+        xlim([-8, 8])
+        set(gca, 'yscale', 'log'); box off;
+    end
+end
+
 %% Fit exp distribution on the coefficients
 allProj = projs(:);
 index = randsample(length(allProj), 2.5e4);
