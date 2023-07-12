@@ -1,66 +1,70 @@
-%% Create Retina object
+
+
+%% Use ISETTreeshrew and create forward model for reconstruction
+%
+% Generate a generic cone response object
 retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
     'fovealDegree', 0.1);
 
-% load from file - treeshrew mosaic and PSF object
-threwMosaic.noiseFlag = 'none';
-retina.Mosaic = threwMosaic;
-retina.PSF = threwPSF;
-retina.FovealDegree = 5;
-
-%% Use ISETTreeshrew
-retina = ConeResponse('eccBasedConeDensity', true, 'eccBasedConeQuantal', true, ...
-    'fovealDegree', 0.1);
-
+% Get trew shrew optics and mosaic
 fovDegs = 8;
-
-threwPSF = oiTreeShrewCreate('pupilDiameterMM', 2.0);
-threwMosaic = coneMosaicTreeShrewCreate(...
-    threwPSF.optics.micronsPerDegree, ...
+shrewPSF = oiTreeShrewCreate('pupilDiameterMM', 2.0);
+shrewMosaic = coneMosaicTreeShrewCreate(...
+    shrewPSF.optics.micronsPerDegree, ...
     'fovDegs', fovDegs, ...
     'sConeMinDistanceFactor', 2, ...
     'integrationTime', 0.1);
+shrewMosaic.noiseFlag = 'none';
 
-threwMosaic.noiseFlag = 'none';
-retina.Mosaic = threwMosaic;
-retina.PSF = threwPSF;
+% Write these into the cone response object
+retina.Mosaic = shrewMosaic;
+retina.PSF = shrewPSF;
 retina.FovealDegree = fovDegs;
 
-retina.compute(rand([256, 256, 3]));
-retina.visualizeOI();
-retina.visualizeExcitation();
-
-%% Compute mosaic response
-imageSize = [128, 128, 3];
-image   = imresize(im2double(imread('./input.jpeg')), 0.5);
+%% Read in an imaget to test with
+%
+% Use a standard Matlab image and reduce its size.
+imageSize = [32, 32, 3];
+[X,cmap] = imread('corn.tif');
+theRawImage = ind2rgb(X,cmap);
+image   = imresize(im2double(theRawImage), 0.5);
 patch = sampleImage(image, imageSize(1));
-
-%% Show input image
 patch(patch < 0) = 0;
 patch(patch > 1) = 1;
+
+% Show the test image
 imshow(patch, 'InitialMagnification', 500);
 
-%% Calculate response
-retina.compute(patch);
-retina.visualizeExcitation();
+%% Calculate cone responses to the test image
+[~, ~, linearImage, coneVec] = retina.compute(patch);
 retina.visualizeOI();
+retina.visualizeExcitation();
 
-%% Image reconstruction
-% using small image size so the demo will run fast
-imageSize = [32, 32, 3];
+%% Compute the render matrix for the tree shrew eye
+%
+% The render matrix is the linear matrix that maps between
+% the image in vector form and the vector of mean cone excitations.
+%
+% The way we do this is to generate a set of "training" pairs
+% between image vectors and cone excitation vectors, and then
+% use linear regression to find the matrix that maps between them.
+%
+% The training set needs to be at least as larger as the number
+% of pixels in the image times the number of color channels.
+minNTrain = prod(imageSize);
+nTrain = 1.3*minNTrain;
 
-testImage = rand(imageSize);
-[~, ~, linearImage, coneVec] = retina.compute(testImage);
-
-%% Generate a "training set" for regression
-nTrain = 4e3;
+% Allocate space for training set
 allConeVec   = zeros(nTrain, length(coneVec));
 allLinearImg = zeros(nTrain, length(linearImage(:)));
 
+% Calculate the training set 
+%
+% In practice, we found that white noise images produce better results
+% and are easier to work with (since we can simply generate them on the
+% fly).
 parfor idx = 1:nTrain
-    % In practice, we found that white noise images produce better results
-    % and are easier to work with (since we can simply generate them on the
-    % fly).
+   
     input = rand(imageSize);
     [~, ~, linearImage, coneVec] = retina.compute(input);
     
@@ -73,17 +77,8 @@ regEstimator = RegressionEstimator(allLinearImg, allConeVec);
 renderMatrix = regEstimator.W';
 
 %% Test the render matrix
-image   = imresize(im2double(imread('./input.jpeg')), 0.25);
-patch = sampleImage(image, imageSize(1));
-
-patch(patch < 0) = 0;
-patch(patch > 1) = 1;
-imshow(patch, 'InitialMagnification', 500);
-
-%% Calculation
 [~, ~, linearImage, coneVec] = retina.compute(patch);
 coneVecRender = renderMatrix * linearImage(:);
-
 figure();
 scatter(coneVec, coneVecRender);
 
