@@ -47,7 +47,7 @@ prBase.versEditor = 'small_quads_chr';
 % 
 % 
 % For reference, 2-3 arcmin seems to agree with OI spread. 
-prBase.annWidthArc = [1; 2; 3];
+prBase.annWidthArc = [1; 2];
 
 %% Parameters
 %
@@ -80,8 +80,8 @@ prBase.addPoissonNoise = false;
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
 %    Currently established quadSeq1 - quadSeq56
-forwardChromList = "quadSeq62"; %["quadSeq99" "quadSeq100" "quadSeq101" "quadSeq102" "quadSeq103" "quadSeq104" "quadSeq105" "quadSeq106" "quadSeq107" "quadSeq108" "quadSeq109" ]; % Don't forget to run QS34 on 4@0.5
-reconChromList   = "quadSeq62"; %["quadSeq99" "quadSeq100" "quadSeq101" "quadSeq102" "quadSeq103" "quadSeq104" "quadSeq105" "quadSeq106" "quadSeq107" "quadSeq108" "quadSeq109" ]; % 36, 38, 40, 42, 44
+forwardChromList = ["quadSeq110" "quadSeq111" "quadSeq112" "quadSeq113" "quadSeq114" "quadSeq115" "quadSeq116" "quadSeq117" "quadSeq118"]; % Don't forget to run QS34 on 4@0.5
+reconChromList   = ["quadSeq110" "quadSeq111" "quadSeq112" "quadSeq113" "quadSeq114" "quadSeq115" "quadSeq116" "quadSeq117" "quadSeq118"]; % 36, 38, 40, 42, 44
 
 % Build new sequence by
 prBase.quads(1).name  = 'useQuadSeq';
@@ -105,7 +105,7 @@ if(prBase.quads(1).value)
     prBase.quads(2).percentL = [0.27];
     prBase.quads(3).percentL = [0.53];
     prBase.quads(4).percentL = [0.71];
-    prBase.quads(5).percentL = [0.70];
+    prBase.quads(5).percentL = [0.50];
 
     % Enter desired percent as decimal of S cones per region across
     % quadrants. Follows same form as above
@@ -131,7 +131,7 @@ if(prBase.quads(1).value)
     end
 end
 
-prBase.quads(6).name  = 'overrideQuadSeq';
+prBase.quads(6).name  = 'overrideQuadSeq'; % Should change this to customQuadSeq
 prBase.quads(6).value = true;
 
 % Add indices of cones to be silenced.
@@ -162,7 +162,7 @@ stimBValList = 0.10;%0.1189 ./ [2 4 6 8 10];  %[0];% 0.0 0.0];
 % staircase procedure where (-) is more red and (+) is more green,
 % (Intervals of 50s? 100s? 1000s?)
 isoLumRG = true;
-colorStepRG = 240; % [-1729 -1280 -880 -480 0 240 480 720 960 1200 1440 1680 1729];
+colorStepRG = [-1729 -1280 -880 -480 0 240 480 720 960 1200 1440 1680 1729];
 
 if (isoLumRG)
     % Load the appropriate display

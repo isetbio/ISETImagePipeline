@@ -44,7 +44,7 @@ rrf.reconDispScale = 1;
 % Each subdirectory should correspond to a different stimulus size
 rrf.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 rrf.versEditor = 'small_quads_chr';
-rrf.wrapDir = fullfile(rrf.aoReconDir , rrf.versEditor, '/StimSize_v6/Rerun');
+rrf.wrapDir = fullfile(rrf.aoReconDir , rrf.versEditor, '/StimSize_v7/Rerun');
 rrf.wrapDirInfo = dir(rrf.wrapDir);
 
 
