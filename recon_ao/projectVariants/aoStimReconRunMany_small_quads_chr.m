@@ -80,8 +80,8 @@ prBase.addPoissonNoise = false;
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
 %    Currently established quadSeq1 - quadSeq56
-forwardChromList = ["quadSeq110" "quadSeq111" "quadSeq112" "quadSeq113" "quadSeq114" "quadSeq115" "quadSeq116" "quadSeq117" "quadSeq118"]; % Don't forget to run QS34 on 4@0.5
-reconChromList   = ["quadSeq110" "quadSeq111" "quadSeq112" "quadSeq113" "quadSeq114" "quadSeq115" "quadSeq116" "quadSeq117" "quadSeq118"]; % 36, 38, 40, 42, 44
+forwardChromList = ["quadSeq19" "quadSeq120" "quadSeq121" "quadSeq122" "quadSeq123" "quadSeq124" "quadSeq125" "quadSeq126" "quadSeq127"]; % Don't forget to run QS34 on 4@0.5
+reconChromList   = ["quadSeq19" "quadSeq120" "quadSeq121" "quadSeq122" "quadSeq123" "quadSeq124" "quadSeq125" "quadSeq126" "quadSeq127"]; % 36, 38, 40, 42, 44
 
 % Build new sequence by
 prBase.quads(1).name  = 'useQuadSeq';
@@ -149,7 +149,7 @@ buildNewRecon = false;
 %% Stimulus parameters.
 %
 % Size list parameter in degs, expressed as min/60 (because 60 min/deg)
-stimSizeDegsList = [10] / 60;
+stimSizeDegsList = [3.5] / 60;
 
 % RGB values (before gamma correction)
 prBase.stimBgVal = 0.3;% [0.1054 0.1832 0.1189]
