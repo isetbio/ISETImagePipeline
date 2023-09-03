@@ -23,7 +23,7 @@ rrf = struct;
 % statPlots: Create quantification plots for presentations
 rrf.rerunImages = true;
 rrf.montage = true;
-rrf.dispStim = false;
+rrf.dispStim = true;
 rrf.statPlots = true;
 
 % Select monitor display arrangements for correctForViewing.m procedure 
@@ -54,7 +54,7 @@ rrf.wrapDirInfo = dir(rrf.wrapDir);
 if contains(rrf.aoReconDir, 'megalodon')
     firstEntry = 3;
 else
-    firstEntry = 4;
+    firstEntry = 3;
 end
 
 
@@ -66,15 +66,15 @@ for i = firstEntry:length(rrf.wrapDirInfo)
         if (rrf.montage)
 
             % Establish montage dimensions and whether or not you would like to
-            % disregard the first and final mosaics as extrema (i.e. have a 100%
+            % disregard the first and final mosaics as extrema (i.e. if have a 100%
             % and 0% L mosaic but don't want to include due to unrealistic nature)
             numStim = 13;
-            numMosaics = 11;
-            trimExtrema = true;
+            numMosaics = 9;
+            trimExtrema = false;
 
             % Input sizes for stimuli used and progression of L proportionality
             % across mosaics tested.
-            sizes = [3.5 10.0];
+            sizes = [3.5];
             mosaicSpread =  fliplr(0.1:0.1:0.9);
 
             % Impose some pixel limitation for the image zoom on the montage when
@@ -126,13 +126,13 @@ for i = firstEntry:length(rrf.wrapDirInfo)
 
                     % Pull associated Stat information and also place in a
                     % corresponding cell
-                    cellStatsRecon{counter} = rgbStatsRecon;
+                    cellStatsRecon{counter} = cfvRecon.rgbStats;
 
                     % Repeat the above procedure for the stimulus when the
                     % counter value falls inside the StimGrab list
                     if ismember(counter, stimGrab)
                         cellStim{1, counter/(numMosaics)} = cfvStim.stimulusRGBScaled{ii}(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
-                        cellStatsStim{1, counter/(numMosaics)} = rgbStatsStim;
+                        cellStatsStim{1, counter/(numMosaics)} = cfvStim.rgbStats;
                     end
 
                     % Add to the counter
