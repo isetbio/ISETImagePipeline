@@ -17,7 +17,8 @@
 % this option there is also example code that converts a given r/(r+g)
 % value to equivalent wavelength and vice-versa.  The conversion of equiv
 % wavelength to an rgb triplet is not unique, although you could add code
-% to do it if you specified b.
+% to do it if you specified two of the three values and determined the
+% third.
 %
 % Note that r, g and b here are linear r and g values, not gamma corrected
 % R, G and B values.
@@ -67,7 +68,7 @@ highIndex = find(wls == highWl);
 if (COMPUTEFORRGB)
     % Make a list of linear rgb values to compute for.  You can have as
     % many columns as you like
-    rgbValues = [ [0.5 0.5 0.2]' [1 0 0.2]' [0 1 0.2]' [0.5 0.5 0]' [1 0 0]' [0 1 0]'];
+    rgbValues = [ [0.8 0.37 0.2]' [0.5 0.5 0.2]' [1 0 0.2]' [0 1 0.2]' [0.5 0.5 0]' [1 0 0]' [0 1 0]'];
     nValues = size(rgbValues,2);
 
     for rr = 1:nValues
