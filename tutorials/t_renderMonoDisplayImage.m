@@ -33,10 +33,16 @@ overwriteDisplayGamma = true;
 reconDisplayScaleFactor = 3;
 
 % Set image size and color
+startWithLinearRGB = true;
+
 nPixels = 128;
 maxVal = 0.8;
 bgVal = 0.2;
-theRGB = maxVal*[0 1 0] + bgVal*[1 1 1];
+if (startWithLinearRGB)
+    theInputLinearRGB = maxVal*[0 1 0] + bgVal*[1 1 1];
+else
+    theInputGammaCorrectedRGB = maxVal*[0 1 0] + bgVal*[1 1 1];
+end
 
 % Set up display specific fields
 switch (forwardDisplayName)
@@ -77,11 +83,17 @@ reconDisplay = displaySet(reconDisplay,'wave',wls);
 % Scale recon display primaries to try to keep things in range
 reconDisplay = displaySet(reconDisplay,'spd primaries',displayGet(reconDisplay,'spd primaries')*reconDisplayScaleFactor);
 
+% If we started with linear, gamma correct so we're all on the same
+% page
+if (startWithLinearRGB)
+    theInputGammaCorrectedRGB = gammaCorrection(theInputLinear,forwardDisplay);
+end
+
 % Create an ISETBio scene.  Rescale input image
 % according to pr.inputImageScaleFactor.
 theImageRGB = ones(nPixels,nPixels,3);
 for cc = 1:3
-    theImageRGB(:,:,cc) = theRGB(cc)*theImageRGB(:,:,cc);
+    theImageRGB(:,:,cc) = theInputGammaCorrectedRGB(cc)*theImageRGB(:,:,cc);
 end
 meanLuminanceCdPerM2 = [];
 [theForwardScene, ~, theForwardImagergb] = sceneFromFile(theImageRGB, 'rgb', ...
