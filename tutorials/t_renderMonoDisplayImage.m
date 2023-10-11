@@ -37,7 +37,7 @@ startWithLinearRGB = true;
 
 nPixels = 128;
 maxVal = 0.8;
-bgVal = 0.2;
+bgVal = 0.0;
 if (startWithLinearRGB)
     theInputLinearRGB = maxVal*[0 1 0] + bgVal*[1 1 1];
 else
@@ -86,7 +86,7 @@ reconDisplay = displaySet(reconDisplay,'spd primaries',displayGet(reconDisplay,'
 % If we started with linear, gamma correct so we're all on the same
 % page
 if (startWithLinearRGB)
-    theInputGammaCorrectedRGB = gammaCorrection(theInputLinear,forwardDisplay);
+    theInputGammaCorrectedRGB = gammaCorrection(theInputLinearRGB,forwardDisplay);
 end
 
 % Create an ISETBio scene.  Rescale input image
@@ -100,7 +100,14 @@ meanLuminanceCdPerM2 = [];
     meanLuminanceCdPerM2, forwardDisplay);
 theForwardImageRGB = gammaCorrection(theForwardImagergb, forwardDisplay);
 figure; clf; imshow(theForwardImageRGB);
-
+minr = min(min(theForwardImagergb(:,:,1)));
+ming = min(min(theForwardImagergb(:,:,2)));
+minb = min(min(theForwardImagergb(:,:,3)));
+maxr = max(max(theForwardImagergb(:,:,1)));
+maxg = max(max(theForwardImagergb(:,:,2)));
+maxb = max(max(theForwardImagergb(:,:,3)));
+fprintf('Min input mono linear: %0.2f, %0.2f, %0.2f\n',minr,ming,minb);
+fprintf('Max input mono linear: %0.2f, %0.2f, %0.2f\n',maxr,maxg,maxb);
 
 % [theForwardScene, ~, theForwardImageLinear] = sceneFromFile(theForwardImageRGB, 'rgb', ...
 %     meanLuminanceCdPerM2, forwardConeMosaic.Display);
@@ -108,7 +115,7 @@ figure; clf; imshow(theForwardImageRGB);
 
 
 % Get information we need to render scenes from their spectra through
-% the recin display.
+% the recon display.
 theXYZStruct = load('T_xyz1931');
 T_XYZ = SplineCmf(theXYZStruct.S_xyz1931,683*theXYZStruct.T_xyz1931,wls);
 Mforward_rgbToXYZ = T_XYZ*displayGet(forwardDisplay,'spd primaries')*(wls(2)-wls(1));
@@ -123,18 +130,41 @@ theForwardImageXYZCalFormat = Mforward_rgbToXYZ*theForwardImagergbCalFormat;
 theReconImagergbCalFormat = Mrecon_XYZTorgb*theForwardImageXYZCalFormat;
 theReconImagergb = CalFormatToImage(theReconImagergbCalFormat,m,n);
 
-% Truncate
+% Check chromaticities
+theReconImageXYZChkCalFormat = Mrecon_rgbToXYZ*theReconImagergbCalFormat;
+theForwardImagexyYCalFormat = XYZToxyY(theForwardImageXYZCalFormat);
+theReconImagexyYChkCalFormat = XYZToxyY(theReconImageXYZChkCalFormat);
+theForwardxyY = XYZToxyY(Mforward_rgbToXYZ);
+theReconxyY = XYZToxyY(Mrecon_rgbToXYZ);
+T_xyY = XYZToxyY(T_XYZ);
+chromFigure = figure; clf; hold on
+plot(theForwardxyY(1,:),theForwardxyY(2,:),'rs','MarkerFaceColor','r','MarkerSize',12);
+plot(theReconxyY(1,:),theReconxyY(2,:),'gs','MarkerFaceColor','g','MarkerSize',12);
+plot(theForwardImagexyYCalFormat(1,:),theForwardImagexyYCalFormat(2,:),'ro','MarkerFaceColor','r','MarkerSize',8);
+plot(theReconImagexyYChkCalFormat(1,:),theReconImagexyYChkCalFormat(2,:),'go','MarkerFaceColor','g','MarkerSize',6);
+plot(T_xyY(1,:),T_xyY(2,:),'k','LineWidth',2);
+xlim([0 1]); ylim([0 1]);
+title('Chromaticities');
+drawnow;
+
+% Truncate if needed
 minr = min(min(theReconImagergb(:,:,1)));
 ming = min(min(theReconImagergb(:,:,2)));
 minb = min(min(theReconImagergb(:,:,3)));
 maxr = max(max(theReconImagergb(:,:,1)));
 maxg = max(max(theReconImagergb(:,:,2)));
 maxb = max(max(theReconImagergb(:,:,3)));
-fprintf('Min: %0.2f, %0.2f, %0.2f\n',minr,ming,minb);
-fprintf('Max: %0.2f, %0.2f, %0.2f\n',maxr,maxg,maxb);
+fprintf('Min conv display linear: %0.2f, %0.2f, %0.2f\n',minr,ming,minb);
+fprintf('Max conv display linear: %0.2f, %0.2f, %0.2f\n',maxr,maxg,maxb);
 theReconImagergbTruncated = theReconImagergb;
 theReconImagergbTruncated(theReconImagergbTruncated < 0) = 0;
 theReconImagergbTruncated(theReconImagergbTruncated > 1) = 1;
+
+theReconImagergbTruncatedCalFormat = ImageToCalFormat(theReconImagergbTruncated);
+theReconImageXYZTruncatedCalFormat = Mrecon_rgbToXYZ*theReconImagergbTruncatedCalFormat;
+theReconImagexyYTruncatedCalFormat = XYZToxyY(theReconImageXYZTruncatedCalFormat);
+figure(chromFigure);
+plot(theReconImagexyYTruncatedCalFormat(1,:),theReconImagexyYTruncatedCalFormat(2,:),'bo','MarkerFaceColor','b','MarkerSize',4);
 
 theReconImageTruncatedRGB = gammaCorrection(theReconImagergbTruncated, reconDisplay);
 figure; clf; imshow(theReconImageTruncatedRGB);
