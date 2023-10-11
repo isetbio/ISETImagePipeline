@@ -17,6 +17,8 @@
 
 % History:
 %   03/26/2023  dhb  Wrote it from various pieces we already had.
+%   10/11/2023  dhb  More diagnostics, and make linear vs gamma corrected
+%                    more explict.
 
 % Clear
 clear; close all;
