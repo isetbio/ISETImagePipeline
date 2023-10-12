@@ -2,12 +2,20 @@ function [outputImageRGB,outputImagergb] = RGBRenderAcrossDisplays(inputImageRGB
 % Correct image from one display for viewing on another
 %
 % Synopsis:
-%    [outputImageRGB,outputImagergb] = rgb2aoDisplay(inputImageRGB, startDisplay, viewingDisplay)
+%    [outputImageRGB,outputImagergb] = RGBRenderAcrossDisplays(inputImageRGB, startDisplay, viewingDisplay)
 %
 % Description:
-%    Input a gamma corrected RGG image with respect to passed startDisplay.
-%    Generate a displayed image as close to metameric as possible to 
+%    Input a gamma corrected RGB image with respect to passed startDisplay.
+%    Generate an RGB image as close to metameric as possible to 
 %    for the passed viewingDisplay.
+%
+%    Negative linear rgb values in the output image are truncated to 0.
+%    The linear output image is not scaled, so may contain values greater
+%    than 1.  The gamma corrected output image is truncated into range 0 to
+%    1 before gamma correction.
+%
+%    You can force a scaling to max on the linear output image prior to
+%    gamma correction by setting scaleToMax key/value pair to true.
 %
 %    Typically we'd be doing this with our mono display as start display
 %    and our conventional display as the viewing display.
@@ -16,10 +24,15 @@ function [outputImageRGB,outputImagergb] = RGBRenderAcrossDisplays(inputImageRGB
 %    here, and also verifies that this routine returns the same answer as
 %    the unpacked calculation.
 %
+%    You can get the rendering in sRGB with a key/value pair, in which case
+%    the viewingDisplay can be passed as empty.  The sRGB gamma corrected
+%    output is converted to double and divided by 255, so it is in range
+%    0-1.
+%
 % Inputs:
 %    inputImageRGB  - Gamma corrected input image for startDisplay
 %    startDisplay   - ISETBio display structure corresponding to the input image 
-%    viewingDispla  - ISETBio display structure corresponding to the output image
+%    viewingDisplay - ISETBio display structure corresponding to the output image
 %
 % Outputs:
 %    outputImageRGB - Gamma corrected output image
@@ -33,6 +46,9 @@ function [outputImageRGB,outputImagergb] = RGBRenderAcrossDisplays(inputImageRGB
 %    'wls'                       - Spectral wavelength sampling, column
 %                                  vector.  Default (400:10:700)'
 %    'verbose'                   - Print out diagnostic info. Default false.
+%    'SRGB'                      - Render in sRGB?  Default false.
+%    'scaleToMax'                - Scale linear rgb to its max prior to
+%                                  gamma correction.
 %
 % See also: t_renderMonoDisplayImage, aoStimRecon, aoStimReconRunMany
 
@@ -50,6 +66,8 @@ p.addParameter('linearInput', false, @islogical);
 p.addParameter('viewingDisplayScaleFactor',1,@isnumeric);
 p.addParameter('wls',(400:10:700)',@isnumeric);
 p.addParameter('verbose',false,@islogical);
+p.addParameter('SRGB',false,@islogical);
+p.addParameter('scaleToMax',false,@islogical)
 parse(p, varargin{:});
 
 % Convenience assumption that all displays operate on the same wave structure
@@ -63,7 +81,9 @@ if (p.Results.linearInput)
 end
 
 % Scale recon display primaries to try to keep things in range
-viewingDisplay = displaySet(viewingDisplay,'spd primaries',displayGet(viewingDisplay,'spd primaries')*p.Results.viewingDisplayScaleFactor);
+if (~p.Results.SRGB)
+    viewingDisplay = displaySet(viewingDisplay,'spd primaries',displayGet(viewingDisplay,'spd primaries')*p.Results.viewingDisplayScaleFactor);
+end
 
 meanLuminanceCdPerM2 = [];
 [~, ~, startImageLinear] = sceneFromFile(inputImageRGB, 'rgb', ...
@@ -85,13 +105,19 @@ theXYZStruct = load('T_xyz1931');
 T_XYZ = SplineCmf(theXYZStruct.S_xyz1931,683*theXYZStruct.T_xyz1931,wls);
 Mstart_rgbToXYZ = T_XYZ*displayGet(startDisplay,'spd primaries')*(p.Results.wls(2)-p.Results.wls(1));
 Mstart_XYZTorgb = inv(Mstart_rgbToXYZ);
-Mviewing_rgbToXYZ = T_XYZ*displayGet(viewingDisplay,'spd primaries')*(p.Results.wls(2)-p.Results.wls(1));
-Mviewing_XYZTorgb = inv(Mviewing_rgbToXYZ);
+if (~p.Results.SRGB)
+    Mviewing_rgbToXYZ = T_XYZ*displayGet(viewingDisplay,'spd primaries')*(p.Results.wls(2)-p.Results.wls(1));
+    Mviewing_XYZTorgb = inv(Mviewing_rgbToXYZ);
+end
 
 % Render the scene from the start display on the viewing display, try to match XYZ.
-[thestartImagergbCalFormat,m,n] = ImageToCalFormat(startImageLinear);
-thestartImageXYZCalFormat = Mstart_rgbToXYZ*thestartImagergbCalFormat;
-theViewingImagergbCalFormat = Mviewing_XYZTorgb*thestartImageXYZCalFormat;
+[theStartImagergbCalFormat,m,n] = ImageToCalFormat(startImageLinear);
+theStartImageXYZCalFormat = Mstart_rgbToXYZ*theStartImagergbCalFormat;
+if (p.Results.SRGB)
+    theViewingImagergbCalFormat = XYZToSRGBPrimary(theStartImageXYZCalFormat);
+else
+    theViewingImagergbCalFormat = Mviewing_XYZTorgb*theStartImageXYZCalFormat;
+end
 theViewingImagergb = CalFormatToImage(theViewingImagergbCalFormat,m,n);
 if (p.Results.verbose)
     minr = min(min(theViewingImagergb(:,:,1)));
@@ -117,7 +143,18 @@ else
     outputImagergb = theViewingImagergb;
 end
 
-% Gamma correct output 
-outputImageRGB = gammaCorrection(outputImagergb, viewingDisplay);
+% Scale to max if specified
+if (p.Results.scaleToMax)
+    outputImagergb = outputImageRGB/max(outputImagergb(:));
+end
+
+% Truncate prior to gamma correction
+outputImagergbTemp = outputImagergb;
+outputImagergbTemp(outputImagergbTemp > 1) = 1;
+if (p.Results.SRGB)
+    outputImageRGB  = double(SRGBGammaCorrect(outputImagergbTemp,0))/255;
+else
+    outputImageRGB = gammaCorrection(outputImagergbTemp, viewingDisplay);
+end
 
 end

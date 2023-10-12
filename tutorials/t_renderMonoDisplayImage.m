@@ -10,15 +10,28 @@
 %   XYZ, and then finding settings on conventional monitor that
 %   produce that XYZ.
 %
-%   Only approximate, because many images on the monochromatic monitor
+%   Only approximate, because some images on the monochromatic monitor
 %   are outside the gamut of the conventional monitor.  Still, probably
 %   more accurate than just looking at the RGB values for the monochromatic
-%   monitor as a directly viewed image.
+%   monitor as a directly viewed image.  The plots illustrate the
+%   chromaticiites of what happend.
+%
+%   Also computes the equivalent wavelength of the stimuli.
+%
+%   Some of the calculations are done here, but this illustrates the use of
+%   functions RGBRenderAcrossDisplays and RGBToEquivWavelength, which are
+%   where the work would be done in applications of these ideas.
+%
+%   Note that some thought is needed about how to scale the images for
+%   display.  Here a common scaling is applied to all of the images within
+%   each monitor type.
 
 % History:
-%   03/26/2023  dhb  Wrote it fredit Computeom various pieces we already had.
+%   03/26/2023  dhb  Wrote it from various pieces we already had.
 %   10/11/2023  dhb  More diagnostics, and make linear vs gamma corrected
 %                    more explict.
+%               dhb  Add equivalent wavelength calc.
+%   10/12/2023  dhb  Clean up.
 
 % Clear
 clear; close all;
@@ -33,12 +46,14 @@ displayGammaBits = 12;
 displayGammaGamma = 2;
 overwriteDisplayGamma = true;
 reconDisplayScaleFactor = 1;
+
+% Render in sRGB (true) or with respect to ISETBio viewing display (false)
 SRGB = true;
 
 % Set image size
 nPixels = 128;
 
-% Set a list of linear RGB
+% Set a list of linear RGB to render as uniform swatches
 startWithLinearRGB = true;
 inputLinearrgbValues = ...
    [0.1268    0.0971    0.0739   (0.0739 + 0.0536)/2  0.0536   0.0335    0.0255    0.0184    0.0123    0.0077    0.0040    0.0016    0.0001    0.0001 ;
@@ -127,13 +142,16 @@ for iii = 1:size(inputLinearrgbValues,2)
     maxgForward(iii) = max(max(theForwardImagergb{iii}(:,:,2)));
     maxbForward(iii) = max(max(theForwardImagergb{iii}(:,:,3)));
     maxForward(iii) = max(theForwardImagergb{iii}(:));
-    fprintf('Min input mono linear: %0.4f, %0.4f, %0.4f\n',minrForward(iii),mingForward(iii),minbForward(iii));
-    fprintf('Max input mono linear: %0.4f, %0.4f, %0.4f\n',maxrForward(iii),maxgForward(iii),maxbForward(iii));
+    if (minrForward(iii) ~= maxrForward(iii) | mingForward(iii) ~= maxgForward(iii) | minbForward(iii) ~= maxbForward(iii))
+        error('Image not spatially uniform as expected');
+    end
+    fprintf('Input mono linear rgb: %0.4f, %0.4f, %0.4f\n',minrForward(iii),mingForward(iii),minbForward(iii));
    
     % Render the scene from the forward display on the recon display, to try to
     % match XYZ.
     [theForwardImagergbCalFormat,m,n] = ImageToCalFormat(theForwardImagergb{iii});
     theForwardImageXYZCalFormat = Mforward_rgbToXYZ*theForwardImagergbCalFormat;
+    fprintf('Input stimulus luminance: %0.2f cd/m2\n',theForwardImageXYZCalFormat(2,1));
 
     % Either use SRGB or the recon display, as specified
     if (SRGB)
@@ -143,18 +161,15 @@ for iii = 1:size(inputLinearrgbValues,2)
     end
     theReconImagergb{iii} = CalFormatToImage(theReconImagergbCalFormat,m,n);
 
-    % Check/plot chromaticities
-    theReconImageXYZChkCalFormat = Mrecon_rgbToXYZ*theReconImagergbCalFormat;
+    % Plot chromaticities
     theForwardImagexyYCalFormat = XYZToxyY(theForwardImageXYZCalFormat);
-    theReconImagexyYChkCalFormat = XYZToxyY(theReconImageXYZChkCalFormat);
     theForwardxyY = XYZToxyY(Mforward_rgbToXYZ);
     theReconxyY = XYZToxyY(Mrecon_rgbToXYZ);
     T_xyY = XYZToxyY(T_XYZ);
     subplot(1,3,3); hold on
     plot(theForwardxyY(1,:),theForwardxyY(2,:),'rs','MarkerFaceColor','r','MarkerSize',12);
     plot(theReconxyY(1,:),theReconxyY(2,:),'gs','MarkerFaceColor','g','MarkerSize',12);
-    plot(theForwardImagexyYCalFormat(1,:),theForwardImagexyYCalFormat(2,:),'ro','MarkerFaceColor','r','MarkerSize',8);
-    plot(theReconImagexyYChkCalFormat(1,:),theReconImagexyYChkCalFormat(2,:),'go','MarkerFaceColor','g','MarkerSize',6);
+    plot(theForwardImagexyYCalFormat(1,:),theForwardImagexyYCalFormat(2,:),'go','MarkerFaceColor','g','MarkerSize',12);
     plot(T_xyY(1,:),T_xyY(2,:),'k','LineWidth',2);
     xlim([0 1]); ylim([0 1]);
 
@@ -166,12 +181,15 @@ for iii = 1:size(inputLinearrgbValues,2)
     maxgRecon(iii) = max(max(theReconImagergb{iii}(:,:,2)));
     maxbRecon(iii) = max(max(theReconImagergb{iii}(:,:,3)));
     maxRecon(iii) = max(theReconImagergb{iii}(:));
-    fprintf('Min conventional display linear: %0.4f, %0.4f, %0.4f\n',minrRecon(iii),mingRecon(iii),minbRecon(iii));
-    fprintf('Max conventional display linear: %0.4f, %0.4f, %0.4f\n',maxrRecon(iii),maxgRecon(iii),maxbRecon(iii));
+    if (minrRecon(iii) ~= maxrRecon(iii) | mingRecon(iii) ~= maxgRecon(iii) | minbRecon(iii) ~= maxbRecon(iii))
+        error('Image not spatially uniform as expected');
+    end
+    fprintf('Conventional display rgb linear: %0.4f, %0.4f, %0.4f\n',minrRecon(iii),mingRecon(iii),minbRecon(iii));
     theReconImagergbTruncated{iii} = theReconImagergb{iii};
     theReconImagergbTruncated{iii}(theReconImagergbTruncated{iii} < 0) = 0;
-    theReconImageTruncatedRGBTemp = gammaCorrection(theReconImagergbTruncated{iii}, reconDisplay);
 
+    % Convert truncated linear rgb image back to XYZ so we can look in
+    % chromaticity coordinates, and add to plot
     theReconImagergbTruncatedCalFormat{iii} = ImageToCalFormat(theReconImagergbTruncated{iii});
     if (SRGB)
         theReconImageXYZTruncatedCalFormat = SRGBPrimaryToXYZ(theReconImagergbTruncatedCalFormat{iii});
@@ -180,17 +198,30 @@ for iii = 1:size(inputLinearrgbValues,2)
     end
     theReconImagexyYTruncatedCalFormat = XYZToxyY(theReconImageXYZTruncatedCalFormat);
     subplot(1,3,3);
-    plot(theReconImagexyYTruncatedCalFormat(1,:),theReconImagexyYTruncatedCalFormat(2,:),'bo','MarkerFaceColor','b','MarkerSize',4);
+    plot(theReconImagexyYTruncatedCalFormat(1,:),theReconImagexyYTruncatedCalFormat(2,:),'bo','MarkerFaceColor','b','MarkerSize',12);
 
     % Do it with our function.
     %
     % Note that we've incorporated the viewingDisplayScaleFactor into the
     % reconDisplay object already, so when we call the function we set the
     % factor to one.
-    [outputImageRGBFromFunction,outputImagergbFromFunction] = rgb2aoDisplay(theImageRGB, forwardDisplay, reconDisplay, ...
-        'viewingDisplayScaleFactor',1,'linearInput',false,'wls',wls,'verbose',true);
-    if (max(abs(theReconImageTruncatedRGBTemp(:)-outputImageRGBFromFunction(:))) > 1e-6)
-        %error('Not recreating same output image through our function');
+    if (~SRGB)
+        % Note that the sRGB RGB image comes back as a double in the range
+        % [0-1].  Below we leave it as a uint8 in range [0-255].  Also note
+        % that the scaling of the rgb image is not necessarily in a good
+        % range here.  Below we illustrate how to apply a common scaling
+        % prior to gamma correction.
+        [outputImageRGBFromFunction,outputImagergbFromFunction] = RGBRenderAcrossDisplays(theImageRGB, forwardDisplay, reconDisplay, ...
+            'viewingDisplayScaleFactor',1,'linearInput',false,'wls',wls,'verbose',true,'scaleToMax',false,'SRGB',SRGB);
+    else
+        % Same comment on scaling applies as for sRGB branch above.
+        [outputImageRGBFromFunction,outputImagergbFromFunction] = RGBRenderAcrossDisplays(theImageRGB, forwardDisplay, [], ...
+            'viewingDisplayScaleFactor',1,'linearInput',false,'wls',wls,'verbose',true,'scaleToMax',false,'SRGB',SRGB);
+    end
+
+    % Reality check.
+    if (max(abs(theReconImagergbTruncated{iii}(:)-outputImagergbFromFunction(:))) > 1e-6)
+        error('Not recreating same linear rgb output image through our function');
     end
 
     % Get the equivalent wavelength with our function.  Picking off the
@@ -198,9 +229,18 @@ for iii = 1:size(inputLinearrgbValues,2)
     % back.
     theImageForEquivRGB = zeros(1,1,3);
     theImageForEquivRGB(1,1,:) = theInputGammaCorrectedRGB';
-    [~,eqWavelengthCal]= rgb2EquivWavelength(theImageForEquivRGB,forwardDisplay,'wls',wls);
+    [~,eqWavelengthCal]= RGBToEquivWavelength(theImageForEquivRGB,forwardDisplay,'wls',wls);
 
     % Add to chromaticity plot.
+    %
+    % This plot shows:
+    %   open red squares:   gamut of forward monitor
+    %   open green squares: gamut of recon monitor (sRGB gamut not shown)
+    %   black cross:        EEW chromaticity
+    %   cyan cross:         Equiv wavelength chromaticity (hard to see)
+    %   black line:         Connects EEW and equiv wl points
+    %   green circle:       original image chromacitity
+    %   blue circle:        Rendered image chromaticity (might look black)
     index = find(wls == eqWavelengthCal);
     subplot(1,3,3);
     eewxy = [0.33 0.33]';
@@ -236,13 +276,12 @@ for iii = 1:size(inputLinearrgbValues,2)
     if (SRGB)
         theReconImageTruncatedRGB = SRGBGammaCorrect(theReconImagergbTruncated{iii}/maxReconAll,0);
         imshow(uint8(theReconImageTruncatedRGB));
-        imwrite(uint8(theReconImageTruncatedRGB),fullfile(outputDir,sprintf('Stimulus%d.tiff',iii)),'tiff');
+        imwrite(uint8(theReconImageTruncatedRGB),fullfile(outputDir,sprintf('Stimulus%d_SRGB.tiff',iii)),'tiff');
     else
         theReconImageTruncatedRGB = gammaCorrection(theReconImagergbTruncated{iii}/maxReconAll, reconDisplay);
         imshow(theReconImageTruncatedRGB);
-        imwrite(uint8(theReconImageTruncatedRGB),fullfile(outputDir,sprintf('Stimulus%d.tiff',iii)),'tiff');
+        imwrite(uint8(theReconImageTruncatedRGB),fullfile(outputDir,sprintf('Stimulus%d_ConvMonitor.tiff',iii)),'tiff');
     end
     title({ 'Render on Recon' ; sprintf('Stimulus %d',iii) ; sprintf('rgb: %0.4f %0.4f %0.4f', ...
         minrRecon(iii)/maxReconAll,mingRecon(iii)/maxReconAll,minbRecon(iii)/maxReconAll) });
-  
 end

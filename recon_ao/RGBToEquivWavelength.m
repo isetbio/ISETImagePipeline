@@ -1,8 +1,8 @@
-function [equivWavelength,equivWavelengthCal] = rgb2EquivWavelength(inputImageRGB, theDisplay, varargin)
+function [equivWavelength,equivWavelengthCal] = RGBToEquivWavelength(inputImageRGB, theDisplay, varargin)
 % Convert image RGB values to equivalent wavelength
 %
 % Synopsis:
-%    [equivWavelength] = rgb2EquivWavelength(inputImageRGB, theDisplay)
+%    [equivWavelength] = RGB2EquivWavelength(inputImageRGB, theDisplay)
 %
 % Description:
 %    Input a gamma corrected RGB image, with respect to passed display.
