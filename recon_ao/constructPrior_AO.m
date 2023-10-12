@@ -105,7 +105,21 @@ monoDisplay.gamma = gammaOutput(:, [1 1 1]);
 % Generate linear images in monochromatic display space
 imageDataMono = zeros(size(imageData));
 parfor idx = 1:size(imageData, 1)
-    inputImage = reshape(imageData(idx, :), imageSize);    
+    inputImage = reshape(imageData(idx, :), imageSize);
+
+    % 2023-10-12, DHB: Need to update this call to RGBRenderAcrossDisplays,
+    % paying careful attention as to whether we are passing and returning
+    % RGB (gamma corrected) images, or rgb (linear) images.  The new
+    % RGBRenderAcrossDisplays routine will take either in and returns both,
+    % but you need to be very careful about the scaling so that the gamma
+    % corrected return is not truncated.  Not clear this was happening
+    % previously. I think the right logic is probably to collect up the
+    % full set of linear images, then find scaling that brings all of these
+    % into range, apply that scaling, and then gamma correct them all.
+    %
+    % There is another call to rgb2aoDisplay below which also needs
+    % updating in a similar vein.
+    error('Need to update rgb2aoDisplay.  See comment above this line.')
     imageMono = rgb2aoDisplay(inputImage, crtDisplay, monoDisplay);
     imageDataMono(idx, :) = imageMono(:);
 end
