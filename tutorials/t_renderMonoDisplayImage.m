@@ -54,6 +54,7 @@ SRGB = true;
 nPixels = 128;
 
 % Set a list of linear RGB to render as uniform swatches
+useEquilumConstruct = true;
 startWithLinearRGB = true;
 inputLinearrgbValues = ...
    [0.1268    0.0971    0.0739   (0.0739 + 0.0536)/2  0.0536   0.0335    0.0255    0.0184    0.0123    0.0077    0.0040    0.0016    0.0001    0.0001 ;
@@ -109,8 +110,27 @@ Mrecon_rgbToXYZ = T_XYZ*displayGet(reconDisplay,'spd primaries')*(wls(2)-wls(1))
 Mrecon_XYZTorgb = inv(Mrecon_rgbToXYZ);
 
 % Report on primaries
+rPrimaryLuminance = Mforward_rgbToXYZ(2,1);
+gPrimaryLuminance = Mforward_rgbToXYZ(2,2);
 fprintf('Forward primary luminances (r, g, b): %0.2f, %0.2f %0.2f\n',Mforward_rgbToXYZ(2,1),Mforward_rgbToXYZ(2,2),Mforward_rgbToXYZ(2,3));
 fprintf('Recon primary luminances (r, g, b): %0.2f, %0.2f %0.2f\n',Mrecon_rgbToXYZ(2,1),Mrecon_rgbToXYZ(2,2),Mrecon_rgbToXYZ(2,3));
+
+% Compute as set of equally spaced r/(r+g) values that lead
+% to equal luminance stimuli.
+if (useEquilumConstruct)
+    startWithLinearRGB = true;
+    nEquiLumStimuli = 14;
+    forwardPrimaries = displayGet(forwardDisplay,'spd primaries');
+    rOverRPlusG = linspace(1,0,nEquiLumStimuli);
+    gOverRPlusG = 1-rOverRPlusG;
+    gPrimaryAdjust = rPrimaryLuminance/gPrimaryLuminance;
+    rRaw = rOverRPlusG;
+    gRaw = gOverRPlusG;
+    gAdjust = gRaw*rPrimaryLuminance/gPrimaryLuminance;
+    b = 0.001;
+    equiLumrgbValues = [rRaw ; gAdjust; b*ones(size(rRaw))];
+    inputLinearrgbValues = 0.5*equiLumrgbValues/max(equiLumrgbValues(:));
+end
 
 % Loop over all the input values
 for iii = 1:size(inputLinearrgbValues,2)
