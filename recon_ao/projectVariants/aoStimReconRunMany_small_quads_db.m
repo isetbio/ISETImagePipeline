@@ -217,7 +217,7 @@ prBase.stimBgVal = 0.3;% [0.1054 0.1832 0.1189]
 % Set up stimuli
 stimRValList = [0.5000    0.4615    0.4231    0.3846    0.3462    0.3077    0.2692    0.2308    0.1923    0.1538    0.1154    0.0769    0.0385         0];
 stimGValList = [ 0    0.0081    0.0161    0.0242    0.0323    0.0403    0.0484    0.0565    0.0645    0.0726    0.0807    0.0888    0.0968    0.1049];
-stimBValList = [0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005]
+stimBValList = [0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005];
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
