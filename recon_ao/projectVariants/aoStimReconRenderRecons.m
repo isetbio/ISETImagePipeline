@@ -1,8 +1,9 @@
-%% aoStimReconRerunFigs
+%% aoStimReconRenderRecons
 %
 % Description:
-%    Rerun aoStimRecon to apply new updates or pull out stat info/figures.
-%    Bypasses the actual reconstruction calculation.
+%    Collect up a set of reconstructions and render/analyze.
+%
+%    Patterned after aoStimReconRerunFigs, but simplifying.
 %
 % See also: aoStimRecon, aoStimReconRunMany, correctForViewing
 
@@ -14,26 +15,30 @@
 %    in same proportionality, 141 is all L surround, 142 is all M surround
 
 % History:
-%   06/1/23  chr  Organize into its own file
+%   06/01/23  chr  Organize into its own file
+%   10/19/23 dhb  Wrote from chr program.
 
 %% Initialize
 clear; close all;
 
 %% Set variables for the rrf sequence
 
-% Establish the ReRunFigs struct
+% Establish struct that tells us what we want to do.
 rrf = struct;
 
 % Indicate where we want to go today
 %
-%   rerunImages: Call the full aoStimRecon script after updates
 %   montage: Pull recons from files for presentable montage
 %   dispStim: Display a montage of only the stimuli images
 %   statPlots: Create quantification plots for presentations
-rrf.rerunImages = true;   % DHB: Setting this to true seems to be the thing that doesn't rerun the images.
 rrf.montage = false;
 rrf.dispStim = true;
 rrf.statPlots = true;
+
+% Select stimulus size to analyze
+rrf.sizes = [3.5];
+
+
 
 % Select monitor display arrangements for correctForViewing.m procedure 
 rrf.startDisplayName = 'mono';
@@ -45,7 +50,8 @@ rrf.reconDispScale = 1;
 
 %% Call the montage portion
 
-% Get preference and version editor for project
+% Get preference and version editor info, and directory
+% that we'll run this over
 %
 % Assign the proper rerun wrapper directory with the associated
 % version and pull out corresponding information.
@@ -55,18 +61,18 @@ rrf.versEditor = 'small_quads_db';
 rrf.wrapDir = fullfile(rrf.aoReconDir , rrf.versEditor, 'DBTestWrapper');
 rrf.wrapDirInfo = dir(rrf.wrapDir);
 
-% When reading directories there are initial filler entries (., ..,
+% When listing directories there are initial filler entries (., ..,
 % DS_Store). The script should ignore these fillers and start with actual
 % output directories, but the number changes between mac/megalodon.
-if contains(rrf.aoReconDir, 'megalodon')
-    firstEntry = 3;
-else
-    firstEntry = 3;
-end
+firstGoodDirEntry = 4;
 
 % Cycle through each stim size directory
-for i = firstEntry:length(rrf.wrapDirInfo)
-    if rrf.wrapDirInfo(i).isdir
+sizeStr = num2str(rrf.sizes(1));
+sizeStrLen = length(sizeStr);
+condIndex = 1;
+for i = firstGoodDirEntry:length(rrf.wrapDirInfo)
+    % Only read directories for this size
+    if (rrf.wrapDirInfo(i).isdir & strncmp(sizeStr,rrf.wrapDirInfo(i).name,sizeStrLen))
 
         % Setup some base variables for the montage
         if (rrf.montage)
@@ -80,7 +86,6 @@ for i = firstEntry:length(rrf.wrapDirInfo)
 
             % Input sizes for stimuli used and progression of L proportionality
             % across mosaics tested.
-            sizes = [3.5];
             mosaicSpread =  fliplr(0.1:0.1:0.9);
 
             % Impose some pixel limitation for the image zoom on the montage when
@@ -107,7 +112,7 @@ for i = firstEntry:length(rrf.wrapDirInfo)
         rrf.mainDirInfo = dir(rrf.mainDir);
 
         % Cycle through each output directory
-        for j = firstEntry:length(rrf.mainDirInfo)
+        for j = firstGoodDirEntry:length(rrf.mainDirInfo)
 
             % If the indexed mainDirInfo value is a valid directory
             if rrf.mainDirInfo(j).isdir
@@ -117,12 +122,12 @@ for i = firstEntry:length(rrf.wrapDirInfo)
                 rrf.outputDir = fullfile(rrf.mainDir, rrf.mainDirInfo(j).name);
 
                 % If the goal is to create a montage
-                if(rrf.montage)
+                if (rrf.montage)
 
                     % Load the pertinent variables from the output directory
-                    load(fullfile(rrf.outputDir, 'xRunOutput.mat'), ...
-                        "cfvRecon", "cfvStim", "ii", ...
-                        "rgbStatsStim", "rgbStatsRecon")
+                    theData = load(fullfile(rrf.outputDir, 'xRunOutput.mat'), ...
+                        "cfvRecon", "cfvStim", "stimulusImageLinear", "reconImageLinear" ...
+                        );
 
                     % Pull the corrected and scaled recon from the xRunOutput,
                     % trim the edges based on the zoomLim value given above
@@ -244,7 +249,7 @@ if (rrf.statPlots)
     cellStatsAll = cell(1,length(sizes));
 
     % For each size
-    for i = firstEntry:length(rrf.wrapDirInfo)
+    for i = firstGoodDirEntry:length(rrf.wrapDirInfo)
 
         % Set the name of the main directory as above
         rrf.mainDir = fullfile(rrf.wrapDir, rrf.wrapDirInfo(i).name);
