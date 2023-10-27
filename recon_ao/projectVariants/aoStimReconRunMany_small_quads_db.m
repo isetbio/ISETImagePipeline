@@ -148,7 +148,7 @@ buildNewRecon = false;
 stimSizeDegsList = [3.5] / 60;
 
 % Linear rgb values (before gamma correction)
-prBase.stimBgVal = 0.3;% [0.1054 0.1832 0.1189]
+prBase.stimBgVal = 0.05;% [0.1054 0.1832 0.1189]
 % stimRValList = 0.80;%0.1054 ./ [2 4 6 8 10];  %[1];% 1.0 0.0];
 % stimGValList = 0.65;%0.1832 ./ [2 4 6 8 10];  %[1];% 0.0 1.0];
 % stimBValList = 0.10;%0.1189 ./ [2 4 6 8 10];  %[0];% 0.0 0.0];
@@ -215,9 +215,12 @@ prBase.stimBgVal = 0.3;% [0.1054 0.1832 0.1189]
 % end
 
 % Set up stimuli
-stimRValList = [0.5000    0.4615    0.4231    0.3846    0.3462    0.3077    0.2692    0.2308    0.1923    0.1538    0.1154    0.0769    0.0385         0];
-stimGValList = [ 0    0.0081    0.0161    0.0242    0.0323    0.0403    0.0484    0.0565    0.0645    0.0726    0.0807    0.0888    0.0968    0.1049];
-stimBValList = [0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005];
+stimRValList = prBase.stimBgVal + ...
+    [0.5000    0.4615    0.4231    0.3846    0.3462    0.3077    0.2692    0.2308    0.1923    0.1538    0.1154    0.0769    0.0385         0];
+stimGValList = prBase.stimBgVal + ...
+    [ 0    0.0081    0.0161    0.0242    0.0323    0.0403    0.0484    0.0565    0.0645    0.0726    0.0807    0.0888    0.0968    0.1049];
+stimBValList = prBase.stimBgVal + ...
+    [0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005    0.0005];
 
 % Check that all channels receive same number of inputs
 if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
