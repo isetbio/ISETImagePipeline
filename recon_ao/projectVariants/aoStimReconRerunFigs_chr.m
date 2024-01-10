@@ -6,23 +6,32 @@
 %
 % See also: aoStimRecon, aoStimReconRunMany, correctForViewing
 
+% Notes:
+%    Cone ratios are such that the first number in a series (i.e. 110) is 90% L and then
+%    systematically goes down towards 10%L for a given chunk.
+%
+%    Also I can double check as for the >136 I may not have pushed those edits to the git. 137-140 are positional changes
+%    in same proportionality, 141 is all L surround, 142 is all M surround
+
 % History:
 %   06/1/23  chr  Organize into its own file
 
+%% Initialize
+clear; close all;
 
 %% Set variables for the rrf sequence
 
 % Establish the ReRunFigs struct
 rrf = struct;
 
-% State the purpose of the rerun:
+% Indicate where we want to go today
 %
-% rerunImages: Call the full aoStimRecon script after updates
-% montage: Pull recons from files for presentable montage
-% dispStim: Display a montage of only the stimuli images
-% statPlots: Create quantification plots for presentations
-rrf.rerunImages = true;
-rrf.montage = true;
+%   rerunImages: Call the full aoStimRecon script after updates
+%   montage: Pull recons from files for presentable montage
+%   dispStim: Display a montage of only the stimuli images
+%   statPlots: Create quantification plots for presentations
+rrf.rerunImages = true;   % DHB: Setting this to true seems to be the thing that doesn't rerun the images.
+rrf.montage = false;
 rrf.dispStim = true;
 rrf.statPlots = false;
 
@@ -34,19 +43,17 @@ rrf.viewingDisplayName = 'conventional';
 rrf.stimDispScale = 1;
 rrf.reconDispScale = 1;
 
-
 %% Call the montage portion
 
 % Get preference and version editor for project
 %
-% Assign the proper Rerun wrapper directory with the associated StimSize
+% Assign the proper rerun wrapper directory with the associated
 % version and pull out corresponding information.
 % Each subdirectory should correspond to a different stimulus size
 rrf.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
-rrf.versEditor = 'small_quads_chr';
-rrf.wrapDir = fullfile(rrf.aoReconDir , rrf.versEditor, '/StimSize_v7/Rerun');
+rrf.versEditor = 'small_quads_db';
+rrf.wrapDir = fullfile(rrf.aoReconDir , rrf.versEditor, 'DBTestWrapper');
 rrf.wrapDirInfo = dir(rrf.wrapDir);
-
 
 % When reading directories there are initial filler entries (., ..,
 % DS_Store). The script should ignore these fillers and start with actual
@@ -56,7 +63,6 @@ if contains(rrf.aoReconDir, 'megalodon')
 else
     firstEntry = 3;
 end
-
 
 % Cycle through each stim size directory
 for i = firstEntry:length(rrf.wrapDirInfo)
