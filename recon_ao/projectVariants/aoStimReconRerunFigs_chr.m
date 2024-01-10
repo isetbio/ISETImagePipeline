@@ -24,7 +24,7 @@ rrf = struct;
 rrf.rerunImages = true;
 rrf.montage = true;
 rrf.dispStim = true;
-rrf.statPlots = true;
+rrf.statPlots = false;
 
 % Select monitor display arrangements for correctForViewing.m procedure 
 rrf.startDisplayName = 'mono';
@@ -74,7 +74,7 @@ for i = firstEntry:length(rrf.wrapDirInfo)
 
             % Input sizes for stimuli used and progression of L proportionality
             % across mosaics tested.
-            sizes = [3.5];
+            sizes = [10];
             mosaicSpread =  fliplr(0.1:0.1:0.9);
 
             % Impose some pixel limitation for the image zoom on the montage when
@@ -87,8 +87,10 @@ for i = firstEntry:length(rrf.wrapDirInfo)
             % every pass through (limit redundancy)
             cellRecons = cell(numMosaics, numStim);
             cellStatsRecon = cell(size(cellRecons));
+            cellWaveRecon = cell(size(cellRecons));
             cellStim = cell(1,numStim);
             cellStatsStim = cell(size(cellStim));
+            cellWaveStim = cell(size(cellStim));
             stimGrab = [1:numStim] *  (numMosaics);
         end
 
@@ -116,7 +118,7 @@ for i = firstEntry:length(rrf.wrapDirInfo)
                     % Load the pertinent variables from the output directory
                     load(fullfile(rrf.outputDir, 'xRunOutput.mat'), ...
                         "cfvRecon", "cfvStim", "ii", ...
-                        "rgbStatsStim", "rgbStatsRecon")
+                        "rgbStatsStim", "rgbStatsRecon", "idxXRange", "idxYRange")
 
                     % Pull the corrected and scaled recon from the xRunOutput,
                     % trim the edges based on the zoomLim value given above
@@ -127,12 +129,14 @@ for i = firstEntry:length(rrf.wrapDirInfo)
                     % Pull associated Stat information and also place in a
                     % corresponding cell
                     cellStatsRecon{counter} = cfvRecon.rgbStats;
+                    cellWaveRecon{counter} = cfvRecon.imageRGBNoGamma;
 
                     % Repeat the above procedure for the stimulus when the
                     % counter value falls inside the StimGrab list
                     if ismember(counter, stimGrab)
                         cellStim{1, counter/(numMosaics)} = cfvStim.stimulusRGBScaled{ii}(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
                         cellStatsStim{1, counter/(numMosaics)} = cfvStim.rgbStats;
+                        cellWaveStim{1, counter/(numMosaics)} = cfvRecon.imageRGBNoGamma;
                     end
 
                     % Add to the counter
@@ -178,13 +182,31 @@ for i = firstEntry:length(rrf.wrapDirInfo)
 
             % For each stimulus, append the r/(r+g) value across different mosaics
             for q = 1:(numMosaicsTrim)
-                rrgValsRecons = [rrgValsRecons cellStatsRecon{q,k}{1,5}];
+                %%% insert the call function
+%                 avgReconLinearrgb(1,1) = {cellWaveRecon{q,k}(idxYRange,idxXRange, 1)};
+%                 avgReconLinearrgb(2,1) = {cellWaveRecon{q,k}(idxYRange,idxXRange, 2)};
+%                 avgReconLinearrgb(3,1) = {cellWaveRecon{q,k}(idxYRange,idxXRange, 3)};
+%                 avgReconLinearrgb(1,2) = {mean(avgReconLinearrgb{1,1}(:))};
+%                 avgReconLinearrgb(2,2) = {mean(avgReconLinearrgb{2,1}(:))};
+%                 avgReconLinearrgb(3,2) = {mean(avgReconLinearrgb{3,1}(:))};
+%                 eqWave = computeEquivWavelength([avgReconLinearrgb{1,2} ...
+%                     avgReconLinearrgb{2,2} avgReconLinearrgb{3,2}]');
+
+                eqWave = computeEquivWavelength([cellStatsRecon{q,k}{1,2} ...
+                    cellStatsRecon{q,k}{2,2} cellStatsRecon{q,k}{3,2}]');
+                rrgValsRecons = [rrgValsRecons eqWave];
+                eqWave = [];
+%                 rrgValsRecons = [rrgValsRecons cellStatsRecon{q,k}{1,5}];
             end
 
             % Store above values in a cell, then apply the same procedure to the
             % stimuli
             cellStats{3,k} = (rrgValsRecons);
-            rrgValsStim(k) = cellStatsStim{1,k}{1,5};
+%             avgStimLinearrgb = squeeze(cellWaveRecon{1,k}(24, 24, :));
+%             avgStimLinearrgb = squeeze(cellStatsStim{1,k}(24, 24, :));
+            rrgValsStim(k) = computeEquivWavelength([cellStatsStim{1,k}{1,2} ...
+                    cellStatsStim{1,k}{2,2} cellStatsStim{1,k}{3,2}]');
+%             rrgValsStim(k) = cellStatsStim{1,k}{1,5};
 
             % Calculate the mean and standard deviation across all average
             % reconstruction values. Also include the distribution of mosaic
@@ -280,8 +302,8 @@ if (rrf.statPlots)
 
     % Plot lines based on the intersection when the stimulus looks most
     % yellow (neither red nor green)
-    plot([6 6], [0 rrgValsStim(end-6+1)], '--k', 'LineWidth', 3);
-    plot([0 6], [rrgValsStim(end-6+1) rrgValsStim(end-6+1)], '--k', 'LineWidth', 3);
+%     plot([6 6], [0 rrgValsStim(end-6+1)], '--k', 'LineWidth', 3);
+%     plot([0 6], [rrgValsStim(end-6+1) rrgValsStim(end-6+1)], '--k', 'LineWidth', 3);
 
     % Label plot and format
     xlabel('Stimulus Number', 'FontSize', 24, 'FontName', 'Arial');

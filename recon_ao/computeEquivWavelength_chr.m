@@ -1,4 +1,4 @@
-% computeEquivWavlength
+function wvl = computeEquivWavelength(rgbLinear)
 %
 % Find equivalent wavelengths for various linear combinations of r and g in
 % our monochromatic monitor.
@@ -28,10 +28,12 @@
 %   2023/09/28  dhb  Added rgb options.
 
 % Setup
-clear; close all;
+% clear; close all;
 project = 'ISETImagePipeline';
 displayDir = fullfile(getpref(project,'aoReconDir'),'displays');
 displayFile = fullfile(displayDir,'monoDisplay');
+% displayFile = fullfile(displayDir,'conventionalDisplay');
+
 
 % When true, compute for a list of specified linear rgb values.
 % When false, compute for a set of r/(r+g) on assumption that b == 0.
@@ -45,6 +47,8 @@ wls = SToWls(S);
 % wavelengths.
 theDisplayData = load(displayFile);
 primaries = SplineSpd(displayGet(theDisplayData.monoDisplay,'wave'),displayGet(theDisplayData.monoDisplay,'spdprimaries'),S,2);
+% primaries = SplineSpd(displayGet(theDisplayData.CRT12BitDisplay,'wave'),displayGet(theDisplayData.CRT12BitDisplay,'spdprimaries'),S,2);
+
 
 % Get cone fundamentals.  Spline to desired wavelengths.
 theConeData = load('T_cones_ss2');
@@ -68,7 +72,11 @@ highIndex = find(wls == highWl);
 if (COMPUTEFORRGB)
     % Make a list of linear rgb values to compute for.  You can have as
     % many columns as you like
-    rgbValues = [ [0.8 0.37 0.2]' [0.5 0.5 0.2]' [1 0 0.2]' [0 1 0.2]' [0.5 0.5 0]' [1 0 0]' [0 1 0]'];
+%     rgbValues = [ [0.8 0.37 0.2]' [0.5 0.5 0.2]' [1 0 0.2]' [0 1 0.2]' [0.5 0.5 0]' [1 0 0]' [0 1 0]'];
+%     rgbValues = [[0.0013 0.0012 0]' [0.0255 0.0386 0.0001]' [0.1594 0.1962 0.0119]' [0.02551 0.03845 0.00012]' [0.0006 0.0015 0]' [0.01103 0.03963 0.00005]' [0.00028 0.0016 0.00004]'];
+%     rgbValues = [[0.0013 0.0012 0]' [0.2506 0.2373 0]' [0.000325 0.0015 0.000042]'];
+    rgbValues = rgbLinear; 
+   
     nValues = size(rgbValues,2);
 
     for rr = 1:nValues
@@ -93,7 +101,8 @@ if (COMPUTEFORRGB)
 
         % Get equivalent wavelength as that which had smallest distance.
         theEquivWls(rr) = wls(nearestWl);
-        fprintf('Equivalent wavelength for rgb = %0.2f,%0.2f,%0.2f: %d\n',rgbValues(1,rr),rgbValues(2,rr),rgbValues(3,rr),theEquivWls(rr));
+        wvl = theEquivWls(rr);
+%         fprintf('Equivalent wavelength for rgb = %0.2f,%0.2f,%0.2f: %d\n',rgbValues(1,rr),rgbValues(2,rr),rgbValues(3,rr),theEquivWls(rr));
     end
 
 else

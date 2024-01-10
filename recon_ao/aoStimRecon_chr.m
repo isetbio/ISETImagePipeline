@@ -171,7 +171,8 @@ if (length(pr.stimBgVal) == 1 || length(pr.stimBgVal) == 3)
             return
         end
 
-        % Set image pixels
+        % Set image pixels, !!!!FIX THIS, this should be the gamma
+        % corrected value because it's inherently gamma
         stimImageRGBnoGam(idxYRange, idxXRange, 1) = pr.stimRVal;
         stimImageRGBnoGam(idxYRange, idxXRange, 2) = pr.stimGVal;
         stimImageRGBnoGam(idxYRange, idxXRange, 3) = pr.stimBVal;
@@ -190,12 +191,19 @@ end
 
 % Create an ISETBio scene.  Rescale input image
 % according to pr.inputImageScaleFactor.
+
+% By calling sceneFromFile we are undoing gamma correction and making it
+% linear
 meanLuminanceCdPerM2 = [];
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimImageRGBnoGam, 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 
+% Then we scale by some factor on the linear space and regamma correct
 stimulusImageRGB = gammaCorrection(stimulusImageLinear*pr.inputImageScaleFactor, forwardConeMosaic.Display);
 
+% Then we UNDO that gamma correction we just did to get another linear
+% verison, which in theory should be the same as the previous linear image
+% times the input scale factor.
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 
@@ -204,9 +212,12 @@ imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 
 % Return a struct that contains values corrected for viewing on a display
 % different from that where the stimulation was calculated
+
+% So the concern here is that what we're sending in is already linear and
+% should not undergo a second linearization process inside the script. 
 cfvStim = correctForViewing(stimulusImageLinear, rrf.startDisplayName, ...
     rrf.viewingDisplayName, rrf.stimDispScale, pr.aoReconDir, pr.displayGammaBits, ...
-    pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
+    pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange, stimulusScene);
 % imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
 % imwrite(cfvStim.imageRGBBoost,fullfile(cnv.outputDir,'StimulusDispCorrectedBoost.tiff'),'tiff');
 
@@ -421,7 +432,7 @@ for ii = 1:length(multistartStruct.initTypes)
     reconImageLinear = multistartStruct.reconImages{ii};
     cfvRecon = correctForViewing(reconImageLinear, rrf.startDisplayName, ...
         rrf.viewingDisplayName, rrf.reconDispScale, pr.aoReconDir, pr.displayGammaBits, ...
-        pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
+        pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange, reconSceneTemp);
 %     imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
 
 
