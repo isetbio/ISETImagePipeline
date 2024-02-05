@@ -124,29 +124,41 @@ for i = firstEntry:length(rrf.wrapDirInfo)
                     % Load the pertinent variables from the output directory
                     load(fullfile(rrf.outputDir, 'xRunOutput.mat'), ...
                         "cfvRecon", "cfvStim", "ii", ...
-                        "rgbStatsStim", "rgbStatsRecon", "idxXRange", "idxYRange", ...
+                         "idxXRange", "idxYRange", ...
                         "stimulusImageLinear", "reconImageLinear")
+
+
+
+                    % "rgbStatsStim", "rgbStatsRecon", deleted since not
+                    % being used
+
+                    cellWaveRecon{counter} = compareRenderingEW(cfvStim.stimulusRGBScaled{1}, ...
+                        cfvRecon.reconScaledRGB{1}, stimulusImageLinear, reconImageLinear, ...
+                        rrf.startDisplayName, rrf.viewingDisplayName, idxXRange, ...
+                        'inwardMove', 1, 'showFigs', false, 'scaleToMax', true);
 
                     % Pull the corrected and scaled recon from the xRunOutput,
                     % trim the edges based on the zoomLim value given above
                     % (effectively magnifying the image for presentation), and
                     % save in the desired index for the cell holding recon images
-                    cellRecons{counter} = cfvRecon.reconScaledRGB{ii}(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
+%                     cellRecons{counter} = cfvRecon.reconScaledRGB{ii}(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
+                    cellRecons{counter} = cellWaveRecon{counter}.reconImageRGB(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
+
+
+
 
                     % Pull associated Stat information and also place in a
                     % corresponding cell
                     cellStatsRecon{counter} = cfvRecon.rgbStats;
-%                     cellWaveRecon{counter} = cfvRecon.imageRGBNoGamma;
-                    cellWaveRecon{counter} = compareRenderingEW(cfvStim.stimulusRGBScaled{1}, ...
-                        cfvRecon.reconScaledRGB{1}, stimulusImageLinear, reconImageLinear, ...
-                        rrf.startDisplayName, rrf.viewingDisplayName, idxXRange, 'inwardMove', 1);
 
                     % Repeat the above procedure for the stimulus when the
                     % counter value falls inside the StimGrab list
                     if ismember(counter, stimGrab)
-                        cellStim{1, counter/(numMosaics)} = cfvStim.stimulusRGBScaled{ii}(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
+%                         cellStim{1, counter/(numMosaics)} = cfvStim.stimulusRGBScaled{ii}(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
+                        cellWaveStim{1, counter/(numMosaics)} = cellWaveRecon{counter};    % Don't forget to clean this part too, just a renaming here
+                        cellStim{1, counter/(numMosaics)} = cellWaveStim{1, counter/(numMosaics)}.stimImageRGB(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
+
                         cellStatsStim{1, counter/(numMosaics)} = cfvStim.rgbStats;
-                        cellWaveStim{1, counter/(numMosaics)} = cellWaveRecon;    % Don't forget to clean this part too, just a renaming here
                     end
 
                     % Add to the counter
@@ -298,7 +310,7 @@ if (rrf.statPlots)
 
 rrgValsStim = [];
 for w = 1:numStim
-    rrgValsStim = [rrgValsStim int64(mean(cellWaveStim{13}{1,w}.stimEWFormer, 'all'))];
+    rrgValsStim = [rrgValsStim int64(mean(cellWaveStim{w}.stimEWUncorrected, 'all'))];
 end
 
 
@@ -312,7 +324,7 @@ for k = 1:size(cellStatsAll,2)
         % r/(r+g) value
         for j = 1:numStim
             %                 cellStatsAll{3,k}(i,j) = cellStatsAll{2,k}{3,j}(i+1);
-            cellStatsAll{3,k}(i,j) = int64(mean(cellWaveRecon{i,j}.reconEWFormer, 'all'));
+            cellStatsAll{3,k}(i,j) = int64(mean(cellWaveRecon{i,j}.reconEWUncorrected, 'all'));
         end
     end
 
@@ -340,7 +352,7 @@ end
 
 
 
-
+end
 
 
 
