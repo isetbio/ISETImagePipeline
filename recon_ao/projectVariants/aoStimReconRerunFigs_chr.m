@@ -177,7 +177,6 @@ for i = firstEntry:length(rrf.wrapDirInfo)
             end
         end
 
-
         % Initialize a vector to hold the r/(r+g) Vals
         rrgValsStim = ones(1,numStim);
 
@@ -192,7 +191,6 @@ for i = firstEntry:length(rrf.wrapDirInfo)
         else
             numMosaicsTrim = numMosaics;
         end
-
 
         % For each stimulus, pull out pertinent stats information for plotting
         for k = 1:numStim
@@ -352,8 +350,8 @@ end
 
 
 
-end
 
+end
 
 
 
