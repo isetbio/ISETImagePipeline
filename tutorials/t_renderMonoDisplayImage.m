@@ -41,25 +41,27 @@ clear; close all;
 %    'mono'            - A display with monochromatic primaries
 aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 forwardDisplayName = 'mono';
-reconDisplayName = 'conventional';
+renderDisplayName = 'conventional';
 displayGammaBits = 12;
 displayGammaGamma = 2;
 overwriteDisplayGamma = true;
-reconDisplayScaleFactor = 1;
+renderDisplayScaleFactor = 1;
 
 % Render in sRGB (true) or with respect to ISETBio viewing display (false)
-SRGB = true;
+SRGB = false;
 
 % Set image size
 nPixels = 128;
 
 % Set a list of linear RGB to render as uniform swatches
-useEquilumConstruct = true;
+useEquilumConstruct = false;
 startWithLinearRGB = true;
 inputLinearrgbValues = ...
    [0.1268    0.0971    0.0739   (0.0739 + 0.0536)/2  0.0536   0.0335    0.0255    0.0184    0.0123    0.0077    0.0040    0.0016    0.0001    0.0001 ;
     0.0240    0.0270    0.0299   (0.0299 + 0.0328)/2  0.0328   0.0365    0.0385    0.0404    0.0426    0.0445    0.0467    0.0489    0.0511    0.0517 ;
     0.0001    0.0001    0.0001   0.0001                        0.001     0.0001    0.0001    0.0001    0.0001    0.0001    0.0001    0.0001    0.0001    0.0001];
+inputLinearrgbValues = ...
+   [0.0739 ; 0.0299 ; 1.2076e-04];
 
 % Set up display specific fields
 switch (forwardDisplayName)
@@ -70,7 +72,7 @@ switch (forwardDisplayName)
     otherwise
         error('Unknown forward display specified');
 end
-switch (reconDisplayName)
+switch (renderDisplayName)
     case 'conventional'
         reconDisplayFieldName = 'CRT12BitDisplay';
     case 'mono'
@@ -82,7 +84,7 @@ end
 % Get displays
 forwardDisplayLoad = load(fullfile(aoReconDir, 'displays', [forwardDisplayName 'Display.mat']));
 eval(['forwardDisplay = forwardDisplayLoad.' forwardDisplayFieldName ';']);
-reconDisplayLoad = load(fullfile(aoReconDir, 'displays', [reconDisplayName 'Display.mat']));
+reconDisplayLoad = load(fullfile(aoReconDir, 'displays', [renderDisplayName 'Display.mat']));
 eval(['reconDisplay = reconDisplayLoad.' reconDisplayFieldName ';']);
 clear forwardDisplayLoad reconDisplayLoad
 
@@ -98,7 +100,7 @@ forwardDisplay = displaySet(forwardDisplay,'wave',wls);
 reconDisplay = displaySet(reconDisplay,'wave',wls);
 
 % Scale recon display primaries to try to keep things in range
-reconDisplay = displaySet(reconDisplay,'spd primaries',displayGet(reconDisplay,'spd primaries')*reconDisplayScaleFactor);
+reconDisplay = displaySet(reconDisplay,'spd primaries',displayGet(reconDisplay,'spd primaries')*renderDisplayScaleFactor);
 
 % Get information we need to render scenes from their spectra through
 % the recon display.
@@ -113,7 +115,7 @@ Mrecon_XYZTorgb = inv(Mrecon_rgbToXYZ);
 rPrimaryLuminance = Mforward_rgbToXYZ(2,1);
 gPrimaryLuminance = Mforward_rgbToXYZ(2,2);
 fprintf('Forward primary luminances (r, g, b): %0.2f, %0.2f %0.2f\n',Mforward_rgbToXYZ(2,1),Mforward_rgbToXYZ(2,2),Mforward_rgbToXYZ(2,3));
-fprintf('Recon primary luminances (r, g, b): %0.2f, %0.2f %0.2f\n',Mrecon_rgbToXYZ(2,1),Mrecon_rgbToXYZ(2,2),Mrecon_rgbToXYZ(2,3));
+fprintf('Render primary luminances (r, g, b): %0.2f, %0.2f %0.2f\n',Mrecon_rgbToXYZ(2,1),Mrecon_rgbToXYZ(2,2),Mrecon_rgbToXYZ(2,3));
 
 % Compute as set of equally spaced r/(r+g) values that lead
 % to equal luminance stimuli.
@@ -155,17 +157,17 @@ for iii = 1:size(inputLinearrgbValues,2)
     [theForwardScene, ~, theForwardImagergb{iii}] = sceneFromFile(theImageRGB, 'rgb', ...
         meanLuminanceCdPerM2, forwardDisplay);
     
-    minrForward(iii) = min(min(theForwardImagergb{iii}(:,:,1)));
-    mingForward(iii) = min(min(theForwardImagergb{iii}(:,:,2)));
-    minbForward(iii) = min(min(theForwardImagergb{iii}(:,:,3)));
+    therForward(iii) = min(min(theForwardImagergb{iii}(:,:,1)));
+    thegForward(iii) = min(min(theForwardImagergb{iii}(:,:,2)));
+    thebForward(iii) = min(min(theForwardImagergb{iii}(:,:,3)));
     maxrForward(iii) = max(max(theForwardImagergb{iii}(:,:,1)));
     maxgForward(iii) = max(max(theForwardImagergb{iii}(:,:,2)));
     maxbForward(iii) = max(max(theForwardImagergb{iii}(:,:,3)));
     maxForward(iii) = max(theForwardImagergb{iii}(:));
-    if (minrForward(iii) ~= maxrForward(iii) | mingForward(iii) ~= maxgForward(iii) | minbForward(iii) ~= maxbForward(iii))
+    if (therForward(iii) ~= maxrForward(iii) | thegForward(iii) ~= maxgForward(iii) | thebForward(iii) ~= maxbForward(iii))
         error('Image not spatially uniform as expected');
     end
-    fprintf('Input mono linear rgb: %0.4f, %0.4f, %0.4f\n',minrForward(iii),mingForward(iii),minbForward(iii));
+    fprintf('Input mono linear rgb: %0.4f, %0.4f, %0.4f\n',therForward(iii),thegForward(iii),thebForward(iii));
    
     % Render the scene from the forward display on the recon display, to try to
     % match XYZ.
@@ -175,50 +177,50 @@ for iii = 1:size(inputLinearrgbValues,2)
 
     % Either use SRGB or the recon display, as specified
     if (SRGB)
-        theReconImagergbCalFormat = XYZToSRGBPrimary(theForwardImageXYZCalFormat);
+        theRenderImagergbCalFormat = XYZToSRGBPrimary(theForwardImageXYZCalFormat);
     else
-        theReconImagergbCalFormat = Mrecon_XYZTorgb*theForwardImageXYZCalFormat;
+        theRenderImagergbCalFormat = Mrecon_XYZTorgb*theForwardImageXYZCalFormat;
     end
-    theReconImagergb{iii} = CalFormatToImage(theReconImagergbCalFormat,m,n);
+    theRenderImagergb{iii} = CalFormatToImage(theRenderImagergbCalFormat,m,n);
 
     % Plot chromaticities
     theForwardImagexyYCalFormat = XYZToxyY(theForwardImageXYZCalFormat);
     theForwardxyY = XYZToxyY(Mforward_rgbToXYZ);
-    theReconxyY = XYZToxyY(Mrecon_rgbToXYZ);
+    theRenderxyY = XYZToxyY(Mrecon_rgbToXYZ);
     T_xyY = XYZToxyY(T_XYZ);
     subplot(1,3,3); hold on
     plot(theForwardxyY(1,:),theForwardxyY(2,:),'rs','MarkerFaceColor','r','MarkerSize',12);
-    plot(theReconxyY(1,:),theReconxyY(2,:),'gs','MarkerFaceColor','g','MarkerSize',12);
+    plot(theRenderxyY(1,:),theRenderxyY(2,:),'gs','MarkerFaceColor','g','MarkerSize',12);
     plot(theForwardImagexyYCalFormat(1,:),theForwardImagexyYCalFormat(2,:),'go','MarkerFaceColor','g','MarkerSize',12);
     plot(T_xyY(1,:),T_xyY(2,:),'k','LineWidth',2);
     xlim([0 1]); ylim([0 1]);
 
     % Truncate rendered image if needed
-    minrRecon(iii) = min(min(theReconImagergb{iii}(:,:,1)));
-    mingRecon(iii) = min(min(theReconImagergb{iii}(:,:,2)));
-    minbRecon(iii) = min(min(theReconImagergb{iii}(:,:,3)));
-    maxrRecon(iii) = max(max(theReconImagergb{iii}(:,:,1)));
-    maxgRecon(iii) = max(max(theReconImagergb{iii}(:,:,2)));
-    maxbRecon(iii) = max(max(theReconImagergb{iii}(:,:,3)));
-    maxRecon(iii) = max(theReconImagergb{iii}(:));
-    if (minrRecon(iii) ~= maxrRecon(iii) | mingRecon(iii) ~= maxgRecon(iii) | minbRecon(iii) ~= maxbRecon(iii))
+    therRender(iii) = min(min(theRenderImagergb{iii}(:,:,1)));
+    thegRender(iii) = min(min(theRenderImagergb{iii}(:,:,2)));
+    thebRender(iii) = min(min(theRenderImagergb{iii}(:,:,3)));
+    maxrRender(iii) = max(max(theRenderImagergb{iii}(:,:,1)));
+    maxgRender(iii) = max(max(theRenderImagergb{iii}(:,:,2)));
+    maxbRender(iii) = max(max(theRenderImagergb{iii}(:,:,3)));
+    maxRender(iii) = max(theRenderImagergb{iii}(:));
+    if (therRender(iii) ~= maxrRender(iii) | thegRender(iii) ~= maxgRender(iii) | thebRender(iii) ~= maxbRender(iii))
         error('Image not spatially uniform as expected');
     end
-    fprintf('Conventional display rgb linear: %0.4f, %0.4f, %0.4f\n',minrRecon(iii),mingRecon(iii),minbRecon(iii));
-    theReconImagergbTruncated{iii} = theReconImagergb{iii};
-    theReconImagergbTruncated{iii}(theReconImagergbTruncated{iii} < 0) = 0;
+    fprintf('Conventional display rgb linear: %0.4f, %0.4f, %0.4f\n',therRender(iii),thegRender(iii),thebRender(iii));
+    theRenderImagergbTruncated{iii} = theRenderImagergb{iii};
+    theRenderImagergbTruncated{iii}(theRenderImagergbTruncated{iii} < 0) = 0;
 
     % Convert truncated linear rgb image back to XYZ so we can look in
     % chromaticity coordinates, and add to plot
-    theReconImagergbTruncatedCalFormat{iii} = ImageToCalFormat(theReconImagergbTruncated{iii});
+    theRenderImagergbTruncatedCalFormat{iii} = ImageToCalFormat(theRenderImagergbTruncated{iii});
     if (SRGB)
-        theReconImageXYZTruncatedCalFormat = SRGBPrimaryToXYZ(theReconImagergbTruncatedCalFormat{iii});
+        theRenderImageXYZTruncatedCalFormat = SRGBPrimaryToXYZ(theRenderImagergbTruncatedCalFormat{iii});
     else
-        theReconImageXYZTruncatedCalFormat = Mrecon_rgbToXYZ*theReconImagergbTruncatedCalFormat{iii};
+        theRenderImageXYZTruncatedCalFormat = Mrecon_rgbToXYZ*theRenderImagergbTruncatedCalFormat{iii};
     end
-    theReconImagexyYTruncatedCalFormat = XYZToxyY(theReconImageXYZTruncatedCalFormat);
+    theRenderImagexyYTruncatedCalFormat = XYZToxyY(theRenderImageXYZTruncatedCalFormat);
     subplot(1,3,3);
-    plot(theReconImagexyYTruncatedCalFormat(1,:),theReconImagexyYTruncatedCalFormat(2,:),'bo','MarkerFaceColor','b','MarkerSize',12);
+    plot(theRenderImagexyYTruncatedCalFormat(1,:),theRenderImagexyYTruncatedCalFormat(2,:),'bo','MarkerFaceColor','b','MarkerSize',12);
 
     % Do it with our function.
     %
@@ -239,8 +241,14 @@ for iii = 1:size(inputLinearrgbValues,2)
             'viewingDisplayScaleFactor',1,'linearInput',false,'wls',wls,'verbose',true,'scaleToMax',false,'SRGB',SRGB);
     end
 
+    % 
+    % [reconImageRGBCurrent,reconImagergbTruncated,reconImagergb] = RGBRenderAcrossDisplays(reconImageRGBUncorrected, startDisplay, viewingDisplay, ...
+    %     'viewingDisplayScaleFactor',p.Results.viewingDisplayScaleFactor, ...
+    %     'linearInput',p.Results.linearInput,'verbose',p.Results.verbose, ...
+    %     'scaleToMax',p.Results.scaleToMax,'SRGB',p.Results.SRGB);
+
     % Reality check.
-    if (max(abs(theReconImagergbTruncated{iii}(:)-outputImagergbFromFunction(:))) > 1e-6)
+    if (max(abs(theRenderImagergbTruncated{iii}(:)-outputImagergbFromFunction(:))) > 1e-6)
         error('Not recreating same linear rgb output image through our function');
     end
 
@@ -280,7 +288,7 @@ if (~exist(outputDir,'dir'))
     mkdir(outputDir);
 end
 maxForwardAll = max(maxForward);
-maxReconAll = max(maxRecon);
+maxRenderAll = max(maxRender);
 for iii = 1:size(inputLinearrgbValues,2)
     figure(theFigure{iii});
 
@@ -289,19 +297,19 @@ for iii = 1:size(inputLinearrgbValues,2)
     theForwardImageRGB = gammaCorrection(theForwardImagergb{iii}/maxForwardAll, forwardDisplay);
     imshow(theForwardImageRGB);
     title({ 'Direct on Forward' ; sprintf('rgb: %0.2f %0.2f %0.2f', ...
-        minrForward(iii)/maxForwardAll,mingForward(iii)/maxForwardAll,minbForward(iii)/maxForwardAll) });
+        therForward(iii)/maxForwardAll,thegForward(iii)/maxForwardAll,thebForward(iii)/maxForwardAll) });
 
     % Gamma correct and show recon image
     subplot(1,3,2);
     if (SRGB)
-        theReconImageTruncatedRGB = SRGBGammaCorrect(theReconImagergbTruncated{iii}/maxReconAll,0);
-        imshow(uint8(theReconImageTruncatedRGB));
-        imwrite(uint8(theReconImageTruncatedRGB),fullfile(outputDir,sprintf('Stimulus%d_SRGB.tiff',iii)),'tiff');
+        theRenderImageTruncatedRGB = SRGBGammaCorrect(theRenderImagergbTruncated{iii}/maxRenderAll,0);
+        imshow(uint8(theRenderImageTruncatedRGB));
+        imwrite(uint8(theRenderImageTruncatedRGB),fullfile(outputDir,sprintf('Stimulus%d_SRGB.tiff',iii)),'tiff');
     else
-        theReconImageTruncatedRGB = gammaCorrection(theReconImagergbTruncated{iii}/maxReconAll, reconDisplay);
-        imshow(theReconImageTruncatedRGB);
-        imwrite(uint8(theReconImageTruncatedRGB),fullfile(outputDir,sprintf('Stimulus%d_ConvMonitor.tiff',iii)),'tiff');
+        theRenderImageTruncatedRGB = gammaCorrection(theRenderImagergbTruncated{iii}/maxRenderAll, reconDisplay);
+        imshow(theRenderImageTruncatedRGB);
+        imwrite(uint8(theRenderImageTruncatedRGB),fullfile(outputDir,sprintf('Stimulus%d_ConvMonitor.tiff',iii)),'tiff');
     end
-    title({ 'Render on Recon' ; sprintf('Stimulus %d',iii) ; sprintf('rgb: %0.4f %0.4f %0.4f', ...
-        minrRecon(iii)/maxReconAll,mingRecon(iii)/maxReconAll,minbRecon(iii)/maxReconAll) });
+    title({ 'Render on Render' ; sprintf('Stimulus %d',iii) ; sprintf('rgb: %0.4f %0.4f %0.4f', ...
+        therRender(iii)/maxRenderAll,thegRender(iii)/maxRenderAll,thebRender(iii)/maxRenderAll) });
 end
