@@ -35,7 +35,7 @@ rrf.montage = true;
 rrf.dispStim = true;
 rrf.statPlots = true;
 
-% Select monitor display arrangements for correctForViewing.m procedure 
+% Select monitor display arrangements for correctForViewing.m procedure
 rrf.startDisplayName = 'mono';
 rrf.viewingDisplayName = 'conventional';
 
@@ -124,7 +124,7 @@ for i = firstEntry:length(rrf.wrapDirInfo)
                     % Load the pertinent variables from the output directory
                     load(fullfile(rrf.outputDir, 'xRunOutput.mat'), ...
                         "cfvRecon", "cfvStim", "ii", ...
-                         "idxXRange", "idxYRange", ...
+                        "idxXRange", "idxYRange", ...
                         "stimulusImageLinear", "reconImageLinear")
 
 
@@ -135,13 +135,13 @@ for i = firstEntry:length(rrf.wrapDirInfo)
                     cellWaveRecon{counter} = compareRenderingEW(cfvStim.stimulusRGBScaled{1}, ...
                         cfvRecon.reconScaledRGB{1}, stimulusImageLinear, reconImageLinear, ...
                         rrf.startDisplayName, rrf.viewingDisplayName, idxXRange, ...
-                        'inwardMove', 1, 'showFigs', true, 'scaleToMax', false);
+                        'inwardMove', true, 'showFigs', true, 'scaleToMax', false);
 
                     % Pull the corrected and scaled recon from the xRunOutput,
                     % trim the edges based on the zoomLim value given above
                     % (effectively magnifying the image for presentation), and
                     % save in the desired index for the cell holding recon images
-%                     cellRecons{counter} = cfvRecon.reconScaledRGB{ii}(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
+                    %                     cellRecons{counter} = cfvRecon.reconScaledRGB{ii}(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
                     cellRecons{counter} = cellWaveRecon{counter}.reconImageRGB(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
 
 
@@ -154,7 +154,7 @@ for i = firstEntry:length(rrf.wrapDirInfo)
                     % Repeat the above procedure for the stimulus when the
                     % counter value falls inside the StimGrab list
                     if ismember(counter, stimGrab)
-%                         cellStim{1, counter/(numMosaics)} = cfvStim.stimulusRGBScaled{ii}(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
+                        %                         cellStim{1, counter/(numMosaics)} = cfvStim.stimulusRGBScaled{ii}(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
                         cellWaveStim{1, counter/(numMosaics)} = cellWaveRecon{counter};    % Don't forget to clean this part too, just a renaming here
                         cellStim{1, counter/(numMosaics)} = cellWaveStim{1, counter/(numMosaics)}.stimImageRGB(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
 
@@ -182,7 +182,7 @@ for i = firstEntry:length(rrf.wrapDirInfo)
 
         % Remove excess mosaic proportionalities if trimming the bounds and
         % set as new variable to avoid overwriting. Otherwise, set new
-        % variable equal to the full cell. 
+        % variable equal to the full cell.
         if trimExtrema
             numMosaicsTrim = numMosaics - 2;
             cellRecons = cellRecons(2:end-1, :);
@@ -201,33 +201,33 @@ for i = firstEntry:length(rrf.wrapDirInfo)
             cellStats{2,k} = cellStatsRecon(:,k);
             rrgValsRecons = [];
 
-%             % For each stimulus, append the r/(r+g) value across different mosaics
-%             for q = 1:(numMosaicsTrim)
-%                 %%% insert the call function
-% %                 avgReconLinearrgb(1,1) = {cellWaveRecon{q,k}(idxYRange,idxXRange, 1)};
-% %                 avgReconLinearrgb(2,1) = {cellWaveRecon{q,k}(idxYRange,idxXRange, 2)};
-% %                 avgReconLinearrgb(3,1) = {cellWaveRecon{q,k}(idxYRange,idxXRange, 3)};
-% %                 avgReconLinearrgb(1,2) = {mean(avgReconLinearrgb{1,1}(:))};
-% %                 avgReconLinearrgb(2,2) = {mean(avgReconLinearrgb{2,1}(:))};
-% %                 avgReconLinearrgb(3,2) = {mean(avgReconLinearrgb{3,1}(:))};
-% %                 eqWave = computeEquivWavelength([avgReconLinearrgb{1,2} ...
-% %                     avgReconLinearrgb{2,2} avgReconLinearrgb{3,2}]');
-% 
-%                 eqWave = computeEquivWavelength([cellStatsRecon{q,k}{1,2} ...
-%                     cellStatsRecon{q,k}{2,2} cellStatsRecon{q,k}{3,2}]');
-%                 rrgValsRecons = [rrgValsRecons eqWave];
-%                 eqWave = [];
-% %                 rrgValsRecons = [rrgValsRecons cellStatsRecon{q,k}{1,5}];
-%             end
+            %             % For each stimulus, append the r/(r+g) value across different mosaics
+            %             for q = 1:(numMosaicsTrim)
+            %                 %%% insert the call function
+            % %                 avgReconLinearrgb(1,1) = {cellWaveRecon{q,k}(idxYRange,idxXRange, 1)};
+            % %                 avgReconLinearrgb(2,1) = {cellWaveRecon{q,k}(idxYRange,idxXRange, 2)};
+            % %                 avgReconLinearrgb(3,1) = {cellWaveRecon{q,k}(idxYRange,idxXRange, 3)};
+            % %                 avgReconLinearrgb(1,2) = {mean(avgReconLinearrgb{1,1}(:))};
+            % %                 avgReconLinearrgb(2,2) = {mean(avgReconLinearrgb{2,1}(:))};
+            % %                 avgReconLinearrgb(3,2) = {mean(avgReconLinearrgb{3,1}(:))};
+            % %                 eqWave = computeEquivWavelength([avgReconLinearrgb{1,2} ...
+            % %                     avgReconLinearrgb{2,2} avgReconLinearrgb{3,2}]');
+            %
+            %                 eqWave = computeEquivWavelength([cellStatsRecon{q,k}{1,2} ...
+            %                     cellStatsRecon{q,k}{2,2} cellStatsRecon{q,k}{3,2}]');
+            %                 rrgValsRecons = [rrgValsRecons eqWave];
+            %                 eqWave = [];
+            % %                 rrgValsRecons = [rrgValsRecons cellStatsRecon{q,k}{1,5}];
+            %             end
 
             % Store above values in a cell, then apply the same procedure to the
             % stimuli
             cellStats{3,k} = (rrgValsRecons);
-%             avgStimLinearrgb = squeeze(cellWaveRecon{1,k}(24, 24, :));
-%             avgStimLinearrgb = squeeze(cellStatsStim{1,k}(24, 24, :));
-%             rrgValsStim(k) = computeEquivWavelength([cellStatsStim{1,k}{1,2} ...
-%                     cellStatsStim{1,k}{2,2} cellStatsStim{1,k}{3,2}]');
-%             rrgValsStim(k) = cellStatsStim{1,k}{1,5};!!!!!
+            %             avgStimLinearrgb = squeeze(cellWaveRecon{1,k}(24, 24, :));
+            %             avgStimLinearrgb = squeeze(cellStatsStim{1,k}(24, 24, :));
+            %             rrgValsStim(k) = computeEquivWavelength([cellStatsStim{1,k}{1,2} ...
+            %                     cellStatsStim{1,k}{2,2} cellStatsStim{1,k}{3,2}]');
+            %             rrgValsStim(k) = cellStatsStim{1,k}{1,5};!!!!!
 
             % Calculate the mean and standard deviation across all average
             % reconstruction values. Also include the distribution of mosaic
@@ -271,7 +271,7 @@ for i = firstEntry:length(rrf.wrapDirInfo)
 end
 
 
-%% Create quantification plots 
+%% Create quantification plots
 
 
 % If goal is to produce statistics plots
@@ -289,68 +289,145 @@ if (rrf.statPlots)
         % If the indexed mainDirInfo value is a valid directory
         if isdir(rrf.mainDir)
 
-            % Load the pertinent cellStats file 
+            % Load the pertinent cellStats file
             load(fullfile(rrf.mainDir, 'cellStats.mat'));
             cellStatsAll{i-3} = cellStats;
         end
     end
 
-%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%
     % Reorganization since directories are read in lexicographical order.
-    % Not confident this is a stable patch, should investigate this more. 
+    % Not confident this is a stable patch, should investigate this more.
 
     cellStatsAll = [cellStatsAll(:,end) cellStatsAll(:,1:end-1)];
     cellStatsAll = [num2cell(sizes);cellStatsAll];
-%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%
 
 
 
-
-rrgValsStim = [];
-for w = 1:numStim
-    rrgValsStim = [rrgValsStim int64(mean(cellWaveStim{w}.stimEWUncorrected, 'all'))];
-end
+    %  Begin the portion to create the plot of stimulus vs reconstruction
+    %  wavelength
 
 
-for k = 1:size(cellStatsAll,2)
-    cellStatsAll{3,k} = ones((numMosaicsTrim-3),numStim);
+    % Create the figure 1 legends based on input
+    legend1End = repmat(" arcmin", 1, length(sizes));
+    legend1Str = append(string(sizes), legend1End);
+    fig1Legend = num2cell(legend1Str);
 
-    % For each mosaic proportionality
-    for i = 1:(numMosaicsTrim)
+    % Create the figure 2 legends based on input
+    legend2End = repmat(" %L", 1, length(mosaicSpread));
+    legend2Str = append(string(mosaicSpread*100), legend2End);
+    fig2Legend = num2cell(legend2Str);
 
-        % For each stimulus presented, pull out the reconstruction
-        % r/(r+g) value
-        for j = 1:numStim
-            %                 cellStatsAll{3,k}(i,j) = cellStatsAll{2,k}{3,j}(i+1);
-            cellStatsAll{3,k}(i,j) = int64(mean(cellWaveRecon{i,j}.reconEWUncorrected, 'all'));
-        end
+
+    rrgValsStim = [];
+    for w = 1:numStim
+        rrgValsStim = [rrgValsStim int64(mean(cellWaveStim{w}.stimEWUncorrected, 'all'))];
     end
 
+
+    for k = 1:size(cellStatsAll,2)
+        cellStatsAll{3,k} = ones((numMosaicsTrim-3),numStim);
+
+        % For each mosaic proportionality
+        for i = 1:(numMosaicsTrim)
+
+            % For each stimulus presented, pull out the reconstruction
+            % r/(r+g) value
+            for j = 1:numStim
+                %                 cellStatsAll{3,k}(i,j) = cellStatsAll{2,k}{3,j}(i+1);
+                cellStatsAll{3,k}(i,j) = int64(mean(cellWaveRecon{i,j}.reconEWUncorrected, 'all'));
+            end
+        end
+
+        figure()
+        % Plot recon r/(r+g) value vs stimulus r/(r+g) value
+        plot((rrgValsStim), cellStatsAll{3,k}(:, :), '-o', 'LineWidth', 3); hold on
+
+
+
+        % Label plot and format
+        xlabel('Stimulus EW', 'FontSize', 44);
+        ylabel('Reconstruction EW', 'FontSize', 44);
+        title(['Reconstruction Quantification: ' num2str(cellStatsAll{1,k}) ' arcmin'], 'FontSize', 26)
+        xlim([540 620])
+        set(gcf, 'Position', [119   321   661   518]);
+        box off
+        axis square
+        %     plot(0:0.1:1, 0:0.1:1, '--k', 'LineWidth', 3); hold on;
+        yline(580, '--k', 'LineWidth', 3);
+        legend(fig2Legend, 'NumColumns',2, 'Location', 'northwest')
+
+        % Save output as image and eps file for easier formatting in Adobe
+        % Illustrator
+        saveas(gcf,fullfile(rrf.wrapDir,['reconQuant' num2str(cellStatsAll{1,k}) 'Arcmin.tiff']),'tiff');
+        saveas(gcf,fullfile(rrf.wrapDir,['reconQuant' num2str(cellStatsAll{1,k}) 'Arcmin.eps']),'epsc');
+    end
+
+
+
+
+
+
+
+
+  % Shift in unique yellow plot
     figure()
-    % Plot recon r/(r+g) value vs stimulus r/(r+g) value
-    plot((rrgValsStim), cellStatsAll{3,k}(:, :), '-o', 'LineWidth', 3); hold on
-end
+
+    % For each stimulus arcmin size
+    for k = 1:1:size(cellStatsAll,2)
+
+        % Interpolate the point at which the above line plots intersect the
+        % stimulus r/(r+g) unique yellow value
+        cellStatsAll{4,k} = ones(numMosaicsTrim,1);
 
 
 
+        for i = 1:(numMosaicsTrim)
+        % Approximations in the event that there are repeated wavelength 
+        % values to maintain interpolation
+        
+            reconEW = cellStatsAll{3,k}(i,:);
+%             reconEW = [1 2 3 4 5 6 7 7 9 10 11 12 13]
+            reconEWUnique = unique(reconEW(:).');
+    
+            reconEWUniqueInd = zeros(1, length(reconEWUnique));
+            for w = 1:length(reconEWUnique)
+                reconEWUniqueInd(w) = find(reconEW == reconEWUnique(w), 1);
+            end
+            
+            reconEWInterp = reconEW(reconEWUniqueInd);
+            rrgValsStimInterp = double(rrgValsStim(reconEWUniqueInd));
+
+%             reconEWUnique = unique(reconEW, 'stable')
+%             reconEWUniqueMat = reconEW == reconEWUnique(:)
+%             [~, reconEWUniqueInd] = find(diff(reconEWUniqueMat) == 1)
+
+            cellStatsAll{4,k}(i,1) = interp1(reconEWInterp, rrgValsStimInterp, 580, 'spline');
+        end
+
+        % Plot the values at which the stimulus r/(r+g) produces a Unique
+        % Yellow reconstruction across each mosaic proportionality
+        plot(cellStatsAll{2,1}{6,7}(:), cellStatsAll{4,k}(:,1), '-o', 'Linewidth', 3); hold on;
+
+%         % Label plot and format
+%         xlim([0.1 0.9]); ylim([0 1]);
+%         set(gca, 'XDir', 'reverse')
+%         xlabel('%L Cones', 'FontSize', 24);
+%         ylabel('Stimulus $\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
+%         title(['Stimulus Appearance for UY Recon'], 'FontSize', 26)
+    end
 
     % Label plot and format
-    xlabel('Stimulus EW', 'FontSize', 44);
-    ylabel('Reconstruction EW', 'FontSize', 44);
-    title(['Reconstruction Quantification: ' num2str(cellStatsAll{1,k}) ' arcmin'], 'FontSize', 26)
-%     xlim([0 1])
-% %     set(gcf, 'Position', [119   321   661   518]);
+%     set(gcf, 'Position', [119   321   661   518]);
 %     box off
 %     axis square
-%     plot(0:0.1:1, 0:0.1:1, '--k', 'LineWidth', 3); hold on;
-%     yline(rrgValsStim(8), '--k', 'LineWidth', 3);
-% %     legend(fig2Legend, 'NumColumns',2, 'Location', 'northwest')
+%     legend(fig1Legend, 'Location', 'northwest')
 
-
-
-
-
-
+    % Save output as image and eps file for easier formatting in Adobe
+    % Illustrator
+    saveas(gcf,fullfile(rrf.wrapDir,['shiftUY' num2str(cellStatsAll{1,k}) '.tiff']),'tiff');
+    saveas(gcf,fullfile(rrf.wrapDir,['shiftUY' num2str(cellStatsAll{1,k}) '.eps']),'epsc');
 end
 
 
@@ -368,34 +445,25 @@ end
 
 
 
-% 
-% 
-% 
-% 
-% 
-% 
-%     % Create the figure 1 legends based on input
-%     legend1End = repmat(" arcmin", 1, length(sizes));
-%     legend1Str = append(string(sizes), legend1End);
-%     fig1Legend = num2cell(legend1Str);
-% 
-%     % Create the figure 2 legends based on input
-%     legend2End = repmat(" %L", 1, length(mosaicSpread));
-%     legend2Str = append(string(mosaicSpread*100), legend2End);
-%     fig2Legend = num2cell(legend2Str);
-% 
-% 
+
+
+%
+%
+%
+%
+%
+
 %     % % Stimulus quantification plots
 %     figure()
-% 
+%
 %     % Plot stimulus r/(r+g) value vs stimulus number
 %     plot(fliplr(1:numStim), rrgValsStim, '-o', 'LineWidth',3); hold on
-% 
+%
 %     % Plot lines based on the intersection when the stimulus looks most
 %     % yellow (neither red nor green)
 % %     plot([6 6], [0 rrgValsStim(end-6+1)], '--k', 'LineWidth', 3);
 % %     plot([0 6], [rrgValsStim(end-6+1) rrgValsStim(end-6+1)], '--k', 'LineWidth', 3);
-% 
+%
 %     % Label plot and format
 %     xlabel('Stimulus Number', 'FontSize', 24, 'FontName', 'Arial');
 %     ylabel('Stimulus $\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44, 'FontName', 'Arial');
@@ -403,34 +471,34 @@ end
 %     set(gcf, 'Position', [119   321   661   518]);
 %     axis square
 %     box off
-% 
+%
 %     % Save output as image and eps file for easier formatting in Adobe
-%     % Illustrator 
+%     % Illustrator
 %     saveas(gcf,fullfile(rrf.wrapDir,'stimQuant.tiff'),'tiff');
 %     saveas(gcf,fullfile(rrf.wrapDir,'stimQuant.eps'),'epsc');
-% 
-% 
+%
+%
 %     % % Recon quantification plots
 %     % For each stimulus arcmin size
 %     for k = 1:size(cellStatsAll,2)
 %         cellStatsAll{3,k} = ones((numMosaicsTrim-3),numStim);
-% 
-%         % For each mosaic proportionality 
+%
+%         % For each mosaic proportionality
 %         for i = 1:(numMosaicsTrim)
-% 
+%
 %             % For each stimulus presented, pull out the reconstruction
 %             % r/(r+g) value
 %             for j = 1:numStim
 % %                 cellStatsAll{3,k}(i,j) = cellStatsAll{2,k}{3,j}(i+1);
-% %                 cellStatsAll{3,k}(i,j) = 
+% %                 cellStatsAll{3,k}(i,j) =
 %             end
 %         end
-% 
+%
 %         figure()
-% 
+%
 %         % Plot recon r/(r+g) value vs stimulus r/(r+g) value
 %         plot((rrgValsStim), cellStatsAll{3,k}(:, :), '-o', 'LineWidth', 3); hold on
-% 
+%
 %         % Label plot and format
 %         xlabel('Stimulus $\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
 %         ylabel('Reconstruction $\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
@@ -439,36 +507,36 @@ end
 %         set(gcf, 'Position', [119   321   661   518]);
 %         box off
 %         axis square
-%         plot(0:0.1:1, 0:0.1:1, '--k', 'LineWidth', 3); hold on; 
+%         plot(0:0.1:1, 0:0.1:1, '--k', 'LineWidth', 3); hold on;
 %         yline(rrgValsStim(8), '--k', 'LineWidth', 3);
 %         legend(fig2Legend, 'NumColumns',2, 'Location', 'northwest')
-% 
+%
 %         % Save output as image and eps file for easier formatting in Adobe
 %         % Illustrator
 %         saveas(gcf,fullfile(rrf.wrapDir,['reconQuant' num2str(cellStatsAll{1,k}) 'Arcmin.tiff']),'tiff');
 %         saveas(gcf,fullfile(rrf.wrapDir,['reconQuant' num2str(cellStatsAll{1,k}) 'Arcmin.eps']),'epsc');
 %     end
-% 
-% 
+%
+%
 % end
-% % 
+% %
 % %     % % Shift in unique yellow plot
 % %     figure()
-% % 
+% %
 % %     % For each stimulus arcmin size
 % %     for k = 1:1:size(cellStatsAll,2)
-% % 
+% %
 % %         % Interpolate the point at which the above line plots intersect the
 % %         % stimulus r/(r+g) unique yellow value
 % %         cellStatsAll{4,k} = ones(numMosaicsTrim,1);
 % %         for i = 1:(numMosaicsTrim)
 % %             cellStatsAll{4,k}(i,1) = interp1(cellStatsAll{3,k}(i,:), rrgValsStim, rrgValsStim(8), 'spline');
 % %         end
-% % 
+% %
 % %         % Plot the values at which the stimulus r/(r+g) produces a Unique
 % %         % Yellow reconstruction across each mosaic proportionality
 % %         plot(cellStatsAll{2,1}{6,7}(2:end-1), cellStatsAll{4,k}(:,1), '-o', 'Linewidth', 3); hold on;
-% % 
+% %
 % %         % Label plot and format
 % %         xlim([0.1 0.9]); ylim([0 1]);
 % %         set(gca, 'XDir', 'reverse')
@@ -476,19 +544,19 @@ end
 % %         ylabel('Stimulus $\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
 % %         title(['Stimulus Appearance for UY Recon'], 'FontSize', 26)
 % %     end
-% % 
+% %
 % %     % Label plot and format
 % %     set(gcf, 'Position', [119   321   661   518]);
 % %     box off
 % %     axis square
 % %     legend(fig1Legend, 'Location', 'northwest')
-% % 
+% %
 % %     % Save output as image and eps file for easier formatting in Adobe
-% %     % Illustrator 
+% %     % Illustrator
 % %     saveas(gcf,fullfile(rrf.wrapDir,'shiftUY.tiff'),'tiff');
 % %     saveas(gcf,fullfile(rrf.wrapDir,'shiftUY.eps'),'epsc');
 % % end
-% % 
-% % 
-% % 
-% % 
+% %
+% %
+% %
+% %
