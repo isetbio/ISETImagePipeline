@@ -194,12 +194,15 @@ end
 
 % By calling sceneFromFile we are undoing gamma correction and making it
 % linear
+
+%%% THIS IS A BIG PROBLEM AREA, THE SCENE FROM FILE NEEDS TO BE APPLIED TO
+%%% A GAMMA CORRECTED RGB VALUE, BUT RIGHT NOW GIVING IT LINEAR INFO. 
 meanLuminanceCdPerM2 = [];
-[stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimImageRGBnoGam, 'rgb', ...
-    meanLuminanceCdPerM2, forwardConeMosaic.Display);
+% [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimImageRGBnoGam, 'rgb', ...
+%     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 
 % Then we scale by some factor on the linear space and regamma correct
-stimulusImageRGB = gammaCorrection(stimulusImageLinear*pr.inputImageScaleFactor, forwardConeMosaic.Display);
+stimulusImageRGB = gammaCorrection(stimImageRGBnoGam*pr.inputImageScaleFactor, forwardConeMosaic.Display);
 
 % Then we UNDO that gamma correction we just did to get another linear
 % verison, which in theory should be the same as the previous linear image
@@ -217,7 +220,7 @@ imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 % should not undergo a second linearization process inside the script. 
 cfvStim = correctForViewing(stimulusImageLinear, rrf.startDisplayName, ...
     rrf.viewingDisplayName, rrf.stimDispScale, pr.aoReconDir, pr.displayGammaBits, ...
-    pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange, stimulusScene);
+    pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
 % imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
 % imwrite(cfvStim.imageRGBBoost,fullfile(cnv.outputDir,'StimulusDispCorrectedBoost.tiff'),'tiff');
 
@@ -230,7 +233,7 @@ forwardExcitationsToStimulusISETBio = squeeze(forwardConeMosaic.Mosaic.compute(f
 forwardExcitationsToStimulusISETBio(pr.kConeIndices) = 0;
 
 % Check forward exciations calculation another way.  Also shows another way
-% to visualize the retinal image, but this only is done when the check
+% to visualize the retinal image, but stst
 % fails.
 forwardExcitationsToStimulusCheck = forwardConeMosaic.compute(stimulusImageRGB);
 forwardExcitationsToStimulusCheck(pr.kConeIndices) = 0;
@@ -432,7 +435,7 @@ for ii = 1:length(multistartStruct.initTypes)
     reconImageLinear = multistartStruct.reconImages{ii};
     cfvRecon = correctForViewing(reconImageLinear, rrf.startDisplayName, ...
         rrf.viewingDisplayName, rrf.reconDispScale, pr.aoReconDir, pr.displayGammaBits, ...
-        pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange, reconSceneTemp);
+        pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
 %     imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
 
 

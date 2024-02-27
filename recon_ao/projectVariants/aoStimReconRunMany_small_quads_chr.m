@@ -79,9 +79,9 @@ prBase.addPoissonNoise = false;
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
-%    Currently established quadSeq1 - quadSeq56
-forwardChromList = "quadSeqNew"%["quadSeq132" "quadSeq137" "quadSeq138" "quadSeq139" "quadSeq140" "quadSeq141" "quadSeq142"]; 
-reconChromList   = "quadSeqNew"%["quadSeq132" "quadSeq137" "quadSeq138" "quadSeq139" "quadSeq140" "quadSeq141" "quadSeq142"]; 
+% ["quadSeq132" "quadSeq137" "quadSeq138" "quadSeq139" "quadSeq140" "quadSeq141" "quadSeq142"];
+forwardChromList = ["quadSeq128" "quadSeq129" "quadSeq130" "quadSeq131" "quadSeq132" "quadSeq133" "quadSeq134" "quadSeq135" "quadSeq136"]; 
+reconChromList   = ["quadSeq128" "quadSeq129" "quadSeq130" "quadSeq131" "quadSeq132" "quadSeq133" "quadSeq134" "quadSeq135" "quadSeq136"];  
 
 % Build new sequence by
 prBase.quads(1).name  = 'useQuadSeq';
@@ -162,60 +162,105 @@ stimBValList = 0.10;%0.1189 ./ [2 4 6 8 10];  %[0];% 0.0 0.0];
 % staircase procedure where (-) is more red and (+) is more green,
 % (Intervals of 50s? 100s? 1000s?)
 isoLumRG = true;
-colorStepRG = [-1729 -1280 -880 -480 0 240 480 720 960 1200 1440 1680 1729];
+% colorStepRG = [-1729 -1280 -880 -480 0 240 480 720 960 1200 1440 1680 1729];
+nEquiLumStimuli = 11;
+
 
 if (isoLumRG)
-    % Load the appropriate display
-    theDisplayLoad = load(fullfile(prBase.aoReconDir, 'displays', [prBase.displayName 'Display.mat']));
     switch (prBase.displayName)
         case 'conventional'
             displayFieldName = 'CRT12BitDisplay';
-            prBase.stimBgVal = [0.1054 0.1832 0.1189]/10;
+            overwriteDisplayGamma = false; 
+            prBase.stimBgVal = [0.1 0.1 0.1];
+%             prBase.stimBgVal = [0.1054 0.1832 0.1189]/10;
         case 'mono'
             displayFieldName = 'monoDisplay';
-            prBase.stimBgVal = [0.1054 0.1832 0.1189]/10;
+            overwriteDisplayGamma = true;
+            prBase.stimBgVal = [0.1 0.1 0.1]/10;% [0.1054 0.1832 0.1189]/10;
         otherwise
             error('Unknown display specified');
     end
 
-    % Grab the display primary xyz values and pull out luminance column
-    eval(['primariesXYZ = displayGet(theDisplayLoad.' displayFieldName ', ''primaries xyz'');']);
-    lumRGB = primariesXYZ(:,2);
+    % Load the appropriate display
+    theDisplayLoad = load(fullfile(prBase.aoReconDir, 'displays', [prBase.displayName 'Display.mat']));
+    eval(['theDisplay = theDisplayLoad.' displayFieldName ';']);
 
-    % Create offset vectors for R and G-raw values, then multiply raw value
-    % by luminance ratio between channels. Find index where R and G
-    % channels are most similar and add step if desired
-    isoLumR = fliplr(0:0.0001:1); isoLumGRaw = 1 - isoLumR;
-    ratioRG = lumRGB(1) / lumRGB(2); alpha = lumRGB(2) / lumRGB(1);
-    isoLumG = ratioRG .* isoLumGRaw;
-
-    gMax1 = (1-prBase.stimBgVal(1))/alpha; rMax1 = gMax1 * alpha;
-    gMax2 = (1-prBase.stimBgVal(2)); rMax2 = gMax2 * alpha;
-
-    if gMax1 > 1 || rMax1 > 1
-        rBound = find(isoLumR < rMax2);
-        isoLumR = isoLumR(min(rBound):end);
-        isoLumG = isoLumG(min(rBound):end);
-    elseif gMax2 > 1 || rMax2 > 1
-        rBound = find(isoLumR < rMax1);
-        isoLumR = isoLumR(min(rBound):end);
-        isoLumG = isoLumG(min(rBound):end);
-    else
-        error('Both calculations with background exceed limits')
+    if (overwriteDisplayGamma)
+        gammaInput = linspace(0,1,2^prBase.displayGammaBits)';
+        gammaOutput = gammaInput.^prBase.displayGammaGamma;
+        theDisplay.gamma = gammaOutput(:,[1 1 1]);
     end
 
-    difRG = abs(isoLumR - isoLumG)';
-    indRG = find(difRG == min(difRG)) + colorStepRG;
+    % Using the 1 nm sampling to agree w/ tutorial
+    wls = (400:1:700)';
+    theDisplay = displaySet(theDisplay, 'wave', wls);
+
+    % Get information we need to render scenes from their spectra through
+    % the recon display.
+    theXYZStruct = load('T_xyz1931');
+    T_XYZ = SplineCmf(theXYZStruct.S_xyz1931,683*theXYZStruct.T_xyz1931,wls);
+    M_rgbToXYZ = T_XYZ*displayGet(theDisplay,'spd primaries')*(wls(2)-wls(1));
+    M_XYZTorgb = inv(M_rgbToXYZ);
+    rPrimaryLuminance = M_rgbToXYZ(2,1);
+    gPrimaryLuminance = M_rgbToXYZ(2,2);
+
+    % Compute as set of equally spaced r/(r+g) values that lead
+    % to equal luminance stimuli.
+    thePrimaries = displayGet(theDisplay,'spd primaries');
+    rOverRPlusG = linspace(1,0,nEquiLumStimuli);
+    gOverRPlusG = 1-rOverRPlusG;
+    gPrimaryAdjust = rPrimaryLuminance/gPrimaryLuminance;
+    rRaw = rOverRPlusG;
+    gRaw = gOverRPlusG;
+    gAdjust = gRaw*rPrimaryLuminance/gPrimaryLuminance;
+    b = 0.001;
+    equiLumrgbValues = [rRaw ; gAdjust; b*ones(size(rRaw))];
+    inputLinearrgbValues = 0.5*equiLumrgbValues/max(equiLumrgbValues(:));
+
+    stimRValList = inputLinearrgbValues(1,:);
+    stimGValList = inputLinearrgbValues(2,:);
+    stimBValList = inputLinearrgbValues(3,:);
+
+
+
+%     % Grab the display primary xyz values and pull out luminance column
+%     eval(['primariesXYZ = displayGet(theDisplayLoad.' displayFieldName ', ''primaries xyz'');']);
+%     lumRGB = primariesXYZ(:,2);
+% 
+%     % Create offset vectors for R and G-raw values, then multiply raw value
+%     % by luminance ratio between channels. Find index where R and G
+%     % channels are most similar and add step if desired
+%     isoLumR = fliplr(0:0.0001:1); isoLumGRaw = 1 - isoLumR;
+%     ratioRG = lumRGB(1) / lumRGB(2); alpha = lumRGB(2) / lumRGB(1);
+%     isoLumG = ratioRG .* isoLumGRaw;
+% 
+%     gMax1 = (1-prBase.stimBgVal(1))/alpha; rMax1 = gMax1 * alpha;
+%     gMax2 = (1-prBase.stimBgVal(2)); rMax2 = gMax2 * alpha;
+% 
+%     if gMax1 > 1 || rMax1 > 1
+%         rBound = find(isoLumR < rMax2);
+%         isoLumR = isoLumR(min(rBound):end);
+%         isoLumG = isoLumG(min(rBound):end);
+%     elseif gMax2 > 1 || rMax2 > 1
+%         rBound = find(isoLumR < rMax1);
+%         isoLumR = isoLumR(min(rBound):end);
+%         isoLumG = isoLumG(min(rBound):end);
+%     else
+%         error('Both calculations with background exceed limits')
+%     end
+% 
+%     difRG = abs(isoLumR - isoLumG)';
+%     indRG = find(difRG == min(difRG)) + colorStepRG;
 
     % Overwrite R and G val list based on isolum conditions. To all three
     % channels add background stim value.
-    stimRValList = isoLumR(indRG) + prBase.stimBgVal(1);
-    stimGValList = isoLumG(indRG) + prBase.stimBgVal(2);
-    stimBValList = zeros(1,length(stimRValList)) + prBase.stimBgVal(3);
+%     stimRValList = isoLumR(indRG) + prBase.stimBgVal(1);
+%     stimGValList = isoLumG(indRG) + prBase.stimBgVal(2);
+%     stimBValList = zeros(1,length(stimRValList)) + prBase.stimBgVal(3);
 
-    % Clean workspace
-    clear theDisplayLoad; clear displayFieldName; clear primariesXYZ;
-    clear isoLumR; clear isoLumG; clear isoLumGRaw; clear difRG; clear indRG;
+%     % Clean workspace
+%     clear theDisplayLoad; clear theDisplay; clear displayFieldName; clear primariesXYZ;
+%     clear isoLumR; clear isoLumG; clear isoLumGRaw; clear difRG; clear indRG;
 end
 
 % Check that all channels receive same number of inputs

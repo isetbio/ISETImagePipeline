@@ -32,7 +32,7 @@ rrf = struct;
 %   statPlots: Create quantification plots for presentations
 rrf.rerunImages = false;   % DHB: Setting this to true seems to be the thing that doesn't rerun the images.
 rrf.montage = true;
-rrf.dispStim = true;
+rrf.dispStim = false;
 rrf.statPlots = true;
 
 % Select monitor display arrangements for correctForViewing.m procedure
@@ -52,7 +52,7 @@ rrf.reconDispScale = 1;
 % Each subdirectory should correspond to a different stimulus size
 rrf.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 rrf.versEditor = 'small_quads_chr';
-rrf.wrapDir = fullfile(rrf.aoReconDir , rrf.versEditor, '/StimSize_v7/Rerun');
+rrf.wrapDir = fullfile(rrf.aoReconDir , rrf.versEditor, '/StimSize_v8/Rerun');
 rrf.wrapDirInfo = dir(rrf.wrapDir);
 
 % When reading directories there are initial filler entries (., ..,
@@ -61,7 +61,7 @@ rrf.wrapDirInfo = dir(rrf.wrapDir);
 if contains(rrf.aoReconDir, 'megalodon')
     firstEntry = 3;
 else
-    firstEntry = 3;
+    firstEntry = 4;
 end
 
 % Cycle through each stim size directory
@@ -74,13 +74,13 @@ for i = firstEntry:length(rrf.wrapDirInfo)
             % Establish montage dimensions and whether or not you would like to
             % disregard the first and final mosaics as extrema (i.e. if have a 100%
             % and 0% L mosaic but don't want to include due to unrealistic nature)
-            numStim = 13;
+            numStim = 11;
             numMosaics = 9;
             trimExtrema = false;
 
             % Input sizes for stimuli used and progression of L proportionality
             % across mosaics tested.
-            sizes = [10];
+            sizes = [3.5];
             mosaicSpread =  fliplr(0.1:0.1:0.9);
 
             % Impose some pixel limitation for the image zoom on the montage when
@@ -135,7 +135,7 @@ for i = firstEntry:length(rrf.wrapDirInfo)
                     cellWaveRecon{counter} = compareRenderingEW(cfvStim.stimulusRGBScaled{1}, ...
                         cfvRecon.reconScaledRGB{1}, stimulusImageLinear, reconImageLinear, ...
                         rrf.startDisplayName, rrf.viewingDisplayName, idxXRange, ...
-                        'inwardMove', true, 'showFigs', true, 'scaleToMax', false);
+                        'inwardMove', true, 'showFigs', false, 'scaleToMax', false);
 
                     % Pull the corrected and scaled recon from the xRunOutput,
                     % trim the edges based on the zoomLim value given above
@@ -168,13 +168,15 @@ for i = firstEntry:length(rrf.wrapDirInfo)
 
                     % Otherwise load the xRunOutput.mat file from the output
                     % directory, establish the new renderDir and rerun the
-                    % aoStimRecon
-                    load(fullfile(rrf.outputDir, 'xRunOutput.mat'), "pr", "cnv")
-                    rrf.renderDir = fullfile(rrf.aoReconDir, rrf.versEditor);
-                    aoStimRecon(pr, cnv, rrf)
-
                 end
             end
+            if rrf.rerunImages
+                % aoStimRecon
+                load(fullfile(rrf.outputDir, 'xRunOutput.mat'), "pr", "cnv")
+                rrf.renderDir = fullfile(rrf.aoReconDir, rrf.versEditor);
+                aoStimRecon(pr, cnv, rrf)
+            end
+
         end
 
         % Initialize a vector to hold the r/(r+g) Vals
@@ -308,7 +310,6 @@ if (rrf.statPlots)
     %  Begin the portion to create the plot of stimulus vs reconstruction
     %  wavelength
 
-
     % Create the figure 1 legends based on input
     legend1End = repmat(" arcmin", 1, length(sizes));
     legend1Str = append(string(sizes), legend1End);
@@ -319,15 +320,20 @@ if (rrf.statPlots)
     legend2Str = append(string(mosaicSpread*100), legend2End);
     fig2Legend = num2cell(legend2Str);
 
+    plotColors = [1 - (0:1/(length(mosaicSpread)-1):1); ...
+        (0:1/(length(mosaicSpread)-1):1); ...
+        zeros(1, length(mosaicSpread))]';
+
+    plotColorsScaled = plotColors ./ max(plotColors, [], 2);
 
     rrgValsStim = [];
     for w = 1:numStim
-        rrgValsStim = [rrgValsStim int64(mean(cellWaveStim{w}.stimEWUncorrected, 'all'))];
+        rrgValsStim = [rrgValsStim int64(mean(cellWaveStim{w}.stimEW, 'all'))];
     end
-
 
     for k = 1:size(cellStatsAll,2)
         cellStatsAll{3,k} = ones((numMosaicsTrim-3),numStim);
+        figure()
 
         % For each mosaic proportionality
         for i = 1:(numMosaicsTrim)
@@ -336,20 +342,17 @@ if (rrf.statPlots)
             % r/(r+g) value
             for j = 1:numStim
                 %                 cellStatsAll{3,k}(i,j) = cellStatsAll{2,k}{3,j}(i+1);
-                cellStatsAll{3,k}(i,j) = int64(mean(cellWaveRecon{i,j}.reconEWUncorrected, 'all'));
+                cellStatsAll{3,k}(i,j) = int64(mean(cellWaveRecon{i,j}.reconEW, 'all'));
             end
+            % Plot recon r/(r+g) value vs stimulus r/(r+g) value
+            plot((rrgValsStim), cellStatsAll{3,k}(i, :), '-o', 'Color', plotColorsScaled(i,:), 'LineWidth', 3); hold on
+
         end
 
-        figure()
-        % Plot recon r/(r+g) value vs stimulus r/(r+g) value
-        plot((rrgValsStim), cellStatsAll{3,k}(:, :), '-o', 'LineWidth', 3); hold on
-
-
-
         % Label plot and format
-        xlabel('Stimulus EW', 'FontSize', 44);
-        ylabel('Reconstruction EW', 'FontSize', 44);
-        title(['Reconstruction Quantification: ' num2str(cellStatsAll{1,k}) ' arcmin'], 'FontSize', 26)
+        xlabel('Stim Wavelength', 'FontSize', 40);
+        ylabel('Recon Wavelength', 'FontSize', 40);
+        title(['Stim/Recon Comparison: ' num2str(cellStatsAll{1,k}) ' arcmin'], 'FontSize', 26)
         xlim([540 620])
         set(gcf, 'Position', [119   321   661   518]);
         box off
@@ -404,19 +407,32 @@ if (rrf.statPlots)
 %             [~, reconEWUniqueInd] = find(diff(reconEWUniqueMat) == 1)
 
             cellStatsAll{4,k}(i,1) = interp1(reconEWInterp, rrgValsStimInterp, 580, 'spline');
-        end
 
-        % Plot the values at which the stimulus r/(r+g) produces a Unique
-        % Yellow reconstruction across each mosaic proportionality
-        plot(cellStatsAll{2,1}{6,7}(:), cellStatsAll{4,k}(:,1), '-o', 'Linewidth', 3); hold on;
+            % Plot the values at which the stimulus r/(r+g) produces a Unique
+            % Yellow reconstruction across each mosaic proportionality
+            plot(cellStatsAll{2,1}{6,7}(i), cellStatsAll{4,k}(i,1), 'o', 'Color', plotColorsScaled(i,:), 'Linewidth', 5); hold on;
+        end
+        legend(fig2Legend, 'NumColumns',2, 'Location', 'northeast')
+        plot(cellStatsAll{2,1}{6,7}(:), cellStatsAll{4,k}(:,1), '-k', 'Linewidth', 3, 'HandleVisibility', 'off'); hold on;
+
 
 %         % Label plot and format
 %         xlim([0.1 0.9]); ylim([0 1]);
 %         set(gca, 'XDir', 'reverse')
-%         xlabel('%L Cones', 'FontSize', 24);
-%         ylabel('Stimulus $\frac{r}{r+g}$', 'Interpreter', 'latex', 'FontSize', 44);
-%         title(['Stimulus Appearance for UY Recon'], 'FontSize', 26)
+        ylim([550 650])
+        axis("square")
+        xlabel('Local Proportion L', 'FontSize', 40);
+        ylabel('Unique Yellow (nm)', 'FontSize', 40);
+        title('Shift in Unique Yellow', 'FontSize', 44)
     end
+
+
+
+
+
+
+
+
 
     % Label plot and format
 %     set(gcf, 'Position', [119   321   661   518]);
@@ -424,8 +440,8 @@ if (rrf.statPlots)
 %     axis square
 %     legend(fig1Legend, 'Location', 'northwest')
 
-    % Save output as image and eps file for easier formatting in Adobe
-    % Illustrator
+%     Save output as image and eps file for easier formatting in Adobe
+%     Illustrator
     saveas(gcf,fullfile(rrf.wrapDir,['shiftUY' num2str(cellStatsAll{1,k}) '.tiff']),'tiff');
     saveas(gcf,fullfile(rrf.wrapDir,['shiftUY' num2str(cellStatsAll{1,k}) '.eps']),'epsc');
 end
