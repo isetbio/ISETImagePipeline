@@ -135,7 +135,7 @@ for i = firstEntry:length(rrf.wrapDirInfo)
                     cellWaveRecon{counter} = compareRenderingEW(cfvStim.stimulusRGBScaled{1}, ...
                         cfvRecon.reconScaledRGB{1}, stimulusImageLinear, reconImageLinear, ...
                         rrf.startDisplayName, rrf.viewingDisplayName, idxXRange, ...
-                        'inwardMove', true, 'showFigs', false, 'scaleToMax', false);
+                        'inwardMove', false, 'showFigs', false, 'scaleToMax', false);
 
                     % Pull the corrected and scaled recon from the xRunOutput,
                     % trim the edges based on the zoomLim value given above
@@ -353,7 +353,8 @@ if (rrf.statPlots)
         xlabel('Stim Wavelength', 'FontSize', 40);
         ylabel('Recon Wavelength', 'FontSize', 40);
         title(['Stim/Recon Comparison: ' num2str(cellStatsAll{1,k}) ' arcmin'], 'FontSize', 26)
-        xlim([540 620])
+        xlim([540 680])
+        ylim([540 680])
         set(gcf, 'Position', [119   321   661   518]);
         box off
         axis square
