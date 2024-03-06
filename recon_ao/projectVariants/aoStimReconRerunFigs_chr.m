@@ -366,6 +366,15 @@ if (rrf.statPlots)
         % Illustrator
         saveas(gcf,fullfile(rrf.wrapDir,['reconQuant' num2str(cellStatsAll{1,k}) 'Arcmin.tiff']),'tiff');
         saveas(gcf,fullfile(rrf.wrapDir,['reconQuant' num2str(cellStatsAll{1,k}) 'Arcmin.eps']),'epsc');
+
+        % Table with Wavelength Values
+        allWavelengths = [rrgValsStim; cellStatsAll{3,k}];
+        proportionL = ["Stimulus"; num2str(mosaicSpread')];
+
+        fullTable = [proportionL allWavelengths];
+        T = array2table(fullTable(2:end,:), 'VariableNames', fullTable(1,:));
+        disp(T);
+
     end
 
 

@@ -78,10 +78,10 @@ prBase.addPoissonNoise = false;
 
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
-%    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number
+%    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number -142
 % ["quadSeq132" "quadSeq137" "quadSeq138" "quadSeq139" "quadSeq140" "quadSeq141" "quadSeq142"];
-forwardChromList = ["quadSeq128" "quadSeq129" "quadSeq130" "quadSeq131" "quadSeq132" "quadSeq133" "quadSeq134" "quadSeq135" "quadSeq136"]; 
-reconChromList   = ["quadSeq128" "quadSeq129" "quadSeq130" "quadSeq131" "quadSeq132" "quadSeq133" "quadSeq134" "quadSeq135" "quadSeq136"];  
+forwardChromList = "quadSeqNew"; %["quadSeq128" "quadSeq129" "quadSeq130" "quadSeq131" "quadSeq132" "quadSeq133" "quadSeq134" "quadSeq135" "quadSeq136"]; 
+reconChromList   = "quadSeqNew"; %["quadSeq128" "quadSeq129" "quadSeq130" "quadSeq131" "quadSeq132" "quadSeq133" "quadSeq134" "quadSeq135" "quadSeq136"];  
 
 % Build new sequence by
 prBase.quads(1).name  = 'useQuadSeq';
