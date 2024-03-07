@@ -37,7 +37,10 @@ prBase = prBaseDefaults;
 %
 % Helps us keep different calcs separate
 prBase.versEditor = 'small_quads_chr';
-prBase.system = 'chrTrashcan';
+
+% To keep account for the different computers simulations might be run on
+% simulatneously. macPro = trashcan, iMac = Semin's old computer
+prBase.system = 'macPro';
 
 %% Calculate Cone Proportions
 
@@ -158,14 +161,8 @@ stimRValList = 0.80;%0.1054 ./ [2 4 6 8 10];  %[1];% 1.0 0.0];
 stimGValList = 0.65;%0.1832 ./ [2 4 6 8 10];  %[1];% 0.0 1.0];
 stimBValList = 0.10;%0.1189 ./ [2 4 6 8 10];  %[0];% 0.0 0.0];
 
-% Overwrite stim values to make isoluminant colors on the RG channel.
-% Allow for offset from the true isoLum values based on variability in
-% staircase procedure where (-) is more red and (+) is more green,
-% (Intervals of 50s? 100s? 1000s?)
 isoLumRG = true;
-% colorStepRG = [-1729 -1280 -880 -480 0 240 480 720 960 1200 1440 1680 1729];
 nEquiLumStimuli = 11;
-
 
 if (isoLumRG)
     switch (prBase.displayName)
@@ -173,11 +170,21 @@ if (isoLumRG)
             displayFieldName = 'CRT12BitDisplay';
             overwriteDisplayGamma = false; 
             prBase.stimBgVal = [0.1 0.1 0.1];
-%             prBase.stimBgVal = [0.1054 0.1832 0.1189]/10;
         case 'mono'
             displayFieldName = 'monoDisplay';
             overwriteDisplayGamma = true;
-            prBase.stimBgVal = [0.1 0.1 0.1]/10;% [0.1054 0.1832 0.1189]/10;
+
+            % The following values are the approximations for a 0.5 uniform 
+            % field on a conventional display using the tutorial. These can
+            % be scaled accordingly for a lighter or darker background on
+            % the interval 0-1/max(monoGray). Temporary patch, once
+            % everything else is cleaned may consider replacing with a call
+            % to RGBRenderAcrossDisplays
+            monoGray = [0.444485445018075; ...
+                0.525384925401570; ...
+                0.554173733733909];
+            prBase.stimBgVal = monoGray * 1;
+
         otherwise
             error('Unknown display specified');
     end

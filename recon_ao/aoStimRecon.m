@@ -186,20 +186,7 @@ else
     end
 end
 
-%%%%%%%%%%%%%%%
-% imshow(stimImageRGBnoGam);
-
-% Create an ISETBio scene.  Rescale input image
-% according to pr.inputImageScaleFactor.
-
-% By calling sceneFromFile we are undoing gamma correction and making it
-% linear
-
-%%% THIS IS A BIG PROBLEM AREA, THE SCENE FROM FILE NEEDS TO BE APPLIED TO
-%%% A GAMMA CORRECTED RGB VALUE, BUT RIGHT NOW GIVING IT LINEAR INFO. 
 meanLuminanceCdPerM2 = [];
-% [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimImageRGBnoGam, 'rgb', ...
-%     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 
 % Then we scale by some factor on the linear space and regamma correct
 stimulusImageRGB = gammaCorrection(stimImageRGBnoGam*pr.inputImageScaleFactor, forwardConeMosaic.Display);
