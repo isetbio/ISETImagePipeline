@@ -37,6 +37,7 @@ prBase = prBaseDefaults;
 %
 % Helps us keep different calcs separate
 prBase.versEditor = 'small_quads_chr';
+prBase.system = 'chrTrashcan';
 
 %% Calculate Cone Proportions
 

@@ -144,6 +144,6 @@ else
         pr.forwardChrom, pr.forwardEccVars, pr.forwardNoLCA, pr.reconChrom, pr.reconEccVars, pr.reconNoLCA, ...
         pr.stimCenter(1),pr.stimCenter(2),noiseStr,pr.boundedSearch, stimQuadsName);
 end
-cnv.outputDir = fullfile(pr.aoReconDir, pr.versEditor, cnv.outputMainName, cnv.outputSubName);
+cnv.outputDir = fullfile(pr.aoReconDir, pr.versEditor, pr.system, cnv.outputMainName, cnv.outputSubName);
 
 end

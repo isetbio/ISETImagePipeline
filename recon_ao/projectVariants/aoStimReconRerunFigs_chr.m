@@ -135,7 +135,7 @@ for i = firstEntry:length(rrf.wrapDirInfo)
                     cellWaveRecon{counter} = compareRenderingEW(cfvStim.stimulusRGBScaled{1}, ...
                         cfvRecon.reconScaledRGB{1}, stimulusImageLinear, reconImageLinear, ...
                         rrf.startDisplayName, rrf.viewingDisplayName, idxXRange, ...
-                        'inwardMove', false, 'showFigs', false, 'scaleToMax', false);
+                        'inwardMove', false, 'showFigs', true, 'scaleToMax', false, 'verbose', true);
 
                     % Pull the corrected and scaled recon from the xRunOutput,
                     % trim the edges based on the zoomLim value given above
@@ -253,7 +253,7 @@ for i = firstEntry:length(rrf.wrapDirInfo)
             % visualized on top (accomodating default order of imtile), and save
             figFull = imtile(cellFull, 'GridSize', [numStim, numMosaicsTrim+1]);
             imshow(imrotate(figFull, -90))
-            saveas(gcf,fullfile(rrf.mainDir,'reconSlidePlot.tiff'),'tiff');
+            saveas(gcf,fullfile(rrf.mainDir,'reconSlidePlotMax.tiff'),'tiff');
         end
 
         % If presenting the stimuli sequence alone
@@ -371,7 +371,7 @@ if (rrf.statPlots)
         allWavelengths = [rrgValsStim; cellStatsAll{3,k}];
         proportionL = ["Stimulus"; num2str(mosaicSpread')];
 
-        fullTable = [proportionL allWavelengths];
+        fullTable = [proportionL fliplr(allWavelengths)];
         T = array2table(fullTable(2:end,:), 'VariableNames', fullTable(1,:));
         disp(T);
 
