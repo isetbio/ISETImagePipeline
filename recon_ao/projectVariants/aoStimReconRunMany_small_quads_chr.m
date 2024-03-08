@@ -80,6 +80,14 @@ prBase.reconEccVars = false;
 prBase.reconstructfromRenderMatrix = true;
 prBase.addPoissonNoise = false;
 
+% By setting it up this way we impose a constraint that you can only every
+% change one region at a time, which might seem limiting but avoids
+% accidentally setting a million simulations off at once. 
+prBase.focalRegion = 'center'; % Options - center, nearSurround, distantSurround
+prBase.focalVariant = 1;
+prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
+
+
 % Mosaic chromatic type, options are:
 %    "chromNorm", "chromProt", "chromDeut", "chromTrit",
 %    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number -142
@@ -228,47 +236,6 @@ if (isoLumRG)
     stimRValList = inputLinearrgbValues(1,:);
     stimGValList = inputLinearrgbValues(2,:);
     stimBValList = inputLinearrgbValues(3,:);
-
-
-
-%     % Grab the display primary xyz values and pull out luminance column
-%     eval(['primariesXYZ = displayGet(theDisplayLoad.' displayFieldName ', ''primaries xyz'');']);
-%     lumRGB = primariesXYZ(:,2);
-% 
-%     % Create offset vectors for R and G-raw values, then multiply raw value
-%     % by luminance ratio between channels. Find index where R and G
-%     % channels are most similar and add step if desired
-%     isoLumR = fliplr(0:0.0001:1); isoLumGRaw = 1 - isoLumR;
-%     ratioRG = lumRGB(1) / lumRGB(2); alpha = lumRGB(2) / lumRGB(1);
-%     isoLumG = ratioRG .* isoLumGRaw;
-% 
-%     gMax1 = (1-prBase.stimBgVal(1))/alpha; rMax1 = gMax1 * alpha;
-%     gMax2 = (1-prBase.stimBgVal(2)); rMax2 = gMax2 * alpha;
-% 
-%     if gMax1 > 1 || rMax1 > 1
-%         rBound = find(isoLumR < rMax2);
-%         isoLumR = isoLumR(min(rBound):end);
-%         isoLumG = isoLumG(min(rBound):end);
-%     elseif gMax2 > 1 || rMax2 > 1
-%         rBound = find(isoLumR < rMax1);
-%         isoLumR = isoLumR(min(rBound):end);
-%         isoLumG = isoLumG(min(rBound):end);
-%     else
-%         error('Both calculations with background exceed limits')
-%     end
-% 
-%     difRG = abs(isoLumR - isoLumG)';
-%     indRG = find(difRG == min(difRG)) + colorStepRG;
-
-    % Overwrite R and G val list based on isolum conditions. To all three
-    % channels add background stim value.
-%     stimRValList = isoLumR(indRG) + prBase.stimBgVal(1);
-%     stimGValList = isoLumG(indRG) + prBase.stimBgVal(2);
-%     stimBValList = zeros(1,length(stimRValList)) + prBase.stimBgVal(3);
-
-%     % Clean workspace
-%     clear theDisplayLoad; clear theDisplay; clear displayFieldName; clear primariesXYZ;
-%     clear isoLumR; clear isoLumG; clear isoLumGRaw; clear difRG; clear indRG;
 end
 
 % Check that all channels receive same number of inputs
@@ -356,7 +323,7 @@ for ss = 1:length(stimSizeDegsList)
         for yy = 1:size(deltaCenterList,2)
             for ff = 1:length(forwardDefocusDioptersList)
                 for rr = 1:length(regParaList)
-                    for dd = 1:length(forwardChromList)
+                    for dd = 1:length(forwardChromList)%%%%%%%%%%%%%
                         for pp = 1:length(forwardPupilDiamListMM)
                             for qq = 1:length(quadSelectList(1,:))
                                 for dsf = 1:length(displayScaleFactorList)
