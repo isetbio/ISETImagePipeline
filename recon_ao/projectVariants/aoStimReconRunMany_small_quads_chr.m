@@ -80,11 +80,24 @@ prBase.reconEccVars = false;
 prBase.reconstructfromRenderMatrix = true;
 prBase.addPoissonNoise = false;
 
+%% Choose your journey
+%
+% Select what you would like to do, for efficiency's sake only recommend
+% having one set to true at a time (reconstruct, renderMatrices, or mosaic 
+% montages)
+runReconstructions = false;
+buildRenderMatrix = false;
+buildMosaicMontages = true; 
+
+if buildRenderMatrix
+buildNewForward = false;
+buildNewRecon = false;
+end
 %% Mosaic cone domain
 % Top level domain values of all possible combinations we'll want to
 % run. Useful for rapidly building render matrices or viewing mosaic
 % montages, but is not sent into the aoScript to avoid overrunning. 
-prBase.viewMosaicMontage = true; 
+prBase.viewMosaicMontage = false; 
 prBase.setProps = true; 
 prBase.viewBounds = false; 
 
@@ -102,82 +115,12 @@ stimSizeDegsList = [3.5] / 60;
 prBase.focalRegion = "center"; % Options: center, nearSurround, distantSurround, multiple, global
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
-% Mosaic chromatic type, options are:
-%    "chromNorm", "chromProt", "chromDeut", "chromTrit",
-%    "chromAllL", "chromAllM", "chromAllS", "quadSeq" and number -142
-% ["quadSeq132" "quadSeq137" "quadSeq138" "quadSeq139" "quadSeq140" "quadSeq141" "quadSeq142"];
-forwardChromList = "quadSeqNew"; %["quadSeq128" "quadSeq129" "quadSeq130" "quadSeq131" "quadSeq132" "quadSeq133" "quadSeq134" "quadSeq135" "quadSeq136"]; 
-reconChromList   = "quadSeqNew"; %["quadSeq128" "quadSeq129" "quadSeq130" "quadSeq131" "quadSeq132" "quadSeq133" "quadSeq134" "quadSeq135" "quadSeq136"];  
-
-% Build new sequence by
-prBase.quads(1).name  = 'useQuadSeq';
-prBase.quads(1).value = true;
-
-% If want to apply percentages to the full mosaic instead of a
-% quadrant, set to true and use percentages corresponding to Quadrant 4
-% (prBase.quads(5))
-fullMosaicPercent = true;
-
-if(prBase.quads(1).value)
-    % Initialize storage structure with information on each quadrant
-    prBase.quads(2).name = 'Quad1';
-    prBase.quads(3).name = 'Quad2';
-    prBase.quads(4).name = 'Quad3';
-    prBase.quads(5).name = 'Quad4';
-
-    % Enter desired percent as decimal of L cones per region across
-    % quadrants. The remaining percent will be made of M cones. Entries
-    % should start with outermost regions first and progress inward
-    prBase.quads(2).percentL = [0.27];
-    prBase.quads(3).percentL = [0.53];
-    prBase.quads(4).percentL = [0.71];
-    prBase.quads(5).percentL = [0.50];
-
-    % Enter desired percent as decimal of S cones per region across
-    % quadrants. Follows same form as above
-    prBase.quads(2).percentS = [0.05];
-    prBase.quads(3).percentS = [0.05];
-    prBase.quads(4).percentS = [0.05];
-    prBase.quads(5).percentS = [0.1];
-
-    % Establish initial region boundaries in the x and y direction for all
-    % four quadrants based on FOV
-    prBase.quads(2).xbounds = [0 prBase.fieldSizeMinutes/60/2] + prBase.eccXDegs;
-    prBase.quads(3).xbounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccXDegs;
-    prBase.quads(4).xbounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccXDegs;
-    prBase.quads(5).xbounds = [0 prBase.fieldSizeMinutes/60/2] + prBase.eccXDegs;
-    prBase.quads(2).ybounds = [0 prBase.fieldSizeMinutes/60/2] + prBase.eccYDegs;
-    prBase.quads(3).ybounds = [0 prBase.fieldSizeMinutes/60/2] + prBase.eccYDegs;
-    prBase.quads(4).ybounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccYDegs;
-    prBase.quads(5).ybounds = [-prBase.fieldSizeMinutes/60/2 0] + prBase.eccYDegs;
-
-    if (fullMosaicPercent)
-        prBase.quads(5).xbounds = [-prBase.fieldSizeMinutes/60/2 prBase.fieldSizeMinutes/60/2] + prBase.eccXDegs;
-        prBase.quads(5).ybounds = [-prBase.fieldSizeMinutes/60/2 prBase.fieldSizeMinutes/60/2] + prBase.eccYDegs;
-    end
-end
-
-prBase.quads(6).name  = 'overrideQuadSeq'; % Should change this to customQuadSeq
-prBase.quads(6).value = true;
-
-% Add indices of cones to be silenced.
-prBase.kConeIndices = [];
-
-% Select which quadrants from the above to activate, of the order:
-% Q1 Q2 Q3 Q4 Origin
-quadSelectList = [[false false false false true]]';%...
-
-% Force build and save of render structures.  This
-% only affects this script, and will typically be false.
-buildNewForward = false;
-buildNewRecon = false;
-
 %% Stimulus color
-% RGB values (before gamma correction)
-prBase.stimBgVal = 0.3;% [0.1054 0.1832 0.1189]
-stimRValList = 0.80;%0.1054 ./ [2 4 6 8 10];  %[1];% 1.0 0.0];
-stimGValList = 0.65;%0.1832 ./ [2 4 6 8 10];  %[1];% 0.0 1.0];
-stimBValList = 0.10;%0.1189 ./ [2 4 6 8 10];  %[0];% 0.0 0.0];
+% rgb values (before gamma correction)
+prBase.stimBgVal = 0.3;
+stimRValList = 0.80;
+stimGValList = 0.65;
+stimBValList = 0.10;
 
 isoLumRG = true;
 nEquiLumStimuli = 11;
@@ -373,58 +316,63 @@ for ss = 1:length(stimSizeDegsList)
 end
 
 %% Render Structures
-% 
+%
 % Either build the render structure OR visualize a montage of possible
 % mosaics OR load an existing render struct. NOTE: All paths are mutually
 % exclusive, can only do one of the above at a time. Loading is done within
-% the aoStimRecon script in the chunk below. 
-if buildNewForward || buildNewRecon || prBase.viewMosaicMontage
-    for pp = 1:length(regPara)
-        % Set up paramters structure for this loop, filling in fields that come
-        % out of lists precreated above.
-        pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
-            stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-            forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
-        pr.quadSelect = quadSelect(:,pp);
-        cnv = computeConvenienceParams(pr);
-
-        % Build foward cone mosaic and render matrix if needed
-        if (buildNewForward || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'file'))
-%             renderStructure = buildrenderStruct(pr, cnv);
-            renderStructure = buildRenderStruct(pr, cnv, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardNoLCA, ...
-                pr.forwardDefocusDiopters, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
-                cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase, pr.forwardChrom);
-%             save(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'renderStructure','-v7.3');
-%             forwardRenderStructure = renderStructure; clear renderStructure;
-        end
-
-        % Build recon cone mosaic and render structure if needed
-        if (buildNewRecon || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'file'))
-            renderStructure = buildRenderStruct(pr, cnv, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconNoLCA, ...
-                pr.reconDefocusDiopters, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
-                cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase, pr.reconChrom);
-%             save(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'renderStructure','-v7.3');
-%             reconRenderStructure = renderStructure; clear renderStructure;
-        end
-    end
-    return
-end
-
-%% Run aoStimRecon.m
-% THIS SHOULD BE A PARFOR AFTERWARDS DON'T FORGET
-parfor pp = 1:length(regPara)
-
+% the aoStimRecon script in the chunk below.
+for pp = 1:length(regPara)
     % Set up paramters structure for this loop, filling in fields that come
-    % out of lists above.
+    % out of lists precreated above.
     pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
         forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
     pr.quadSelect = quadSelect(:,pp);
-
-    % Compute convenience parameters
     cnv = computeConvenienceParams(pr);
 
-    % Call the driving function
-    aoStimRecon(pr,cnv, rrf);
+    % Build foward cone mosaic and render matrix if needed
+    if (buildNewForward || prBase.viewMosaicMontage || ...
+            ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'file'))
+        %             renderStructure = buildrenderStruct(pr, cnv);
+        renderStructure = buildRenderStruct(pr, cnv, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardNoLCA, ...
+            pr.forwardDefocusDiopters, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
+            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase, pr.forwardChrom);
+        %             save(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'renderStructure','-v7.3');
+        %             forwardRenderStructure = renderStructure; clear renderStructure;
+    end
+
+    % Build recon cone mosaic and render structure if needed
+    if (buildNewRecon || prBase.viewMosaicMontage || ...
+            ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'file'))
+        renderStructure = buildRenderStruct(pr, cnv, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconNoLCA, ...
+            pr.reconDefocusDiopters, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
+            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase, pr.reconChrom);
+        %             save(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'renderStructure','-v7.3');
+        %             reconRenderStructure = renderStructure; clear renderStructure;
+    end
+end
+
+
+
+keyboard();
+
+%% Run aoStimRecon.m
+% THIS SHOULD BE A PARFOR AFTERWARDS DON'T FORGET
+if reconstruct
+    parfor pp = 1:length(regPara)
+
+        % Set up paramters structure for this loop, filling in fields that come
+        % out of lists above.
+        pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
+            stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
+            forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
+        pr.quadSelect = quadSelect(:,pp);
+
+        % Compute convenience parameters
+        cnv = computeConvenienceParams(pr);
+
+        % Call the driving function
+        aoStimRecon(pr,cnv, rrf);
+    end
 end
 
