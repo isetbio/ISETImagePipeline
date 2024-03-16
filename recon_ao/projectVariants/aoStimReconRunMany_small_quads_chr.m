@@ -48,9 +48,9 @@ prBase.system = 'macPro';
 % Provide input matrix with desired surrounding annulus widths. Each column
 % corresponds to another annulus moving outward. Each row corresponds to a
 % different series of annuli layers (labeled as "conditions")
-% 
-% 
-% For reference, 2-3 arcmin seems to agree with OI spread. 
+%
+%
+% For reference, 2-3 arcmin seems to agree with OI spread.
 prBase.annWidthArc = [1; 2];
 
 %% Parameters
@@ -83,23 +83,23 @@ prBase.addPoissonNoise = false;
 %% Choose your journey
 %
 % Select what you would like to do, for efficiency's sake only recommend
-% having one set to true at a time (reconstruct, renderMatrices, or mosaic 
+% having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
 runReconstructions = false;
 buildRenderMatrix = false;
-buildMosaicMontages = true; 
+buildMosaicMontages = true;
 
 if buildRenderMatrix
-buildNewForward = false;
-buildNewRecon = false;
+    buildNewForward = false;
+    buildNewRecon = false;
 end
 %% Mosaic cone domain
 % Top level domain values of all possible combinations we'll want to
 % run. Useful for rapidly building render matrices or viewing mosaic
-% montages, but is not sent into the aoScript to avoid overrunning. 
-prBase.viewMosaicMontage = false; 
-prBase.setProps = true; 
-prBase.viewBounds = false; 
+% montages, but is not sent into the aoScript to avoid overrunning.
+prBase.viewMosaicMontage = false;
+prBase.useCustomMosaic = true;
+prBase.viewBounds = false;
 
 prBase.focalVariantDomain = 1; %1:5;
 prBase.stimSizeDegsDomain = 10/60;%[2 3.5 10] / 60;
@@ -109,7 +109,7 @@ prBase.focalPropLListDomain = 0.9;%[0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9
 %% Mosaic cone parameters
 
 % These are the specific values taken in by the AO script, for this project
-% want it to be relatively limited for the sake of speed. 
+% want it to be relatively limited for the sake of speed.
 prBase.focalVariant = 1;
 stimSizeDegsList = [3.5] / 60;
 prBase.focalRegion = "center"; % Options: center, nearSurround, distantSurround, multiple, global
@@ -129,13 +129,13 @@ if (isoLumRG)
     switch (prBase.displayName)
         case 'conventional'
             displayFieldName = 'CRT12BitDisplay';
-            overwriteDisplayGamma = false; 
+            overwriteDisplayGamma = false;
             prBase.stimBgVal = [0.1 0.1 0.1];
         case 'mono'
             displayFieldName = 'monoDisplay';
             overwriteDisplayGamma = true;
 
-            % The following values are the approximations for a 0.5 uniform 
+            % The following values are the approximations for a 0.5 uniform
             % field on a conventional display using the tutorial. These can
             % be scaled accordingly for a lighter or darker background on
             % the interval 0-1/max(monoGray). Temporary patch, once
@@ -278,7 +278,7 @@ for ss = 1:length(stimSizeDegsList)
                 for rr = 1:length(regParaList)
                     for dd = 1:length(forwardChromList)%%%%%%%%%%%%%
                         for pp = 1:length(forwardPupilDiamListMM)
-                            for qq = 1:length(quadSelectList(1,:))
+                            for qq = 1:length(quadSelectList(1,:))%%%%%%%%%
                                 for dsf = 1:length(displayScaleFactorList)
 
                                     stimSizeDegs(runIndex) = stimSizeDegsList(ss);
@@ -321,40 +321,33 @@ end
 % mosaics OR load an existing render struct. NOTE: All paths are mutually
 % exclusive, can only do one of the above at a time. Loading is done within
 % the aoStimRecon script in the chunk below.
-for pp = 1:length(regPara)
-    % Set up paramters structure for this loop, filling in fields that come
-    % out of lists precreated above.
-    pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
-        stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-        forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
-    pr.quadSelect = quadSelect(:,pp);
-    cnv = computeConvenienceParams(pr);
+if buildRenderMatrix
+    for pp = 1:length(regPara)
+        % Set up paramters structure for this loop, filling in fields that come
+        % out of lists precreated above.
+        pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
+            stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
+            forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
+        pr.quadSelect = quadSelect(:,pp);
+        cnv = computeConvenienceParams(pr);
 
-    % Build foward cone mosaic and render matrix if needed
-    if (buildNewForward || prBase.viewMosaicMontage || ...
-            ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'file'))
-        %             renderStructure = buildrenderStruct(pr, cnv);
-        renderStructure = buildRenderStruct(pr, cnv, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardNoLCA, ...
-            pr.forwardDefocusDiopters, pr.forwardRandSeed, cnv.replaceForwardCones, cnv.forwardStartCones, ...
-            cnv.forwardNewCones, pr.forwardEccVars, pr.forwardSubjectID, pr.forwardZernikeDataBase, pr.forwardChrom);
-        %             save(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'renderStructure','-v7.3');
-        %             forwardRenderStructure = renderStructure; clear renderStructure;
-    end
+        % Build foward cone mosaic and render matrix if needed
+        if (buildNewForward || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'file'))
+            renderStructure = buildRenderStruct(pr, cnv, "forward");
+        end
 
-    % Build recon cone mosaic and render structure if needed
-    if (buildNewRecon || prBase.viewMosaicMontage || ...
-            ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'file'))
-        renderStructure = buildRenderStruct(pr, cnv, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconNoLCA, ...
-            pr.reconDefocusDiopters, pr.reconRandSeed, cnv.replaceReconCones, cnv.reconStartCones, ...
-            cnv.reconNewCones, pr.reconEccVars, pr.reconSubjectID, pr.reconZernikeDataBase, pr.reconChrom);
-        %             save(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'renderStructure','-v7.3');
-        %             reconRenderStructure = renderStructure; clear renderStructure;
+        % Build recon cone mosaic and render structure if needed
+        if (buildNewRecon || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'file'))
+            renderStructure = buildRenderStruct(pr, cnv, "recon");
+        end
     end
 end
 
-
-
-keyboard();
+%% Visualize mosaics
+if buildMosaicMontages
+    buildMosaicMontage(pr, cnv, "forward");
+    buildMosaicMontage(pr, cnv, "recon");
+end
 
 %% Run aoStimRecon.m
 % THIS SHOULD BE A PARFOR AFTERWARDS DON'T FORGET
