@@ -93,6 +93,13 @@ if buildRenderMatrix
     buildNewForward = false;
     buildNewRecon = false;
 end
+
+multReconParams = false;
+
+% Set default variant and proportion L and S cones.
+prBase.regionVariant = [1 1 1];
+prBase.propL = [0.5 0.5 0.5];
+prBase.propS = [0.10 0.10 0.10];
 %% Mosaic cone domain
 % Top level domain values of all possible combinations we'll want to
 % run. Useful for rapidly building render matrices or viewing mosaic
@@ -103,7 +110,7 @@ prBase.viewBounds = false;
 
 prBase.focalVariantDomain = 1; %1:5;
 prBase.stimSizeDegsDomain = 10/60;%[2 3.5 10] / 60;
-prBase.focalRegionDomain = "center"; %["center" "nearSurround" "distantSurround"];
+prBase.focalRegionDomain = "global"; %["center" "nearSurround" "distantSurround"];
 prBase.focalPropLListDomain = 0.9;%[0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
 %% Mosaic cone parameters
@@ -276,37 +283,35 @@ for ss = 1:length(stimSizeDegsList)
         for yy = 1:size(deltaCenterList,2)
             for ff = 1:length(forwardDefocusDioptersList)
                 for rr = 1:length(regParaList)
-                    for dd = 1:length(forwardChromList)%%%%%%%%%%%%%
-                        for pp = 1:length(forwardPupilDiamListMM)
-                            for qq = 1:length(quadSelectList(1,:))%%%%%%%%%
-                                for dsf = 1:length(displayScaleFactorList)
+                    %                     for dd = 1:length(forwardChromList)%%%%%%%%%%%%%
+                    for pp = 1:length(forwardPupilDiamListMM)
+                        %                             for qq = 1:length(quadSelectList(1,:))%%%%%%%%%
+                        for dsf = 1:length(displayScaleFactorList)
 
-                                    stimSizeDegs(runIndex) = stimSizeDegsList(ss);
+                            stimSizeDegs(runIndex) = stimSizeDegsList(ss);
 
-                                    stimRVal(runIndex) = stimRValList(cc);
-                                    stimGVal(runIndex) = stimGValList(cc);
-                                    stimBVal(runIndex) = stimBValList(cc);
+                            stimRVal(runIndex) = stimRValList(cc);
+                            stimGVal(runIndex) = stimGValList(cc);
+                            stimBVal(runIndex) = stimBValList(cc);
 
-                                    stimCenter(:,runIndex) = deltaCenterList(:,yy);
+                            stimCenter(:,runIndex) = deltaCenterList(:,yy);
 
-                                    forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
-                                    reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
+                            forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
+                            reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
 
-                                    regPara(runIndex) = regParaList(rr);
+                            regPara(runIndex) = regParaList(rr);
 
-                                    forwardChrom(runIndex) = forwardChromList(dd);
-                                    reconChrom(runIndex) = reconChromList(dd);
+                            %                                     forwardChrom(runIndex) = forwardChromList(dd);
+                            %                                     reconChrom(runIndex) = reconChromList(dd);
 
-                                    forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
-                                    reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
+                            forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
+                            reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
 
-                                    quadSelect(:,runIndex) = quadSelectList(:,qq);
+                            %                                     quadSelect(:,runIndex) = quadSelectList(:,qq);
 
-                                    displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
+                            displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
 
-                                    runIndex = runIndex + 1;
-                                end
-                            end
+                            runIndex = runIndex + 1;
                         end
                     end
                 end
@@ -314,6 +319,8 @@ for ss = 1:length(stimSizeDegsList)
         end
     end
 end
+%     end
+% end
 
 %% Render Structures
 %
@@ -322,31 +329,74 @@ end
 % exclusive, can only do one of the above at a time. Loading is done within
 % the aoStimRecon script in the chunk below.
 if buildRenderMatrix
-    for pp = 1:length(regPara)
-        % Set up paramters structure for this loop, filling in fields that come
-        % out of lists precreated above.
-        pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
-            stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-            forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
-        pr.quadSelect = quadSelect(:,pp);
-        cnv = computeConvenienceParams(pr);
+    if multReconParams
+        for pp = 1:length(regPara)
+            % Set up paramters structure for this loop, filling in fields that come
+            % out of lists precreated above.
+            pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
+                stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
+                forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
+            cnv = computeConvenienceParams(pr);
 
-        % Build foward cone mosaic and render matrix if needed
-        if (buildNewForward || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'file'))
-            renderStructure = buildRenderStruct(pr, cnv, "forward");
+            % Build foward cone mosaic and render matrix if needed
+            if (buildNewForward || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'file'))
+                renderStructure = buildRenderStruct(pr, cnv, "forward");
+            end
+
+            % Build recon cone mosaic and render structure if needed
+            if (buildNewRecon || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'file'))
+                renderStructure = buildRenderStruct(pr, cnv, "recon");
+            end
         end
+    else
+        for pp = 1
+            % Set up paramters structure for this loop, filling in fields that come
+            % out of lists precreated above.
+            pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
+                stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
+                forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
+            cnv = computeConvenienceParams(pr);
 
-        % Build recon cone mosaic and render structure if needed
-        if (buildNewRecon || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'file'))
-            renderStructure = buildRenderStruct(pr, cnv, "recon");
+            % Build foward cone mosaic and render matrix if needed
+            if (buildNewForward || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'file'))
+                renderStructure = buildRenderStruct(pr, cnv, "forward");
+            end
+
+            % Build recon cone mosaic and render structure if needed
+            if (buildNewRecon || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'file'))
+                renderStructure = buildRenderStruct(pr, cnv, "recon");
+            end
         end
     end
 end
 
 %% Visualize mosaics
 if buildMosaicMontages
-    buildMosaicMontage(pr, cnv, "forward");
-    buildMosaicMontage(pr, cnv, "recon");
+    if multReconParams
+        for pp = 1:length(regPara)
+            % Set up paramters structure for this loop, filling in fields that come
+            % out of lists precreated above.
+            pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
+                stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
+                forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
+            %         pr.quadSelect = quadSelect(:,pp);
+            cnv = computeConvenienceParams(pr);
+            buildMosaicMontage(pr, cnv, "forward");
+            buildMosaicMontage(pr, cnv, "recon");
+        end
+    else
+        for pp = 1
+            % Set up paramters structure for this loop, filling in fields that come
+            % out of lists precreated above.
+            pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
+                stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
+                forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
+            %         pr.quadSelect = quadSelect(:,pp);
+            cnv = computeConvenienceParams(pr);
+            buildMosaicMontage(pr, cnv, "forward");
+            buildMosaicMontage(pr, cnv, "recon");
+        end
+    end
 end
 
 %% Run aoStimRecon.m

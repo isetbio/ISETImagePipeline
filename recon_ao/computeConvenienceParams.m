@@ -72,31 +72,31 @@ end
 % Process mosaic chromatic type (trichromatic, deuteranopic, etc.) to be used.
 % This provides variables that are used to process the mosaic below according
 % to the specified chromatic type. See routine assignCones.
-[cnv.replaceForwardCones, cnv.forwardStartCones, ...
-    cnv.forwardNewCones] = assignCones(pr.forwardChrom);
-[cnv.replaceReconCones, cnv.reconStartCones, ...
-    cnv.reconNewCones] = assignCones(pr.reconChrom);
+% [cnv.replaceForwardCones, cnv.forwardStartCones, ...
+%     cnv.forwardNewCones] = assignCones(pr.forwardChrom);
+% [cnv.replaceReconCones, cnv.reconStartCones, ...
+%     cnv.reconNewCones] = assignCones(pr.reconChrom);
 
 % Render structure name
 if (pr.forwardAORender)
     cnv.forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_AO_%0.2f_%s_%s_%d_%d.mat', ...
         pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.forwardPupilDiamMM), ...
-        pr.forwardDefocusDiopters,cnv.forwardSeedStr, pr.forwardChrom, pr.forwardEccVars, pr.forwardNoLCA);
+        pr.forwardDefocusDiopters,cnv.forwardSeedStr, pr.forwardEccVars, pr.forwardNoLCA);
 else
     cnv.forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_NOAO_%0.2f_%s_%d_%s_%s_%d_%d.mat', ...
         pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.forwardPupilDiamMM),...
         pr.forwardDefocusDiopters,pr.forwardZernikeDataBase,pr.forwardSubjectID, cnv.forwardSeedStr,...
-        pr.forwardChrom, pr.forwardEccVars, pr.forwardNoLCA);
+        pr.forwardEccVars, pr.forwardNoLCA);
 end
 if (pr.reconAORender)
     cnv.reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_AO_%0.2f_%s_%s_%d_%d.mat', ...
         pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.reconPupilDiamMM), ...
-        pr.reconDefocusDiopters, cnv.reconSeedStr, pr.reconChrom, pr.reconEccVars, pr.reconNoLCA);
+        pr.reconDefocusDiopters, cnv.reconSeedStr, pr.reconEccVars, pr.reconNoLCA);
 else
     cnv.reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_NOAO_%0.2f_%s_%d_%s_%s_%d_%d.mat', ...
         pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.reconPupilDiamMM),...
         pr.reconDefocusDiopters, pr.reconZernikeDataBase,pr.reconSubjectID, cnv.reconSeedStr,...
-        pr.reconChrom, pr.reconEccVars, pr.reconNoLCA);
+         pr.reconEccVars, pr.reconNoLCA);
 end
 
 % Determine Poisson Noise string
@@ -119,14 +119,14 @@ else
     cnv.reconLCAStr = 'LCA';
 end
 
-% Determine which quadrants are stimulated for small quads
-if isfield(pr,'quadSelect')
-    stimQuads = (find(pr.quadSelect' ~= 0));
-    stimQuadsName = sprintf('%d',stimQuads');
-else
-    stimQuads = [];
-    stimQuadsName = 'noquad';
-end
+% % Determine which quadrants are stimulated for small quads
+% if isfield(pr,'quadSelect')
+%     stimQuads = (find(pr.quadSelect' ~= 0));
+%     stimQuadsName = sprintf('%d',stimQuads');
+% else
+%     stimQuads = [];
+%     stimQuadsName = 'noquad';
+% end
 
 
 % Output directory names
@@ -136,13 +136,13 @@ cnv.outputMainName = sprintf('%s_%s_%s_%0.2f_%0.2f_%d_%d_%s_%0.2f_%s', ...
 if (length(pr.stimBgVal) > 3)
     cnv.outputSubName = sprintf('%0.1f_%0.1f_%0.1f_%0.6f_%d_%s_%s_%s_%d_%d_%s_%d_%d_%d_%d_%s_%d_%s', ...
         60*pr.stimSizeDegs,pr.eccXDegs,pr.eccYDegs,pr.regPara,pr.stride,pr.imageName,cnv.exciteSource, ...
-        pr.forwardChrom, pr.forwardEccVars, pr.forwardNoLCA, pr.reconChrom, pr.reconEccVars, pr.reconNoLCA, ...
-        pr.stimCenter(1),pr.stimCenter(2), noiseStr,pr.boundedSearch, stimQuadsName);
+        pr.forwardEccVars, pr.forwardNoLCA, pr.reconEccVars, pr.reconNoLCA, ...
+        pr.stimCenter(1),pr.stimCenter(2), noiseStr,pr.boundedSearch);
 else
     cnv.outputSubName = sprintf('%0.1f_%0.1f_%0.1f_%0.6f_%d_%0.4f_%0.4f_%0.4f_%0.4f_%s_%s_%d_%d_%s_%d_%d_%d_%d_%s_%d_%s', ...
         60*pr.stimSizeDegs,pr.eccXDegs,pr.eccYDegs,pr.regPara,pr.stride,pr.stimBgVal(1),pr.stimRVal,pr.stimGVal,pr.stimBVal, cnv.exciteSource,...
-        pr.forwardChrom, pr.forwardEccVars, pr.forwardNoLCA, pr.reconChrom, pr.reconEccVars, pr.reconNoLCA, ...
-        pr.stimCenter(1),pr.stimCenter(2),noiseStr,pr.boundedSearch, stimQuadsName);
+        pr.forwardEccVars, pr.forwardNoLCA, pr.reconEccVars, pr.reconNoLCA, ...
+        pr.stimCenter(1),pr.stimCenter(2),noiseStr,pr.boundedSearch);
 end
 cnv.outputDir = fullfile(pr.aoReconDir, pr.versEditor, pr.system, cnv.outputMainName, cnv.outputSubName);
 
