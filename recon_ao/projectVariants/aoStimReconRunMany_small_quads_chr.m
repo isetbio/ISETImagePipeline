@@ -89,17 +89,19 @@ runReconstructions = false;
 buildRenderMatrix = false;
 buildMosaicMontages = true;
 
+% The two buildNew flags here force a build of existing matrices, while
+% if they are false and we are building, only ones that don't yet exist
+% are built.
 if buildRenderMatrix
     buildNewForward = false;
     buildNewRecon = false;
 end
 
-multReconParams = false;
-
 % Set default variant and proportion L and S cones.
 prBase.regionVariant = [1 1 1];
 prBase.propL = [0.5 0 0.5];
 prBase.propS = [0.10 0.10 0.10];
+
 %% Mosaic cone domain
 % Top level domain values of all possible combinations we'll want to
 % run. Useful for rapidly building render matrices or viewing mosaic
@@ -122,17 +124,24 @@ stimSizeDegsList = [3.5] / 60;
 prBase.focalRegion = "center"; % Options: center, nearSurround, distantSurround, multiple, global
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
+%% LET'S CHANGE THE BIG RGB USED TO SPECIFY LINEAR VALUES TO LITTLE rgb SOMETIME SOON
+
 %% Stimulus color
-% rgb values (before gamma correction)
-prBase.stimBgVal = 0.3;
-stimRValList = 0.80;
-stimGValList = 0.65;
-stimBValList = 0.10;
-
-isoLumRG = true;
-nEquiLumStimuli = 11;
-
-if (isoLumRG)
+%
+% We can either specify an explicit list of RGB values, or generate an
+% isoluminant series that varies between full green and full red.
+% Which we do is controlled by the isoLumRG flag.  Specific parameters
+% for each possibility are defined within the corresponding branch of the
+% conditional just below.
+isoLumRG = true; 
+if (~isoLumRG)
+    % These are rgb values (linear, before gamma correction)
+    prBase.stimBgVal = 0.3;
+    stimRValList = 0.80;
+    stimGValList = 0.65;
+    stimBValList = 0.10;
+else
+    nEquiLumStimuli = 11;
     switch (prBase.displayName)
         case 'conventional'
             displayFieldName = 'CRT12BitDisplay';
@@ -149,10 +158,11 @@ if (isoLumRG)
             % everything else is cleaned may consider replacing with a call
             % to RGBRenderAcrossDisplays
             monoGray = [0.444485445018075; ...
-                0.525384925401570; ...
-                0.554173733733909];
-            prBase.stimBgVal = monoGray * 1;
+                        0.525384925401570; ...
+                        0.554173733733909];
 
+            % DON'T FORGET TO PUT IN AN ACTUAL VALUE FOR THE "1" HERE
+            prBase.stimBgVal = monoGray * 1;
         otherwise
             error('Unknown display specified');
     end
@@ -287,30 +297,36 @@ for ss = 1:length(stimSizeDegsList)
                     for pp = 1:length(forwardPupilDiamListMM)
                         %                             for qq = 1:length(quadSelectList(1,:))%%%%%%%%%
                         for dsf = 1:length(displayScaleFactorList)
-
-                            stimSizeDegs(runIndex) = stimSizeDegsList(ss);
-
+                            % These parameters do not affect mosaics or
+                            % render matrices.
                             stimRVal(runIndex) = stimRValList(cc);
                             stimGVal(runIndex) = stimGValList(cc);
                             stimBVal(runIndex) = stimBValList(cc);
-
                             stimCenter(:,runIndex) = deltaCenterList(:,yy);
-
-                            forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
-                            reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
-
                             regPara(runIndex) = regParaList(rr);
-
-                            %                                     forwardChrom(runIndex) = forwardChromList(dd);
-                            %                                     reconChrom(runIndex) = reconChromList(dd);
-
-                            forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
-                            reconPupilDiamMM(runIndex) = reconPupilDiamListMM (pp);
-
-                            %                                     quadSelect(:,runIndex) = quadSelectList(:,qq);
-
                             displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
 
+                            % Stimulus size affects mosaics because we
+                            % design mosaics to have desired properties
+                            % within the stimulus region and regions
+                            % adjacent to it. This is taken into account
+                            % when we build montages of mosaics.
+                            stimSizeDegs(runIndex) = stimSizeDegsList(ss);
+
+                            % These parameters do by their nature directly affect either the mosaic
+                            % or the render matrices
+                            forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
+                            reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
+                            forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
+                            reconPupilDiamMM(runIndex) = reconPupilDiamListMM(pp);
+
+                            % QUADSEQ remnants, delete when happy with new
+                            % code.
+                            %                                     forwardChrom(runIndex) = forwardChromList(dd);
+                            %                                     reconChrom(runIndex) = reconChromList(dd);
+                            %                                     quadSelect(:,runIndex) = quadSelectList(:,qq);
+
+                            % Bump condition index
                             runIndex = runIndex + 1;
                         end
                     end
@@ -322,6 +338,28 @@ end
 %     end
 % end
 
+%% Set the multeRenderMatrixParams flag properly based on condition lists
+%
+% Most of the time, we only need to build one set of reconstruction
+% mosaics, because many of the things we could vary are not in fact varied
+% across different reconstruction conditions.  For example, we typically
+% use the same set of mosaics across different stimuli.  Setting this flag 
+% to false prevents us from making the same mosaics and render matrices
+% over and over and over again.
+%
+% Note however, that our build routine builds entire sets of mosaics and 
+% render matrices that take the stimulus size into account, so we can still
+% keep this flag as false even when that list has length greater than 1.
+multRenderMatrixParams = false;
+if (    length(forwardDefocusDioptersList) == 1 & ...
+        length(reconDefocusDioptersList) == 1 & ...
+        length(forwardPupilDiamListMM) == 1 & ...
+        length(reconPupilDiamListMM) == 1 )
+    multRenderMatrixParams = false;
+else
+    multRenderMatrixParams = true;
+end
+
 %% Render Structures
 %
 % Either build the render structure OR visualize a montage of possible
@@ -329,7 +367,7 @@ end
 % exclusive, can only do one of the above at a time. Loading is done within
 % the aoStimRecon script in the chunk below.
 if buildRenderMatrix
-    if multReconParams
+    if multRenderMatrixParams
         for pp = 1:length(regPara)
             % Set up paramters structure for this loop, filling in fields that come
             % out of lists precreated above.
@@ -371,8 +409,11 @@ if buildRenderMatrix
 end
 
 %% Visualize mosaics
+%
+% Building mosaics themselves is fast, and we control the random number
+% generator 
 if buildMosaicMontages
-    if multReconParams
+    if multRenderMatrixParams
         for pp = 1:length(regPara)
             % Set up paramters structure for this loop, filling in fields that come
             % out of lists precreated above.
