@@ -98,20 +98,20 @@ multReconParams = false;
 
 % Set default variant and proportion L and S cones.
 prBase.regionVariant = [1 1 1];
-prBase.propL = [0.5 0.5 0.5];
+prBase.propL = [0.5 0 0.5];
 prBase.propS = [0.10 0.10 0.10];
 %% Mosaic cone domain
 % Top level domain values of all possible combinations we'll want to
 % run. Useful for rapidly building render matrices or viewing mosaic
 % montages, but is not sent into the aoScript to avoid overrunning.
-prBase.viewMosaicMontage = false;
+prBase.viewMosaicMontage = true;
 prBase.useCustomMosaic = true;
 prBase.viewBounds = false;
 
 prBase.focalVariantDomain = 1; %1:5;
-prBase.stimSizeDegsDomain = 10/60;%[2 3.5 10] / 60;
-prBase.focalRegionDomain = "global"; %["center" "nearSurround" "distantSurround"];
-prBase.focalPropLListDomain = 0.9;%[0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
+prBase.stimSizeDegsDomain = 15/60;%[2 3.5 10] / 60;
+prBase.focalRegionDomain = "center"; %["center" "nearSurround" "distantSurround"];
+prBase.focalPropLListDomain = 1;%[0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
 %% Mosaic cone parameters
 
