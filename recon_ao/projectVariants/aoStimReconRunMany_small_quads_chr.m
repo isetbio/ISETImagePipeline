@@ -142,6 +142,7 @@ if (~isoLumRG)
     stimBValList = 0.10;
 else
     nEquiLumStimuli = 11;
+    monoBgScale = 0.5;
     switch (prBase.displayName)
         case 'conventional'
             displayFieldName = 'CRT12BitDisplay';
@@ -162,7 +163,7 @@ else
                         0.554173733733909];
 
             % DON'T FORGET TO PUT IN AN ACTUAL VALUE FOR THE "1" HERE
-            prBase.stimBgVal = monoGray * 1;
+            prBase.stimBgVal = monoGray * monoBgScale;
         otherwise
             error('Unknown display specified');
     end
