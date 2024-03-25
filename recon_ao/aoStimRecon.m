@@ -27,7 +27,7 @@ close all;
 
 %% Load file variables if rerunning from old simulations
 if (rrf.rerunImages)
-    varlist = who; %Find the variables that already exist
+    varlist = who;                   %Find the variables that already exist
     varlist =strjoin(varlist','$|'); %Join into string, separating vars by '|'
     load(fullfile(rrf.outputDir, 'xRunOutput.mat'), '-regexp', ['^(?!' varlist ')\w']);
     cnv.renderDir = rrf.renderDir;
@@ -36,13 +36,19 @@ if (rrf.rerunImages)
 %     pr.annWidthArc = [1; 2; 3];
 end
 
-%% Point at directory with data files for this subproject
+% *******
+% We think this was old.  If the renderDir doesn't exist, we aren't going
+% to be able to read files we need from it, and an error will be thrown 
+% in any case.  Commenting out on based on that idea.  Delete if everything
+% runs fine for a while without this.
 %
-% This will allow us to load in project specific precomputed information.
-% Also records initials of version editors, otherwise set to 'main'
-if (~exist(cnv.renderDir ,'dir'))
-    mkdir(cnv.renderDir );
-end
+% %% Point at directory with data files for this subproject
+% %
+% % This will allow us to load in project specific precomputed information.
+% % Also records initials of version editors, otherwise set to 'main'
+% if (~exist(cnv.renderDir ,'dir'))
+%     mkdir(cnv.renderDir );
+% end
 
 % Sparse prior name
 sparsePriorName = [pr.sparsePriorStr 'SparsePrior.mat'];
@@ -92,14 +98,15 @@ forwardConeMosaic.Display.ambient = displayGet(forwardConeMosaic.Display,'black 
 reconConeMosaic.Display = displaySet(reconConeMosaic.Display,'spd primaries',displayGet(reconConeMosaic.Display,'spd primaries')*pr.displayScaleFactor);
 reconConeMosaic.Display.ambient = displayGet(reconConeMosaic.Display,'black spd')*pr.displayScaleFactor;
 
-
-%% Setup output directories
+%% Setup output directories if they don't exist
 if (~exist(cnv.outputDir,'dir'))
     mkdir(cnv.outputDir);
 end
 
-
-%% Show forward and recon cone mosaics
+%% Show and save forward and recon cone mosaics
+%
+% Unless we're just making some new figures in which case we 
+% assume this has already happened in a good way.
 if ~(rrf.rerunImages)
     forwardConeMosaic.visualizeMosaic();
     saveas(gcf,fullfile(cnv.outputDir,'forwardMosaic.tiff'),'tiff');
@@ -108,16 +115,20 @@ if ~(rrf.rerunImages)
     saveas(gcf,fullfile(cnv.outputDir,'reconMosaic.tiff'),'tiff');
 end
 
-% Calculate cone proportionality for each mosaic
-coneProp.forward = calcConeProportions(pr, cnv, 'forward', pr.annWidthArc, false);
-coneProp.recon = calcConeProportions(pr, cnv, 'recon', pr.annWidthArc, false);
-
+% *******
+% We think this is no longer needed.  Commenting out to see if anything
+% gets unhappy without it.
+%
+% % Calculate cone proportionality for each mosaic
+% coneProp.forward = calcConeProportions(pr, cnv, 'forward', pr.annWidthArc, false);
+% coneProp.recon = calcConeProportions(pr, cnv, 'recon', pr.annWidthArc, false);
 
 %% Generate an image stimulus
 %
-% When pr.stimBgVal is a scalar, we construct a uniform field of
-% appropriate size.
+% When pr.stimBgVal is a scalar or three vector, we construct a uniform field of
+% appropriate size and then put the stimulus on top of it.
 if (length(pr.stimBgVal) == 1 || length(pr.stimBgVal) == 3)
+    % Set up the uniform field
     if (length(pr.stimBgVal) == 1)
         stimImageRGBnoGam = ones(pr.nPixels, pr.nPixels, 3) * pr.stimBgVal;
     elseif length(pr.stimBgVal) == 3
@@ -126,6 +137,9 @@ if (length(pr.stimBgVal) == 1 || length(pr.stimBgVal) == 3)
         stimImageRGBnoGam(:,:,3) = ones(pr.nPixels, pr.nPixels) * pr.stimBgVal(3);
     end
 
+    % *******
+    % Simplify this logic to allow us to shift the stimulus, but not to
+    % copy it four times.
     if(pr.quads(1).value)
         % Apply sign changes to orient in proper Cartesian Quadrant
         % Then adjust based on selected quadrants in RunMany
@@ -171,13 +185,14 @@ if (length(pr.stimBgVal) == 1 || length(pr.stimBgVal) == 3)
             return
         end
 
-        % Set image pixels, !!!!FIX THIS, this should be the gamma
-        % corrected value because it's inherently gamma
+        % Set image pixels, Here's a place to fix naming convention in the
+        % pr structure.
         stimImageRGBnoGam(idxYRange, idxXRange, 1) = pr.stimRVal;
         stimImageRGBnoGam(idxYRange, idxXRange, 2) = pr.stimGVal;
         stimImageRGBnoGam(idxYRange, idxXRange, 3) = pr.stimBVal;
     end
-    % Otherwise, treat passed pr.stimBgVal as an actual image
+
+% Otherwise, treat passed pr.stimBgVal as an actual image
 else
     stimImageRGBnoGam = pr.stimBgVal;
     nPixelsCheck = size(stimImageRGBnoGam,1);
@@ -186,6 +201,7 @@ else
     end
 end
 
+% Leave mean luminance alone
 meanLuminanceCdPerM2 = [];
 
 % Then we scale by some factor on the linear space and regamma correct
@@ -197,12 +213,16 @@ stimulusImageRGB = gammaCorrection(stimImageRGBnoGam*pr.inputImageScaleFactor, f
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
 
+% Set the field size
 stimulusScene = sceneSet(stimulusScene, 'fov', cnv.fieldSizeDegs);
+
+% Save the stimulus image
 imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 
 % Return a struct that contains values corrected for viewing on a display
 % different from that where the stimulation was calculated
 
+% *******
 % So the concern here is that what we're sending in is already linear and
 % should not undergo a second linearization process inside the script. 
 cfvStim = correctForViewing(stimulusImageLinear, rrf.startDisplayName, ...
@@ -220,8 +240,7 @@ forwardExcitationsToStimulusISETBio = squeeze(forwardConeMosaic.Mosaic.compute(f
 forwardExcitationsToStimulusISETBio(pr.kConeIndices) = 0;
 
 % Check forward exciations calculation another way.  Also shows another way
-% to visualize the retinal image, but stst
-% fails.
+% to visualize the retinal image.
 forwardExcitationsToStimulusCheck = forwardConeMosaic.compute(stimulusImageRGB);
 forwardExcitationsToStimulusCheck(pr.kConeIndices) = 0;
 
@@ -229,7 +248,10 @@ if (max(abs(forwardExcitationsToStimulusCheck-forwardExcitationsToStimulusISETBi
     forwardConeMosaic.visualizeOI()
     error('Two ways of doing the same thing do not agree');
 end
-temp = squeeze(forwardConeMosaic.LastResponse);
+
+% ******* At some point see if this check passes or fails, and if it fails
+%         decide whether we are surprised or not.
+% temp = squeeze(forwardConeMosaic.LastResponse);
 % if (max(abs(temp-forwardExcitationsToStimulusISETBio)) ~= 0)
 %     error('Last excitations in object not as we expect');
 % end
