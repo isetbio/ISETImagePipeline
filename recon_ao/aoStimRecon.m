@@ -33,12 +33,12 @@ if (rrf.rerunImages)
     cnv.renderDir = rrf.renderDir;
     cnv.outputDir = rrf.outputDir;
     pr.aoReconDir = rrf.aoReconDir;
-%     pr.annWidthArc = [1; 2; 3];
+    %     pr.annWidthArc = [1; 2; 3];
 end
 
 % *******
 % We think this was old.  If the renderDir doesn't exist, we aren't going
-% to be able to read files we need from it, and an error will be thrown 
+% to be able to read files we need from it, and an error will be thrown
 % in any case.  Commenting out on based on that idea.  Delete if everything
 % runs fine for a while without this.
 %
@@ -105,7 +105,7 @@ end
 
 %% Show and save forward and recon cone mosaics
 %
-% Unless we're just making some new figures in which case we 
+% Unless we're just making some new figures in which case we
 % assume this has already happened in a good way.
 if ~(rrf.rerunImages)
     forwardConeMosaic.visualizeMosaic();
@@ -130,72 +130,54 @@ end
 if (length(pr.stimBgVal) == 1 || length(pr.stimBgVal) == 3)
     % Set up the uniform field
     if (length(pr.stimBgVal) == 1)
-        stimImageRGBnoGam = ones(pr.nPixels, pr.nPixels, 3) * pr.stimBgVal;
+        stimImagergb = ones(pr.nPixels, pr.nPixels, 3) * pr.stimBgVal;
     elseif length(pr.stimBgVal) == 3
-        stimImageRGBnoGam(:,:,1) = ones(pr.nPixels, pr.nPixels) * pr.stimBgVal(1);
-        stimImageRGBnoGam(:,:,2) = ones(pr.nPixels, pr.nPixels) * pr.stimBgVal(2);
-        stimImageRGBnoGam(:,:,3) = ones(pr.nPixels, pr.nPixels) * pr.stimBgVal(3);
+        stimImagergb(:,:,1) = ones(pr.nPixels, pr.nPixels) * pr.stimBgVal(1);
+        stimImagergb(:,:,2) = ones(pr.nPixels, pr.nPixels) * pr.stimBgVal(2);
+        stimImagergb(:,:,3) = ones(pr.nPixels, pr.nPixels) * pr.stimBgVal(3);
     end
 
-    % *******
-    % Simplify this logic to allow us to shift the stimulus, but not to
-    % copy it four times.
-    if(pr.quads(1).value)
-        % Apply sign changes to orient in proper Cartesian Quadrant
-        % Then adjust based on selected quadrants in RunMany
-        quadXShift = [1 -1 -1 1 0];
-        quadYShift = [-1 -1 1 1 0];
-        quadXShift = quadXShift(pr.quadSelect);
-        quadYShift = quadYShift(pr.quadSelect);
-
-    else
-        % Otherwise create one stimulus in the center of the mosaic
-        quadXShift = 0;
-        quadYShift = 0;
+    % Create stimulus to populate the invidivual quadrants
+    % Stimulus size in retinal degrees should not exceed 'cnv.fieldSizeDegs'
+    stimSizeFraction = pr.stimSizeDegs / cnv.fieldSizeDegs;
+    if (stimSizeFraction > 1)
+        error('Stimulus size too big given field size');
+    end
+    idxLB = round(pr.nPixels * (0.5 - stimSizeFraction / 2));
+    if (idxLB < 1)
+        idxLB = 1;
+    end
+    idxUB = round(pr.nPixels * (0.5 + stimSizeFraction / 2));
+    if (idxUB > pr.nPixels)
+        idxUB = pr.nPixels;
     end
 
-    for qs = 1:length(quadXShift)
-        % Create stimulus to populate the invidivual quadrants
-        % Stimulus size in retinal degrees should not exceed 'cnv.fieldSizeDegs'
-        stimSizeFraction = pr.stimSizeDegs / cnv.fieldSizeDegs;
-        if (stimSizeFraction > 1)
-            error('Stimulus size too big given field size');
-        end
-        idxLB = round(pr.nPixels * (0.5 - stimSizeFraction / 2));
-        if (idxLB < 1)
-            idxLB = 1;
-        end
-        idxUB = round(pr.nPixels * (0.5 + stimSizeFraction / 2));
-        if (idxUB > pr.nPixels)
-            idxUB = pr.nPixels;
-        end
+    % Shift the stimulus to be centered on desired values
+    idxXRange = (idxLB:idxUB) + pr.stimCenter(1);
+    idxYRange = (idxLB:idxUB) + pr.stimCenter(2);
 
-        % Shift the stimulus to be centered on desired values
-        idxXRange = (idxLB:idxUB) + pr.stimCenter(1) * quadXShift(qs);
-        idxYRange = (idxLB:idxUB) + pr.stimCenter(2) * quadYShift(qs);
-
-        % Check stimulus position. Ends function and deletes the created
-        % directory if the stimulus position exceeds bounds.
-        if min(idxYRange) <= 0 || max(idxYRange) > pr.nPixels ...
-                || min(idxXRange) <= 0 || max(idxXRange) > pr.nPixels
-            warning(['Stimulus centered on ' int2str(pr.stimCenter' + pr.trueCenter) ...
-                ' exceeds bounds. Beginning next simulation']);
-            rmdir(cnv.outputDir, 's');
-            close all
-            return
-        end
-
-        % Set image pixels, Here's a place to fix naming convention in the
-        % pr structure.
-        stimImageRGBnoGam(idxYRange, idxXRange, 1) = pr.stimRVal;
-        stimImageRGBnoGam(idxYRange, idxXRange, 2) = pr.stimGVal;
-        stimImageRGBnoGam(idxYRange, idxXRange, 3) = pr.stimBVal;
+    % Check stimulus position. Ends function and deletes the created
+    % directory if the stimulus position exceeds bounds.
+    if min(idxYRange) <= 0 || max(idxYRange) > pr.nPixels ...
+            || min(idxXRange) <= 0 || max(idxXRange) > pr.nPixels
+        warning(['Stimulus centered on ' int2str(pr.stimCenter' + pr.trueCenter) ...
+            ' exceeds bounds. Beginning next simulation']);
+        rmdir(cnv.outputDir, 's');
+        close all
+        return
     end
 
-% Otherwise, treat passed pr.stimBgVal as an actual image
+    % Set image pixels, Here's a place to fix naming convention in the
+    % pr structure.
+    stimImagergb(idxYRange, idxXRange, 1) = pr.stimrVal;
+    stimImagergb(idxYRange, idxXRange, 2) = pr.stimgVal;
+    stimImagergb(idxYRange, idxXRange, 3) = pr.stimbVal;
+
+
+    % Otherwise, treat passed pr.stimBgVal as an actual image
 else
-    stimImageRGBnoGam = pr.stimBgVal;
-    nPixelsCheck = size(stimImageRGBnoGam,1);
+    stimImagergb = pr.stimBgVal;
+    nPixelsCheck = size(stimImagergb,1);
     if (nPixelsCheck ~= pr.nPixels)
         error('Passed image does not have correct pixel dimension');
     end
@@ -204,11 +186,11 @@ end
 % Leave mean luminance alone
 meanLuminanceCdPerM2 = [];
 
-% Then we scale by some factor on the linear space and regamma correct
-stimulusImageRGB = gammaCorrection(stimImageRGBnoGam*pr.inputImageScaleFactor, forwardConeMosaic.Display);
+% Then we scale by some factor on the linear space and gamma correct
+stimulusImageRGB = gammaCorrection(stimImagergb*pr.inputImageScaleFactor, forwardConeMosaic.Display);
 
 % Then we UNDO that gamma correction we just did to get another linear
-% verison, which in theory should be the same as the previous linear image
+% verison, which in theory should be the same as the original linear image
 % times the input scale factor.
 [stimulusScene, ~, stimulusImageLinear] = sceneFromFile(stimulusImageRGB, 'rgb', ...
     meanLuminanceCdPerM2, forwardConeMosaic.Display);
@@ -224,7 +206,7 @@ imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 
 % *******
 % So the concern here is that what we're sending in is already linear and
-% should not undergo a second linearization process inside the script. 
+% should not undergo a second linearization process inside the script.
 cfvStim = correctForViewing(stimulusImageLinear, rrf.startDisplayName, ...
     rrf.viewingDisplayName, rrf.stimDispScale, pr.aoReconDir, pr.displayGammaBits, ...
     pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
@@ -445,13 +427,13 @@ for ii = 1:length(multistartStruct.initTypes)
     cfvRecon = correctForViewing(reconImageLinear, rrf.startDisplayName, ...
         rrf.viewingDisplayName, rrf.reconDispScale, pr.aoReconDir, pr.displayGammaBits, ...
         pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
-%     imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
+    %     imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
 
 
     % Include portion for scaling of the corrected stim and recon images
     % based on the max across both, upscaled so the max is reset to 1
-    cfvStim.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]); 
-    cfvRecon.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]); 
+    cfvStim.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
+    cfvRecon.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
     cfvStim.stimulusRGBScaled{ii} = gammaCorrection(cfvStim.imageRGBNoGamma/cfvStim.scaleFactor(ii), cfvStim.viewingDisplay);
     cfvRecon.reconScaledRGB{ii} = gammaCorrection(cfvRecon.imageRGBNoGamma/cfvRecon.scaleFactor(ii), cfvRecon.viewingDisplay);
 
@@ -499,13 +481,13 @@ for ii = 1:length(multistartStruct.initTypes)
     if (length(pr.stimBgVal) > 3)
         title({sprintf('Stimulus Image, input scale %0.4f',pr.inputImageScaleFactor) ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; pr.imageName});
     else
-        title({sprintf('Stimulus Image, input scale %0.4f',pr.inputImageScaleFactor)  ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal(1),pr.stimRVal,pr.stimGVal,pr.stimBVal)});
+        title({sprintf('Stimulus Image, input scale %0.4f',pr.inputImageScaleFactor)  ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal(1),pr.stimrVal,pr.stimgVal,pr.stimbVal)});
     end
     if (ii == reconIndex)
         imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDir,'StimulusScaled.tiff'),'tiff');
     end
 
-   % Visualize stimulus after being corrected for Display
+    % Visualize stimulus after being corrected for Display
     theAxes = subplot(3,7,7);
     imshow(cfvStim.stimulusRGBScaled{ii});
     title({sprintf('Stim on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
@@ -596,7 +578,7 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 
 
-    % Show corrected recon image 
+    % Show corrected recon image
     theAxes = subplot(3,7,14);
     imshow(cfvRecon.reconScaledRGB{ii});
     title({sprintf('Recon on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...

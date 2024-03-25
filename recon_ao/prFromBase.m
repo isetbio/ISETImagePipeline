@@ -1,4 +1,4 @@
-function pr = prFromBase(prBase,index,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
+function pr = prFromBase(prBase,index,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
     stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
     forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor)
 
@@ -7,9 +7,9 @@ function pr = prFromBase(prBase,index,stimSizeDegs,stimRVal,stimGVal,stimBVal, .
 
 pr = prBase;
 pr.stimSizeDegs = stimSizeDegs(index);
-pr.stimRVal = stimRVal(index);
-pr.stimGVal = stimGVal(index);
-pr.stimBVal = stimBVal(index);
+pr.stimrVal = stimrVal(index);
+pr.stimgVal = stimgVal(index);
+pr.stimbVal = stimbVal(index);
 pr.stimCenter = stimCenter(:,index);
 pr.forwardDefocusDiopters = forwardDefocusDiopters(index);
 pr.reconDefocusDiopters = reconDefocusDiopters(index);

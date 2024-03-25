@@ -51,7 +51,7 @@ prBase.system = 'macPro';%%% This may be an area of potential issue
 %
 %
 % For reference, 2-3 arcmin seems to agree with OI spread.
-prBase.annWidthArc = [1; 2];
+% prBase.annWidthArc = [1; 2];
 
 %% Parameters
 %
@@ -102,19 +102,13 @@ prBase.regionVariant = [1 1 1];
 prBase.propL = [0.5 0.5 0.5];
 prBase.propS = [0.10 0.10 0.10];
 
-%% Mosaic cone domain
-% Top level domain values of all possible combinations we'll want to
-% run. Useful for rapidly building render matrices or viewing mosaic
-% montages, but is not sent into the aoScript to avoid overrunning.
+%% Mosaic cone parameters
+%
+% Determine if we're going to make a fancy mosaic with cones specified and
+% if we want to visualize region bounds. Also put wls calc at top level. 
 prBase.useCustomMosaic = true;
 prBase.viewBounds = false;
-
-prBase.focalVariantDomain = 1; %1:5;
-prBase.stimSizeDegsDomain = 15/60;%[2 3.5 10] / 60;
-prBase.focalRegionDomain = "center"; %["center" "nearSurround" "distantSurround"];
-prBase.focalPropLListDomain = 1;%[0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
-
-%% Mosaic cone parameters
+prBase.wls = (400:1:700)';
 
 % These are the specific values taken in by the AO script, for this project
 % want it to be relatively limited for the sake of speed.
@@ -124,7 +118,6 @@ prBase.focalRegion = ["center" "nearSurround" "distantSurround"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
 %% LET'S CHANGE THE BIG RGB USED TO SPECIFY LINEAR VALUES TO LITTLE rgb SOMETIME SOON
-
 %% Stimulus color
 %
 % We can either specify an explicit list of RGB values, or generate an
@@ -136,9 +129,9 @@ isoLumRG = true;
 if (~isoLumRG)
     % These are rgb values (linear, before gamma correction)
     prBase.stimBgVal = 0.3;
-    stimRValList = 0.80;
-    stimGValList = 0.65;
-    stimBValList = 0.10;
+    stimrValList = 0.80;
+    stimgValList = 0.65;
+    stimbValList = 0.10;
 else
     nEquiLumStimuli = 11;
     monoBgScale = 0.5;
@@ -178,14 +171,13 @@ else
     end
 
     % Using the 1 nm sampling to agree w/ tutorial
-    wls = (400:1:700)';
-    theDisplay = displaySet(theDisplay, 'wave', wls);
+    theDisplay = displaySet(theDisplay, 'wave', prBase.wls);
 
     % Get information we need to render scenes from their spectra through
     % the recon display.
     theXYZStruct = load('T_xyz1931');
-    T_XYZ = SplineCmf(theXYZStruct.S_xyz1931,683*theXYZStruct.T_xyz1931,wls);
-    M_rgbToXYZ = T_XYZ*displayGet(theDisplay,'spd primaries')*(wls(2)-wls(1));
+    T_XYZ = SplineCmf(theXYZStruct.S_xyz1931,683*theXYZStruct.T_xyz1931,prBase.wls);
+    M_rgbToXYZ = T_XYZ*displayGet(theDisplay,'spd primaries')*(prBase.wls(2)-prBase.wls(1));
     M_XYZTorgb = inv(M_rgbToXYZ);
     rPrimaryLuminance = M_rgbToXYZ(2,1);
     gPrimaryLuminance = M_rgbToXYZ(2,2);
@@ -203,13 +195,13 @@ else
     equiLumrgbValues = [rRaw ; gAdjust; b*ones(size(rRaw))];
     inputLinearrgbValues = 0.5*equiLumrgbValues/max(equiLumrgbValues(:));
 
-    stimRValList = inputLinearrgbValues(1,:);
-    stimGValList = inputLinearrgbValues(2,:);
-    stimBValList = inputLinearrgbValues(3,:);
+    stimrValList = inputLinearrgbValues(1,:);
+    stimgValList = inputLinearrgbValues(2,:);
+    stimbValList = inputLinearrgbValues(3,:);
 end
 
 % Check that all channels receive same number of inputs
-if (length(stimGValList) ~= length(stimRValList) || length(stimBValList) ~= length(stimRValList))
+if (length(stimgValList) ~= length(stimrValList) || length(stimbValList) ~= length(stimrValList))
     error('Stimulus value lists must have same length');
 end
 
@@ -230,9 +222,8 @@ shiftInPixelsListY = round(pixelsPerMinute*shiftInMinutesListY);
 
 % Consider including the term "-(prBase.nPixels * 0.1)" to better center
 % the quad stim at larger values so not pushing against the outer edge.
-quadCenters = round((prBase.nPixels) / 4);
-centerXPosition = prBase.trueCenter + quadCenters + shiftInPixelsListX;
-centerYPosition = prBase.trueCenter + quadCenters + shiftInPixelsListY;
+centerXPosition = prBase.trueCenter + shiftInPixelsListX;
+centerYPosition = prBase.trueCenter + shiftInPixelsListY;
 prBase.stimCenter = [centerXPosition ; centerYPosition];
 
 % Loop through created pixel positions if want to create a square grid of
@@ -289,7 +280,7 @@ reconDefocusDioptersList = [0.0];
 %% Set up list conditions
 runIndex = 1;
 for ss = 1:length(prBase.stimSizeDegsList)
-    for cc = 1:length(stimRValList)
+    for cc = 1:length(stimrValList)
         for yy = 1:size(deltaCenterList,2)
             for ff = 1:length(forwardDefocusDioptersList)
                 for rr = 1:length(regParaList)
@@ -299,9 +290,9 @@ for ss = 1:length(prBase.stimSizeDegsList)
                         for dsf = 1:length(displayScaleFactorList)
                             % These parameters do not affect mosaics or
                             % render matrices.
-                            stimRVal(runIndex) = stimRValList(cc);
-                            stimGVal(runIndex) = stimGValList(cc);
-                            stimBVal(runIndex) = stimBValList(cc);
+                            stimrVal(runIndex) = stimrValList(cc);
+                            stimgVal(runIndex) = stimgValList(cc);
+                            stimbVal(runIndex) = stimbValList(cc);
                             stimCenter(:,runIndex) = deltaCenterList(:,yy);
                             regPara(runIndex) = regParaList(rr);
                             displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
@@ -371,7 +362,7 @@ if buildRenderMatrix
         for pp = 1:length(regPara)
             % Set up paramters structure for this loop, filling in fields that come
             % out of lists precreated above.
-            pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
+            pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
                 stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
                 forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
             cnv = computeConvenienceParams(pr);
@@ -390,7 +381,7 @@ if buildRenderMatrix
         for pp = 1
             % Set up paramters structure for this loop, filling in fields that come
             % out of lists precreated above.
-            pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
+            pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
                 stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
                 forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
             cnv = computeConvenienceParams(pr);
@@ -417,7 +408,7 @@ if buildMosaicMontages
         for pp = 1:length(regPara)
             % Set up paramters structure for this loop, filling in fields that come
             % out of lists precreated above.
-            pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
+            pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
                 stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
                 forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
             %         pr.quadSelect = quadSelect(:,pp);
@@ -429,7 +420,7 @@ if buildMosaicMontages
         for pp = 1
             % Set up paramters structure for this loop, filling in fields that come
             % out of lists precreated above.
-            pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
+            pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
                 stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
                 forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
             %         pr.quadSelect = quadSelect(:,pp);
@@ -447,7 +438,7 @@ if reconstruct
 
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists above.
-        pr = prFromBase(prBase,pp,stimSizeDegs,stimRVal,stimGVal,stimBVal, ...
+        pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
             forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor);
         pr.quadSelect = quadSelect(:,pp);
