@@ -147,3 +147,8 @@ end
 cnv.outputDir = fullfile(pr.aoReconDir, pr.versEditor, pr.system, cnv.outputMainName, cnv.outputSubName);
 
 end
+
+
+%% Updates
+% Incorporating some portion to account for the new naming scheme and
+% approach to running mosaics. 

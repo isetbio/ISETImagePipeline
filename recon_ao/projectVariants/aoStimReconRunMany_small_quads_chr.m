@@ -40,7 +40,7 @@ prBase.versEditor = 'small_quads_chr';
 
 % To keep account for the different computers simulations might be run on
 % simulatneously. macPro = trashcan, iMac = Semin's old computer
-prBase.system = 'macPro';
+prBase.system = 'macPro';%%% This may be an area of potential issue
 
 %% Calculate Cone Proportions
 
@@ -99,14 +99,13 @@ end
 
 % Set default variant and proportion L and S cones.
 prBase.regionVariant = [1 1 1];
-prBase.propL = [0.5 0 0.5];
+prBase.propL = [0.5 0.5 0.5];
 prBase.propS = [0.10 0.10 0.10];
 
 %% Mosaic cone domain
 % Top level domain values of all possible combinations we'll want to
 % run. Useful for rapidly building render matrices or viewing mosaic
 % montages, but is not sent into the aoScript to avoid overrunning.
-prBase.viewMosaicMontage = true;
 prBase.useCustomMosaic = true;
 prBase.viewBounds = false;
 
@@ -119,9 +118,9 @@ prBase.focalPropLListDomain = 1;%[0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0
 
 % These are the specific values taken in by the AO script, for this project
 % want it to be relatively limited for the sake of speed.
-prBase.focalVariant = 1;
-stimSizeDegsList = [3.5] / 60;
-prBase.focalRegion = "center"; % Options: center, nearSurround, distantSurround, multiple, global
+prBase.focalVariant = 1; %1:5;
+prBase.stimSizeDegsList = [2 3.5 10] / 60;
+prBase.focalRegion = ["center" "nearSurround" "distantSurround"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
 %% LET'S CHANGE THE BIG RGB USED TO SPECIFY LINEAR VALUES TO LITTLE rgb SOMETIME SOON
@@ -289,7 +288,7 @@ reconDefocusDioptersList = [0.0];
 
 %% Set up list conditions
 runIndex = 1;
-for ss = 1:length(stimSizeDegsList)
+for ss = 1:length(prBase.stimSizeDegsList)
     for cc = 1:length(stimRValList)
         for yy = 1:size(deltaCenterList,2)
             for ff = 1:length(forwardDefocusDioptersList)
@@ -312,7 +311,7 @@ for ss = 1:length(stimSizeDegsList)
                             % within the stimulus region and regions
                             % adjacent to it. This is taken into account
                             % when we build montages of mosaics.
-                            stimSizeDegs(runIndex) = stimSizeDegsList(ss);
+                            stimSizeDegs(runIndex) = prBase.stimSizeDegsList(ss);
 
                             % These parameters do by their nature directly affect either the mosaic
                             % or the render matrices
