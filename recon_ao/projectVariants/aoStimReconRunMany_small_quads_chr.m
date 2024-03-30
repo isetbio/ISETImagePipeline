@@ -117,7 +117,6 @@ prBase.stimSizeDegsList = [2 3.5 10] / 60;
 prBase.focalRegion = ["center" "nearSurround" "distantSurround"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
-%% LET'S CHANGE THE BIG RGB USED TO SPECIFY LINEAR VALUES TO LITTLE rgb SOMETIME SOON
 %% Stimulus color
 %
 % We can either specify an explicit list of RGB values, or generate an

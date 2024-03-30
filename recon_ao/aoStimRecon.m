@@ -115,14 +115,6 @@ if ~(rrf.rerunImages)
     saveas(gcf,fullfile(cnv.outputDir,'reconMosaic.tiff'),'tiff');
 end
 
-% *******
-% We think this is no longer needed.  Commenting out to see if anything
-% gets unhappy without it.
-%
-% % Calculate cone proportionality for each mosaic
-% coneProp.forward = calcConeProportions(pr, cnv, 'forward', pr.annWidthArc, false);
-% coneProp.recon = calcConeProportions(pr, cnv, 'recon', pr.annWidthArc, false);
-
 %% Generate an image stimulus
 %
 % When pr.stimBgVal is a scalar or three vector, we construct a uniform field of
@@ -198,21 +190,16 @@ stimulusImageRGB = gammaCorrection(stimImagergb*pr.inputImageScaleFactor, forwar
 % Set the field size
 stimulusScene = sceneSet(stimulusScene, 'fov', cnv.fieldSizeDegs);
 
-% Save the stimulus image
+% Save the stimulus image as entered 
 imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
 
-% Return a struct that contains values corrected for viewing on a display
-% different from that where the stimulation was calculated
+% Use the compareRenderingEW file to render the stimulus across the proper
+% display and collect pertinent wavelength information
+stimInfo = compareRenderingEW(stimulusImageLinear, rrf.startDisplayName, ...
+    rrf.viewingDisplayName, idxXRange, 'wls', pr.wls);
 
-% *******
-% So the concern here is that what we're sending in is already linear and
-% should not undergo a second linearization process inside the script.
-cfvStim = correctForViewing(stimulusImageLinear, rrf.startDisplayName, ...
-    rrf.viewingDisplayName, rrf.stimDispScale, pr.aoReconDir, pr.displayGammaBits, ...
-    pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
-% imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
-% imwrite(cfvStim.imageRGBBoost,fullfile(cnv.outputDir,'StimulusDispCorrectedBoost.tiff'),'tiff');
-
+imwrite(stimInfo.imageRGBAcrossDisplays, ...
+    fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
 
 %% Compute forward retinal image and excitations using ISETBio
 %
@@ -424,19 +411,20 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Visualize recon after being corrected for Display
     reconImageLinear = multistartStruct.reconImages{ii};
-    cfvRecon = correctForViewing(reconImageLinear, rrf.startDisplayName, ...
-        rrf.viewingDisplayName, rrf.reconDispScale, pr.aoReconDir, pr.displayGammaBits, ...
-        pr.displayGammaGamma, cnv.fieldSizeDegs, pr.inputImageScaleFactor, idxXRange, idxYRange);
-    %     imwrite(cfvStim.imageRGB,fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
+
+    reconInfo = compareRenderingEW(reconImageLinear, rrf.startDisplayName, ...
+        rrf.viewingDisplayName, idxXRange, 'wls', pr.wls);
+
+    imwrite(reconInfo.imageRGBAcrossDisplays, fullfile(cnv.outputDir,'ReconDispCorrected.tiff'),'tiff');
 
 
-    % Include portion for scaling of the corrected stim and recon images
-    % based on the max across both, upscaled so the max is reset to 1
-    cfvStim.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
-    cfvRecon.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
-    cfvStim.stimulusRGBScaled{ii} = gammaCorrection(cfvStim.imageRGBNoGamma/cfvStim.scaleFactor(ii), cfvStim.viewingDisplay);
-    cfvRecon.reconScaledRGB{ii} = gammaCorrection(cfvRecon.imageRGBNoGamma/cfvRecon.scaleFactor(ii), cfvRecon.viewingDisplay);
-
+%     % Include portion for scaling of the corrected stim and recon images
+%     % based on the max across both, upscaled so the max is reset to 1
+%     cfvStim.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
+%     cfvRecon.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
+%     cfvStim.stimulusRGBScaled{ii} = gammaCorrection(cfvStim.imageRGBNoGamma/cfvStim.scaleFactor(ii), cfvStim.viewingDisplay);
+%     cfvRecon.reconScaledRGB{ii} = gammaCorrection(cfvRecon.imageRGBNoGamma/cfvRecon.scaleFactor(ii), cfvRecon.viewingDisplay);
+% 
 
     % Get forward and reconstruction OI's computed on reconstruction.  Take
     % difference in pupil size into account with reconOI.
@@ -489,10 +477,10 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Visualize stimulus after being corrected for Display
     theAxes = subplot(3,7,7);
-    imshow(cfvStim.stimulusRGBScaled{ii});
-    title({sprintf('Stim on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
-        sprintf('Min: %0.2f, %0.2f, %0.2f',cfvStim.bounds(1,1),cfvStim.bounds(1,2),cfvStim.bounds(1,3)); ...
-        sprintf('Max: %0.2f, %0.2f, %0.2f',cfvStim.bounds(2,1),cfvStim.bounds(2,2),cfvStim.bounds(2,3))})
+    imshow(stimInfo.imageRGBAcrossDisplays{ii});
+%     title({sprintf('Stim on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
+%         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvStim.bounds(1,1),cfvStim.bounds(1,2),cfvStim.bounds(1,3)); ...
+%         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvStim.bounds(2,1),cfvStim.bounds(2,2),cfvStim.bounds(2,3))})
 
 
     % Contour plot of forward PSF
@@ -580,10 +568,10 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Show corrected recon image
     theAxes = subplot(3,7,14);
-    imshow(cfvRecon.reconScaledRGB{ii});
-    title({sprintf('Recon on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
-        sprintf('Min: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(1,1),cfvRecon.bounds(1,2),cfvRecon.bounds(1,3)); ...
-        sprintf('Max: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(2,1),cfvRecon.bounds(2,2),cfvRecon.bounds(2,3))})
+    imshow(reconInfo.imageRGBAcrossDisplays{ii});
+%     title({sprintf('Recon on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
+%         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(1,1),cfvRecon.bounds(1,2),cfvRecon.bounds(1,3)); ...
+%         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(2,1),cfvRecon.bounds(2,2),cfvRecon.bounds(2,3))})
 
 
     % Contour plot of recon PSF
@@ -865,74 +853,11 @@ for ii = 1:length(multistartStruct.initTypes)
     % Save summary of best recon in its own file
     if (ii == reconIndex)
         saveas(gcf,fullfile(cnv.outputDir,sprintf('ReconSummaryUpdate.tiff',ii)),'tiff');
-
-        % Manually create plots based on specific quadrant excitations
-        if (pr.quads(1).value)
-            theQuadsFig = figure; clf;
-            set(theQuadsFig,'Position',[100 400 2500 1500]);
-            quadOrder = [2 1 3 4];
-
-            quad1Ind = find(...
-                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) > pr.eccXDegs & ...
-                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) > pr.eccYDegs);
-            subplot(2,2,quadOrder(2)); hold on;
-            plot(forwardExcitationsToStimulusUse(quad1Ind),reconExcitationsToReconTemp(quad1Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
-
-            quad2Ind = find(...
-                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) < pr.eccXDegs & ...
-                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) > pr.eccYDegs);
-            subplot(2,2,quadOrder(1)); hold on;
-            plot(forwardExcitationsToStimulusUse(quad2Ind),reconExcitationsToReconTemp(quad2Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
-
-            quad3Ind = find(...
-                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) < pr.eccXDegs & ...
-                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) < pr.eccYDegs);
-            subplot(2,2,quadOrder(3)); hold on;
-            plot(forwardExcitationsToStimulusUse(quad3Ind),reconExcitationsToReconTemp(quad3Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
-
-            quad4Ind = find(...
-                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,1) > pr.eccXDegs & ...
-                forwardConeMosaic.Mosaic.coneRFpositionsDegs(:,2) < pr.eccYDegs);
-            subplot(2,2,quadOrder(4)); hold on;
-            plot(forwardExcitationsToStimulusUse(quad4Ind),reconExcitationsToReconTemp(quad4Ind),'ro','MarkerFaceColor','r','MarkerSize',6);
-
-            for i=1:4
-                subplot(2,2,quadOrder(i)); hold on;
-
-                if (pr.reconstructfromRenderMatrix)
-                    title({['Quadrant ' num2str(i)]; 'Recon excitations to recon' ; 'Excitations from render matrix'});
-                    reconExcitationsToReconTemp = reconExcitationsToReconCheck;
-                else
-                    title({['Quadrant ' num2str(i)]; 'Recon excitations to recon' ; 'Excitations from ISETBio'});
-                    reconExcitationsToReconTemp = (reconConeMosaic.Mosaic.compute(reconOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
-                    reconExcitationsToReconTemp(pr.kConeIndices) = 0;
-                    reconExcitationsToReconTemp = squeeze(reconExcitationsToReconTemp);
-                end
-                axis('square');
-                minVal = 0.9*min([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
-                maxVal = 1.1*max([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
-                plot([minVal maxVal],[minVal maxVal],'k');
-                xlim([minVal maxVal]); ylim([minVal maxVal]);
-                xlabel('Forward excitations to stimulus');
-                ylabel('Recon excitations to recon');
-            end
-            saveas(gcf,fullfile(cnv.outputDir,'reconExcitationstoRecon_Quads.tiff'),'tiff');
-        end
     end
 end
 
-
-
-
-
-% Save the stimulus image after correction and with boosting
-imwrite(cfvStim.stimulusRGBScaled{ii},fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
-
 % Save best reconstruction image
 imwrite(reconScaledRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
-imwrite(cfvRecon.reconScaledRGB{ii},fullfile(cnv.outputDir,'ReconDispCorrected.tiff'),'tiff');
-imwrite(cfvRecon.imageRGBBoost,fullfile(cnv.outputDir,'ReconDispCorrectedBoost.tiff'),'tiff');
-
 
 %% Save workspace without really big variables
 close all;
@@ -940,7 +865,7 @@ clear forwardRenderMatrix reconRenderMatrixPupilScaled reconSceneTemp forwardOI 
 clear estimator
 clear reconScaledRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
 clear reconImageLinearTemp psfSupportTemp initImageLinearTemp
-clear tempFig theAxes theFIg axesHandle temp initSceneTemp
+clear tempFig theAxes theFig axesHandle temp initSceneTemp
 clear forwardConeMosaic reconConeMosaic
 save(fullfile(cnv.outputDir,'xRunOutput.mat'), '-v7.3');
 end
