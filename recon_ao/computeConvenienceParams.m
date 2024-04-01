@@ -45,6 +45,7 @@ else
     cnv.reconAOStrPlt = ['NOAO' num2str(cnv.reconPupilDiamMM) ' ' pr.reconZernikeDataBase ' ' num2str(pr.reconSubjectID)];
 end
 
+% Set the display name
 switch (pr.displayName)
     case 'conventional'
         cnv.displayFieldName = 'CRT12BitDisplay';
@@ -69,15 +70,8 @@ else
     cnv.reconSeedStr = 'noRand';
 end
 
-% Process mosaic chromatic type (trichromatic, deuteranopic, etc.) to be used.
-% This provides variables that are used to process the mosaic below according
-% to the specified chromatic type. See routine assignCones.
-% [cnv.replaceForwardCones, cnv.forwardStartCones, ...
-%     cnv.forwardNewCones] = assignCones(pr.forwardChrom);
-% [cnv.replaceReconCones, cnv.reconStartCones, ...
-%     cnv.reconNewCones] = assignCones(pr.reconChrom);
-
-% Render structure name
+% TO-DO: UPDATE the Render structure name based on new approaches, maybe
+% also consider nested directories with shorter names here. 
 if (pr.forwardAORender)
     cnv.forwardRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_AO_%0.2f_%s_%s_%d_%d.mat', ...
         pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.forwardPupilDiamMM), ...
@@ -96,7 +90,7 @@ else
     cnv.reconRenderStructureName = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_NOAO_%0.2f_%s_%d_%s_%s_%d_%d.mat', ...
         pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.reconPupilDiamMM),...
         pr.reconDefocusDiopters, pr.reconZernikeDataBase,pr.reconSubjectID, cnv.reconSeedStr,...
-         pr.reconEccVars, pr.reconNoLCA);
+        pr.reconEccVars, pr.reconNoLCA);
 end
 
 % Determine Poisson Noise string
@@ -119,36 +113,84 @@ else
     cnv.reconLCAStr = 'LCA';
 end
 
-% % Determine which quadrants are stimulated for small quads
-% if isfield(pr,'quadSelect')
-%     stimQuads = (find(pr.quadSelect' ~= 0));
-%     stimQuadsName = sprintf('%d',stimQuads');
+% % Output directory main name
+% cnv.outputMainName = sprintf('%s_%s_%s_%0.2f_%0.2f_%d_%d_%s_%0.2f_%s', ...
+%     pr.versEditor,cnv.forwardAOStr,cnv.reconAOStr,pr.forwardDefocusDiopters, ...
+%     pr.reconDefocusDiopters,pr.nPixels,pr.fieldSizeMinutes,pr.displayName, ...
+%     pr.displayScaleFactor,pr.sparsePriorStr);
+% 
+% % Output directory subname
+% if (length(pr.stimBgVal) > 3)
+%     cnv.outputSubName = sprintf('%0.1f_%0.1f_%0.1f_%0.6f_%d_%s_%s_%s_%d_%d_%s_%d_%d_%d_%d_%s_%d_%s', ...
+%         60*pr.stimSizeDegs,pr.eccXDegs,pr.eccYDegs,pr.regPara,pr.stride, ...
+%         pr.imageName,cnv.exciteSource, pr.forwardEccVars, pr.forwardNoLCA, ...
+%         pr.reconEccVars, pr.reconNoLCA, ...
+%         pr.stimCenter(1),pr.stimCenter(2), noiseStr,pr.boundedSearch);
 % else
-%     stimQuads = [];
-%     stimQuadsName = 'noquad';
+%     cnv.outputSubName = sprintf('%0.1f_%0.1f_%0.1f_%0.6f_%d_%0.4f_%0.4f_%0.4f_%0.4f_%s_%s_%d_%d_%s_%d_%d_%d_%d_%s_%d_%s', ...
+%         60*pr.stimSizeDegs,pr.eccXDegs,pr.eccYDegs,pr.regPara,pr.stride, ...
+%         pr.stimBgVal(1),pr.stimrVal,pr.stimgVal,pr.stimbVal, cnv.exciteSource,...% This is where the QS would have been
+%         pr.forwardEccVars, pr.forwardNoLCA, pr.reconEccVars, pr.reconNoLCA, ...
+%         pr.stimCenter(1),pr.stimCenter(2),noiseStr,pr.boundedSearch);%% Ends w/ stimquad name
 % end
+% cnv.outputDir = fullfile(pr.aoReconDir, pr.versEditor, pr.system, ...
+%     cnv.outputMainName, cnv.outputSubName);
 
-
-% Output directory names
-cnv.outputMainName = sprintf('%s_%s_%s_%0.2f_%0.2f_%d_%d_%s_%0.2f_%s', ...
-    pr.versEditor,cnv.forwardAOStr,cnv.reconAOStr,pr.forwardDefocusDiopters,pr.reconDefocusDiopters,...
-    pr.nPixels,pr.fieldSizeMinutes,pr.displayName,pr.displayScaleFactor,pr.sparsePriorStr);
-if (length(pr.stimBgVal) > 3)
-    cnv.outputSubName = sprintf('%0.1f_%0.1f_%0.1f_%0.6f_%d_%s_%s_%s_%d_%d_%s_%d_%d_%d_%d_%s_%d_%s', ...
-        60*pr.stimSizeDegs,pr.eccXDegs,pr.eccYDegs,pr.regPara,pr.stride,pr.imageName,cnv.exciteSource, ...
-        pr.forwardEccVars, pr.forwardNoLCA, pr.reconEccVars, pr.reconNoLCA, ...
-        pr.stimCenter(1),pr.stimCenter(2), noiseStr,pr.boundedSearch);
-else
-    cnv.outputSubName = sprintf('%0.1f_%0.1f_%0.1f_%0.6f_%d_%0.4f_%0.4f_%0.4f_%0.4f_%s_%s_%d_%d_%s_%d_%d_%d_%d_%s_%d_%s', ...
-        60*pr.stimSizeDegs,pr.eccXDegs,pr.eccYDegs,pr.regPara,pr.stride,pr.stimBgVal(1),pr.stimrVal,pr.stimgVal,pr.stimbVal, cnv.exciteSource,...
-        pr.forwardEccVars, pr.forwardNoLCA, pr.reconEccVars, pr.reconNoLCA, ...
-        pr.stimCenter(1),pr.stimCenter(2),noiseStr,pr.boundedSearch);
-end
-cnv.outputDir = fullfile(pr.aoReconDir, pr.versEditor, pr.system, cnv.outputMainName, cnv.outputSubName);
-
-end
 
 
 %% Updates
 % Incorporating some portion to account for the new naming scheme and
-% approach to running mosaics. 
+% approach to running mosaics. Also do some general function formating
+%
+% Below is a hodgepodge directory name comprised of all the components that
+% are expected to stay constant in the current small_quads state. For the
+% sake of making output directories more immediately informative, will no
+% longer be including all of this in the name but rather store it and group
+% under some umbrella generalConditions_version1. Can then compare
+% input parameters (which again should be unchanged) against the stored
+% version and if a match can proceed down to make the actual output
+% directories. If not, sends a flag that something has been altered and a
+% new generalConditions_version should be established. Will become relevant
+% if we decide to expand our parameter search again or boost pixel/FOV size
+cnv.generalConditions_verion1 = sprintf(['%s_%s_%0.2f_%0.2f_%d_%d_%s_%0.2f_' ...
+    '%s_%0.1f_%0.1f_%0.6f_%d_%s_%d_%d_%d_%d_%s_%d'], ...
+    cnv.forwardAOStr,cnv.reconAOStr,pr.forwardDefocusDiopters, ...
+    pr.reconDefocusDiopters,pr.nPixels,pr.fieldSizeMinutes,pr.displayName, ...
+    pr.displayScaleFactor,pr.sparsePriorStr,pr.eccXDegs,pr.eccYDegs, ...
+    pr.regPara,pr.stride, cnv.exciteSource,pr.forwardEccVars, ...
+    pr.forwardNoLCA, pr.reconEccVars, pr.reconNoLCA, ...
+    noiseStr,pr.boundedSearch);
+
+% Throw error if see that some parameter that should have been constant is
+% changed. 
+error(["General parameter conditions unrecognized, adjust ouptut directories"]);
+
+
+% TO-DO: Include a new constant param accounting for same mosaic structure on
+% forward encoding and recon decoding since no longer have QS 
+mosaicForwardReconSame = true; 
+
+
+% TO-DO: Include a chunk to call out the region variant based on the focal variant
+% of choice and the focal prop of choice
+
+% Nested directory chain corresponding to the things most pertinent to the
+% small quads routine, organized in a way that makes post-processing most
+% straightforward. This organization may not be the best suited for other
+% projects, but if so can expand from here. Maybe make it versEditor
+% dependent. 
+cnv.firstDir = sprintf(['stimSize_%0.1fArcmin_focalRegion_%s_stimPosition_' ...
+    '%d_%d'], ...
+    60*pr.stimSizeDegs,pr.focalRegion,pr.stimCenter(1),pr.stimCenter(2));
+cnv.secondDir = sprintf(['regionProportions_%0.2fL_%0.2fL_%0.2fL_' ...
+    '%0.2fS_%0.2fS_%0.2fS'],pr.propL(1),pr.propL(2),pr.propL(3), ...
+    pr.propS(1),pr.propS(2),pr.propS(3));
+cnv.thirdDir = sprintf(['regionVariant_%d_%d_%d'], ...
+    pr.regionVariant(1),pr.regionVariant(2),pr.regionVariant(3));
+cnv.fourthDir = sprintf(['stimColor_%0.4f_%0.4f_%0.4f_%0.4f'], ...
+    pr.stimBgVal(1),pr.stimrVal,pr.stimgVal,pr.stimbVal); 
+
+cnv.outputDir = fullfile(pr.aoReconDir, pr.versEditor, pr.system, ...
+    cnv.firstDir, cnv.secondDir, cnv.thirdDir, cnv.fourthDir);
+
+end

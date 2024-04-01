@@ -112,9 +112,9 @@ prBase.wls = (400:1:700)';
 
 % These are the specific values taken in by the AO script, for this project
 % want it to be relatively limited for the sake of speed.
-prBase.focalVariant = 1; %1:5;
+prBase.focalVariantList = 1; %1:5;
 prBase.stimSizeDegsList = [2 3.5 10] / 60;
-prBase.focalRegion = ["center" "nearSurround" "distantSurround"];
+prBase.focalRegionList = ["center" "nearSurround" "distantSurround"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
 %% Stimulus color
@@ -309,12 +309,6 @@ for ss = 1:length(prBase.stimSizeDegsList)
                             reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
                             forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
                             reconPupilDiamMM(runIndex) = reconPupilDiamListMM(pp);
-
-                            % QUADSEQ remnants, delete when happy with new
-                            % code.
-                            %                                     forwardChrom(runIndex) = forwardChromList(dd);
-                            %                                     reconChrom(runIndex) = reconChromList(dd);
-                            %                                     quadSelect(:,runIndex) = quadSelectList(:,qq);
 
                             % Bump condition index
                             runIndex = runIndex + 1;
