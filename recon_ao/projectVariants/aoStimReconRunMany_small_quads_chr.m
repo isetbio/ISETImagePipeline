@@ -361,12 +361,12 @@ if buildRenderMatrix
             cnv = computeConvenienceParams(pr);
 
             % Build foward cone mosaic and render matrix if needed
-            if (buildNewForward || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'file'))
+            if (buildNewForward || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructDir),'file'))
                 renderStructure = buildRenderStruct(pr, cnv, "forward");
             end
 
             % Build recon cone mosaic and render structure if needed
-            if (buildNewRecon || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'file'))
+            if (buildNewRecon || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructDir),'file'))
                 renderStructure = buildRenderStruct(pr, cnv, "recon");
             end
         end
@@ -380,12 +380,12 @@ if buildRenderMatrix
             cnv = computeConvenienceParams(pr);
 
             % Build foward cone mosaic and render matrix if needed
-            if (buildNewForward || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructureName),'file'))
+            if (buildNewForward || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructDir),'file'))
                 renderStructure = buildRenderStruct(pr, cnv, "forward");
             end
 
             % Build recon cone mosaic and render structure if needed
-            if (buildNewRecon || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructureName),'file'))
+            if (buildNewRecon || ~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructDir),'file'))
                 renderStructure = buildRenderStruct(pr, cnv, "recon");
             end
         end
