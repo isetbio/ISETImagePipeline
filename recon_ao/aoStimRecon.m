@@ -29,9 +29,9 @@ close all;
 if (rrf.rerunImages)
     varlist = who;                   %Find the variables that already exist
     varlist =strjoin(varlist','$|'); %Join into string, separating vars by '|'
-    load(fullfile(rrf.outputDir, 'xRunOutput.mat'), '-regexp', ['^(?!' varlist ')\w']);
+    load(fullfile(rrf.outputDirFull, 'xRunOutput.mat'), '-regexp', ['^(?!' varlist ')\w']);
     cnv.renderDir = rrf.renderDir;
-    cnv.outputDir = rrf.outputDir;
+    cnv.outputDirFull = rrf.outputDirFull;
     pr.aoReconDir = rrf.aoReconDir;
     %     pr.annWidthArc = [1; 2; 3];
 end
@@ -59,11 +59,11 @@ sparsePriorName = [pr.sparsePriorStr 'SparsePrior.mat'];
 % is correct at the calling level.
 %
 % Grab foward cone mosaic and render matrix
-if (~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructDir),'file'))
+if (~exist(fullfile(cnv.forwardRenderDirFull, cnv.renderName),'file'))
     error('Forward render strucure not cached')
 else
     clear forwardRenderStructure;
-    load(fullfile(cnv.renderDir, 'xRenderStructures', cnv.forwardRenderStructDir),'renderStructure');
+    load(fullfile(cnv.forwardRenderDirFull, cnv.renderName),'renderStructure');
     forwardRenderStructure = renderStructure; clear renderStructure;
     grabRenderStruct(forwardRenderStructure, pr.eccXDegs, pr.eccYDegs, cnv.fieldSizeDegs, ...
         pr.nPixels, cnv.forwardPupilDiamMM, pr.forwardAORender, pr.forwardDefocusDiopters);
@@ -76,11 +76,11 @@ forwardOI = forwardConeMosaic.PSF;
 clear forwardRenderStructure;
 
 % Grab recon cone mosaic and render matrix
-if (~exist(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructDir),'file'))
+if (~exist(fullfile(cnv.reconRenderDirFull, cnv.renderName),'file'))
     error('Recon render strucure not cached');
 else
     clear reconRenderStructure;
-    load(fullfile(cnv.renderDir, 'xRenderStructures', cnv.reconRenderStructDir),'renderStructure');
+    load(fullfile(cnv.reconRenderDirFull, cnv.renderName),'renderStructure');
     reconRenderStructure = renderStructure; clear renderStructure;
     grabRenderStruct(reconRenderStructure, pr.eccXDegs, pr.eccYDegs, cnv.fieldSizeDegs, ...
         pr.nPixels, cnv.reconPupilDiamMM, pr.reconAORender, pr.reconDefocusDiopters);
@@ -98,9 +98,18 @@ forwardConeMosaic.Display.ambient = displayGet(forwardConeMosaic.Display,'black 
 reconConeMosaic.Display = displaySet(reconConeMosaic.Display,'spd primaries',displayGet(reconConeMosaic.Display,'spd primaries')*pr.displayScaleFactor);
 reconConeMosaic.Display.ambient = displayGet(reconConeMosaic.Display,'black spd')*pr.displayScaleFactor;
 
+% Current snaity check to ensure that cone type at a given position does
+% not change between forward/recon. At some point may want to make this an
+% optional flag as we explore the idea of error in cone type assignment
+if ~isequal(forwardConeMosaic.Mosaic.lConeIndices, reconConeMosaic.Mosaic.Mosaic.lConeIndices) || ...
+        ~isequal(forwardConeMosaic.Mosaic.mConeIndices, reconConeMosaic.Mosaic.Mosaic.mConeIndices) || ...
+        ~isequal(forwardConeMosaic.Mosaic.sConeIndices, reconConeMosaic.Mosaic.Mosaic.sConeIndices)
+    error(['Cone types in forward and recon mosaics do not match']);
+end
+
 %% Setup output directories if they don't exist
-if (~exist(cnv.outputDir,'dir'))
-    mkdir(cnv.outputDir);
+if (~exist(cnv.outputDirFull,'dir'))
+    mkdir(cnv.outputDirFull);
 end
 
 %% Show and save forward and recon cone mosaics
@@ -109,10 +118,10 @@ end
 % assume this has already happened in a good way.
 if ~(rrf.rerunImages)
     forwardConeMosaic.visualizeMosaic();
-    saveas(gcf,fullfile(cnv.outputDir,'forwardMosaic.tiff'),'tiff');
+    saveas(gcf,fullfile(cnv.outputDirFull,'forwardMosaic.tiff'),'tiff');
 
     reconConeMosaic.visualizeMosaic();
-    saveas(gcf,fullfile(cnv.outputDir,'reconMosaic.tiff'),'tiff');
+    saveas(gcf,fullfile(cnv.outputDirFull,'reconMosaic.tiff'),'tiff');
 end
 
 %% Generate an image stimulus
@@ -154,7 +163,7 @@ if (length(pr.stimBgVal) == 1 || length(pr.stimBgVal) == 3)
             || min(idxXRange) <= 0 || max(idxXRange) > pr.nPixels
         warning(['Stimulus centered on ' int2str(pr.stimCenter' + pr.trueCenter) ...
             ' exceeds bounds. Beginning next simulation']);
-        rmdir(cnv.outputDir, 's');
+        rmdir(cnv.outputDirFull, 's');
         close all
         return
     end
@@ -190,8 +199,8 @@ stimulusImageRGB = gammaCorrection(stimImagergb*pr.inputImageScaleFactor, forwar
 % Set the field size
 stimulusScene = sceneSet(stimulusScene, 'fov', cnv.fieldSizeDegs);
 
-% Save the stimulus image as entered 
-imwrite(stimulusImageRGB,fullfile(cnv.outputDir,'Stimulus.tiff'),'tiff');
+% Save the stimulus image as entered
+imwrite(stimulusImageRGB,fullfile(cnv.outputDirFull,'Stimulus.tiff'),'tiff');
 
 % Use the compareRenderingEW file to render the stimulus across the proper
 % display and collect pertinent wavelength information
@@ -199,7 +208,7 @@ stimInfo = compareRenderingEW(stimulusImageLinear, rrf.startDisplayName, ...
     rrf.viewingDisplayName, idxXRange, 'wls', pr.wls);
 
 imwrite(stimInfo.imageRGBAcrossDisplays, ...
-    fullfile(cnv.outputDir,'StimulusDispCorrected.tiff'),'tiff');
+    fullfile(cnv.outputDirFull,'StimulusDispCorrected.tiff'),'tiff');
 
 %% Compute forward retinal image and excitations using ISETBio
 %
@@ -242,7 +251,7 @@ xlim([0 maxVal]); ylim([0 maxVal]);
 xlabel('Excitations to stimulus ISETBio');
 ylabel('Excitations to stimulus render matrix');
 title('Mean excitations ISETBio and render matrix');
-saveas(gcf,fullfile(cnv.outputDir,'ISETBioVsRenderMatrixExciations.tiff'),'tiff');
+saveas(gcf,fullfile(cnv.outputDirFull,'ISETBioVsRenderMatrixExciations.tiff'),'tiff');
 
 %% Choose which excitations to reconstruct form
 if (pr.reconstructfromRenderMatrix)
@@ -272,7 +281,7 @@ forwardConeMosaic.Mosaic.visualize(...
     'activation', reshape(forwardExcitationsToStimulusUse,1,1,length(forwardExcitationsToStimulusUse)), ...
     'activationRange', [0 max(forwardExcitationsToStimulusUse)], ...
     'plotTitle',  titleStr,'labelConesInActivationMap', false);
-saveas(gcf,fullfile(cnv.outputDir,'forwardMosaicExcitations.tiff'),'tiff');
+saveas(gcf,fullfile(cnv.outputDirFull,'forwardMosaicExcitations.tiff'),'tiff');
 forwardConeMosaic.Mosaic.visualize(...
     'figureHandle', figureHandle, ...
     'axesHandle', axesHandle, ...
@@ -280,7 +289,7 @@ forwardConeMosaic.Mosaic.visualize(...
     'activation', reshape(forwardExcitationsToStimulusUse,1,1,length(forwardExcitationsToStimulusUse)), ...
     'activationRange', [0 max(forwardExcitationsToStimulusUse)], ...
     'plotTitle',  titleStr,'labelConesInActivationMap', true);
-saveas(gcf,fullfile(cnv.outputDir,'forwardMosaicExcitationsTypes.tiff'),'tiff');
+saveas(gcf,fullfile(cnv.outputDirFull,'forwardMosaicExcitationsTypes.tiff'),'tiff');
 
 %% Run reconstruction
 %
@@ -415,16 +424,16 @@ for ii = 1:length(multistartStruct.initTypes)
     reconInfo = compareRenderingEW(reconImageLinear, rrf.startDisplayName, ...
         rrf.viewingDisplayName, idxXRange, 'wls', pr.wls);
 
-    imwrite(reconInfo.imageRGBAcrossDisplays, fullfile(cnv.outputDir,'ReconDispCorrected.tiff'),'tiff');
+    imwrite(reconInfo.imageRGBAcrossDisplays, fullfile(cnv.outputDirFull,'ReconDispCorrected.tiff'),'tiff');
 
 
-%     % Include portion for scaling of the corrected stim and recon images
-%     % based on the max across both, upscaled so the max is reset to 1
-%     cfvStim.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
-%     cfvRecon.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
-%     cfvStim.stimulusRGBScaled{ii} = gammaCorrection(cfvStim.imageRGBNoGamma/cfvStim.scaleFactor(ii), cfvStim.viewingDisplay);
-%     cfvRecon.reconScaledRGB{ii} = gammaCorrection(cfvRecon.imageRGBNoGamma/cfvRecon.scaleFactor(ii), cfvRecon.viewingDisplay);
-% 
+    %     % Include portion for scaling of the corrected stim and recon images
+    %     % based on the max across both, upscaled so the max is reset to 1
+    %     cfvStim.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
+    %     cfvRecon.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
+    %     cfvStim.stimulusRGBScaled{ii} = gammaCorrection(cfvStim.imageRGBNoGamma/cfvStim.scaleFactor(ii), cfvStim.viewingDisplay);
+    %     cfvRecon.reconScaledRGB{ii} = gammaCorrection(cfvRecon.imageRGBNoGamma/cfvRecon.scaleFactor(ii), cfvRecon.viewingDisplay);
+    %
 
     % Get forward and reconstruction OI's computed on reconstruction.  Take
     % difference in pupil size into account with reconOI.
@@ -472,15 +481,15 @@ for ii = 1:length(multistartStruct.initTypes)
         title({sprintf('Stimulus Image, input scale %0.4f',pr.inputImageScaleFactor)  ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal(1),pr.stimrVal,pr.stimgVal,pr.stimbVal)});
     end
     if (ii == reconIndex)
-        imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDir,'StimulusScaled.tiff'),'tiff');
+        imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDirFull,'StimulusScaled.tiff'),'tiff');
     end
 
     % Visualize stimulus after being corrected for Display
     theAxes = subplot(3,7,7);
     imshow(stimInfo.imageRGBAcrossDisplays{ii});
-%     title({sprintf('Stim on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
-%         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvStim.bounds(1,1),cfvStim.bounds(1,2),cfvStim.bounds(1,3)); ...
-%         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvStim.bounds(2,1),cfvStim.bounds(2,2),cfvStim.bounds(2,3))})
+    %     title({sprintf('Stim on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
+    %         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvStim.bounds(1,1),cfvStim.bounds(1,2),cfvStim.bounds(1,3)); ...
+    %         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvStim.bounds(2,1),cfvStim.bounds(2,2),cfvStim.bounds(2,3))})
 
 
     % Contour plot of forward PSF
@@ -541,7 +550,7 @@ for ii = 1:length(multistartStruct.initTypes)
             'withSuperimposedOpticalImage', forwardOI, ...
             'outlinedConesWithIndices', pr.kConeIndices, ...
             'plotTitle','Forward OI on Forward Mosaic','superimposedOIAlpha',0.7);
-        saveas(tempFig,fullfile(cnv.outputDir,sprintf('forwardOIOnForwardMosaic.tiff',ii)),'tiff');
+        saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('forwardOIOnForwardMosaic.tiff',ii)),'tiff');
         close(tempFig);
         figure(theFig);
     end
@@ -569,9 +578,9 @@ for ii = 1:length(multistartStruct.initTypes)
     % Show corrected recon image
     theAxes = subplot(3,7,14);
     imshow(reconInfo.imageRGBAcrossDisplays{ii});
-%     title({sprintf('Recon on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
-%         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(1,1),cfvRecon.bounds(1,2),cfvRecon.bounds(1,3)); ...
-%         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(2,1),cfvRecon.bounds(2,2),cfvRecon.bounds(2,3))})
+    %     title({sprintf('Recon on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
+    %         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(1,1),cfvRecon.bounds(1,2),cfvRecon.bounds(1,3)); ...
+    %         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(2,1),cfvRecon.bounds(2,2),cfvRecon.bounds(2,3))})
 
 
     % Contour plot of recon PSF
@@ -632,7 +641,7 @@ for ii = 1:length(multistartStruct.initTypes)
             'outlinedConesWithIndices', pr.kConeIndices, ...
             'withSuperimposedOpticalImage', reconOIToReconTemp, ...
             'plotTitle','Recon OI on Recon Mosaic','superimposedOIAlpha',0.7);
-        saveas(tempFig,fullfile(cnv.outputDir,sprintf('reconOIOnReconMosaic.tiff',ii)),'tiff');
+        saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('reconOIOnReconMosaic.tiff',ii)),'tiff');
         close(tempFig);
         figure(theFig);
     end
@@ -656,7 +665,7 @@ for ii = 1:length(multistartStruct.initTypes)
             'activation', reshape(multistartStruct.reconPreds(:,ii),1,1,length(forwardExcitationsToStimulusUse)), ...
             'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
             'plotTitle',  'Recon excitations','labelConesInActivationMap', false);
-        saveas(tempFig,fullfile(cnv.outputDir,sprintf('reconMosaicExcitations.tiff',ii)),'tiff');
+        saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('reconMosaicExcitations.tiff',ii)),'tiff');
         clf;
         reconConeMosaic.Mosaic.visualize(...
             'figureHandle', tempFig, ...
@@ -665,7 +674,7 @@ for ii = 1:length(multistartStruct.initTypes)
             'activation', reshape(multistartStruct.reconPreds(:,ii),1,1,length(forwardExcitationsToStimulusUse)), ...
             'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
             'plotTitle',  'Recon excitations','labelConesInActivationMap', true);
-        saveas(tempFig,fullfile(cnv.outputDir,sprintf('reconMosaicExcitationsTypes.tiff',ii)),'tiff');
+        saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('reconMosaicExcitationsTypes.tiff',ii)),'tiff');
         close(tempFig);
         figure(theFig);
     end
@@ -768,7 +777,7 @@ for ii = 1:length(multistartStruct.initTypes)
         title('Excitations to recon in two ways');
         xlabel('Excitations from multistart struct');
         ylabel('Excitations from aoStimRecon')
-        saveas(gcf,fullfile(cnv.outputDir,sprintf('ReconExcitationsCheckError%d.tiff',ii)),'tiff');
+        saveas(gcf,fullfile(cnv.outputDirFull,sprintf('ReconExcitationsCheckError%d.tiff',ii)),'tiff');
         figure(theFig);
     end
 
@@ -848,16 +857,16 @@ for ii = 1:length(multistartStruct.initTypes)
     end
 
     % Save
-    saveas(gcf,fullfile(cnv.outputDir,sprintf('Recon%dSummaryUpdate.tiff',ii)),'tiff');
+    saveas(gcf,fullfile(cnv.outputDirFull,sprintf('Recon%dSummaryUpdate.tiff',ii)),'tiff');
 
     % Save summary of best recon in its own file
     if (ii == reconIndex)
-        saveas(gcf,fullfile(cnv.outputDir,sprintf('ReconSummaryUpdate.tiff',ii)),'tiff');
+        saveas(gcf,fullfile(cnv.outputDirFull,sprintf('ReconSummaryUpdate.tiff',ii)),'tiff');
     end
 end
 
 % Save best reconstruction image
-imwrite(reconScaledRGB{reconIndex},fullfile(cnv.outputDir,'Recon.tiff'),'tiff');
+imwrite(reconScaledRGB{reconIndex},fullfile(cnv.outputDirFull,'Recon.tiff'),'tiff');
 
 %% Save workspace without really big variables
 close all;
@@ -867,5 +876,5 @@ clear reconScaledRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
 clear reconImageLinearTemp psfSupportTemp initImageLinearTemp
 clear tempFig theAxes theFig axesHandle temp initSceneTemp
 clear forwardConeMosaic reconConeMosaic
-save(fullfile(cnv.outputDir,'xRunOutput.mat'), '-v7.3');
+save(fullfile(cnv.outputDirFull,'xRunOutput.mat'), '-v7.3');
 end

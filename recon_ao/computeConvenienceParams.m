@@ -9,12 +9,6 @@ function cnv = computeConvenienceParams(pr)
 %    The convenience parameters massage the parameters into
 %    a more directly useful form for some parts of the code.
 
-% Render directory
-cnv.renderDir  = fullfile(pr.aoReconDir , pr.versEditor);
-if (~exist(cnv.renderDir ,'dir'))
-    mkdir(cnv.renderDir );
-end
-
 % Determine which method will be used for the reconstruction: ISETBIO or
 % Render Matrix
 if (pr.reconstructfromRenderMatrix)
@@ -70,36 +64,7 @@ else
     cnv.reconSeedStr = 'noRand';
 end
 
-%% TO-DO: UPDATE the Render structure name based on new approaches, maybe
-% also consider nested directories with shorter names here. 
-if (pr.forwardAORender)
-    cnv.forwardRenderStructDir = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_AO_%0.2f_%s_%s_%d_%d.mat', ...
-        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.forwardPupilDiamMM), ...
-        pr.forwardDefocusDiopters,cnv.forwardSeedStr, pr.forwardEccVars, pr.forwardNoLCA);
-else
-    cnv.forwardRenderStructDir = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_NOAO_%0.2f_%s_%d_%s_%s_%d_%d.mat', ...
-        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.forwardPupilDiamMM),...
-        pr.forwardDefocusDiopters,pr.forwardZernikeDataBase,pr.forwardSubjectID, cnv.forwardSeedStr,...
-        pr.forwardEccVars, pr.forwardNoLCA);
-end
-if (pr.reconAORender)
-    cnv.reconRenderStructDir = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_AO_%0.2f_%s_%s_%d_%d.mat', ...
-        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.reconPupilDiamMM), ...
-        pr.reconDefocusDiopters, cnv.reconSeedStr, pr.reconEccVars, pr.reconNoLCA);
-else
-    cnv.reconRenderStructDir = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_NOAO_%0.2f_%s_%d_%s_%s_%d_%d.mat', ...
-        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.reconPupilDiamMM),...
-        pr.reconDefocusDiopters, pr.reconZernikeDataBase,pr.reconSubjectID, cnv.reconSeedStr,...
-        pr.reconEccVars, pr.reconNoLCA);
-end
-
-% Naming sequence for the render matrix subdirectory, which as a
-% simplification will be a static thing for our purposes between
-% forward/recon conditions in the small_quads project
-cnv.reconRenderStructName = sprintf('%s_');
-
-
-%% Determine Poisson Noise string
+% Determine Poisson Noise string
 if (pr.addPoissonNoise)
     noiseStr = 'noise';
 else
@@ -119,59 +84,114 @@ else
     cnv.reconLCAStr = 'LCA';
 end
 
-%% Updates
-% Incorporating some portion to account for the new naming scheme and
-% approach to running mosaics. Also do some general function formating
+% Initiate vectors and override default values with desired region
+% proportion and variant 
+regionVariant = pr.regionVariant; 
+propL = pr.propL;
+propS = pr.propS;
+
+switch pr.focalRegion
+    case 'center'
+        propL(1) = pr.focalPropL;
+        regionVariant(1) = pr.focalVariant;
+    case 'nearSurround'
+        propL(2) = pr.focalPropL;
+        regionVariant(2) = pr.focalVariant;
+    case 'distantSurround'
+        propL(3) = pr.focalPropL;
+        regionVariant(3) = pr.focalVariant;
+    case 'multiple'
+        if length(pr.focalPropL) ~= 3 || length(pr.focalVariant) ~=3
+            error(['Must provide proportions and variants for all three regions'])
+        end
+        propL = pr.focalPropL;
+        regionVariant = pr.focalVariant;
+    case 'global'% This needs to be a list of 3 or the name will break
+        propL = pr.focalPropL * ones(1,3);
+        regionVariant = pr.focalVariant * ones(1,3);
+    otherwise
+        error(['Unrecognized focal region entered'])
+end
+
+%% Build render structure directories
+
+if (pr.forwardAORender)
+    cnv.forwardRenderDirFirst = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_AO_%0.2f_%s_%d_%d.mat', ...
+        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.forwardPupilDiamMM), ...
+        pr.forwardDefocusDiopters,cnv.forwardSeedStr, pr.forwardEccVars, pr.forwardNoLCA);
+else
+    cnv.forwardRenderDirFirst = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_NOAO_%0.2f_%s_%d_%s_%d_%d.mat', ...
+        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.forwardPupilDiamMM),...
+        pr.forwardDefocusDiopters,pr.forwardZernikeDataBase,pr.forwardSubjectID, cnv.forwardSeedStr,...
+        pr.forwardEccVars, pr.forwardNoLCA);
+end
+if (pr.reconAORender)
+    cnv.reconRenderDirFirst = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_AO_%0.2f_%s_%d_%d.mat', ...
+        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.reconPupilDiamMM), ...
+        pr.reconDefocusDiopters, cnv.reconSeedStr, pr.reconEccVars, pr.reconNoLCA);
+else
+    cnv.reconRenderDirFirst = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_NOAO_%0.2f_%s_%d_%s_%d_%d.mat', ...
+        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.reconPupilDiamMM),...
+        pr.reconDefocusDiopters, pr.reconZernikeDataBase,pr.reconSubjectID, cnv.reconSeedStr,...
+        pr.reconEccVars, pr.reconNoLCA);
+end
+
+% Subdirectory naming based on aspects relevant to the small_quads project,
+% for now this is constant between forward/recon conditions. 
+cnv.renderDirSecond = sprintf('%0.1fArcmin', ...
+    60*pr.stimSizeDegs);
+cnv.renderDirThird = sprintf('%d_%d_%d', ...
+    regionVariant(1),regionVariant(2),regionVariant(3));
+
+% Build the nested render directories for forward and recon conditions
+cnv.forwardRenderDirFull = fullfile(pr.aoReconDir,pr.versEditor,'xRenderStructures', ...
+    cnv.forwardRenderDirFirst,cnv.renderDirSecond,cnv.renderDirThird);
+if (~exist(cnv.forwardRenderDirFull,'dir'))
+    mkdir(cnv.forwardRenderDirFull);
+end
+
+cnv.reconRenderDirFull = fullfile(pr.aoReconDir,pr.versEditor,'xRenderStructures', ...
+    cnv.forwardRenderDirFirst,cnv.renderDirSecond,cnv.renderDirThird);
+if (~exist(cnv.reconRenderDirFull,'dir'))
+    mkdir(cnv.reconRenderDirFull);
+end
+
+% The actual file name is set to be the proportions since this is the most 
+% pertinent information when dealing with small_quads render structures. 
+cnv.renderName = sprintf(['%0.2fL_%0.2fL_%0.2fL_' ...
+    '%0.2fS_%0.2fS_%0.2fS'],propL(1),propL(2),propL(3), ...
+    propS(1),propS(2),propS(3));
+
+%% Build output directories
 %
-% Below is a hodgepodge directory name comprised of all the components that
-% are expected to stay constant in the current small_quads state. For the
-% sake of making output directories more immediately informative, will no
-% longer be including all of this in the name but rather store it and group
-% under some umbrella generalConditions_version1. Can then compare
-% input parameters (which again should be unchanged) against the stored
-% version and if a match can proceed down to make the actual output
-% directories. If not, sends a flag that something has been altered and a
-% new generalConditions_version should be established. Will become relevant
-% if we decide to expand our parameter search again or boost pixel/FOV size
-cnv.generalConditions_verion1 = sprintf(['%s_%s_%0.2f_%0.2f_%d_%d_%s_%0.2f_' ...
+% Nested directory chain going from general to most pertinent things to the
+% small quads routine, organized in a way that makes post-processing most
+% straightforward. This organization may not be the best suited for other
+% projects, but if so can expand from here (maybe make it versEditor
+% dependent).
+
+% General conditions are those that were found during the initial parameter
+% search and have since been constant throughout subsequent simulations
+cnv.generalConditions = sprintf(['%s_%s_%0.2f_%0.2f_%d_%d_%s_%0.2f_' ...
     '%s_%0.1f_%0.1f_%0.6f_%d_%s_%d_%d_%d_%d_%s_%d'], ...
     cnv.forwardAOStr,cnv.reconAOStr,pr.forwardDefocusDiopters, ...
     pr.reconDefocusDiopters,pr.nPixels,pr.fieldSizeMinutes,pr.displayName, ...
     pr.displayScaleFactor,pr.sparsePriorStr,pr.eccXDegs,pr.eccYDegs, ...
-    pr.regPara,pr.stride, cnv.exciteSource,pr.forwardEccVars, ...
-    pr.forwardNoLCA, pr.reconEccVars, pr.reconNoLCA, ...
-    noiseStr,pr.boundedSearch);
+    pr.regPara,pr.stride,cnv.exciteSource,pr.forwardEccVars, ...
+    pr.reconEccVars,pr.forwardNoLCA,pr.reconNoLCA,noiseStr,pr.boundedSearch);
 
-% Throw error if see that some parameter that should have been constant is
-% changed. 
-error(["General parameter conditions unrecognized, adjust ouptut directories"]);
-
-
-% TO-DO: Include a new constant param accounting for same mosaic structure on
-% forward encoding and recon decoding since no longer have QS 
-mosaicForwardReconSame = true; 
-
-
-% TO-DO: Include a chunk to call out the region variant based on the focal variant
-% of choice and the focal prop of choice
-
-% Nested directory chain corresponding to the things most pertinent to the
-% small quads routine, organized in a way that makes post-processing most
-% straightforward. This organization may not be the best suited for other
-% projects, but if so can expand from here. Maybe make it versEditor
-% dependent. 
-cnv.firstDir = sprintf(['stimSize_%0.1fArcmin_focalRegion_%s_stimPosition_' ...
+cnv.outputDirFirst = sprintf(['%0.1fArcmin_%s'], ...
+    60*pr.stimSizeDegs,pr.focalRegion);
+cnv.outputDirSecond = sprintf(['%0.2fL_%0.2fL_%0.2fL_' ...
+    '%0.2fS_%0.2fS_%0.2fS'],propL(1),propL(2),propL(3), ...
+    propS(1),propS(2),propS(3));
+cnv.outputDirThird = sprintf(['%d_%d_%d'], ...
+    regionVariant(1),regionVariant(2),regionVariant(3));
+cnv.outputDirFourth = sprintf(['%0.4f_%0.4f_%0.4f_%0.4f_' ...
     '%d_%d'], ...
-    60*pr.stimSizeDegs,pr.focalRegion,pr.stimCenter(1),pr.stimCenter(2));
-cnv.secondDir = sprintf(['regionProportions_%0.2fL_%0.2fL_%0.2fL_' ...
-    '%0.2fS_%0.2fS_%0.2fS'],pr.propL(1),pr.propL(2),pr.propL(3), ...
-    pr.propS(1),pr.propS(2),pr.propS(3));
-cnv.thirdDir = sprintf(['regionVariant_%d_%d_%d'], ...
-    pr.regionVariant(1),pr.regionVariant(2),pr.regionVariant(3));
-cnv.fourthDir = sprintf(['stimColor_%0.4f_%0.4f_%0.4f_%0.4f'], ...
-    pr.stimBgVal(1),pr.stimrVal,pr.stimgVal,pr.stimbVal); 
+    pr.stimBgVal(1),pr.stimrVal,pr.stimgVal,pr.stimbVal, ...
+    pr.stimCenter(1), pr.stimCenter(2)); 
 
-cnv.outputDir = fullfile(pr.aoReconDir, pr.versEditor, pr.system, ...
-    cnv.firstDir, cnv.secondDir, cnv.thirdDir, cnv.fourthDir);
-
+cnv.outputDirFull = fullfile(pr.aoReconDir, pr.versEditor, cnv.generalConditions,...
+    cnv.outputDirFirst, cnv.outputDirSecond, cnv.outputDirThird, cnv.outputDirFourth);
 end
