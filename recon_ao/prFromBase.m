@@ -18,7 +18,7 @@ pr.regPara = regPara(index);
 pr.forwardPupilDiamMM = forwardPupilDiamMM(index);
 pr.reconPupilDiamMM = reconPupilDiamMM(index);
 pr.displayScaleFactor = displayScaleFactor(index);
-pr.focalRegionList = focalRegion(index);
+pr.focalRegion = focalRegion(index);
 pr.focalPropL = focalPropL(index);
 pr.focalVariant = focalVariant(index); 
 

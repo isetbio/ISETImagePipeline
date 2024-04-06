@@ -264,12 +264,6 @@ forwardDefocusDioptersList = [0.05];
 reconDefocusDioptersList = [0.0];
 
 %% Set up list conditions
-prBase.focalVariantList
-prBase.stimSizeDegsList
-prBase.focalRegionList
-prBase.focalPropLList
-
-
 runIndex = 1;
 for ss = 1:length(prBase.stimSizeDegsList)
     for gg = 1:length(prBase.focalRegionList)
@@ -376,7 +370,7 @@ if buildRenderMatrix
             % out of lists precreated above.
             pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
                 stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-                forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor ...
+                forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
                 focalRegion, focalPropL, focalVariant);
             cnv = computeConvenienceParams(pr);
 
