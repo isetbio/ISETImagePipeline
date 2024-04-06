@@ -70,9 +70,9 @@ prBase.addPoissonNoise = false;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-runReconstructions = false;
-buildRenderMatrix = false;
-buildMosaicMontages = true;
+runReconstructions = true;
+buildRenderMatrix = true;
+buildMosaicMontages = false;
 
 % The two buildNew flags here force a build of existing matrices, while
 % if they are false and we are building, only ones that don't yet exist
@@ -423,7 +423,7 @@ end
 
 %% Run aoStimRecon.m
 % THIS SHOULD BE A PARFOR AFTERWARDS DON'T FORGET
-if reconstruct
+if runReconstructions
     parfor pp = 1:length(regPara)
 
         % Set up paramters structure for this loop, filling in fields that come
