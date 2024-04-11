@@ -95,7 +95,7 @@ prBase.wls = (400:1:700)';
 % want it to be relatively limited for the sake of speed.
 prBase.stimSizeDegsList = [10] / 60;
 prBase.focalRegionList = ["center"];
-prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
+prBase.focalPropLList = [0.0 0.1 0.3 0.5 0.7 0.9 1.0];
 prBase.focalVariantList = 1;
 
 % Set default variant and proportion L and S cones. Note that throughout
@@ -129,7 +129,7 @@ else
         case 'mono'
             displayFieldName = 'monoDisplay';
             overwriteDisplayGamma = true;
-
+            
             % The following values are the approximations for a 0.5 uniform
             % field on a conventional display using the tutorial. These can
             % be scaled accordingly for a lighter or darker background on
@@ -139,26 +139,26 @@ else
             monoGray = [0.444485445018075; ...
                 0.525384925401570; ...
                 0.554173733733909];
-
+            
             % DON'T FORGET TO PUT IN AN ACTUAL VALUE FOR THE "1" HERE
             prBase.stimBgVal = monoGray * monoBgScale;
         otherwise
             error('Unknown display specified');
     end
-
+    
     % Load the appropriate display
     theDisplayLoad = load(fullfile(prBase.aoReconDir, 'displays', [prBase.displayName 'Display.mat']));
     eval(['theDisplay = theDisplayLoad.' displayFieldName ';']);
-
+    
     if (overwriteDisplayGamma)
         gammaInput = linspace(0,1,2^prBase.displayGammaBits)';
         gammaOutput = gammaInput.^prBase.displayGammaGamma;
         theDisplay.gamma = gammaOutput(:,[1 1 1]);
     end
-
+    
     % Using the 1 nm sampling to agree w/ tutorial
     theDisplay = displaySet(theDisplay, 'wave', prBase.wls);
-
+    
     % Get information we need to render scenes from their spectra through
     % the recon display.
     theXYZStruct = load('T_xyz1931');
@@ -167,7 +167,7 @@ else
     M_XYZTorgb = inv(M_rgbToXYZ);
     rPrimaryLuminance = M_rgbToXYZ(2,1);
     gPrimaryLuminance = M_rgbToXYZ(2,2);
-
+    
     % Compute as set of equally spaced r/(r+g) values that lead
     % to equal luminance stimuli.
     thePrimaries = displayGet(theDisplay,'spd primaries');
@@ -180,7 +180,7 @@ else
     b = 0.001;
     equiLumrgbValues = [rRaw ; gAdjust; b*ones(size(rRaw))];
     inputLinearrgbValues = 0.5*equiLumrgbValues/max(equiLumrgbValues(:));
-
+    
     stimrValList = inputLinearrgbValues(1,:);
     stimgValList = inputLinearrgbValues(2,:);
     stimbValList = inputLinearrgbValues(3,:);
@@ -283,7 +283,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                         stimCenter(:,runIndex) = deltaCenterList(:,yy);
                                         regPara(runIndex) = regParaList(rr);
                                         displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
-
+                                        
                                         % These do affect mosaics because we
                                         % design mosaics to have desired properties
                                         % within the stimulus region and regions
@@ -293,14 +293,14 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                         focalRegion(runIndex) = prBase.focalRegionList(gg);
                                         focalPropL(runIndex) = prBase.focalPropLList(oo);
                                         focalVariant(runIndex) = prBase.focalVariantList(vv);
-
+                                        
                                         % These parameters do by their nature directly affect either the mosaic
                                         % or the render matrices beyond the scope of our current project
                                         forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
                                         reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
                                         forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
                                         reconPupilDiamMM(runIndex) = reconPupilDiamListMM(pp);
-
+                                        
                                         % Bump condition index
                                         runIndex = runIndex + 1;
                                     end
@@ -313,6 +313,9 @@ for ss = 1:length(prBase.stimSizeDegsList)
         end
     end
 end
+
+% Remvoew the final run index bump to match lengths
+runIndex = runIndex - 1;
 
 %% Set the multeRenderMatrixParams flag properly based on condition lists
 %
@@ -341,48 +344,29 @@ end
 % Build the render structures and note that being done in bulk so only run
 % over length 1 since builders use the full value lists. This is not the
 % case if the core render matrix params above are altered, then must cycle
-% through. (Suspect this might still have overcalculation/redundancy but 
+% through. (Suspect this might still have overcalculation/redundancy but
 % explore more later)
 if buildRenderMatrix
-    if multRenderMatrixParams
-        for pp = 1:length(regPara)
-            % Set up paramters structure for this loop, filling in fields that come
-            % out of lists precreated above.
-            pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
-                stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-                forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
-                focalRegion, focalPropL, focalVariant);
-            cnv = computeConvenienceParams(pr);
-
-            % Build foward cone mosaic and render matrix if needed
-            if (buildNewForward || ~exist(fullfile(cnv.forwardRenderDirFull, cnv.renderName),'file'))
-                renderStructure = buildRenderStruct(pr, cnv, "forward");
-            end
-
-            % Build recon cone mosaic and render structure if needed
-            if (buildNewRecon || ~exist(fullfile(cnv.forwardRenderDirFull, cnv.renderName),'file'))
-                renderStructure = buildRenderStruct(pr, cnv, "recon");
-            end
+    %     if multRenderMatrixParams
+    for pp = 1:runIndex
+        % Set up paramters structure for this loop, filling in fields that come
+        % out of lists precreated above.
+        pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
+            stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
+            forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
+            focalRegion, focalPropL, focalVariant);
+        cnv = computeConvenienceParams(pr);
+        
+        % Build foward cone mosaic and render matrix if needed
+        if (buildNewForward || ~exist(fullfile(cnv.forwardRenderDirFull, cnv.renderName),'file'))
+            renderStructure = buildRenderStruct(pr, cnv, "forward");
+            clear renderStructure;
         end
-    else
-        for pp = 1
-            % Set up paramters structure for this loop, filling in fields that come
-            % out of lists precreated above.
-            pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
-                stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-                forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
-                focalRegion, focalPropL, focalVariant);
-            cnv = computeConvenienceParams(pr);
-
-            % Build foward cone mosaic and render matrix if needed
-            if (buildNewForward || ~exist(fullfile(cnv.reconRenderDirFull, cnv.renderName),'file'))
-                renderStructure = buildRenderStruct(pr, cnv, "forward");
-            end
-
-            % Build recon cone mosaic and render structure if needed
-            if (buildNewRecon || ~exist(fullfile(cnv.reconRenderDirFull, cnv.renderName),'file'))
-                renderStructure = buildRenderStruct(pr, cnv, "recon");
-            end
+        
+        % Build recon cone mosaic and render structure if needed
+        if (buildNewRecon || ~exist(fullfile(cnv.reconRenderDirFull, cnv.renderName),'file'))
+            renderStructure = buildRenderStruct(pr, cnv, "recon");
+            clear renderStructure;
         end
     end
 end
@@ -390,42 +374,28 @@ end
 %% Visualize mosaics
 %
 % Building mosaics themselves is fast, and we control the random number
-% generator. Follows the same format as for the render matrices. 
+% generator. Follows the same format as for the render matrices.
 if buildMosaicMontages
-    if multRenderMatrixParams
-        for pp = 1:length(regPara)
-            % Set up paramters structure for this loop, filling in fields that come
-            % out of lists precreated above.
-            pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
-                stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-                forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
-                focalRegion, focalPropL, focalVariant);
-            %         pr.quadSelect = quadSelect(:,pp);
-            cnv = computeConvenienceParams(pr);
-            buildMosaicMontage(pr, cnv, "forward");
-            buildMosaicMontage(pr, cnv, "recon");
-        end
-    else
-        for pp = 1
-            % Set up paramters structure for this loop, filling in fields that come
-            % out of lists precreated above.
-            pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
-                stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-                forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
-                focalRegion, focalPropL, focalVariant);
-            %         pr.quadSelect = quadSelect(:,pp);
-            cnv = computeConvenienceParams(pr);
-            buildMosaicMontage(pr, cnv, "forward");
-            buildMosaicMontage(pr, cnv, "recon");
-        end
+    %     if multRenderMatrixParams
+    for pp = 1
+        % Set up paramters structure for this loop, filling in fields that come
+        % out of lists precreated above.
+        pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
+            stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
+            forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
+            focalRegion, focalPropL, focalVariant);
+        %         pr.quadSelect = quadSelect(:,pp);
+        cnv = computeConvenienceParams(pr);
+        buildMosaicMontage(pr, cnv, "forward");
+        buildMosaicMontage(pr, cnv, "recon");
     end
 end
 
 %% Run aoStimRecon.m
 % THIS SHOULD BE A PARFOR AFTERWARDS DON'T FORGET
 if runReconstructions
-    parfor pp = 1:length(regPara)
-
+    parfor pp = 1:runIndex
+        
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists above.
         pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
@@ -433,10 +403,10 @@ if runReconstructions
             forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM, ...
             displayScaleFactor, focalRegion, focalPropL, focalVariant);
         pr.quadSelect = quadSelect(:,pp);
-
+        
         % Compute convenience parameters
         cnv = computeConvenienceParams(pr);
-
+        
         % Call the driving function
         aoStimRecon(pr,cnv, rrf);
     end
