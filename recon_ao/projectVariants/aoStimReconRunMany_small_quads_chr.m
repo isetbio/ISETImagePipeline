@@ -70,7 +70,7 @@ prBase.addPoissonNoise = false;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-runReconstructions = true;
+runReconstructions = false;
 buildRenderMatrix = true;
 buildMosaicMontages = false;
 
