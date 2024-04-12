@@ -70,7 +70,7 @@ prBase.addPoissonNoise = false;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-runReconstructions = true;
+runReconstructions = false;
 buildRenderMatrix = true;
 buildMosaicMontages = false;
 
@@ -93,10 +93,10 @@ prBase.wls = (400:1:700)';
 
 % These are the specific values taken in by the AO script, for this project
 % want it to be relatively limited for the sake of speed.
-prBase.stimSizeDegsList = [10] / 60;
+prBase.stimSizeDegsList = [2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
-prBase.focalPropLList = [0.0 0.1 0.3 0.5 0.7 0.9 1.0];
-prBase.focalVariantList = 1;
+prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
+prBase.focalVariantList = 2;
 
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
