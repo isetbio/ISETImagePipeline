@@ -70,8 +70,8 @@ prBase.addPoissonNoise = false;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-runReconstructions = false;
-buildRenderMatrix = true;
+runReconstructions = true;
+buildRenderMatrix = false;
 buildMosaicMontages = false;
 
 % The two buildNew flags here force a build of existing matrices, while
@@ -93,7 +93,7 @@ prBase.wls = (400:1:700)';
 
 % These are the specific values taken in by the AO script, for this project
 % want it to be relatively limited for the sake of speed.
-prBase.stimSizeDegsList = [2 3.5 10] / 60;
+prBase.stimSizeDegsList = 3.5/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 prBase.focalVariantList = 2;
@@ -104,6 +104,10 @@ prBase.focalVariantList = 2;
 prBase.regionVariant = [1 1 1];
 prBase.propL = [0.5 0.5 0.5];
 prBase.propS = [0.10 0.10 0.10];
+
+% Add indices of cones to be silence
+prBase.kConeIndices = [];
+
 %% Stimulus color
 %
 % We can either specify an explicit list of RGB values, or generate an
@@ -111,16 +115,18 @@ prBase.propS = [0.10 0.10 0.10];
 % Which we do is controlled by the isoLumRG flag.  Specific parameters
 % for each possibility are defined within the corresponding branch of the
 % conditional just below.
-isoLumRG = true;
-if (~isoLumRG)
+isoLumRGAuto = false;
+monoBgScale = 0.2;
+monoGray = [0.4445; 0.5254; 0.5542];
+
+if (~isoLumRGAuto)
     % These are rgb values (linear, before gamma correction)
-    prBase.stimBgVal = 0.3;
-    stimrValList = 0.80;
-    stimgValList = 0.65;
-    stimbValList = 0.10;
+    prBase.stimBgVal = monoGray * monoBgScale;   
+    stimrValList = [0.4615 0.3846 0.3077 0.2308 0.1538 0.1154 0.0769 0.0385 0.0000];
+    stimgValList = [0.0081 0.0242 0.0403 0.0565 0.0726 0.0807 0.0888 0.0968 0.1049];
+    stimbValList = [0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005];
 else
     nEquiLumStimuli = 11;
-    monoBgScale = 0.5;
     switch (prBase.displayName)
         case 'conventional'
             displayFieldName = 'CRT12BitDisplay';
@@ -129,7 +135,7 @@ else
         case 'mono'
             displayFieldName = 'monoDisplay';
             overwriteDisplayGamma = true;
-            
+
             % The following values are the approximations for a 0.5 uniform
             % field on a conventional display using the tutorial. These can
             % be scaled accordingly for a lighter or darker background on
@@ -139,26 +145,26 @@ else
             monoGray = [0.444485445018075; ...
                 0.525384925401570; ...
                 0.554173733733909];
-            
+
             % DON'T FORGET TO PUT IN AN ACTUAL VALUE FOR THE "1" HERE
             prBase.stimBgVal = monoGray * monoBgScale;
         otherwise
             error('Unknown display specified');
     end
-    
+
     % Load the appropriate display
     theDisplayLoad = load(fullfile(prBase.aoReconDir, 'displays', [prBase.displayName 'Display.mat']));
     eval(['theDisplay = theDisplayLoad.' displayFieldName ';']);
-    
+
     if (overwriteDisplayGamma)
         gammaInput = linspace(0,1,2^prBase.displayGammaBits)';
         gammaOutput = gammaInput.^prBase.displayGammaGamma;
         theDisplay.gamma = gammaOutput(:,[1 1 1]);
     end
-    
+
     % Using the 1 nm sampling to agree w/ tutorial
     theDisplay = displaySet(theDisplay, 'wave', prBase.wls);
-    
+
     % Get information we need to render scenes from their spectra through
     % the recon display.
     theXYZStruct = load('T_xyz1931');
@@ -167,7 +173,7 @@ else
     M_XYZTorgb = inv(M_rgbToXYZ);
     rPrimaryLuminance = M_rgbToXYZ(2,1);
     gPrimaryLuminance = M_rgbToXYZ(2,2);
-    
+
     % Compute as set of equally spaced r/(r+g) values that lead
     % to equal luminance stimuli.
     thePrimaries = displayGet(theDisplay,'spd primaries');
@@ -180,7 +186,7 @@ else
     b = 0.001;
     equiLumrgbValues = [rRaw ; gAdjust; b*ones(size(rRaw))];
     inputLinearrgbValues = 0.5*equiLumrgbValues/max(equiLumrgbValues(:));
-    
+
     stimrValList = inputLinearrgbValues(1,:);
     stimgValList = inputLinearrgbValues(2,:);
     stimbValList = inputLinearrgbValues(3,:);
@@ -283,7 +289,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                         stimCenter(:,runIndex) = deltaCenterList(:,yy);
                                         regPara(runIndex) = regParaList(rr);
                                         displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
-                                        
+
                                         % These do affect mosaics because we
                                         % design mosaics to have desired properties
                                         % within the stimulus region and regions
@@ -293,14 +299,14 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                         focalRegion(runIndex) = prBase.focalRegionList(gg);
                                         focalPropL(runIndex) = prBase.focalPropLList(oo);
                                         focalVariant(runIndex) = prBase.focalVariantList(vv);
-                                        
+
                                         % These parameters do by their nature directly affect either the mosaic
                                         % or the render matrices beyond the scope of our current project
                                         forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
                                         reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
                                         forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
                                         reconPupilDiamMM(runIndex) = reconPupilDiamListMM(pp);
-                                        
+
                                         % Bump condition index
                                         runIndex = runIndex + 1;
                                     end
@@ -356,13 +362,13 @@ if buildRenderMatrix
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
             focalRegion, focalPropL, focalVariant);
         cnv = computeConvenienceParams(pr);
-        
+
         % Build foward cone mosaic and render matrix if needed
         if (buildNewForward || ~exist(fullfile(cnv.forwardRenderDirFull, cnv.renderName),'file'))
             renderStructure = buildRenderStruct(pr, cnv, "forward");
             clear renderStructure;
         end
-        
+
         % Build recon cone mosaic and render structure if needed
         if (buildNewRecon || ~exist(fullfile(cnv.reconRenderDirFull, cnv.renderName),'file'))
             renderStructure = buildRenderStruct(pr, cnv, "recon");
@@ -392,21 +398,24 @@ if buildMosaicMontages
 end
 
 %% Run aoStimRecon.m
-% THIS SHOULD BE A PARFOR AFTERWARDS DON'T FORGET
+% 
+% Helpful tip: If you get weird error crashes that don't seem to make
+% sense, try turning the parfor loop below into a normal loop because the
+% issue is likley a masked issue within the aoStimRecon file. Just remember
+% to turn it back to a parfor loop when finished. 
 if runReconstructions
     parfor pp = 1:runIndex
-        
+
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists above.
         pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-            forwardChrom,reconChrom,forwardPupilDiamMM,reconPupilDiamMM, ...
-            displayScaleFactor, focalRegion, focalPropL, focalVariant);
-        pr.quadSelect = quadSelect(:,pp);
-        
+            forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
+            focalRegion, focalPropL, focalVariant);
+
         % Compute convenience parameters
         cnv = computeConvenienceParams(pr);
-        
+
         % Call the driving function
         aoStimRecon(pr,cnv, rrf);
     end

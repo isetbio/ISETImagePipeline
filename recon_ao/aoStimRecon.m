@@ -98,12 +98,12 @@ forwardConeMosaic.Display.ambient = displayGet(forwardConeMosaic.Display,'black 
 reconConeMosaic.Display = displaySet(reconConeMosaic.Display,'spd primaries',displayGet(reconConeMosaic.Display,'spd primaries')*pr.displayScaleFactor);
 reconConeMosaic.Display.ambient = displayGet(reconConeMosaic.Display,'black spd')*pr.displayScaleFactor;
 
-% Current snaity check to ensure that cone type at a given position does
+% Current sanity check to ensure that cone type at a given position does
 % not change between forward/recon. At some point may want to make this an
 % optional flag as we explore the idea of error in cone type assignment
-if ~isequal(forwardConeMosaic.Mosaic.lConeIndices, reconConeMosaic.Mosaic.Mosaic.lConeIndices) || ...
-        ~isequal(forwardConeMosaic.Mosaic.mConeIndices, reconConeMosaic.Mosaic.Mosaic.mConeIndices) || ...
-        ~isequal(forwardConeMosaic.Mosaic.sConeIndices, reconConeMosaic.Mosaic.Mosaic.sConeIndices)
+if ~isequal(forwardConeMosaic.Mosaic.lConeIndices, reconConeMosaic.Mosaic.lConeIndices) || ...
+        ~isequal(forwardConeMosaic.Mosaic.mConeIndices, reconConeMosaic.Mosaic.mConeIndices) || ...
+        ~isequal(forwardConeMosaic.Mosaic.sConeIndices, reconConeMosaic.Mosaic.sConeIndices)
     error(['Cone types in forward and recon mosaics do not match']);
 end
 
@@ -427,13 +427,16 @@ for ii = 1:length(multistartStruct.initTypes)
     imwrite(reconInfo.imageRGBAcrossDisplays, fullfile(cnv.outputDirFull,'ReconDispCorrected.tiff'),'tiff');
 
 
-    %     % Include portion for scaling of the corrected stim and recon images
-    %     % based on the max across both, upscaled so the max is reset to 1
-    %     cfvStim.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
-    %     cfvRecon.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
-    %     cfvStim.stimulusRGBScaled{ii} = gammaCorrection(cfvStim.imageRGBNoGamma/cfvStim.scaleFactor(ii), cfvStim.viewingDisplay);
-    %     cfvRecon.reconScaledRGB{ii} = gammaCorrection(cfvRecon.imageRGBNoGamma/cfvRecon.scaleFactor(ii), cfvRecon.viewingDisplay);
-    %
+    % Include portion for scaling of the corrected stim and recon images
+    % based on the max across both, upscaled so the max is reset to 1
+    
+
+% 
+%     cfvStim.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
+%     cfvRecon.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
+%     cfvStim.stimulusRGBScaled{ii} = gammaCorrection(cfvStim.imageRGBNoGamma/cfvStim.scaleFactor(ii), cfvStim.viewingDisplay);
+%     cfvRecon.reconScaledRGB{ii} = gammaCorrection(cfvRecon.imageRGBNoGamma/cfvRecon.scaleFactor(ii), cfvRecon.viewingDisplay);
+
 
     % Get forward and reconstruction OI's computed on reconstruction.  Take
     % difference in pupil size into account with reconOI.
@@ -480,13 +483,13 @@ for ii = 1:length(multistartStruct.initTypes)
     else
         title({sprintf('Stimulus Image, input scale %0.4f',pr.inputImageScaleFactor)  ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal(1),pr.stimrVal,pr.stimgVal,pr.stimbVal)});
     end
-    if (ii == reconIndex)
-        imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDirFull,'StimulusScaled.tiff'),'tiff');
-    end
+%     if (ii == reconIndex)
+%         imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDirFull,'StimulusScaled.tiff'),'tiff');
+%     end
 
     % Visualize stimulus after being corrected for Display
     theAxes = subplot(3,7,7);
-    imshow(stimInfo.imageRGBAcrossDisplays{ii});
+    imshow(stimInfo.imageRGBAcrossDisplays);
     %     title({sprintf('Stim on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
     %         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvStim.bounds(1,1),cfvStim.bounds(1,2),cfvStim.bounds(1,3)); ...
     %         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvStim.bounds(2,1),cfvStim.bounds(2,2),cfvStim.bounds(2,3))})
@@ -577,7 +580,7 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Show corrected recon image
     theAxes = subplot(3,7,14);
-    imshow(reconInfo.imageRGBAcrossDisplays{ii});
+    imshow(reconInfo.imageRGBAcrossDisplays);
     %     title({sprintf('Recon on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
     %         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(1,1),cfvRecon.bounds(1,2),cfvRecon.bounds(1,3)); ...
     %         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(2,1),cfvRecon.bounds(2,2),cfvRecon.bounds(2,3))})
