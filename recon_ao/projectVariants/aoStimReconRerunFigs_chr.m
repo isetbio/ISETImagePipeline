@@ -52,7 +52,8 @@ rrf.reconDispScale = 1;
 % Each subdirectory should correspond to a different stimulus size
 rrf.aoReconDir = getpref('ISETImagePipeline','aoReconDir');
 rrf.versEditor = 'small_quads_chr';
-rrf.wrapDir = fullfile(rrf.aoReconDir , rrf.versEditor, '/StimSize_v8/Rerun');
+% rrf.generalParams = 'AO7_NOAO2_Polans2015_6_0.05_0.00_50_30_mono_1.00_conventional_2.0_0.0_0.100000_2_renderMatrix_0_0_1_0_nonoise_0'; 
+rrf.wrapDir = fullfile(rrf.aoReconDir , rrf.versEditor);%, '/StimSize_v8/Rerun');
 rrf.wrapDirInfo = dir(rrf.wrapDir);
 
 % When reading directories there are initial filler entries (., ..,
@@ -63,6 +64,9 @@ if contains(rrf.aoReconDir, 'megalodon')
 else
     firstEntry = 4;
 end
+
+sizesStim = '3.5Arcmin_center';
+
 
 % Cycle through each stim size directory
 for i = firstEntry:length(rrf.wrapDirInfo)
@@ -142,8 +146,8 @@ for i = firstEntry:length(rrf.wrapDirInfo)
                     % (effectively magnifying the image for presentation), and
                     % save in the desired index for the cell holding recon images
                     %                     cellRecons{counter} = cfvRecon.reconScaledRGB{ii}(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
-                    cellRecons{counter} = cellWaveRecon{counter}.reconImageRGB(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
-
+%                     cellRecons{counter} = cellWaveRecon{counter}.reconImageRGB(zoomLim:end-zoomLim, zoomLim:end-zoomLim, :);
+                    cellRecons{counter} = ;
                     % Pull associated Stat information and also place in a
                     % corresponding cell
                     cellStatsRecon{counter} = cfvRecon.rgbStats;

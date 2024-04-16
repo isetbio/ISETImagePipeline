@@ -19,7 +19,7 @@ clear; close all;
 %% Control size of parpool, otherwise may crush memory
 % thePool = gcp('nocreate');
 % if (isempty(thePool))
-%     parpool(5);
+%     parpool(2);
 % end
 
 %% Portion for ReRunning Figures from previous simulations after updates
@@ -93,7 +93,7 @@ prBase.wls = (400:1:700)';
 
 % These are the specific values taken in by the AO script, for this project
 % want it to be relatively limited for the sake of speed.
-prBase.stimSizeDegsList = 3.5/60;%[2 3.5 10] / 60;
+prBase.stimSizeDegsList = 10/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 prBase.focalVariantList = 2;
@@ -121,7 +121,7 @@ monoGray = [0.4445; 0.5254; 0.5542];
 
 if (~isoLumRGAuto)
     % These are rgb values (linear, before gamma correction)
-    prBase.stimBgVal = monoGray * monoBgScale;   
+    prBase.stimBgVal = monoGray * monoBgScale;
     stimrValList = [0.4615 0.3846 0.3077 0.2308 0.1538 0.1154 0.0769 0.0385 0.0000];
     stimgValList = [0.0081 0.0242 0.0403 0.0565 0.0726 0.0807 0.0888 0.0968 0.1049];
     stimbValList = [0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005];
@@ -398,11 +398,11 @@ if buildMosaicMontages
 end
 
 %% Run aoStimRecon.m
-% 
+%
 % Helpful tip: If you get weird error crashes that don't seem to make
 % sense, try turning the parfor loop below into a normal loop because the
 % issue is likley a masked issue within the aoStimRecon file. Just remember
-% to turn it back to a parfor loop when finished. 
+% to turn it back to a parfor loop when finished.
 if runReconstructions
     parfor pp = 1:runIndex
 
@@ -420,3 +420,29 @@ if runReconstructions
         aoStimRecon(pr,cnv, rrf);
     end
 end
+
+%% Build Summary Plots
+%
+% Integrate the aoStimReconRerunFigs script into this one for a centralized
+% region of post processing. Set it up as another option.
+summaryPlots = false;
+if summaryPlots
+    numStim = length(stimrValList);
+    numProp = length(prBase.focalPropLList);
+
+    for pp = 1:runIndex
+        % Set up paramters structure for this loop, filling in fields that come
+        % out of lists above.
+        pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
+            stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
+            forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
+            focalRegion, focalPropL, focalVariant);
+
+        % Compute convenience parameters
+        cnv = computeConvenienceParams(pr);
+        
+        buildSummaryPlots(pr, cnv, pp, numStim, numProp)
+
+    end
+    buildSummaryPlots(pr, cnv);
+end 

@@ -162,6 +162,20 @@ cnv.renderName = sprintf(['regionProps_%0.2fL_%0.2fL_%0.2fL_' ...
     '%0.2fS_%0.2fS_%0.2fS.mat'],propL(1),propL(2),propL(3), ...
     propS(1),propS(2),propS(3));
 
+%% Build mosaic montage directories
+% Build the nested render directories for forward and recon conditions
+cnv.forwardMontageDirFull = fullfile(pr.aoReconDir,pr.versEditor,'xRenderStructures', ...
+    cnv.forwardRenderDirFirst,'mosaicMontages');
+if (~exist(cnv.forwardMontageDirFull,'dir'))
+    mkdir(cnv.forwardMontageDirFull);
+end
+
+cnv.reconMontageDirFull = fullfile(pr.aoReconDir,pr.versEditor,'xRenderStructures', ...
+    cnv.reconRenderDirFirst,'mosaicMontages');
+if (~exist(cnv.reconMontageDirFull,'dir'))
+    mkdir(cnv.reconMontageDirFull);
+end
+
 %% Build output directories
 %
 % Nested directory chain going from general to most pertinent things to the
@@ -194,4 +208,6 @@ cnv.outputDirFourth = sprintf(['stimColor_%0.4f_%0.4f_%0.4f_%0.4f_' ...
 
 cnv.outputDirFull = fullfile(pr.aoReconDir, pr.versEditor, cnv.generalConditions,...
     cnv.outputDirFirst, cnv.outputDirSecond, cnv.outputDirThird, cnv.outputDirFourth);
+
+
 end
