@@ -16,6 +16,27 @@
 % History:
 %   06/1/23  chr  Organize into its own file
 
+
+
+%% Scrap sheet storage
+        % Track the history of any montages already run and cached, then
+        % add one to the current output file. This approach avoids
+        % overwriting output results. Need to update again, make it such
+        % that there is a max feature and maybe a name tag associated with
+        % it. 
+%         versionHistory = dir(fullfile(st.montageDirFull));
+%         currentVersion = 1;
+%         for vh = 1:length(versionHistory)
+%             storedNames = versionHistory(vh).name;
+%             if contains(storedNames, outputName)
+%                 startPoint = strfind(storedNames, 'version') + length('version'); 
+%                 endPoint = strfind(storedNames, '.') - 1;
+%                 storedVersion = str2double(storedNames(startPoint:endPoint));
+%                 currentVersion = storedVersion + 1;
+%             end
+%         end
+%         
+
 %% Initialize
 clear; close all;
 

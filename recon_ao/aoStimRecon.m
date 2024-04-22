@@ -878,6 +878,6 @@ clear estimator
 clear reconScaledRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
 clear reconImageLinearTemp psfSupportTemp initImageLinearTemp
 clear tempFig theAxes theFig axesHandle temp initSceneTemp
-clear forwardConeMosaic reconConeMosaic
+% clear forwardConeMosaic reconConeMosaic
 save(fullfile(cnv.outputDirFull,'xRunOutput.mat'), '-v7.3');
 end
