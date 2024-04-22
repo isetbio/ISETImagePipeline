@@ -70,9 +70,10 @@ prBase.addPoissonNoise = false;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-runReconstructions = true;
+runReconstructions = false;
 buildRenderMatrix = false;
 buildMosaicMontages = false;
+summaryPlots = true;
 
 % The two buildNew flags here force a build of existing matrices, while
 % if they are false and we are building, only ones that don't yet exist
@@ -425,7 +426,6 @@ end
 %
 % Integrate the aoStimReconRerunFigs script into this one for a centralized
 % region of post processing. Set it up as another option.
-summaryPlots = false;
 if summaryPlots
     numStim = length(stimrValList);
     numProp = length(prBase.focalPropLList);
