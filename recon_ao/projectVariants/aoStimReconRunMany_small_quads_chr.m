@@ -73,7 +73,7 @@ prBase.addPoissonNoise = false;
 runReconstructions = false;
 buildRenderMatrix = false;
 buildMosaicMontages = false;
-summaryPlots = true;
+summaryFigs = true;
 
 % The two buildNew flags here force a build of existing matrices, while
 % if they are false and we are building, only ones that don't yet exist
@@ -97,7 +97,7 @@ prBase.wls = (400:1:700)';
 prBase.stimSizeDegsList = 10/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
-prBase.focalVariantList = 2;
+prBase.focalVariantList = 3;
 
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
@@ -422,27 +422,53 @@ if runReconstructions
     end
 end
 
-%% Build Summary Plots
+%% Build Summary Figs
 %
 % Integrate the aoStimReconRerunFigs script into this one for a centralized
 % region of post processing. Set it up as another option.
-if summaryPlots
+if summaryFigs
+    fullReconSummary = [];
+
+    % Bookkeeping variables for number of stimuli and propL as dimensions
+    % of future plots
     numStim = length(stimrValList);
     numProp = length(prBase.focalPropLList);
 
-    for pp = 1:runIndex
+    % Identify the main variables we're concerned about for these
+    % simulations for ease of computation, except for the final output
+    % level (i.e. dont include stimrVal despite the fact that we also
+    % change color since those directories contain the xRunOutput.m file).
+    mainVars = [stimSizeDegs; focalRegion; focalPropL; focalVariant;];
+    [~, mainVarsInd] = unique(mainVars.', 'rows', 'stable');
+
+    % Cycle only over the instances where the main variables change.
+    for pp = 1:length(mainVarsInd)
+
+        % Readjust the index value according to the levels that are
+        % actuallu pertinent.
+        newInd = mainVarsInd(pp);
+
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists above.
-        pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
+        pr = prFromBase(prBase,newInd,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
             focalRegion, focalPropL, focalVariant);
 
         % Compute convenience parameters
         cnv = computeConvenienceParams(pr);
-        
-        buildSummaryPlots(pr, cnv, pp, numStim, numProp)
+
+        % Call the function to build the summary plots.
+        [stimSummary, reconSummary] = grabImageInfo(pr, cnv, rrf, numStim, ...
+            "figReconRows", false, "scaleToMax", true, "wls", pr.wls);
+
+        % Store the collected info in a running cell and utilize when actually
+        % building the full summary figures.
+        fullReconSummary = [fullReconSummary; reconSummary];
 
     end
-    buildSummaryPlots(pr, cnv);
-end 
+
+    buildSummaryFigs(pr, cnv, rrf, numStim, numProp, ...
+        fullReconSummary, stimSummary)
+
+end
