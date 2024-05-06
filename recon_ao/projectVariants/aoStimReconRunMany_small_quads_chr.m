@@ -14,7 +14,7 @@
 %   02/20/23  chr  Updates based on Tuten Meeting
 
 %% Clear
-clear; close all;
+clear; %close all;
 
 %% Control size of parpool, otherwise may crush memory
 % thePool = gcp('nocreate');
@@ -71,9 +71,9 @@ prBase.addPoissonNoise = false;
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
 runReconstructions = false;
-buildRenderMatrix = false;
+buildRenderMatrix = true;
 buildMosaicMontages = false;
-summaryFigs = true;
+summaryFigs = false;
 
 % The two buildNew flags here force a build of existing matrices, while
 % if they are false and we are building, only ones that don't yet exist
@@ -97,14 +97,14 @@ prBase.wls = (400:1:700)';
 prBase.stimSizeDegsList = 10/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
-prBase.focalVariantList = 3;
+prBase.focalVariantList = 4;
 
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
 % switched to the focal value (i.e., if focal variant is 2
 prBase.regionVariant = [1 1 1];
 prBase.propL = [0.5 0.5 0.5];
-prBase.propS = [0.10 0.10 0.10];
+prBase.propS = [0.10 10.0 0.10];
 
 % Add indices of cones to be silence
 prBase.kConeIndices = [];
