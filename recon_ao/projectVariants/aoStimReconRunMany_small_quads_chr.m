@@ -104,7 +104,7 @@ prBase.focalVariantList = 4;
 % switched to the focal value (i.e., if focal variant is 2
 prBase.regionVariant = [1 1 1];
 prBase.propL = [0.5 0.5 0.5];
-prBase.propS = [0.10 10.0 0.10];
+prBase.propS = [0.10 0.10 0.10];
 
 % Add indices of cones to be silence
 prBase.kConeIndices = [];
