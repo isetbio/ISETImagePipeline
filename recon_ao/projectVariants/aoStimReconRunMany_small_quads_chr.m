@@ -14,7 +14,7 @@
 %   02/20/23  chr  Updates based on Tuten Meeting
 
 %% Clear
-clear; %close all;
+clear; close all;
 
 %% Control size of parpool, otherwise may crush memory
 % thePool = gcp('nocreate');
@@ -94,7 +94,7 @@ prBase.wls = (400:1:700)';
 
 % These are the specific values taken in by the AO script, for this project
 % want it to be relatively limited for the sake of speed.
-prBase.stimSizeDegsList = 10/60;%[2 3.5 10] / 60;
+prBase.stimSizeDegsList = [2.0 3.5]/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 prBase.focalVariantList = 4;
@@ -104,7 +104,7 @@ prBase.focalVariantList = 4;
 % switched to the focal value (i.e., if focal variant is 2
 prBase.regionVariant = [1 1 1];
 prBase.propL = [0.5 0.5 0.5];
-prBase.propS = [0.10 0.10 0.10];
+prBase.propS = [0.15 0.15 0.15];
 
 % Add indices of cones to be silence
 prBase.kConeIndices = [];
@@ -440,35 +440,39 @@ if summaryFigs
     % change color since those directories contain the xRunOutput.m file).
     mainVars = [stimSizeDegs; focalRegion; focalPropL; focalVariant;];
     [~, mainVarsInd] = unique(mainVars.', 'rows', 'stable');
+    [~, sizeVarsInd] = unique(mainVars(1,:));
+    sizeAdjust = length(mainVarsInd) / length(sizeVarsInd);
+    mainVarsInd = reshape(mainVarsInd, [sizeAdjust, length(sizeVarsInd)])';
 
     % Cycle only over the instances where the main variables change.
-    for pp = 1:length(mainVarsInd)
+    for qq = 1:length(sizeVarsInd)
+        for pp = 1:length(mainVarsInd)
 
-        % Readjust the index value according to the levels that are
-        % actuallu pertinent.
-        newInd = mainVarsInd(pp);
+            % Readjust the index value according to the levels that are
+            % actuallu pertinent.
+            newInd = mainVarsInd(qq,pp);
 
-        % Set up paramters structure for this loop, filling in fields that come
-        % out of lists above.
-        pr = prFromBase(prBase,newInd,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
-            stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-            forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
-            focalRegion, focalPropL, focalVariant);
+            % Set up paramters structure for this loop, filling in fields that come
+            % out of lists above.
+            pr = prFromBase(prBase,newInd,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
+                stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
+                forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
+                focalRegion, focalPropL, focalVariant);
 
-        % Compute convenience parameters
-        cnv = computeConvenienceParams(pr);
+            % Compute convenience parameters
+            cnv = computeConvenienceParams(pr);
 
-        % Call the function to build the summary plots.
-        [stimSummary, reconSummary] = grabImageInfo(pr, cnv, rrf, numStim, ...
-            "figReconRows", false, "scaleToMax", true, "wls", pr.wls);
+            % Call the function to build the summary plots.
+            [stimSummary, reconSummary] = grabImageInfo(pr, cnv, rrf, numStim, ...
+                "figReconRows", false, "scaleToMax", true, "wls", pr.wls);
 
-        % Store the collected info in a running cell and utilize when actually
-        % building the full summary figures.
-        fullReconSummary = [fullReconSummary; reconSummary];
+            % Store the collected info in a running cell and utilize when actually
+            % building the full summary figures.
+            fullReconSummary = [fullReconSummary; reconSummary];
 
+        end
+
+        buildSummaryFigs(pr, cnv, rrf, numStim, numProp, ...
+            fullReconSummary, stimSummary)
     end
-
-    buildSummaryFigs(pr, cnv, rrf, numStim, numProp, ...
-        fullReconSummary, stimSummary)
-
 end
