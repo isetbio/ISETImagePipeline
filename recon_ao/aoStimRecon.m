@@ -1,4 +1,4 @@
-function aoStimRecon(pr, cnv, rrf)
+function aoStimRecon(pr, cnv)
 % Synopsis:
 %    Driver to run AO recon simulations.
 %
@@ -22,33 +22,8 @@ function aoStimRecon(pr, cnv, rrf)
 %   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
 %   09/22/22  chr  Convert to its own dichrom file
 
-%% Close existing figures
+%% Close existing figures and set prior name
 close all;
-
-%% Load file variables if rerunning from old simulations
-if (rrf.rerunImages)
-    varlist = who;                   %Find the variables that already exist
-    varlist =strjoin(varlist','$|'); %Join into string, separating vars by '|'
-    load(fullfile(rrf.outputDirFull, 'xRunOutput.mat'), '-regexp', ['^(?!' varlist ')\w']);
-    cnv.renderDir = rrf.renderDir;
-    cnv.outputDirFull = rrf.outputDirFull;
-    pr.aoReconDir = rrf.aoReconDir;
-    %     pr.annWidthArc = [1; 2; 3];
-end
-
-% *******
-% We think this was old.  If the renderDir doesn't exist, we aren't going
-% to be able to read files we need from it, and an error will be thrown
-% in any case.  Commenting out on based on that idea.  Delete if everything
-% runs fine for a while without this.
-%
-% %% Point at directory with data files for this subproject
-% %
-% % This will allow us to load in project specific precomputed information.
-% % Also records initials of version editors, otherwise set to 'main'
-% if (~exist(cnv.renderDir ,'dir'))
-%     mkdir(cnv.renderDir );
-% end
 
 % Sparse prior name
 sparsePriorName = [pr.sparsePriorStr 'SparsePrior.mat'];
@@ -113,16 +88,11 @@ if (~exist(cnv.outputDirFull,'dir'))
 end
 
 %% Show and save forward and recon cone mosaics
-%
-% Unless we're just making some new figures in which case we
-% assume this has already happened in a good way.
-if ~(rrf.rerunImages)
-    forwardConeMosaic.visualizeMosaic();
-    saveas(gcf,fullfile(cnv.outputDirFull,'forwardMosaic.tiff'),'tiff');
+forwardConeMosaic.visualizeMosaic();
+saveas(gcf,fullfile(cnv.outputDirFull,'forwardMosaic.tiff'),'tiff');
 
-    reconConeMosaic.visualizeMosaic();
-    saveas(gcf,fullfile(cnv.outputDirFull,'reconMosaic.tiff'),'tiff');
-end
+reconConeMosaic.visualizeMosaic();
+saveas(gcf,fullfile(cnv.outputDirFull,'reconMosaic.tiff'),'tiff');
 
 %% Generate an image stimulus
 %
@@ -204,8 +174,8 @@ imwrite(stimulusImageRGB,fullfile(cnv.outputDirFull,'Stimulus.tiff'),'tiff');
 
 % Use the compareRenderingEW file to render the stimulus across the proper
 % display and collect pertinent wavelength information
-stimInfo = compareRenderingEW(stimulusImageLinear, rrf.startDisplayName, ...
-    rrf.viewingDisplayName, idxXRange, 'wls', pr.wls);
+stimInfo = compareRenderingEW(stimulusImageLinear, pr.displayName, ...
+    pr.viewingDisplayName, idxXRange, 'wls', pr.wls);
 
 imwrite(stimInfo.imageRGBAcrossDisplays, ...
     fullfile(cnv.outputDirFull,'StimulusDispCorrected.tiff'),'tiff');
@@ -226,13 +196,6 @@ if (max(abs(forwardExcitationsToStimulusCheck-forwardExcitationsToStimulusISETBi
     forwardConeMosaic.visualizeOI()
     error('Two ways of doing the same thing do not agree');
 end
-
-% ******* At some point see if this check passes or fails, and if it fails
-%         decide whether we are surprised or not.
-% temp = squeeze(forwardConeMosaic.LastResponse);
-% if (max(abs(temp-forwardExcitationsToStimulusISETBio)) ~= 0)
-%     error('Last excitations in object not as we expect');
-% end
 
 %% Compute excitations using forward render matrix.
 %
@@ -324,35 +287,33 @@ if (pr.stimulusStart)
     specifiedStarts{length(specifiedStarts)+1} = stimulusImageLinear(:);
 end
 
-
-if ~(rrf.rerunImages)
-    % Run the estimator
-    if (pr.boundedSearch)
-        ub = 1;
-    else
-        ub = 100;
-    end
-    [multistartStruct,~,reconIndex] = estimator.runMultistartEstimate(forwardExcitationsToStimulusUse, ...
-        'maxIter', pr.maxReconIterations, 'display', 'iter', 'gpu', false, ...
-        'nWhiteStart', pr.whiteNoiseStarts, 'nPinkStart', pr.pinkNoiseStarts, ...
-        'nSparsePriorPatchStart', pr.sparsePriorPatchStarts, 'sparsePrior', prior, ...
-        'specifiedStarts', specifiedStarts, ...
-        'ub', ub);
-
-    % Evaluate stimulus
-    [stimNegLogPrior,~,stimNegLogLikely] = ...
-        estimator.evalEstimate(forwardExcitationsToStimulusUse, stimulusImageLinear(:));
-    stimLoss = stimNegLogPrior + stimNegLogLikely;
-
-    % Get information we need to render scenes from their spectra through
-    % the display.
-    theXYZStruct = load('T_xyz1931');
-    wls = oiGet(forwardOI,'wave');
-    T_xyz = SplineCmf(theXYZStruct.S_xyz1931,683*theXYZStruct.T_xyz1931,wls);
-    M_rgbToxyz = T_xyz*displayGet(forwardConeMosaic.Display,'spd primaries')*(wls(2)-wls(1));
-    % M_rgbToxyz1 = displayGet(forwardConeMosaic.Display,'rgb2xyz');
-    M_xyzTorgb = inv(M_rgbToxyz);
+% Run the estimator
+if (pr.boundedSearch)
+    ub = 1;
+else
+    ub = 100;
 end
+[multistartStruct,~,reconIndex] = estimator.runMultistartEstimate(forwardExcitationsToStimulusUse, ...
+    'maxIter', pr.maxReconIterations, 'display', 'iter', 'gpu', false, ...
+    'nWhiteStart', pr.whiteNoiseStarts, 'nPinkStart', pr.pinkNoiseStarts, ...
+    'nSparsePriorPatchStart', pr.sparsePriorPatchStarts, 'sparsePrior', prior, ...
+    'specifiedStarts', specifiedStarts, ...
+    'ub', ub);
+
+% Evaluate stimulus
+[stimNegLogPrior,~,stimNegLogLikely] = ...
+    estimator.evalEstimate(forwardExcitationsToStimulusUse, stimulusImageLinear(:));
+stimLoss = stimNegLogPrior + stimNegLogLikely;
+
+% Get information we need to render scenes from their spectra through
+% the display.
+theXYZStruct = load('T_xyz1931');
+wls = oiGet(forwardOI,'wave');
+T_xyz = SplineCmf(theXYZStruct.S_xyz1931,683*theXYZStruct.T_xyz1931,wls);
+M_rgbToxyz = T_xyz*displayGet(forwardConeMosaic.Display,'spd primaries')*(wls(2)-wls(1));
+% M_rgbToxyz1 = displayGet(forwardConeMosaic.Display,'rgb2xyz');
+M_xyzTorgb = inv(M_rgbToxyz);
+
 
 
 % % Let's make sure we understand how to get the scene.  This all seems
@@ -421,21 +382,21 @@ for ii = 1:length(multistartStruct.initTypes)
     % Visualize recon after being corrected for Display
     reconImageLinear = multistartStruct.reconImages{ii};
 
-    reconInfo = compareRenderingEW(reconImageLinear, rrf.startDisplayName, ...
-        rrf.viewingDisplayName, idxXRange, 'wls', pr.wls);
+    reconInfo = compareRenderingEW(reconImageLinear, pr.displayName, ...
+        pr.viewingDisplayName, idxXRange, 'wls', pr.wls);
 
     imwrite(reconInfo.imageRGBAcrossDisplays, fullfile(cnv.outputDirFull,'ReconDispCorrected.tiff'),'tiff');
 
 
     % Include portion for scaling of the corrected stim and recon images
     % based on the max across both, upscaled so the max is reset to 1
-    
 
-% 
-%     cfvStim.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
-%     cfvRecon.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
-%     cfvStim.stimulusRGBScaled{ii} = gammaCorrection(cfvStim.imageRGBNoGamma/cfvStim.scaleFactor(ii), cfvStim.viewingDisplay);
-%     cfvRecon.reconScaledRGB{ii} = gammaCorrection(cfvRecon.imageRGBNoGamma/cfvRecon.scaleFactor(ii), cfvRecon.viewingDisplay);
+
+    %
+    %     cfvStim.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
+    %     cfvRecon.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
+    %     cfvStim.stimulusRGBScaled{ii} = gammaCorrection(cfvStim.imageRGBNoGamma/cfvStim.scaleFactor(ii), cfvStim.viewingDisplay);
+    %     cfvRecon.reconScaledRGB{ii} = gammaCorrection(cfvRecon.imageRGBNoGamma/cfvRecon.scaleFactor(ii), cfvRecon.viewingDisplay);
 
 
     % Get forward and reconstruction OI's computed on reconstruction.  Take
@@ -483,14 +444,14 @@ for ii = 1:length(multistartStruct.initTypes)
     else
         title({sprintf('Stimulus Image, input scale %0.4f',pr.inputImageScaleFactor)  ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal(1),pr.stimrVal,pr.stimgVal,pr.stimbVal)});
     end
-%     if (ii == reconIndex)
-%         imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDirFull,'StimulusScaled.tiff'),'tiff');
-%     end
+    %     if (ii == reconIndex)
+    %         imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDirFull,'StimulusScaled.tiff'),'tiff');
+    %     end
 
     % Visualize stimulus after being corrected for Display
     theAxes = subplot(3,7,7);
     imshow(stimInfo.imageRGBAcrossDisplays);
-    %     title({sprintf('Stim on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
+    %     title({sprintf('Stim on %s, viewed on %s', pr.displayName, pr.viewingDisplayName); ...
     %         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvStim.bounds(1,1),cfvStim.bounds(1,2),cfvStim.bounds(1,3)); ...
     %         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvStim.bounds(2,1),cfvStim.bounds(2,2),cfvStim.bounds(2,3))})
 
@@ -581,7 +542,7 @@ for ii = 1:length(multistartStruct.initTypes)
     % Show corrected recon image
     theAxes = subplot(3,7,14);
     imshow(reconInfo.imageRGBAcrossDisplays);
-    %     title({sprintf('Recon on %s, viewed on %s', rrf.startDisplayName, rrf.viewingDisplayName); ...
+    %     title({sprintf('Recon on %s, viewed on %s', pr.displayName, pr.viewingDisplayName); ...
     %         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(1,1),cfvRecon.bounds(1,2),cfvRecon.bounds(1,3)); ...
     %         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(2,1),cfvRecon.bounds(2,2),cfvRecon.bounds(2,3))})
 
@@ -682,11 +643,9 @@ for ii = 1:length(multistartStruct.initTypes)
         figure(theFig);
     end
 
-    if ~(rrf.rerunImages)
-        % Make sure excitations used match what comes back from multistart
-        if (any(forwardExcitationsToStimulusUse ~= multistartStruct.coneVec))
-            error('Inconsistency in excitations driving reconstruction');
-        end
+    % Make sure excitations used match what comes back from multistart
+    if (any(forwardExcitationsToStimulusUse ~= multistartStruct.coneVec))
+        error('Inconsistency in excitations driving reconstruction');
     end
 
     % Compute recon excitations to stimulus and compare with
@@ -878,6 +837,8 @@ clear estimator
 clear reconScaledRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
 clear reconImageLinearTemp psfSupportTemp initImageLinearTemp
 clear tempFig theAxes theFig axesHandle temp initSceneTemp
-% clear forwardConeMosaic reconConeMosaic
+% No longer clearing the coneMosaics for analysis but be aware might lead
+% to a crash of storage. Also might not be necessary as of now. 
+% clear forwardConeMosaic reconConeMosa
 save(fullfile(cnv.outputDirFull,'xRunOutput.mat'), '-v7.3');
 end

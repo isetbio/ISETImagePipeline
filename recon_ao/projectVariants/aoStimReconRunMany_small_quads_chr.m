@@ -22,14 +22,6 @@ clear; close all;
 %     parpool(2);
 % end
 
-%% Portion for ReRunning Figures from previous simulations after updates
-rrf = struct;
-rrf.rerunImages = false;
-rrf.startDisplayName = 'mono';
-rrf.viewingDisplayName = 'conventional';
-rrf.stimDispScale = 1;
-rrf.reconDispScale = 1;
-
 %% Set defaults in prBase
 prBase = prBaseDefaults;
 
@@ -44,6 +36,7 @@ prBase.versEditor = 'small_quads_chr';
 %    'conventional'    - A conventional display
 %    'mono'            - A display with monochromatic primaries
 prBase.displayName = 'mono';
+prBase.viewingDisplayName = 'conventional';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
 displayScaleFactorList = [1];
@@ -70,8 +63,8 @@ prBase.addPoissonNoise = false;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-runReconstructions = false;
-buildRenderMatrix = true;
+runReconstructions = true;
+buildRenderMatrix = false;
 buildMosaicMontages = false;
 summaryFigs = false;
 
@@ -93,18 +86,20 @@ prBase.viewBounds = false;
 prBase.wls = (400:1:700)';
 
 % These are the specific values taken in by the AO script, for this project
-% want it to be relatively limited for the sake of speed.
-prBase.stimSizeDegsList = [2.0 3.5]/60;%[2 3.5 10] / 60;
+% want it to be relatively limited for the sake of speed. Of note,
+% regionList options include: center, nearSurround, distantSurround,
+% multiple, global
+prBase.stimSizeDegsList = [10]/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
-prBase.focalVariantList = 4;
+prBase.focalVariantList = [4];
 
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
 % switched to the focal value (i.e., if focal variant is 2
 prBase.regionVariant = [1 1 1];
 prBase.propL = [0.5 0.5 0.5];
-prBase.propS = [0.15 0.15 0.15];
+prBase.propS = [0.10 0.10 0.10];
 
 % Add indices of cones to be silence
 prBase.kConeIndices = [];
@@ -274,8 +269,8 @@ reconDefocusDioptersList = [0.0];
 runIndex = 1;
 for ss = 1:length(prBase.stimSizeDegsList)
     for gg = 1:length(prBase.focalRegionList)
-        for oo = 1:length(prBase.focalPropLList)
-            for vv = 1:length(prBase.focalVariantList)
+        for vv = 1:length(prBase.focalVariantList)
+            for oo = 1:length(prBase.focalPropLList)
                 for cc = 1:length(stimrValList)
                     for yy = 1:size(deltaCenterList,2)
                         for ff = 1:length(forwardDefocusDioptersList)
@@ -418,7 +413,7 @@ if runReconstructions
         cnv = computeConvenienceParams(pr);
 
         % Call the driving function
-        aoStimRecon(pr,cnv, rrf);
+        aoStimRecon(pr,cnv);
     end
 end
 
@@ -438,41 +433,55 @@ if summaryFigs
     % simulations for ease of computation, except for the final output
     % level (i.e. dont include stimrVal despite the fact that we also
     % change color since those directories contain the xRunOutput.m file).
-    mainVars = [stimSizeDegs; focalRegion; focalPropL; focalVariant;];
+    mainVars = [stimSizeDegs; focalRegion; focalVariant; focalPropL];
     [~, mainVarsInd] = unique(mainVars.', 'rows', 'stable');
-    [~, sizeVarsInd] = unique(mainVars(1,:));
-    sizeAdjust = length(mainVarsInd) / length(sizeVarsInd);
-    mainVarsInd = reshape(mainVarsInd, [sizeAdjust, length(sizeVarsInd)])';
 
     % Cycle only over the instances where the main variables change.
-    for qq = 1:length(sizeVarsInd)
-        for pp = 1:length(mainVarsInd)
+    [~, varInd1] = unique(mainVars(1,:));
+    varInd1 = [varInd1' (length(mainVars)+1)];
+    for vo = 1:length(varInd1)-1
+        holderVars1 = mainVars(: , varInd1(vo):varInd1(vo+1)-1);
+        [~, varInd2] = unique(mainVars(2,:));
+        varInd2 = [varInd2' (length(holderVars1)+1)];
 
-            % Readjust the index value according to the levels that are
-            % actuallu pertinent.
-            newInd = mainVarsInd(qq,pp);
+        for vt = 1:length(varInd2)-1
+            holderVars2 = mainVars(: , varInd2(vt):varInd2(vt+1)-1);
+            [~, varInd3] = unique(mainVars(3,:));
+            varInd3 = [varInd3' (length(holderVars2)+1)];
 
-            % Set up paramters structure for this loop, filling in fields that come
-            % out of lists above.
-            pr = prFromBase(prBase,newInd,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
-                stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-                forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
-                focalRegion, focalPropL, focalVariant);
+            for ve = 1:length(varInd3)-1
+                holderVars3 = mainVars(: , varInd3(ve):varInd3(ve+1)-1);
+                [~, varInd4] = unique(mainVars(4,:));
+                varInd4 = [varInd4'];
 
-            % Compute convenience parameters
-            cnv = computeConvenienceParams(pr);
+                for vf = 1:length(varInd4)
+                    % Readjust the index value according to the levels that are
+                    % actuallu pertinent.
+                    newInd = varInd4(vf);
 
-            % Call the function to build the summary plots.
-            [stimSummary, reconSummary] = grabImageInfo(pr, cnv, rrf, numStim, ...
-                "figReconRows", false, "scaleToMax", true, "wls", pr.wls);
+                    % Set up paramters structure for this loop, filling in fields that come
+                    % out of lists above.
+                    pr = prFromBase(prBase,newInd,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
+                        stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
+                        forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
+                        focalRegion, focalPropL, focalVariant);
 
-            % Store the collected info in a running cell and utilize when actually
-            % building the full summary figures.
-            fullReconSummary = [fullReconSummary; reconSummary];
+                    % Compute convenience parameters
+                    cnv = computeConvenienceParams(pr);
 
+                    % Call the function to build the summary plots.
+                    [stimSummary, reconSummary] = grabImageInfo(pr, cnv, rrf, numStim, ...
+                        "figReconRows", false, "scaleToMax", true, "wls", pr.wls);
+
+                    % Store the collected info in a running cell and utilize when actually
+                    % building the full summary figures.
+                    fullReconSummary = [fullReconSummary; reconSummary];
+
+                end
+
+                 buildSummaryFigs(pr, cnv, rrf, numStim, numProp, ...
+                    fullReconSummary, stimSummary, 'scaleToMax', true);
+            end
         end
-
-        buildSummaryFigs(pr, cnv, rrf, numStim, numProp, ...
-            fullReconSummary, stimSummary)
     end
 end
