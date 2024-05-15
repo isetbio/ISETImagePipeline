@@ -66,7 +66,7 @@ prBase.addPoissonNoise = false;
 runReconstructions = true;
 buildRenderMatrix = false;
 buildMosaicMontages = false;
-summaryFigs = false;
+summaryFigs = true;
 
 % The two buildNew flags here force a build of existing matrices, while
 % if they are false and we are building, only ones that don't yet exist
@@ -89,7 +89,7 @@ prBase.wls = (400:1:700)';
 % want it to be relatively limited for the sake of speed. Of note,
 % regionList options include: center, nearSurround, distantSurround,
 % multiple, global
-prBase.stimSizeDegsList = [10]/60;%[2 3.5 10] / 60;
+prBase.stimSizeDegsList = [2 3.5]/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 prBase.focalVariantList = [4];
@@ -131,7 +131,7 @@ else
         case 'mono'
             displayFieldName = 'monoDisplay';
             overwriteDisplayGamma = true;
-
+            
             % The following values are the approximations for a 0.5 uniform
             % field on a conventional display using the tutorial. These can
             % be scaled accordingly for a lighter or darker background on
@@ -141,26 +141,26 @@ else
             monoGray = [0.444485445018075; ...
                 0.525384925401570; ...
                 0.554173733733909];
-
+            
             % DON'T FORGET TO PUT IN AN ACTUAL VALUE FOR THE "1" HERE
             prBase.stimBgVal = monoGray * monoBgScale;
         otherwise
             error('Unknown display specified');
     end
-
+    
     % Load the appropriate display
     theDisplayLoad = load(fullfile(prBase.aoReconDir, 'displays', [prBase.displayName 'Display.mat']));
     eval(['theDisplay = theDisplayLoad.' displayFieldName ';']);
-
+    
     if (overwriteDisplayGamma)
         gammaInput = linspace(0,1,2^prBase.displayGammaBits)';
         gammaOutput = gammaInput.^prBase.displayGammaGamma;
         theDisplay.gamma = gammaOutput(:,[1 1 1]);
     end
-
+    
     % Using the 1 nm sampling to agree w/ tutorial
     theDisplay = displaySet(theDisplay, 'wave', prBase.wls);
-
+    
     % Get information we need to render scenes from their spectra through
     % the recon display.
     theXYZStruct = load('T_xyz1931');
@@ -169,7 +169,7 @@ else
     M_XYZTorgb = inv(M_rgbToXYZ);
     rPrimaryLuminance = M_rgbToXYZ(2,1);
     gPrimaryLuminance = M_rgbToXYZ(2,2);
-
+    
     % Compute as set of equally spaced r/(r+g) values that lead
     % to equal luminance stimuli.
     thePrimaries = displayGet(theDisplay,'spd primaries');
@@ -182,7 +182,7 @@ else
     b = 0.001;
     equiLumrgbValues = [rRaw ; gAdjust; b*ones(size(rRaw))];
     inputLinearrgbValues = 0.5*equiLumrgbValues/max(equiLumrgbValues(:));
-
+    
     stimrValList = inputLinearrgbValues(1,:);
     stimgValList = inputLinearrgbValues(2,:);
     stimbValList = inputLinearrgbValues(3,:);
@@ -285,7 +285,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                         stimCenter(:,runIndex) = deltaCenterList(:,yy);
                                         regPara(runIndex) = regParaList(rr);
                                         displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
-
+                                        
                                         % These do affect mosaics because we
                                         % design mosaics to have desired properties
                                         % within the stimulus region and regions
@@ -295,14 +295,14 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                         focalRegion(runIndex) = prBase.focalRegionList(gg);
                                         focalPropL(runIndex) = prBase.focalPropLList(oo);
                                         focalVariant(runIndex) = prBase.focalVariantList(vv);
-
+                                        
                                         % These parameters do by their nature directly affect either the mosaic
                                         % or the render matrices beyond the scope of our current project
                                         forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
                                         reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
                                         forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
                                         reconPupilDiamMM(runIndex) = reconPupilDiamListMM(pp);
-
+                                        
                                         % Bump condition index
                                         runIndex = runIndex + 1;
                                     end
@@ -358,13 +358,13 @@ if buildRenderMatrix
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
             focalRegion, focalPropL, focalVariant);
         cnv = computeConvenienceParams(pr);
-
+        
         % Build foward cone mosaic and render matrix if needed
         if (buildNewForward || ~exist(fullfile(cnv.forwardRenderDirFull, cnv.renderName),'file'))
             renderStructure = buildRenderStruct(pr, cnv, "forward");
             clear renderStructure;
         end
-
+        
         % Build recon cone mosaic and render structure if needed
         if (buildNewRecon || ~exist(fullfile(cnv.reconRenderDirFull, cnv.renderName),'file'))
             renderStructure = buildRenderStruct(pr, cnv, "recon");
@@ -401,17 +401,17 @@ end
 % to turn it back to a parfor loop when finished.
 if runReconstructions
     parfor pp = 1:runIndex
-
+        
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists above.
         pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
             focalRegion, focalPropL, focalVariant);
-
+        
         % Compute convenience parameters
         cnv = computeConvenienceParams(pr);
-
+        
         % Call the driving function
         aoStimRecon(pr,cnv);
     end
@@ -423,19 +423,19 @@ end
 % region of post processing. Set it up as another option.
 if summaryFigs
     fullReconSummary = [];
-
+    
     % Bookkeeping variables for number of stimuli and propL as dimensions
     % of future plots
     numStim = length(stimrValList);
     numProp = length(prBase.focalPropLList);
-
+    
     % Identify the main variables we're concerned about for these
     % simulations for ease of computation, except for the final output
     % level (i.e. dont include stimrVal despite the fact that we also
     % change color since those directories contain the xRunOutput.m file).
     mainVars = [stimSizeDegs; focalRegion; focalVariant; focalPropL];
     [~, mainVarsInd] = unique(mainVars.', 'rows', 'stable');
-
+    
     % Cycle only over the instances where the main variables change.
     [~, varInd1] = unique(mainVars(1,:));
     varInd1 = [varInd1' (length(mainVars)+1)];
@@ -443,44 +443,45 @@ if summaryFigs
         holderVars1 = mainVars(: , varInd1(vo):varInd1(vo+1)-1);
         [~, varInd2] = unique(mainVars(2,:));
         varInd2 = [varInd2' (length(holderVars1)+1)];
-
+        
         for vt = 1:length(varInd2)-1
             holderVars2 = mainVars(: , varInd2(vt):varInd2(vt+1)-1);
             [~, varInd3] = unique(mainVars(3,:));
             varInd3 = [varInd3' (length(holderVars2)+1)];
-
+            
             for ve = 1:length(varInd3)-1
                 holderVars3 = mainVars(: , varInd3(ve):varInd3(ve+1)-1);
                 [~, varInd4] = unique(mainVars(4,:));
                 varInd4 = [varInd4'];
-
+                
                 for vf = 1:length(varInd4)
                     % Readjust the index value according to the levels that are
                     % actuallu pertinent.
                     newInd = varInd4(vf);
-
+                    
                     % Set up paramters structure for this loop, filling in fields that come
                     % out of lists above.
                     pr = prFromBase(prBase,newInd,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
                         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
                         forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
                         focalRegion, focalPropL, focalVariant);
-
+                    
                     % Compute convenience parameters
                     cnv = computeConvenienceParams(pr);
-
+                    
                     % Call the function to build the summary plots.
-                    [stimSummary, reconSummary] = grabImageInfo(pr, cnv, rrf, numStim, ...
-                        "figReconRows", false, "scaleToMax", true, "wls", pr.wls);
-
+                    [stimSummary, reconSummary] = grabImageInfo(pr, cnv, numStim, ...
+                        "figReconRows", false, "scaleToMax", false, "wls", pr.wls);
+                    
                     % Store the collected info in a running cell and utilize when actually
                     % building the full summary figures.
                     fullReconSummary = [fullReconSummary; reconSummary];
-
+                    
                 end
-
-                 buildSummaryFigs(pr, cnv, rrf, numStim, numProp, ...
-                    fullReconSummary, stimSummary, 'scaleToMax', true);
+                
+                buildSummaryFigs(pr, cnv, numStim, numProp, ...
+                    fullReconSummary, stimSummary, 'scaleToMax', true, ...
+                    'zoomToStim', true);
             end
         end
     end
