@@ -63,7 +63,7 @@ prBase.addPoissonNoise = false;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-runReconstructions = true;
+runReconstructions = false;
 buildRenderMatrix = false;
 buildMosaicMontages = false;
 summaryFigs = true;
@@ -75,6 +75,11 @@ if buildRenderMatrix
     buildNewForward = false;
     buildNewRecon = false;
 end
+
+% Adjust desired visualization aspects of summary montages
+figReconRows = true;
+scaleToMax = true;
+zoomToStim = true;
 
 %% Mosaic cone parameters
 %
@@ -89,7 +94,7 @@ prBase.wls = (400:1:700)';
 % want it to be relatively limited for the sake of speed. Of note,
 % regionList options include: center, nearSurround, distantSurround,
 % multiple, global
-prBase.stimSizeDegsList = [2 3.5]/60;%[2 3.5 10] / 60;
+prBase.stimSizeDegsList = [3.5]/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 prBase.focalVariantList = [4];
@@ -99,6 +104,10 @@ prBase.focalVariantList = [4];
 % switched to the focal value (i.e., if focal variant is 2
 prBase.regionVariant = [1 1 1];
 prBase.propL = [0.5 0.5 0.5];
+% The idea here is to turn this into a vector corresponding to each of the
+% stim sizes instead of a baseline. Example: we may want to use a
+% 0.10 baseline proportion S for 10 arcmin but 0.15 for 3.5 arcmin.
+% prBase.propS = [0.1 0.1 0.1];
 prBase.propS = [0.15 0.15 0.15];
 
 % Add indices of cones to be silence
@@ -471,7 +480,8 @@ if summaryFigs
                     
                     % Call the function to build the summary plots.
                     [stimSummary, reconSummary] = grabImageInfo(pr, cnv, numStim, ...
-                        "figReconRows", false, "scaleToMax", false, "wls", pr.wls);
+                        "figReconRows", figReconRows, "scaleToMax", scaleToMax, ...
+                        "wls", pr.wls, "zoomToStim", zoomToStim);
                     
                     % Store the collected info in a running cell and utilize when actually
                     % building the full summary figures.
@@ -480,9 +490,52 @@ if summaryFigs
                 end
                 
                 buildSummaryFigs(pr, cnv, numStim, numProp, ...
-                    fullReconSummary, stimSummary, 'scaleToMax', true, ...
-                    'zoomToStim', true);
+                    fullReconSummary, stimSummary, 'scaleToMax', scaleToMax, ...
+                    'zoomToStim', zoomToStim);
             end
         end
     end
 end
+
+
+%% Appendix 1
+%
+% This spot allows for quick visualization of a single mosaic without
+% having to produce an entire mosaic montage. Manually load in the desired
+% render structure from the proper directory. Then uncomment the needed
+% portion below and run in the command window. Be sure to comment it out
+% when finished.
+
+% % LOAD THE RENDER STRUCTURE FIRST
+% renderStructure.theConeMosaic.visualizeMosaic()
+% 
+% % Set the boundaries based on stimulus position to superimpose on the
+% % mosaic for viewing. Make sure using the appropriate pr.stimSizeDegs value
+% xBounds = [];
+% yBounds = [];
+% xBounds(1,:) = [pr.eccXDegs pr.eccXDegs];
+% yBounds(1,:) = [pr.eccYDegs pr.eccYDegs];
+% centerWidth = pr.stimSizeDegs/2;
+% xBounds(2,:) = [xBounds(1)-centerWidth, xBounds(2)+centerWidth];
+% yBounds(2,:) = [yBounds(1)-centerWidth, yBounds(2)+centerWidth];
+% 
+% % Outline the stimulus region
+% hold on
+% rectangle('Position', [xBounds(2,1) yBounds(2,1) ...
+%     (xBounds(2,2) - xBounds(2,1)) ...
+%     (yBounds(2,2) - yBounds(2,1))], 'LineWidth', 3)
+% 
+% % Visaulize index numbers over each cone in the mosaic
+% for i=1:length(renderStructure.theConeMosaic.Mosaic.coneTypes)
+%     txt = int2str(i);
+%     t = text((renderStructure.theConeMosaic.Mosaic.coneRFpositionsDegs(i,1)-0.005), ...
+%         renderStructure.theConeMosaic.Mosaic.coneRFpositionsDegs(i,2),txt);
+%     t.FontSize=11;
+%     hold on
+% end
+% 
+% % Call function to manually select and swap cones (see mouseClick)
+% g = @(x, y) mouseClick(x, y, renderStructure.theConeMosaic);
+% set(gcf, 'WindowButtonDownFcn', g)
+% keyboard
+
