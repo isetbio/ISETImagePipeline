@@ -77,7 +77,7 @@ if buildRenderMatrix
 end
 
 % Adjust desired visualization aspects of summary montages
-figReconRows = true;
+figReconRows = false;
 scaleToMax = true;
 zoomToStim = true;
 
@@ -94,10 +94,10 @@ prBase.wls = (400:1:700)';
 % want it to be relatively limited for the sake of speed. Of note,
 % regionList options include: center, nearSurround, distantSurround,
 % multiple, global
-prBase.stimSizeDegsList = [3.5]/60;%[2 3.5 10] / 60;
+prBase.stimSizeDegsList = [2]/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
-prBase.focalVariantList = [4];
+prBase.focalVariantList = [1 2];
 
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
@@ -431,7 +431,6 @@ end
 % Integrate the aoStimReconRerunFigs script into this one for a centralized
 % region of post processing. Set it up as another option.
 if summaryFigs
-    fullReconSummary = [];
     
     % Bookkeeping variables for number of stimuli and propL as dimensions
     % of future plots
@@ -462,6 +461,8 @@ if summaryFigs
                 holderVars3 = mainVars(: , varInd3(ve):varInd3(ve+1)-1);
                 [~, varInd4] = unique(mainVars(4,:));
                 varInd4 = [varInd4'];
+                
+                fullReconSummary = [];
                 
                 for vf = 1:length(varInd4)
                     % Readjust the index value according to the levels that are
