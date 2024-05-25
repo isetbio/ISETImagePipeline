@@ -94,10 +94,10 @@ prBase.wls = (400:1:700)';
 % want it to be relatively limited for the sake of speed. Of note,
 % regionList options include: center, nearSurround, distantSurround,
 % multiple, global
-prBase.stimSizeDegsList = [2]/60;%[2 3.5 10] / 60;
+prBase.stimSizeDegsList = [2 3]/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
-prBase.focalVariantList = [1 2];
+prBase.focalVariantList = [1 2 3 4];
 
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
@@ -447,23 +447,30 @@ if summaryFigs
     % Cycle only over the instances where the main variables change.
     [~, varInd1] = unique(mainVars(1,:));
     varInd1 = [varInd1' (length(mainVars)+1)];
+
+    % Variable One: Stim Size
     for vo = 1:length(varInd1)-1
         holderVars1 = mainVars(: , varInd1(vo):varInd1(vo+1)-1);
         [~, varInd2] = unique(mainVars(2,:));
         varInd2 = [varInd2' (length(holderVars1)+1)];
+        varInd2 = [varInd1(vo) - 1 + varInd2];
         
+        % Variable Two: Focal Region
         for vt = 1:length(varInd2)-1
             holderVars2 = mainVars(: , varInd2(vt):varInd2(vt+1)-1);
             [~, varInd3] = unique(mainVars(3,:));
             varInd3 = [varInd3' (length(holderVars2)+1)];
+            varInd3 = [varInd2(vt) - 1 + varInd3];
             
+            % Variable Three: Focal Variant
             for ve = 1:length(varInd3)-1
                 holderVars3 = mainVars(: , varInd3(ve):varInd3(ve+1)-1);
                 [~, varInd4] = unique(mainVars(4,:));
-                varInd4 = [varInd4'];
+                varInd4 = [varInd3(ve) - 1 + varInd4'];
                 
                 fullReconSummary = [];
                 
+                % Variable Four: Focal Prop L
                 for vf = 1:length(varInd4)
                     % Readjust the index value according to the levels that are
                     % actuallu pertinent.
