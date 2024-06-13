@@ -63,10 +63,10 @@ prBase.addPoissonNoise = false;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-runReconstructions = false;
-buildRenderMatrix = false;
+runReconstructions = true;
+buildRenderMatrix = true;
 buildMosaicMontages = false;
-summaryFigs = true;
+summaryFigs = false;
 
 % The two buildNew flags here force a build of existing matrices, while
 % if they are false and we are building, only ones that don't yet exist
@@ -77,9 +77,10 @@ if buildRenderMatrix
 end
 
 % Adjust desired visualization aspects of summary montages
-figReconRows = false;
+figReconRows = true;
 scaleToMax = true;
 zoomToStim = true;
+wavelengthUY = [580 570];
 
 %% Mosaic cone parameters
 %
@@ -94,21 +95,22 @@ prBase.wls = (400:1:700)';
 % want it to be relatively limited for the sake of speed. Of note,
 % regionList options include: center, nearSurround, distantSurround,
 % multiple, global
-prBase.stimSizeDegsList = [2 3.5]/60;%[2 3.5 10] / 60;
+prBase.stimSizeDegsList = [10]/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
-prBase.focalVariantList = [1 2 3 4];
+prBase.focalVariantList = [1];
 
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
-% switched to the focal value (i.e., if focal variant is 2
+% switched to the focal value 
 prBase.regionVariant = [1 1 1];
-prBase.propL = [0.5 0.5 0.5];
+prBase.propL = [0.75 0.75 0.75];
+
 % The idea here is to turn this into a vector corresponding to each of the
 % stim sizes instead of a baseline. Example: we may want to use a
 % 0.10 baseline proportion S for 10 arcmin but 0.15 for 3.5 arcmin.
-% prBase.propS = [0.1 0.1 0.1];
-prBase.propS = [0.15 0.15 0.15];
+prBase.propS = [0.1 0.1 0.1];
+% prBase.propS = [0.15 0.15 0.15];
 
 % Add indices of cones to be silence
 prBase.kConeIndices = [];
@@ -498,8 +500,7 @@ if summaryFigs
                 end
                 
                 buildSummaryFigs(pr, cnv, numStim, numProp, ...
-                    fullReconSummary, stimSummary, 'scaleToMax', scaleToMax, ...
-                    'zoomToStim', zoomToStim);
+                    fullReconSummary, stimSummary, 'wavelengthUY', wavelengthUY);
             end
         end
     end
@@ -517,8 +518,8 @@ end
 % % LOAD THE RENDER STRUCTURE FIRST
 % renderStructure.theConeMosaic.visualizeMosaic()
 % 
-% % Set the boundaries based on stimulus position to superimpose on the
-% % mosaic for viewing. Make sure using the appropriate pr.stimSizeDegs value
+% Set the boundaries based on stimulus position to superimpose on the
+% mosaic for viewing. Make sure using the appropriate pr.stimSizeDegs value
 % xBounds = [];
 % yBounds = [];
 % xBounds(1,:) = [pr.eccXDegs pr.eccXDegs];

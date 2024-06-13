@@ -208,4 +208,11 @@ cnv.outputDirFourth = sprintf(['stimColor_%0.4f_%0.4f_%0.4f_%0.4f_' ...
 
 cnv.outputDirFull = fullfile(pr.aoReconDir, pr.versEditor, cnv.generalConditions,...
     cnv.outputDirFirst, cnv.outputDirSecond, cnv.outputDirThird, cnv.outputDirFourth);
+
+% Add a component to make output directory for summary figures as well
+cnv.outputDirSummaryFigs = fullfile(pr.aoReconDir, pr.versEditor, cnv.generalConditions,...
+    cnv.outputDirFirst, cnv.outputDirSecond, 'summaryFigs');
+if (~exist(cnv.outputDirSummaryFigs,'dir'))
+    mkdir(cnv.outputDirSummaryFigs);
+end
 end
