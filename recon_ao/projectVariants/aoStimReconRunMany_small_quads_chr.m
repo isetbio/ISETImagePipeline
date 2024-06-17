@@ -95,7 +95,7 @@ prBase.wls = (400:1:700)';
 % want it to be relatively limited for the sake of speed. Of note,
 % regionList options include: center, nearSurround, distantSurround,
 % multiple, global
-prBase.stimSizeDegsList = [2 3.5]/60;%[2 3.5 10] / 60;
+prBase.stimSizeDegsList = [10]/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 prBase.focalVariantList = [1];
@@ -111,8 +111,8 @@ prBase.propL = [0.5 0.5 0.5];
 % 
 % stim sizes instead of a baseline. Example: we may want to use a
 % 0.10 baseline proportion S for 10 arcmin but 0.15 for 3.5 arcmin.
-% prBase.propS = [0.1 0.1 0.1];
-prBase.propS = [0.15 0.15 0.15];
+prBase.propS = [0.1 0.1 0.1];
+% prBase.propS = [0.15 0.15 0.15];
 
 % Add indices of cones to be silence
 prBase.kConeIndices = [];
