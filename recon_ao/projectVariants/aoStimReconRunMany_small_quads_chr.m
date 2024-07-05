@@ -222,11 +222,14 @@ shiftInMinutesListX = [0];
 shiftInMinutesListY = [0];
 fullSquareShift = false;
 prBase.availStimSizesPixels = (1:2:prBase.nPixels);
-prBase.availStimSizesMinutes = prBase.pixelsPerMinute*prBase.availStimSizesPixels;
+prBase.availStimSizesMinutes = prBase.minutesPerPixel*prBase.availStimSizesPixels;
 
 % Convert the shifts to pixel positions
-shiftInPixelsListX = round(pixelsPerMinute*shiftInMinutesListX);
-shiftInPixelsListY = round(pixelsPerMinute*shiftInMinutesListY);
+shiftInPixelsListX = round(prBase.pixelsPerMinute*shiftInMinutesListX);
+shiftInPixelsListY = round(prBase.pixelsPerMinute*shiftInMinutesListY);
+if (shiftInPixelsListX ~= 0 | shiftInPixelsListY ~= 0)
+    error('For right now assuming no shift in pixels specified');
+end
 
 % Consider including the term "-(prBase.nPixels * 0.1)" to better center
 % the quad stim at larger values so not pushing against the outer edge.
@@ -420,8 +423,7 @@ end
 % issue is likley a masked issue within the aoStimRecon file. Just remember
 % to turn it back to a parfor loop when finished.
 if runReconstructions
-    parfor pp = 1:runIndex
-        
+    parfor pp = 1:runIndex        
         % Set up parameters structure for this loop, filling in fields that come
         % out of lists above.
         pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
