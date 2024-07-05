@@ -44,7 +44,7 @@ displayScaleFactorList = [1];
 %% Spatial parameters
 %
 % Common to forward and recon models
-prBase.nPixels = 50;
+prBase.nPixels = 51;
 prBase.trueCenter = round(prBase.nPixels/2);
 
 %% Mosaic general parameters
@@ -72,8 +72,8 @@ summaryFigs = false;
 % if they are false and we are building, only ones that don't yet exist
 % are built.
 if buildRenderMatrix
-    buildNewForward = false;
-    buildNewRecon = false;
+    buildNewForward = true;
+    buildNewRecon = true;
 end
 
 % Adjust desired visualization aspects of summary montages
