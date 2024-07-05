@@ -46,6 +46,9 @@ displayScaleFactorList = [1];
 % Common to forward and recon models
 prBase.nPixels = 51;
 prBase.trueCenter = round(prBase.nPixels/2);
+if (rem(prBase.nPixels,2) ~= 1)
+    error('Stimulus size logic requires odd number of pixels');
+end
 
 %% Mosaic general parameters
 prBase.fieldSizeMinutes = 30;
@@ -213,10 +216,13 @@ end
 % will end if values exceed pixel limits.
 %
 % Position specified in pixels, could consider specifying in minutes.
-pixelsPerMinute = prBase.nPixels/prBase.fieldSizeMinutes;
+prBase.pixelsPerMinute = prBase.nPixels/prBase.fieldSizeMinutes;
+prBase.minutesPerPixel = 1/prBase.pixelsPerMinute;
 shiftInMinutesListX = [0];
 shiftInMinutesListY = [0];
 fullSquareShift = false;
+prBase.availStimSizesPixels = (1:2:prBase.nPixels);
+prBase.availStimSizesMinutes = prBase.pixelsPerMinute*prBase.availStimSizesPixels;
 
 % Convert the shifts to pixel positions
 shiftInPixelsListX = round(pixelsPerMinute*shiftInMinutesListX);
@@ -253,6 +259,7 @@ prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
 prBase.stimulusStart = false;
+
 % Should note, the line below only works if have >= 3 starting fields
 prBase.uniformStartVals = []; % [[0.5 0.5 0.5]' [0 0.5 0]' [0 0 0.5]'];
 prBase.boundedSearch = false;
@@ -363,7 +370,7 @@ end
 % through. (Suspect this might still have overcalculation/redundancy but
 % explore more later)
 if buildRenderMatrix
-    %     if multRenderMatrixParams
+    % If multRenderMatrixParams
     for pp = 1:runIndex
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists precreated above.
@@ -392,7 +399,7 @@ end
 % Building mosaics themselves is fast, and we control the random number
 % generator. Follows the same format as for the render matrices.
 if buildMosaicMontages
-    %     if multRenderMatrixParams
+    % If multRenderMatrixParams
     for pp = 1
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists precreated above.
@@ -400,7 +407,6 @@ if buildMosaicMontages
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
             focalRegion, focalPropL, focalVariant);
-        %         pr.quadSelect = quadSelect(:,pp);
         cnv = computeConvenienceParams(pr);
         buildMosaicMontage(pr, cnv, "forward");
         buildMosaicMontage(pr, cnv, "recon");
@@ -416,7 +422,7 @@ end
 if runReconstructions
     parfor pp = 1:runIndex
         
-        % Set up paramters structure for this loop, filling in fields that come
+        % Set up parameters structure for this loop, filling in fields that come
         % out of lists above.
         pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...

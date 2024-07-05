@@ -114,6 +114,25 @@ if (length(pr.stimBgVal) == 1 || length(pr.stimBgVal) == 3)
     if (stimSizeFraction > 1)
         error('Stimulus size too big given field size');
     end
+
+    % prBase.pixelsPerMinute = prBase.nPixels/prBase.fieldSizeMinutes;
+    % prBase.minutesPerPixel = 1/pixelsPerMinute;
+    % shiftInMinutesListX = [0];
+    % shiftInMinutesListY = [0];
+    % fullSquareShift = false;
+    % prBase.availStimSizesMinutes = pixelsPerMinute*(1:2:prbase.nPixels);
+    % prBase.trueCenter
+
+    % We have previously forced the number of pixels to be odd and computed
+    % available square sizes for the stimulus.
+    availStimSizeSizesDegs = pr.availStimSizesMinutes/60;
+    [~,index]= min(abs(pr.availStimSizesDegs - pr.stimSizeDegs));
+    stimSizePixelsUse = pr.availStimSizesPixels(index);
+    stimSizeDegsUse = pr.availStimSizesDegs(index);
+    stimSizeMinutesUse = stimSizeDegsUse*60;
+    fprintf('Stimulus will be %0.3f minutes, %d pixels, minutes per pixel is %0.4f\n', ...
+        stimSizeMinutesUse,stimSizePixelsuse,pr.minutesPerPixel);
+
     idxLB = round(pr.nPixels * (0.5 - stimSizeFraction / 2));
     if (idxLB < 1)
         idxLB = 1;
