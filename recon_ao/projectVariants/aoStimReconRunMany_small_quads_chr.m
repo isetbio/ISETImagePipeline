@@ -64,7 +64,7 @@ prBase.addPoissonNoise = false;
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
 runReconstructions = true;
-buildRenderMatrix = true;
+buildRenderMatrix = false;
 buildMosaicMontages = false;
 summaryFigs = false;
 
@@ -72,8 +72,8 @@ summaryFigs = false;
 % if they are false and we are building, only ones that don't yet exist
 % are built.
 if buildRenderMatrix
-    buildNewForward = true;
-    buildNewRecon = true;
+    buildNewForward = false;
+    buildNewRecon = false;
 end
 
 % Adjust desired visualization aspects of summary montages
