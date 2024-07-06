@@ -224,7 +224,10 @@ fullSquareShift = false;
 prBase.availStimSizesPixels = (1:2:prBase.nPixels);
 prBase.availStimSizesMinutes = prBase.minutesPerPixel*prBase.availStimSizesPixels;
 
-% Convert the shifts to pixel positions
+% Convert the shifts to pixel positions.
+%
+% DHB: Currently this is not used in the new asStimRecon.  Could add,
+% but at the moment throw an error if it is not zero.
 shiftInPixelsListX = round(prBase.pixelsPerMinute*shiftInMinutesListX);
 shiftInPixelsListY = round(prBase.pixelsPerMinute*shiftInMinutesListY);
 if (shiftInPixelsListX ~= 0 | shiftInPixelsListY ~= 0)
@@ -233,13 +236,22 @@ end
 
 % Consider including the term "-(prBase.nPixels * 0.1)" to better center
 % the quad stim at larger values so not pushing against the outer edge.
+%
+% DHB: I think prBase.stimCenter is now ignored in favor of the new
+% way of positioning the sitmulus implemented in aoStimRecon.  If
+% we delete prBase.stimCenter, also need to remove deltaCenterList
+% just below.
 centerXPosition = prBase.trueCenter + shiftInPixelsListX;
 centerYPosition = prBase.trueCenter + shiftInPixelsListY;
 prBase.stimCenter = [centerXPosition ; centerYPosition];
 
 % Loop through created pixel positions if want to create a square grid of
-% movement instead of default horizontal shift
+% movement instead of default horizontal shift.
+%
+% DHB: I think this is no longer used and should be deleted.  Added an
+% error message that is thrown if it is true.  
 if (fullSquareShift)
+    error('No longer want to support fullSquareShift set to true');
     centerXPosition = repelem(prBase.stimCenter(1,:), length(shiftInMinutesList));
     centerYPosition = repmat(prBase.stimCenter(1,:), [1,length(shiftInMinutesList)]);
     prBase.stimCenter = [centerXPosition; centerYPosition];
@@ -343,7 +355,7 @@ end
 % Remvoew the final run index bump to match lengths
 runIndex = runIndex - 1;
 
-%% Set the multeRenderMatrixParams flag properly based on condition lists
+%% Set the multeiRenderMatrixParams flag properly based on condition lists
 %
 % Most of the time, we only need to build one set of reconstruction
 % mosaics, because many of the things we could vary are not in fact varied
