@@ -115,20 +115,10 @@ if (length(pr.stimBgVal) == 1 || length(pr.stimBgVal) == 3)
         error('Stimulus size too big given field size');
     end
 
-    % We have previously forced the number of pixels to be odd and computed
-    % available square sizes for the stimulus.
-    availStimSizesDegs = pr.availStimSizesMinutes/60;
-    [~,index]= min(abs(availStimSizesDegs - pr.stimSizeDegs));
-    stimSizePixelsUse = pr.availStimSizesPixels(index);
-    stimSizeDegsUse = availStimSizesDegs(index);
-    stimSizeMinutesUse = stimSizeDegsUse*60;
-    fprintf('Stimulus will be %0.3f minutes, %d pixels, minutes per pixel is %0.4f\n', ...
-        stimSizeMinutesUse,stimSizePixelsUse,pr.minutesPerPixel);
-    if (rem(stimSizePixelsUse,2) ~= 1)
-        error('We are assuming odd numer of pixels and stim pixel size');
-    end
-    idxLB = (pr.trueCenter)-(stimSizePixelsUse-1)/2;
-    idxUB = (pr.trueCenter)+(stimSizePixelsUse-1)/2;
+    % Use stimulus size in pixels passed in.  This is computed
+    % to deal with pixel quantization in the calling routine.
+    idxLB = (pr.trueCenter)-(pr.stimSizePixels-1)/2;
+    idxUB = (pr.trueCenter)+(pr.stimSizePixels-1)/2;
     idxXRange = (idxLB:idxUB);
     idxYRange = (idxLB:idxUB);
     % Could add back in the pixel shift here

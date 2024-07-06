@@ -297,6 +297,22 @@ prBase.forwardZernikeDataBase = 'Polans2015';
 prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Polans2015';
 
+% Calculate the actual stimulus size given pixel quantization.
+% It is these we want to use in constructing the mosaics and scenes.
+prBase.availStimSizesDegs = prBase.availStimSizesMinutes/60;
+for ss = 1:length(prBase.stimSizeDegsList)
+    stimSizeDegsNominal = prBase.stimSizeDegsList(ss);
+    [~,index]= min(abs(prBase.availStimSizesDegs - stimSizeDegsNominal));
+    prBase.stimSizePixels(ss) = prBase.availStimSizesPixels(index);
+    prBase.stimSizeDegs(ss) = prBase.availStimSizesDegs(index);
+    stimSizeMinutes(ss) = prBase.stimSizeDegs(ss)*60;
+    fprintf('Nominal stimulus %d: %0.3f minutes, actual used %0.3f minutes, %d pixels, minutes per pixel is %0.4f\n', ...
+        ss,prBase.stimSizeDegsList(ss)*60,stimSizeMinutes,prBase.stimSizePixels,prBase.minutesPerPixel);
+    if (rem(prBase.stimSizePixels(ss,2) ~= 1)
+        error('We are assuming odd numer of pixels and stim pixel size');
+    end
+end
+
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.05];
 reconDefocusDioptersList = [0.0];
@@ -327,7 +343,8 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                         % within the stimulus region and regions
                                         % adjacent to it. This is taken into account
                                         % when we build montages of mosaics.
-                                        stimSizeDegs(runIndex) = prBase.stimSizeDegsList(ss);
+                                        stimSize.Degs(runIndex) = prBase.stimSizeDegs(ss);
+                                        stimSizePixels(runIndex) = prBase.stimSizePixels(ss);
                                         focalRegion(runIndex) = prBase.focalRegionList(gg);
                                         focalPropL(runIndex) = prBase.focalPropLList(oo);
                                         focalVariant(runIndex) = prBase.focalVariantList(vv);
@@ -389,7 +406,7 @@ if buildRenderMatrix
     for pp = 1:runIndex
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists precreated above.
-        pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
+        pr = prFromBase(prBase,pp,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
             focalRegion, focalPropL, focalVariant);
@@ -418,7 +435,7 @@ if buildMosaicMontages
     for pp = 1
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists precreated above.
-        pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
+        pr = prFromBase(prBase,pp,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
             focalRegion, focalPropL, focalVariant);
@@ -438,7 +455,7 @@ if runReconstructions
     parfor pp = 1:runIndex        
         % Set up parameters structure for this loop, filling in fields that come
         % out of lists above.
-        pr = prFromBase(prBase,pp,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
+        pr = prFromBase(prBase,pp,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
             focalRegion, focalPropL, focalVariant);
@@ -466,7 +483,7 @@ if summaryFigs
     % simulations for ease of computation, except for the final output
     % level (i.e. dont include stimrVal despite the fact that we also
     % change color since those directories contain the xRunOutput.m file).
-    mainVars = [stimSizeDegs; focalRegion; focalVariant; focalPropL];
+    mainVars = [stimSize.Degs; focalRegion; focalVariant; focalPropL];
     [~, mainVarsInd] = unique(mainVars.', 'rows', 'stable');
     
     % Cycle only over the instances where the main variables change.
@@ -503,7 +520,7 @@ if summaryFigs
                     
                     % Set up paramters structure for this loop, filling in fields that come
                     % out of lists above.
-                    pr = prFromBase(prBase,newInd,stimSizeDegs,stimrVal,stimgVal,stimbVal, ...
+                    pr = prFromBase(prBase,newInd,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
                         stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
                         forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
                         focalRegion, focalPropL, focalVariant);
