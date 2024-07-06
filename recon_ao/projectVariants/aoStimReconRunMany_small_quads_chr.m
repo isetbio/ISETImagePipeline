@@ -44,7 +44,7 @@ displayScaleFactorList = [1];
 %% Spatial parameters
 %
 % Common to forward and recon models
-prBase.nPixels = 51;
+prBase.nPixels = 61;
 prBase.trueCenter = round(prBase.nPixels/2);
 if (rem(prBase.nPixels,2) ~= 1)
     error('Stimulus size logic requires odd number of pixels');
@@ -67,7 +67,7 @@ prBase.addPoissonNoise = false;
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
 runReconstructions = true;
-buildRenderMatrix = false;
+buildRenderMatrix = true;
 buildMosaicMontages = false;
 summaryFigs = false;
 
@@ -101,7 +101,7 @@ prBase.wls = (400:1:700)';
 prBase.stimSizeDegsList = [3.5]/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
 % prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
-prBase.focalPropLList = [0.5];
+prBase.focalPropLList = [0];
 prBase.focalVariantList = [1];
 
 % Set default variant and proportion L and S cones. Note that throughout
@@ -120,6 +120,27 @@ prBase.propS = [0.15 0.15 0.15];
 
 % Add indices of cones to be silence
 prBase.kConeIndices = [];
+
+%% Calculate the actual stimulus size given pixel quantization.
+%
+% It is these we want to use in constructing the mosaics and scenes.
+prBase.pixelsPerMinute = prBase.nPixels/prBase.fieldSizeMinutes;
+prBase.minutesPerPixel = 1/prBase.pixelsPerMinute;
+prBase.availStimSizesPixels = (1:2:prBase.nPixels);
+prBase.availStimSizesMinutes = prBase.minutesPerPixel*prBase.availStimSizesPixels;
+prBase.availStimSizesDegs = prBase.availStimSizesMinutes/60;
+for ss = 1:length(prBase.stimSizeDegsList)
+    stimSizeDegsNominal = prBase.stimSizeDegsList(ss);
+    [~,index]= min(abs(prBase.availStimSizesDegs - stimSizeDegsNominal));
+    prBase.stimSizePixels(ss) = prBase.availStimSizesPixels(index);
+    prBase.stimSizeDegs(ss) = prBase.availStimSizesDegs(index);
+    stimSizeMinutes(ss) = prBase.stimSizeDegs(ss)*60;
+    fprintf('Nominal stimulus %d: %0.3f minutes, actual used %0.3f minutes, %d pixels, minutes per pixel is %0.4f\n', ...
+        ss,prBase.stimSizeDegsList(ss)*60,stimSizeMinutes,prBase.stimSizePixels,prBase.minutesPerPixel);
+    if (rem(prBase.stimSizePixels(ss),2) ~= 1)
+        error('We are assuming odd numer of pixels and stim pixel size');
+    end
+end
 
 %% Stimulus color
 %
@@ -216,13 +237,9 @@ end
 % will end if values exceed pixel limits.
 %
 % Position specified in pixels, could consider specifying in minutes.
-prBase.pixelsPerMinute = prBase.nPixels/prBase.fieldSizeMinutes;
-prBase.minutesPerPixel = 1/prBase.pixelsPerMinute;
 shiftInMinutesListX = [0];
 shiftInMinutesListY = [0];
 fullSquareShift = false;
-prBase.availStimSizesPixels = (1:2:prBase.nPixels);
-prBase.availStimSizesMinutes = prBase.minutesPerPixel*prBase.availStimSizesPixels;
 
 % Convert the shifts to pixel positions.
 %
@@ -241,9 +258,9 @@ end
 % way of positioning the sitmulus implemented in aoStimRecon.  If
 % we delete prBase.stimCenter, also need to remove deltaCenterList
 % just below.
-centerXPosition = prBase.trueCenter + shiftInPixelsListX;
-centerYPosition = prBase.trueCenter + shiftInPixelsListY;
-prBase.stimCenter = [centerXPosition ; centerYPosition];
+% centerXPosition = prBase.trueCenter + shiftInPixelsListX;
+% centerYPosition = prBase.trueCenter + shiftInPixelsListY;
+prBase.stimCenter = [prBase.trueCenter ; prBase.trueCenter];
 
 % Loop through created pixel positions if want to create a square grid of
 % movement instead of default horizontal shift.
@@ -252,11 +269,11 @@ prBase.stimCenter = [centerXPosition ; centerYPosition];
 % error message that is thrown if it is true.  
 if (fullSquareShift)
     error('No longer want to support fullSquareShift set to true');
-    centerXPosition = repelem(prBase.stimCenter(1,:), length(shiftInMinutesList));
-    centerYPosition = repmat(prBase.stimCenter(1,:), [1,length(shiftInMinutesList)]);
-    prBase.stimCenter = [centerXPosition; centerYPosition];
+    % centerXPosition = repelem(prBase.stimCenter(1,:), length(shiftInMinutesList));
+    % centerYPosition = repmat(prBase.stimCenter(1,:), [1,length(shiftInMinutesList)]);
+    % prBase.stimCenter = [centerXPosition; centerYPosition];
 end
-deltaCenterList = [prBase.stimCenter - prBase.trueCenter];
+% deltaCenterList = [prBase.stimCenter - prBase.trueCenter];
 
 %% Prior parameters
 %
@@ -297,22 +314,6 @@ prBase.forwardZernikeDataBase = 'Polans2015';
 prBase.reconSubjectID = 6;
 prBase.reconZernikeDataBase = 'Polans2015';
 
-% Calculate the actual stimulus size given pixel quantization.
-% It is these we want to use in constructing the mosaics and scenes.
-prBase.availStimSizesDegs = prBase.availStimSizesMinutes/60;
-for ss = 1:length(prBase.stimSizeDegsList)
-    stimSizeDegsNominal = prBase.stimSizeDegsList(ss);
-    [~,index]= min(abs(prBase.availStimSizesDegs - stimSizeDegsNominal));
-    prBase.stimSizePixels(ss) = prBase.availStimSizesPixels(index);
-    prBase.stimSizeDegs(ss) = prBase.availStimSizesDegs(index);
-    stimSizeMinutes(ss) = prBase.stimSizeDegs(ss)*60;
-    fprintf('Nominal stimulus %d: %0.3f minutes, actual used %0.3f minutes, %d pixels, minutes per pixel is %0.4f\n', ...
-        ss,prBase.stimSizeDegsList(ss)*60,stimSizeMinutes,prBase.stimSizePixels,prBase.minutesPerPixel);
-    if (rem(prBase.stimSizePixels(ss,2) ~= 1)
-        error('We are assuming odd numer of pixels and stim pixel size');
-    end
-end
-
 % Residual defocus for forward and recon rendering, of equal sizes
 forwardDefocusDioptersList = [0.05];
 reconDefocusDioptersList = [0.0];
@@ -324,7 +325,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
         for vv = 1:length(prBase.focalVariantList)
             for oo = 1:length(prBase.focalPropLList)
                 for cc = 1:length(stimrValList)
-                    for yy = 1:size(deltaCenterList,2)
+                    % for yy = 1:size(deltaCenterList,2)
                         for ff = 1:length(forwardDefocusDioptersList)
                             for rr = 1:length(regParaList)
                                 for pp = 1:length(forwardPupilDiamListMM)
@@ -334,7 +335,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                         stimrVal(runIndex) = stimrValList(cc);
                                         stimgVal(runIndex) = stimgValList(cc);
                                         stimbVal(runIndex) = stimbValList(cc);
-                                        stimCenter(:,runIndex) = deltaCenterList(:,yy);
+                                        stimCenter(:,runIndex) = prBase.stimCenter; % deltaCenterList(:,yy);
                                         regPara(runIndex) = regParaList(rr);
                                         displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
                                         
@@ -343,7 +344,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                         % within the stimulus region and regions
                                         % adjacent to it. This is taken into account
                                         % when we build montages of mosaics.
-                                        stimSize.Degs(runIndex) = prBase.stimSizeDegs(ss);
+                                        stimSizeDegs(runIndex) = prBase.stimSizeDegs(ss);
                                         stimSizePixels(runIndex) = prBase.stimSizePixels(ss);
                                         focalRegion(runIndex) = prBase.focalRegionList(gg);
                                         focalPropL(runIndex) = prBase.focalPropLList(oo);
@@ -362,7 +363,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                 end
                             end
                         end
-                    end
+                    % end
                 end
             end
         end
@@ -483,7 +484,7 @@ if summaryFigs
     % simulations for ease of computation, except for the final output
     % level (i.e. dont include stimrVal despite the fact that we also
     % change color since those directories contain the xRunOutput.m file).
-    mainVars = [stimSize.Degs; focalRegion; focalVariant; focalPropL];
+    mainVars = [stimSizeDegs; focalRegion; focalVariant; focalPropL];
     [~, mainVarsInd] = unique(mainVars.', 'rows', 'stable');
     
     % Cycle only over the instances where the main variables change.
