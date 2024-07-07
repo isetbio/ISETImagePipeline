@@ -98,11 +98,15 @@ prBase.wls = (400:1:700)';
 % want it to be relatively limited for the sake of speed. Of note,
 % regionList options include: center, nearSurround, distantSurround,
 % multiple, global
-prBase.stimSizeDegsList = [3.5]/60;%[2 3.5 10] / 60;
+prBase.stimSizeDegsList = [3.5 2]/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
-% prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
-prBase.focalPropLList = [0];
+prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 prBase.focalVariantList = [1];
+
+% When we construct mosaics, add this much to the size of the stimulus
+% area that we control, to account for effect of forward optical blur
+% on the area the stimulus covers.  Just a little.
+prBase.forwardOpticalBlurStimSizeExpansionDegs = 0.2/60;
 
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
@@ -344,7 +348,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                         % within the stimulus region and regions
                                         % adjacent to it. This is taken into account
                                         % when we build montages of mosaics.
-                                        stimSizeDegs(runIndex) = prBase.stimSizeDegs(ss);
+                                        stimSizeDegs(runIndex) = prBase.stimSizeDegs(ss) + prBase.forwardOpticalBlurStimSizeExpansionDegs;
                                         stimSizePixels(runIndex) = prBase.stimSizePixels(ss);
                                         focalRegion(runIndex) = prBase.focalRegionList(gg);
                                         focalPropL(runIndex) = prBase.focalPropLList(oo);
