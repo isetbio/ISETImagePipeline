@@ -66,10 +66,10 @@ prBase.addPoissonNoise = false;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-runReconstructions = true;
-buildRenderMatrix = true;
-buildMosaicMontages = false;
-summaryFigs = false;
+runReconstructions = false;
+buildRenderMatrix = false;
+buildMosaicMontages = true;
+summaryFigs = true;
 
 % The two buildNew flags here force a build of existing matrices, while
 % if they are false and we are building, only ones that don't yet exist
