@@ -245,49 +245,38 @@ if (length(stimgValList) ~= length(stimrValList) || length(stimbValList) ~= leng
     error('Stimulus value lists must have same length');
 end
 
-%% Positions
-%
-% Input desired x and y position for stimulus to be centered over. Function
-% will end if values exceed pixel limits.
-%
-% Position specified in pixels, could consider specifying in minutes.
-shiftInMinutesListX = [0];
-shiftInMinutesListY = [0];
-fullSquareShift = false;
+% %% Position shifts
+% %
+% % Input desired x and y position for stimulus to be centered over. Function
+% % will end if values exceed pixel limits.
+% %
+% % DHB: Currently commented out all the shifting code.  We could put this
+% % back with a little thought, but I am inclined to remove completely to
+% % simplify reading this whole routine which is already pretty complicated.
+% %
+% % Position specified in pixels, could consider specifying in minutes.
+% % shiftInMinutesListX = [0];
+% % shiftInMinutesListY = [0];
+% 
+% % Convert the shifts to pixel positions.
+% %
+% % shiftInPixelsListX = round(prBase.pixelsPerMinute*shiftInMinutesListX);
+% % shiftInPixelsListY = round(prBase.pixelsPerMinute*shiftInMinutesListY);
+% % if (shiftInPixelsListX ~= 0 | shiftInPixelsListY ~= 0)
+% %     error('For right now assuming no shift in pixels specified');
+% % end
+% 
+% % Consider including the term "-(prBase.nPixels * 0.1)" to better center
+% % the quad stim at larger values so not pushing against the outer edge.
+% %
+% % DHB: I think prBase.stimCenter is now ignored in favor of the new
+% % way of positioning the sitmulus implemented in aoStimRecon.  I don't
+% % think it would be hard to put shifts back if we decide we need that.
+% % centerXPosition = prBase.trueCenter + shiftInPixelsListX;
+% % centerYPosition = prBase.trueCenter + shiftInPixelsListY;
 
-% Convert the shifts to pixel positions.
-%
-% DHB: Currently this is not used in the new asStimRecon.  Could add,
-% but at the moment throw an error if it is not zero.
-shiftInPixelsListX = round(prBase.pixelsPerMinute*shiftInMinutesListX);
-shiftInPixelsListY = round(prBase.pixelsPerMinute*shiftInMinutesListY);
-if (shiftInPixelsListX ~= 0 | shiftInPixelsListY ~= 0)
-    error('For right now assuming no shift in pixels specified');
-end
-
-% Consider including the term "-(prBase.nPixels * 0.1)" to better center
-% the quad stim at larger values so not pushing against the outer edge.
-%
-% DHB: I think prBase.stimCenter is now ignored in favor of the new
-% way of positioning the sitmulus implemented in aoStimRecon.  If
-% we delete prBase.stimCenter, also need to remove deltaCenterList
-% just below.
-% centerXPosition = prBase.trueCenter + shiftInPixelsListX;
-% centerYPosition = prBase.trueCenter + shiftInPixelsListY;
+%% Save center parameters as a vector.
 prBase.stimCenter = [prBase.trueCenter ; prBase.trueCenter];
-
-% Loop through created pixel positions if want to create a square grid of
-% movement instead of default horizontal shift.
-%
-% DHB: I think this is no longer used and should be deleted.  Added an
-% error message that is thrown if it is true.  
-if (fullSquareShift)
-    error('No longer want to support fullSquareShift set to true');
-    % centerXPosition = repelem(prBase.stimCenter(1,:), length(shiftInMinutesList));
-    % centerYPosition = repmat(prBase.stimCenter(1,:), [1,length(shiftInMinutesList)]);
-    % prBase.stimCenter = [centerXPosition; centerYPosition];
-end
-% deltaCenterList = [prBase.stimCenter - prBase.trueCenter];
 
 %% Prior parameters
 %
