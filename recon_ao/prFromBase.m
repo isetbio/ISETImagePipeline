@@ -21,7 +21,16 @@ pr.reconPupilDiamMM = reconPupilDiamMM(index);
 pr.displayScaleFactor = displayScaleFactor(index);
 pr.focalRegion = focalRegion(index);
 pr.focalPropL = focalPropL(index);
-pr.focalVariant = focalVariant(index); 
+pr.focalVariant = focalVariant(index);
+
+% Set propS field based on stimSizeDegs. This
+% is done to allow us to drive the number of S
+% cones in small focal stimulated regions.
+if (pr.stimSizeDegs < prBase.stargetSizeSPropThresholdDegs)
+    pr.propS = prBase.propSSmallTarget;
+else
+    pr.propS = prBase.propSLargeTarget;
+end
 
 % Make sure some new fields have a value if not specified
 % by the caller.

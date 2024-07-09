@@ -14,7 +14,7 @@
 %   02/20/23  chr  Updates based on Tuten Meeting
 
 %% Clear
-% clear; close all;
+clear; close all;
 
 %% Control size of parpool, otherwise may crush memory
 % thePool = gcp('nocreate');
@@ -106,6 +106,11 @@ prBase.focalVariantList = [1];
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
 % on the area the stimulus covers.  Just a little.
+%
+% This is handled by adding this number to the stimulus size in the call
+% made by buildRenderStruct to setConeProportions, thus leaving the target
+% size alone everywhere else. That is, this only affects the region of the
+% central portion of the mosaic where we set the cone proportions.
 prBase.forwardOpticalBlurStimSizeExpansionDegs = 0.2/60;
 
 % Set default variant and proportion L and S cones. Note that throughout
@@ -115,22 +120,17 @@ prBase.regionVariant = [1 1 1];
 %prBase.propL = [0.75 0.75 0.75];
 prBase.propL = [0.5 0.5 0.5];
 
-% 2 arcmin
-%     1.6870    2.3124
-%    -0.3123    0.3131
-
-% 3.5 arcmin
-
-
-% 10 armcin
-
-
-% The idea here is to turn this into a vector corresponding to each of the
+% Set cone proportions for S for all groups.
 % 
-% stim sizes instead of a baseline. Example: we may want to use a
-% 0.10 baseline proportion S for 10 arcmin but 0.15 for 3.5 arcmin.
-%prBase.propS = [0.1 0.1 0.1];
-prBase.propS = [0.15 0.15 0.15];
+% Currently we are adjusting this by hand for different
+% stim sizes, because we want to make sure we get some
+% S cones in the central stimulated area even for the small
+% sizes.  To do this, we need to boost the underlying
+% proportion.  The conditional is handled in routine
+% prFromBase.
+prBase.propSLargeTarget = [0.1 0.07 0.07];  
+prBase.propSSmallTarget = [0.15 0.07 0.07];
+prBase.targetSizeSPropThresholdDegs = 6/60;
 
 % Add indices of cones to be silence
 prBase.kConeIndices = [];
@@ -170,9 +170,9 @@ monoGray = [0.4445; 0.5254; 0.5542];
 if (~isoLumRGAuto)
     % These are rgb values (linear, before gamma correction)
     prBase.stimBgVal = monoGray * monoBgScale;
-    stimrValList = 0.5%[0.4615 0.3846 0.3077 0.2308 0.1538 0.1154 0.0769 0.0385 0.0000];
-    stimgValList = 0.5%[0.0081 0.0242 0.0403 0.0565 0.0726 0.0807 0.0888 0.0968 0.1049];
-    stimbValList = 0.5%[0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005];
+    stimrValList = 0.5; %[0.4615 0.3846 0.3077 0.2308 0.1538 0.1154 0.0769 0.0385 0.0000];
+    stimgValList = 0.5; %[0.0081 0.0242 0.0403 0.0565 0.0726 0.0807 0.0888 0.0968 0.1049];
+    stimbValList = 0.5; %[0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005];
 else
     nEquiLumStimuli = 11;
     switch (prBase.displayName)
@@ -339,45 +339,43 @@ for ss = 1:length(prBase.stimSizeDegsList)
         for vv = 1:length(prBase.focalVariantList)
             for oo = 1:length(prBase.focalPropLList)
                 for cc = 1:length(stimrValList)
-                    % for yy = 1:size(deltaCenterList,2)
-                        for ff = 1:length(forwardDefocusDioptersList)
-                            for rr = 1:length(regParaList)
-                                for pp = 1:length(forwardPupilDiamListMM)
-                                    for dsf = 1:length(displayScaleFactorList)
-                                        % These parameters do not affect mosaics or
-                                        % render matrices.
-                                        stimrVal(runIndex) = stimrValList(cc);
-                                        stimgVal(runIndex) = stimgValList(cc);
-                                        stimbVal(runIndex) = stimbValList(cc);
-                                        stimCenter(:,runIndex) = prBase.stimCenter; % deltaCenterList(:,yy);
-                                        regPara(runIndex) = regParaList(rr);
-                                        displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
-                                        
-                                        % These do affect mosaics because we
-                                        % design mosaics to have desired properties
-                                        % within the stimulus region and regions
-                                        % adjacent to it. This is taken into account
-                                        % when we build montages of mosaics.
-                                        stimSizeDegs(runIndex) = prBase.stimSizeDegs(ss) + prBase.forwardOpticalBlurStimSizeExpansionDegs;
-                                        stimSizePixels(runIndex) = prBase.stimSizePixels(ss);
-                                        focalRegion(runIndex) = prBase.focalRegionList(gg);
-                                        focalPropL(runIndex) = prBase.focalPropLList(oo);
-                                        focalVariant(runIndex) = prBase.focalVariantList(vv);
-                                        
-                                        % These parameters do by their nature directly affect either the mosaic
-                                        % or the render matrices beyond the scope of our current project
-                                        forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
-                                        reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
-                                        forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
-                                        reconPupilDiamMM(runIndex) = reconPupilDiamListMM(pp);
-                                        
-                                        % Bump condition index
-                                        runIndex = runIndex + 1;
-                                    end
+                    for ff = 1:length(forwardDefocusDioptersList)
+                        for rr = 1:length(regParaList)
+                            for pp = 1:length(forwardPupilDiamListMM)
+                                for dsf = 1:length(displayScaleFactorList)
+                                    % These parameters do not affect mosaics or
+                                    % render matrices.
+                                    stimrVal(runIndex) = stimrValList(cc);
+                                    stimgVal(runIndex) = stimgValList(cc);
+                                    stimbVal(runIndex) = stimbValList(cc);
+                                    stimCenter(:,runIndex) = prBase.stimCenter; % deltaCenterList(:,yy);
+                                    regPara(runIndex) = regParaList(rr);
+                                    displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
+
+                                    % These do affect mosaics because we
+                                    % design mosaics to have desired properties
+                                    % within the stimulus region and regions
+                                    % adjacent to it. This is taken into account
+                                    % when we build montages of mosaics.
+                                    stimSizeDegs(runIndex) = prBase.stimSizeDegs(ss);
+                                    stimSizePixels(runIndex) = prBase.stimSizePixels(ss);
+                                    focalRegion(runIndex) = prBase.focalRegionList(gg);
+                                    focalPropL(runIndex) = prBase.focalPropLList(oo);
+                                    focalVariant(runIndex) = prBase.focalVariantList(vv);
+
+                                    % These parameters do by their nature directly affect either the mosaic
+                                    % or the render matrices beyond the scope of our current project
+                                    forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
+                                    reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
+                                    forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
+                                    reconPupilDiamMM(runIndex) = reconPupilDiamListMM(pp);
+
+                                    % Bump condition index
+                                    runIndex = runIndex + 1;
                                 end
                             end
                         end
-                    % end
+                    end
                 end
             end
         end
@@ -387,28 +385,6 @@ end
 % Remvoew the final run index bump to match lengths
 runIndex = runIndex - 1;
 
-%% Set the multeiRenderMatrixParams flag properly based on condition lists
-%
-% Most of the time, we only need to build one set of reconstruction
-% mosaics, because many of the things we could vary are not in fact varied
-% across different reconstruction conditions.  For example, we typically
-% use the same regularization parameter across trials. Setting this flag
-% to false prevents us from making the same mosaics and render matrices
-% over and over and over again.
-%
-% Note however, that our build routine builds entire sets of mosaics and
-% render matrices that take the stimulus size into account, so we can still
-% keep this flag as false even when that list has length greater than 1.
-multRenderMatrixParams = false;
-if (    length(forwardDefocusDioptersList) == 1 & ...
-        length(reconDefocusDioptersList) == 1 & ...
-        length(forwardPupilDiamListMM) == 1 & ...
-        length(reconPupilDiamListMM) == 1 )
-    multRenderMatrixParams = false;
-else
-    multRenderMatrixParams = true;
-end
-
 %% Render Structures
 %
 % Build the render structures and note that being done in bulk so only run
@@ -417,7 +393,6 @@ end
 % through. (Suspect this might still have overcalculation/redundancy but
 % explore more later)
 if buildRenderMatrix
-    % If multRenderMatrixParams
     for pp = 1:runIndex
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists precreated above.
@@ -446,7 +421,6 @@ end
 % Building mosaics themselves is fast, and we control the random number
 % generator. Follows the same format as for the render matrices.
 if buildMosaicMontages
-    % If multRenderMatrixParams
     for pp = 1
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists precreated above.
