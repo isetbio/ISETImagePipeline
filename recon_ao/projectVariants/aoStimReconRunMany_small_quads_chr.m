@@ -41,30 +41,30 @@ prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
 displayScaleFactorList = [1];
 
-%% Key size and region parameters that we tend to play with
+%% Stimulus size
 prBase.stimSizeDegsList = [3.5]/60; %[2 3.5 10] / 60;
+
+%% Mosaic information
+%
+% The parameters here overide the default parameters
+% for different regions, with those parametrs specified below.
+% 
+% Here, Oone region is defined as the focal region, and we can cycle
+% through L cone proportions and variants for that region.  Usually this is
+% the center, but other choices are possible.  We don't currently allow
+% cycling through other parameters, but can set them.
 prBase.focalRegionList = ["center"];
 prBase.focalPropLList = 0; %[0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
-prBase.focalVariantList = [1];
+prBase.focalVariantList = [2];
 
-%% Choose your journey
-%
-% Select what you would like to do, for efficiency's sake only recommend
-% having one set to true at a time (reconstruct, renderMatrices, or mosaic
-% montages)
-runReconstructions = false;
-buildRenderMatrix = false;
-buildMosaicMontages = true;
-summaryFigs = true;
-
-%% Additional region variant params
+% Additional region variant params
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
 % switched to the focal value 
 prBase.regionVariant = [1 1 1];
 prBase.propL = [0.67 0.67 0.67];
 
-% Set cone proportions for S for all groups.
+% Set cone proportions for S for all regions.
 % 
 % Currently we are adjusting this by hand for different
 % stim sizes, because we want to make sure we get some
@@ -75,6 +75,16 @@ prBase.propL = [0.67 0.67 0.67];
 prBase.propSLargeTarget = [0.1 0.07 0.07];  
 prBase.propSSmallTarget = [0.15 0.07 0.07];
 prBase.targetSizeSPropThresholdDegs = 6/60;
+
+%% Choose your journey
+%
+% Select what you would like to do, for efficiency's sake only recommend
+% having one set to true at a time (reconstruct, renderMatrices, or mosaic
+% montages)
+runReconstructions = false;
+buildRenderMatrix = false;
+buildMosaicMontages = true;
+summaryFigs = true;
 
 %% Spatial parameters
 %
@@ -96,15 +106,20 @@ prBase.reconEccVars = false;
 prBase.reconstructfromRenderMatrix = true;
 prBase.addPoissonNoise = false;
 
+%% Force rewrite of existing render matrices
+%
 % The two buildNew flags here force a build of existing matrices, while
 % if they are false and we are building, only ones that don't yet exist
-% are built.
+% are built.  Turn these to true with trepidation because the same render
+% matrix may get build over and over as one loops through conditions.  
+% Probably what you actually want to do is go delete render matrices that
+% you would like rebuilt.
 if buildRenderMatrix
     buildNewForward = false;
     buildNewRecon = false;
 end
 
-% Adjust desired visualization aspects of summary montages
+%% Adjust desired visualization aspects of summary montages
 figReconRows = false;
 scaleToMax = true;
 zoomToStim = true;
@@ -112,11 +127,13 @@ wavelengthUY = [580 570];
 
 %% Mosaic cone parameters
 %
-% Determine if we're going to make a fancy mosaic with cones specified and
+% Determine if we're going to make a mosaic with cones specified and
 % if we want to visualize region bounds. If equals false, default is base
-% mosaic. Also put wls calc at top level.
+% mosaic.
 prBase.useCustomMosaic = true;
 prBase.viewBounds = false;
+
+% Wavelength specificaiton for calculations
 prBase.wls = (400:1:700)';
 
 % When we construct mosaics, add this much to the size of the stimulus
