@@ -41,6 +41,41 @@ prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
 displayScaleFactorList = [1];
 
+%% Key size and region parameters that we tend to play with
+prBase.stimSizeDegsList = [3.5]/60; %[2 3.5 10] / 60;
+prBase.focalRegionList = ["center"];
+prBase.focalPropLList = 0; %[0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
+prBase.focalVariantList = [1];
+
+%% Choose your journey
+%
+% Select what you would like to do, for efficiency's sake only recommend
+% having one set to true at a time (reconstruct, renderMatrices, or mosaic
+% montages)
+runReconstructions = false;
+buildRenderMatrix = false;
+buildMosaicMontages = true;
+summaryFigs = true;
+
+%% Additional region variant params
+% Set default variant and proportion L and S cones. Note that throughout
+% the simulations, these values will hold and only one per group will be
+% switched to the focal value 
+prBase.regionVariant = [1 1 1];
+prBase.propL = [0.67 0.67 0.67];
+
+% Set cone proportions for S for all groups.
+% 
+% Currently we are adjusting this by hand for different
+% stim sizes, because we want to make sure we get some
+% S cones in the central stimulated area even for the small
+% sizes.  To do this, we need to boost the underlying
+% proportion.  The conditional is handled in routine
+% prFromBase.
+prBase.propSLargeTarget = [0.1 0.07 0.07];  
+prBase.propSSmallTarget = [0.15 0.07 0.07];
+prBase.targetSizeSPropThresholdDegs = 6/60;
+
 %% Spatial parameters
 %
 % Common to forward and recon models
@@ -60,16 +95,6 @@ prBase.forwardEccVars = false;
 prBase.reconEccVars = false;
 prBase.reconstructfromRenderMatrix = true;
 prBase.addPoissonNoise = false;
-
-%% Choose your journey
-%
-% Select what you would like to do, for efficiency's sake only recommend
-% having one set to true at a time (reconstruct, renderMatrices, or mosaic
-% montages)
-runReconstructions = false;
-buildRenderMatrix = false;
-buildMosaicMontages = true;
-summaryFigs = true;
 
 % The two buildNew flags here force a build of existing matrices, while
 % if they are false and we are building, only ones that don't yet exist
@@ -94,15 +119,6 @@ prBase.useCustomMosaic = true;
 prBase.viewBounds = false;
 prBase.wls = (400:1:700)';
 
-% These are the specific values taken in by the AO script, for this project
-% want it to be relatively limited for the sake of speed. Of note,
-% regionList options include: center, nearSurround, distantSurround,
-% multiple, global
-prBase.stimSizeDegsList = [3.5 2]/60;%[2 3.5 10] / 60;
-prBase.focalRegionList = ["center"];
-prBase.focalPropLList = 0%[0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
-prBase.focalVariantList = [1];
-
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
 % on the area the stimulus covers.  Just a little.
@@ -112,28 +128,6 @@ prBase.focalVariantList = [1];
 % size alone everywhere else. That is, this only affects the region of the
 % central portion of the mosaic where we set the cone proportions.
 prBase.forwardOpticalBlurStimSizeExpansionDegs = 0.2/60;
-
-% Set default variant and proportion L and S cones. Note that throughout
-% the simulations, these values will hold and only one per group will be
-% switched to the focal value 
-prBase.regionVariant = [1 1 1];
-%prBase.propL = [0.75 0.75 0.75];
-prBase.propL = [0.5 0.5 0.5];
-
-% Set cone proportions for S for all groups.
-% 
-% Currently we are adjusting this by hand for different
-% stim sizes, because we want to make sure we get some
-% S cones in the central stimulated area even for the small
-% sizes.  To do this, we need to boost the underlying
-% proportion.  The conditional is handled in routine
-% prFromBase.
-prBase.propSLargeTarget = [0.1 0.07 0.07];  
-prBase.propSSmallTarget = [0.15 0.07 0.07];
-prBase.targetSizeSPropThresholdDegs = 6/60;
-
-% Add indices of cones to be silence
-prBase.kConeIndices = [];
 
 %% Calculate the actual stimulus size given pixel quantization.
 %
