@@ -114,28 +114,38 @@ if (length(pr.stimBgVal) == 1 || length(pr.stimBgVal) == 3)
     if (stimSizeFraction > 1)
         error('Stimulus size too big given field size');
     end
-    idxLB = round(pr.nPixels * (0.5 - stimSizeFraction / 2));
-    if (idxLB < 1)
-        idxLB = 1;
-    end
-    idxUB = round(pr.nPixels * (0.5 + stimSizeFraction / 2));
-    if (idxUB > pr.nPixels)
-        idxUB = pr.nPixels;
-    end
 
+    % Use stimulus size in pixels passed in.  This is computed
+    % to deal with pixel quantization in the calling routine.
+    idxLB = (pr.trueCenter)-(pr.stimSizePixels-1)/2;
+    idxUB = (pr.trueCenter)+(pr.stimSizePixels-1)/2;
+    idxXRange = (idxLB:idxUB);
+    idxYRange = (idxLB:idxUB);
+    % Could add back in the pixel shift here
+
+    % OLD STIM PLACEMENT CODE.
+    % idxLB = round(pr.nPixels * (0.5 - stimSizeFraction / 2));
+    % if (idxLB < 1)
+    %     idxLB = 1;
+    % end
+    % idxUB = round(pr.nPixels * (0.5 + stimSizeFraction / 2));
+    % if (idxUB > pr.nPixels)
+    %     idxUB = pr.nPixels;
+    % end
+    %
     % Shift the stimulus to be centered on desired values
-    idxXRange = (idxLB:idxUB) + pr.stimCenter(1);
-    idxYRange = (idxLB:idxUB) + pr.stimCenter(2);
+    % idxXRange = (idxLB:idxUB) + pr.stimCenter(1);
+    % idxYRange = (idxLB:idxUB) + pr.stimCenter(2);
 
     % Check stimulus position. Ends function and deletes the created
     % directory if the stimulus position exceeds bounds.
     if min(idxYRange) <= 0 || max(idxYRange) > pr.nPixels ...
             || min(idxXRange) <= 0 || max(idxXRange) > pr.nPixels
-        warning(['Stimulus centered on ' int2str(pr.stimCenter' + pr.trueCenter) ...
-            ' exceeds bounds. Beginning next simulation']);
+        % warning(['Stimulus centered on ' int2str(pr.stimCenter' + pr.trueCenter) ...
+        %     ' exceeds bounds. Beginning next simulation']);
         rmdir(cnv.outputDirFull, 's');
         close all
-        return
+        error('Stimulus out of image bounds');
     end
 
     % Set image pixels, Here's a place to fix naming convention in the
