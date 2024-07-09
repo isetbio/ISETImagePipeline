@@ -14,7 +14,7 @@
 %   02/20/23  chr  Updates based on Tuten Meeting
 
 %% Clear
-clear; close all;
+% clear; close all;
 
 %% Control size of parpool, otherwise may crush memory
 % thePool = gcp('nocreate');
@@ -44,7 +44,7 @@ displayScaleFactorList = [1];
 %% Spatial parameters
 %
 % Common to forward and recon models
-prBase.nPixels = 50;
+prBase.nPixels = 61;
 prBase.trueCenter = round(prBase.nPixels/2);
 
 %% Mosaic general parameters
@@ -64,7 +64,7 @@ prBase.addPoissonNoise = false;
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
 runReconstructions = true;
-buildRenderMatrix = true;
+buildRenderMatrix = false;
 buildMosaicMontages = false;
 summaryFigs = false;
 
@@ -77,7 +77,7 @@ if buildRenderMatrix
 end
 
 % Adjust desired visualization aspects of summary montages
-figReconRows = true;
+figReconRows = false;
 scaleToMax = true;
 zoomToStim = true;
 wavelengthUY = [580 570];
@@ -95,22 +95,32 @@ prBase.wls = (400:1:700)';
 % want it to be relatively limited for the sake of speed. Of note,
 % regionList options include: center, nearSurround, distantSurround,
 % multiple, global
-prBase.stimSizeDegsList = [10]/60;%[2 3.5 10] / 60;
+prBase.stimSizeDegsList = [3.5]/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
-prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
+prBase.focalPropLList = 0%[0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 prBase.focalVariantList = [1];
 
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
 % switched to the focal value 
-prBase.regionVariant = [1 1 1];
+prBase.regionVariant = [1 2 2];
 prBase.propL = [0.75 0.75 0.75];
+
+% 2 arcmin
+%     1.6870    2.3124
+%    -0.3123    0.3131
+
+% 3.5 arcmin
+
+
+% 10 armcin
+
 
 % The idea here is to turn this into a vector corresponding to each of the
 % stim sizes instead of a baseline. Example: we may want to use a
 % 0.10 baseline proportion S for 10 arcmin but 0.15 for 3.5 arcmin.
-prBase.propS = [0.1 0.1 0.1];
-% prBase.propS = [0.15 0.15 0.15];
+% prBase.propS = [0.1 0.1 0.1];
+prBase.propS = [0.15 0.15 0.15];
 
 % Add indices of cones to be silence
 prBase.kConeIndices = [];
@@ -129,9 +139,9 @@ monoGray = [0.4445; 0.5254; 0.5542];
 if (~isoLumRGAuto)
     % These are rgb values (linear, before gamma correction)
     prBase.stimBgVal = monoGray * monoBgScale;
-    stimrValList = [0.4615 0.3846 0.3077 0.2308 0.1538 0.1154 0.0769 0.0385 0.0000];
-    stimgValList = [0.0081 0.0242 0.0403 0.0565 0.0726 0.0807 0.0888 0.0968 0.1049];
-    stimbValList = [0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005];
+    stimrValList = 0.5%[0.4615 0.3846 0.3077 0.2308 0.1538 0.1154 0.0769 0.0385 0.0000];
+    stimgValList = 0.5%[0.0081 0.0242 0.0403 0.0565 0.0726 0.0807 0.0888 0.0968 0.1049];
+    stimbValList = 0.5%[0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005];
 else
     nEquiLumStimuli = 11;
     switch (prBase.displayName)
@@ -242,10 +252,11 @@ prBase.sparsePriorStr = 'conventional';
 %% Reconstruction parameters
 %
 % Should cycle through a few of these regs to optimize for 58x58 pixels
-% Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
-regParaList = 0.1;
+% Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2, base framework for
+% smallquads been done on 0.1 but now reinvestigating
+regParaList = 0.005; %Trying this again [0.1 0.01 0.001 0.0001]
 prBase.stride = 2;
-prBase.maxReconIterations = 2000;
+prBase.maxReconIterations = 2;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
@@ -411,7 +422,7 @@ end
 % issue is likley a masked issue within the aoStimRecon file. Just remember
 % to turn it back to a parfor loop when finished.
 if runReconstructions
-    parfor pp = 1:runIndex
+    for pp = 1:runIndex
         
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists above.
@@ -518,13 +529,21 @@ end
 % % LOAD THE RENDER STRUCTURE FIRST
 % renderStructure.theConeMosaic.visualizeMosaic()
 % 
-% Set the boundaries based on stimulus position to superimpose on the
-% mosaic for viewing. Make sure using the appropriate pr.stimSizeDegs value
+% % Establish the new center point based on comparison with where the OI
+% % actually lands. Also include scaling based on the OI
+% pr.eccXDegs = 1.9945; 
+% pr.eccYDegs = 0.0055;
+% scaleForOI = 1.23;
+% % scales for [2 3.5 10] = [1.55 1.23 1.05]
+% 
+% hold on; 
+% plot(pr.eccXDegs, pr.eccYDegs, '.', 'MarkerSize', 40);
+% 
 % xBounds = [];
 % yBounds = [];
 % xBounds(1,:) = [pr.eccXDegs pr.eccXDegs];
 % yBounds(1,:) = [pr.eccYDegs pr.eccYDegs];
-% centerWidth = pr.stimSizeDegs/2;
+% centerWidth = scaleForOI * (pr.stimSizeDegs/2);
 % xBounds(2,:) = [xBounds(1)-centerWidth, xBounds(2)+centerWidth];
 % yBounds(2,:) = [yBounds(1)-centerWidth, yBounds(2)+centerWidth];
 % 
@@ -533,6 +552,24 @@ end
 % rectangle('Position', [xBounds(2,1) yBounds(2,1) ...
 %     (xBounds(2,2) - xBounds(2,1)) ...
 %     (yBounds(2,2) - yBounds(2,1))], 'LineWidth', 3)
+% 
+% 
+% % Scale Factor
+% a = 1.639;
+% b = -1.598;
+% c = 1.009;
+% 
+% % Arcmin Anulus
+% % Data points represent number of arcmin added to the diameter of the
+% % stimulus
+% % a = 1.44;
+% % b = -0.7641;
+% % c = 0.2521;
+% 
+% % Power Fits (2-term)
+% val = a*x^b + c;
+% 
+% 
 % 
 % % Visaulize index numbers over each cone in the mosaic
 % for i=1:length(renderStructure.theConeMosaic.Mosaic.coneTypes)
