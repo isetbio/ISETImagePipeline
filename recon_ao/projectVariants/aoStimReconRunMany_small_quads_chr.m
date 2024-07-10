@@ -49,19 +49,23 @@ prBase.stimSizeDegsList = [3.5]/60; %[2 3.5 10] / 60;
 % The parameters here overide the default parameters
 % for different regions, with those parametrs specified below.
 % 
-% Here, Oone region is defined as the focal region, and we can cycle
+% Here, a list of regions are defined as the focal region, and we can cycle
 % through L cone proportions and variants for that region.  Usually this is
-% the center, but other choices are possible.  We don't currently allow
-% cycling through other parameters, but can set them.
+% the center, but other choices are possible.
+%
+% For each focal region specified, the code cycles through the variants in
+% the focalVariantList, replacing the corresponding value in
+% regionVariantList on each iteration.
 prBase.focalRegionList = ["center"];
-prBase.focalPropLList = 0; %[0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 prBase.focalVariantList = [1];
+prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
 % Additional region variant params
+%
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
 % switched to the focal value 
-prBase.regionVariant = [2 1 1];
+prBase.regionVariant = [1 1 1];
 prBase.propL = [0.67 0.67 0.67];
 
 % Set cone proportions for S for all regions.
@@ -81,9 +85,9 @@ prBase.targetSizeSPropThresholdDegs = 6/60;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-runReconstructions = false;
-buildRenderMatrix = false;
-buildMosaicMontages = true;
+runReconstructions = true;
+buildRenderMatrix = true;
+buildMosaicMontages = false;
 summaryFigs = true;
 
 %% Spatial parameters
