@@ -55,13 +55,13 @@ prBase.stimSizeDegsList = [3.5]/60; %[2 3.5 10] / 60;
 % cycling through other parameters, but can set them.
 prBase.focalRegionList = ["center"];
 prBase.focalPropLList = 0; %[0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
-prBase.focalVariantList = [2];
+prBase.focalVariantList = [1];
 
 % Additional region variant params
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
 % switched to the focal value 
-prBase.regionVariant = [1 1 1];
+prBase.regionVariant = [2 1 1];
 prBase.propL = [0.67 0.67 0.67];
 
 % Set cone proportions for S for all regions.
