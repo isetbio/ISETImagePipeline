@@ -304,7 +304,7 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = [0.005]; %[0.1];
 prBase.stride = 2;
-prBase.maxReconIterations = 2;
+prBase.maxReconIterations = 2000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
@@ -538,7 +538,6 @@ if summaryFigs
         end
     end
 end
-
 
 %% Appendix 1
 %
