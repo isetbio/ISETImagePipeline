@@ -185,9 +185,9 @@ monoGray = [0.4445; 0.5254; 0.5542];
 if (~isoLumRGAuto)
     % These are rgb values (linear, before gamma correction)
     prBase.stimBgVal = monoGray * monoBgScale;
-    stimrValList = 0.5; %[0.4615 0.3846 0.3077 0.2308 0.1538 0.1154 0.0769 0.0385 0.0000];
-    stimgValList = 0.5; %[0.0081 0.0242 0.0403 0.0565 0.0726 0.0807 0.0888 0.0968 0.1049];
-    stimbValList = 0.5; %[0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005];
+    stimrValList = [0.4615 0.3846 0.3077 0.2308 0.1538 0.1154 0.0769 0.0385 0.0000];
+    stimgValList = [0.0081 0.0242 0.0403 0.0565 0.0726 0.0807 0.0888 0.0968 0.1049];
+    stimbValList = [0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005];
 else
     nEquiLumStimuli = 11;
     switch (prBase.displayName)
