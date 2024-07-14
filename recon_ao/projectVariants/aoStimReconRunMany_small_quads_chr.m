@@ -42,7 +42,7 @@ prBase.displayGammaGamma = 2;
 displayScaleFactorList = [1];
 
 %% Stimulus size
-prBase.stimSizeDegsList = [10 5.5]/60; %[2 3.5 10] / 60;
+prBase.stimSizeDegsList = [3.5]/60; %[10 5.5 3.5 2] / 60;
 
 %% Mosaic information
 %
@@ -148,7 +148,7 @@ prBase.wls = (400:1:700)';
 % made by buildRenderStruct to setConeProportions, thus leaving the target
 % size alone everywhere else. That is, this only affects the region of the
 % central portion of the mosaic where we set the cone proportions.
-prBase.forwardOpticalBlurStimSizeExpansionDegs = 0.2/60;
+prBase.forwardOpticalBlurStimSizeExpansionDegs = 0.5/60;
 
 %% Calculate the actual stimulus size given pixel quantization.
 %

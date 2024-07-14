@@ -157,10 +157,11 @@ if (~exist(cnv.reconRenderDirFull,'dir'))
 end
 
 % The actual file name is set to be the proportions since this is the most 
-% pertinent information when dealing with small_quads render structures. 
+% pertinent information when dealing with small_quads render structures.
 cnv.renderName = sprintf(['regionProps_%0.2fL_%0.2fL_%0.2fL_' ...
-    '%0.2fS_%0.2fS_%0.2fS.mat'],propL(1),propL(2),propL(3), ...
-    propS(1),propS(2),propS(3));
+    '%0.2fS_%0.2fS_%0.2fS_%0.2f.mat'],propL(1),propL(2),propL(3), ...
+    propS(1),propS(2),propS(3),60*pr.forwardOpticalBlurStimSizeExpansionDegs);
+
 
 %% Build mosaic montage directories
 % Build the nested render directories for forward and recon conditions
