@@ -42,7 +42,7 @@ prBase.displayGammaGamma = 2;
 displayScaleFactorList = [1];
 
 %% Stimulus size
-prBase.stimSizeDegsList = [3.5]/60; %[10 5.5 3.5 2] / 60;
+prBase.stimSizeDegsList = [5.5]/60; %[10 5.5 3.5 2] / 60;
 
 %% Mosaic information
 %
