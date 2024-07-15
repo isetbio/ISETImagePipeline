@@ -114,7 +114,6 @@ switch pr.focalRegion
 end
 
 %% Build render structure directories
-
 if (pr.forwardAORender)
     cnv.forwardRenderDirFirst = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_AO_%0.2f_%s_%d_%d', ...
         pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.forwardPupilDiamMM), ...
@@ -140,8 +139,8 @@ end
 % for now this is constant between forward/recon conditions. 
 cnv.renderDirSecond = sprintf('%0.1fArcmin', ...
     60*pr.stimSizeDegs);
-cnv.renderDirThird = sprintf('regionVariant_v%d_v%d_v%d', ...
-    regionVariant(1),regionVariant(2),regionVariant(3));
+cnv.renderDirThird = sprintf('regionVariant_v%d_v%d_v%d_%0.2f', ...
+    regionVariant(1),regionVariant(2),regionVariant(3),60*pr.forwardOpticalBlurStimSizeExpansionDegs);
 
 % Build the nested render directories for forward and recon conditions
 cnv.forwardRenderDirFull = fullfile(pr.aoReconDir,pr.versEditor,'xRenderStructures', ...
@@ -159,8 +158,8 @@ end
 % The actual file name is set to be the proportions since this is the most 
 % pertinent information when dealing with small_quads render structures.
 cnv.renderName = sprintf(['regionProps_%0.2fL_%0.2fL_%0.2fL_' ...
-    '%0.2fS_%0.2fS_%0.2fS_%0.2f.mat'],propL(1),propL(2),propL(3), ...
-    propS(1),propS(2),propS(3),60*pr.forwardOpticalBlurStimSizeExpansionDegs);
+    '%0.2fS_%0.2fS_%0.2fS.mat'],propL(1),propL(2),propL(3), ...
+    propS(1),propS(2),propS(3));
 
 
 %% Build mosaic montage directories
