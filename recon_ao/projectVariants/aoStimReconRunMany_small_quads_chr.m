@@ -42,7 +42,7 @@ prBase.displayGammaGamma = 2;
 displayScaleFactorList = [1];
 
 %% Stimulus size
-prBase.stimSizeDegsList = [10]/60; %[10 5.5 3.5 2] / 60;
+prBase.stimSizeDegsList = [5.5]/60; %[10 5.5 3.5 2] / 60;
 
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
@@ -103,15 +103,15 @@ prBase.regionVariant = [1 1 1];
 prBase.propL = [0.0 0.0 0.0];
 for rr = 2:3
     switch (prBase.regionVariant(rr))
-        case 1
+        case {1, 6}
             prBase.propL(rr) = 0.67;
-        case 2
+        case {2, 7}
             prBase.propL(rr) = 0;
-        case 3
+        case {3, 8}
             prBase.propL(rr) = 1;
-        case 4
+        case {4, 9}
             prBase.propL(rr) = 0.1;
-        case 5
+        case {5, 10}
             prBase.propL(rr) = 0.9;
         otherwise
             error('Need to specify propL for this regionVariant case');
@@ -145,8 +145,8 @@ prBase.targetSizeSPropThresholdDegs = 6/60;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-runReconstructions = true;
-buildRenderMatrix = true;
+runReconstructions = false;
+buildRenderMatrix = false;
 buildMosaicMontages = false;
 summaryFigs = true;
 
