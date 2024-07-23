@@ -42,10 +42,34 @@ prBase.displayGammaGamma = 2;
 displayScaleFactorList = [1];
 
 %% Stimulus size
-prBase.stimSizeDegsList = [5.5]/60; %[10 5.5 3.5 2] / 60;
+prBase.stimSizeDegsList = [10]/60; %[10 5.5 3.5 2] / 60;
+
+% When we construct mosaics, add this much to the size of the stimulus
+% area that we control, to account for effect of forward optical blur
+% on the area the stimulus covers.  Just a little.
+%
+% This is handled by adding this number to the stimulus size in the call
+% made by buildRenderStruct to setConeProportions, thus leaving the target
+% size alone everywhere else. That is, this only affects the region of the
+% central portion of the mosaic where we set the cone proportions.
+prBase.forwardOpticalBlurStimSizeExpansionDegs = 1/60;
 
 %% Mosaic information
 %
+% Mosaics are built to be matched to the stimulus size, generally.  Because
+% building the render matrix is very slow, we may want to dissociate this a
+% little at some point.  The first step in that direction is simply to
+% define a separate parameter for the mosaic size specification and set
+% it to be the same as the stimulus size specfication.  We will need to
+% spend a little time on directory naming and parameter passing to actually
+% dissociate these two things, so this next line should not be changed
+% until that work is done.
+prBase.mosaicStimSizeDegsList = prBase.stimSizeDegsList;
+
+% At some point we should expose the parameter that controls the size of
+% the immediate surround, because we may be interested in how varying that
+% affects things. 
+
 % The parameters here overide the default parameters
 % for different regions, with those parametrs specified below.
 % 
@@ -65,8 +89,44 @@ prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
 % switched to the focal value 
+
+% L proportions switch.  Sets cone proportions matched to region
+% variant number.  This wasn't our original intent with how we
+% would use the regionVariant flexibility, but for the near and
+% far surrounds it is turning out to be useful to have a specific
+% cone propL associated with each near and far surround region variant.
+% That is because the bookkeeping doesn't separately allow us to easily
+% track what happens for multiple instances of the same region variant
+% number with different cone proportions.  I think this is probably
+% OK.
 prBase.regionVariant = [1 1 1];
-prBase.propL = [0.67 0.67 0.67];
+prBase.propL = [0.0 0.0 0.0];
+for rr = 2:3
+    switch (prBase.regionVariant(rr))
+        case 1
+            prBase.propL(rr) = 0.67;
+        case 2
+            prBase.propL(rr) = 0;
+        case 3
+            prBase.propL(rr) = 1;
+        case 4
+            prBase.propL(rr) = 0.1;
+        case 5
+            prBase.propL(rr) = 0.9;
+        otherwise
+            error('Need to specify propL for this regionVariant case');
+    end
+end
+
+% Want to run through
+% prBase.regionVariant = [1 3 1];
+% prBase.propL = [0.0 1.0 0.67];
+% 
+% prBase.regionVariant = [1 3 2];
+% prBase.propL = [0.0 1.0 0.0];
+% 
+% prBase.regionVariant = [1 3 3];
+% prBase.propL = [0.0 1.0 1.0];
 
 % Set cone proportions for S for all regions.
 % 
@@ -139,16 +199,6 @@ prBase.viewBounds = false;
 
 % Wavelength specificaiton for calculations
 prBase.wls = (400:1:700)';
-
-% When we construct mosaics, add this much to the size of the stimulus
-% area that we control, to account for effect of forward optical blur
-% on the area the stimulus covers.  Just a little.
-%
-% This is handled by adding this number to the stimulus size in the call
-% made by buildRenderStruct to setConeProportions, thus leaving the target
-% size alone everywhere else. That is, this only affects the region of the
-% central portion of the mosaic where we set the cone proportions.
-prBase.forwardOpticalBlurStimSizeExpansionDegs = 0.5/60;
 
 %% Calculate the actual stimulus size given pixel quantization.
 %
