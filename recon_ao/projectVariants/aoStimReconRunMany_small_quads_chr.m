@@ -42,7 +42,7 @@ prBase.displayGammaGamma = 2;
 displayScaleFactorList = [1];
 
 %% Stimulus size
-prBase.stimSizeDegsList = [5.5]/60; %[10 5.5 3.5 2] / 60;
+prBase.stimSizeDegsList = [4.5 5.5]/60; %[10 5.5 3.5 2] / 60;
 
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
