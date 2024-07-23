@@ -91,6 +91,30 @@ end
 forwardConeMosaic.visualizeMosaic();
 saveas(gcf,fullfile(cnv.outputDirFull,'forwardMosaic.tiff'),'tiff');
 
+% Save a version of the image with the stimulus region superimposed
+forwardConeMosaic.Mosaic.visualize();
+scaleForOI = 1; %1.23;
+
+% Visualize the center used for stimulus presentation
+hold on; 
+plot(pr.eccXDegs, pr.eccYDegs, '.', 'MarkerSize', 40);
+
+% Create the box boundaries
+xBounds = []; yBounds = [];
+xBounds(1,:) = [pr.eccXDegs pr.eccXDegs];
+yBounds(1,:) = [pr.eccYDegs pr.eccYDegs];
+centerWidth = scaleForOI * (pr.stimSizeDegs/2);
+xBounds(2,:) = [xBounds(1)-centerWidth, xBounds(2)+centerWidth];
+yBounds(2,:) = [yBounds(1)-centerWidth, yBounds(2)+centerWidth];
+
+% Outline the stimulus region
+hold on
+rectangle('Position', [xBounds(2,1) yBounds(2,1) ...
+    (xBounds(2,2) - xBounds(2,1)) ...
+    (yBounds(2,2) - yBounds(2,1))], 'LineWidth', 3)
+saveas(gcf,fullfile(cnv.outputDirFull, 'forwardMosaicwithBox.tiff'), 'tiff');
+
+% Show and save recon mosaic
 reconConeMosaic.visualizeMosaic();
 saveas(gcf,fullfile(cnv.outputDirFull,'reconMosaic.tiff'),'tiff');
 

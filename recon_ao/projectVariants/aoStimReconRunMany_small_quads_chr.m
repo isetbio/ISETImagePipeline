@@ -68,7 +68,7 @@ prBase.addPoissonNoise = false;
 % montages)
 runReconstructions = false;
 buildRenderMatrix = false;
-buildMosaicMontages = true;
+buildMosaicMontages = false;
 summaryFigs = true;
 
 % The two buildNew flags here force a build of existing matrices, while
@@ -98,9 +98,9 @@ prBase.wls = (400:1:700)';
 % want it to be relatively limited for the sake of speed. Of note,
 % regionList options include: center, nearSurround, distantSurround,
 % multiple, global
-prBase.stimSizeDegsList = [3.5 2]/60;%[2 3.5 10] / 60;
+prBase.stimSizeDegsList = [2]/60;%[2 3.5 10] / 60;
 prBase.focalRegionList = ["center"];
-prBase.focalPropLList = 0%[0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
+prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 prBase.focalVariantList = [1];
 
 % When we construct mosaics, add this much to the size of the stimulus
@@ -113,7 +113,7 @@ prBase.forwardOpticalBlurStimSizeExpansionDegs = 0.2/60;
 % switched to the focal value 
 prBase.regionVariant = [1 1 1];
 %prBase.propL = [0.75 0.75 0.75];
-prBase.propL = [0.5 0.5 0.5];
+prBase.propL = [0.67 0.67 0.67];
 
 % 2 arcmin
 %     1.6870    2.3124
@@ -130,7 +130,7 @@ prBase.propL = [0.5 0.5 0.5];
 % stim sizes instead of a baseline. Example: we may want to use a
 % 0.10 baseline proportion S for 10 arcmin but 0.15 for 3.5 arcmin.
 %prBase.propS = [0.1 0.1 0.1];
-prBase.propS = [0.15 0.15 0.15];
+prBase.propS = [0.1 0.07 0.07];
 
 % Add indices of cones to be silence
 prBase.kConeIndices = [];
@@ -467,7 +467,7 @@ end
 % issue is likley a masked issue within the aoStimRecon file. Just remember
 % to turn it back to a parfor loop when finished.
 if runReconstructions
-    parfor pp = 1:runIndex        
+    for pp = 1:runIndex        
         % Set up parameters structure for this loop, filling in fields that come
         % out of lists above.
         pr = prFromBase(prBase,pp,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
@@ -572,31 +572,39 @@ end
 
 % % LOAD THE RENDER STRUCTURE FIRST
 % renderStructure.theConeMosaic.visualizeMosaic()
+
+tempFig = figure; clf;
+forwardConeMosaic.Mosaic.visualize(...
+    'figureHandle', tempFig, ...
+    'axesHandle', [], ...
+    'withSuperimposedOpticalImage', forwardOI, ...
+    'outlinedConesWithIndices', pr.kConeIndices, ...
+    'plotTitle','Forward OI on Forward Mosaic','superimposedOIAlpha',0.7);
 % 
-% % Establish the new center point based on comparison with where the OI
-% % actually lands. Also include scaling based on the OI
+% Establish the new center point based on comparison with where the OI
+% actually lands. Also include scaling based on the OI
 % pr.eccXDegs = 1.9945; 
 % pr.eccYDegs = 0.0055;
-% scaleForOI = 1.23;
-% % scales for [2 3.5 10] = [1.55 1.23 1.05]
-% 
-% hold on; 
-% plot(pr.eccXDegs, pr.eccYDegs, '.', 'MarkerSize', 40);
-% 
-% xBounds = [];
-% yBounds = [];
-% xBounds(1,:) = [pr.eccXDegs pr.eccXDegs];
-% yBounds(1,:) = [pr.eccYDegs pr.eccYDegs];
-% centerWidth = scaleForOI * (pr.stimSizeDegs/2);
-% xBounds(2,:) = [xBounds(1)-centerWidth, xBounds(2)+centerWidth];
-% yBounds(2,:) = [yBounds(1)-centerWidth, yBounds(2)+centerWidth];
-% 
-% % Outline the stimulus region
-% hold on
-% rectangle('Position', [xBounds(2,1) yBounds(2,1) ...
-%     (xBounds(2,2) - xBounds(2,1)) ...
-%     (yBounds(2,2) - yBounds(2,1))], 'LineWidth', 3)
-% 
+scaleForOI = 1; %1.23;
+% scales for [2 3.5 10] = [1.55 1.23 1.05]
+
+hold on; 
+plot(pr.eccXDegs, pr.eccYDegs, '.', 'MarkerSize', 40);
+
+xBounds = [];
+yBounds = [];
+xBounds(1,:) = [pr.eccXDegs pr.eccXDegs];
+yBounds(1,:) = [pr.eccYDegs pr.eccYDegs];
+centerWidth = scaleForOI * (pr.stimSizeDegs/2);
+xBounds(2,:) = [xBounds(1)-centerWidth, xBounds(2)+centerWidth];
+yBounds(2,:) = [yBounds(1)-centerWidth, yBounds(2)+centerWidth];
+
+% Outline the stimulus region
+hold on
+rectangle('Position', [xBounds(2,1) yBounds(2,1) ...
+    (xBounds(2,2) - xBounds(2,1)) ...
+    (yBounds(2,2) - yBounds(2,1))], 'LineWidth', 3)
+
 % 
 % % Scale Factor
 % a = 1.639;
@@ -628,4 +636,23 @@ end
 % g = @(x, y) mouseClick(x, y, renderStructure.theConeMosaic);
 % set(gcf, 'WindowButtonDownFcn', g)
 % keyboard
+
+
+%% Appendix 2
+% 
+% Visualize the OI on the retinal mosaic, to be conducted after running the
+% aoStimRecon portion outside of the parfor loop and inserting a line break
+% somewhere near line 520. Use some easily identifiable and removable stim
+% color like 0.5 0.5 0.5 for a maxiteration of 2 to quickly get through the
+% initial phases. 
+
+
+tempFig = figure; clf;
+forwardConeMosaic.Mosaic.visualize(...
+    'figureHandle', tempFig, ...
+    'axesHandle', [], ...
+    'withSuperimposedOpticalImage', forwardOI, ...
+    'outlinedConesWithIndices', pr.kConeIndices, ...
+    'plotTitle','Forward OI on Forward Mosaic','superimposedOIAlpha',0.7);
+
 
