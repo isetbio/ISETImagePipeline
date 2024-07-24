@@ -103,15 +103,15 @@ prBase.regionVariant = [6 6 6];
 prBase.propL = [0.0 0.0 0.0];
 for rr = 2:3
     switch (prBase.regionVariant(rr))
-        case 1
+        case {1, 6}
             prBase.propL(rr) = 0.67;
-        case 2
+        case {2, 7}
             prBase.propL(rr) = 0;
-        case 3
+        case {3, 8}
             prBase.propL(rr) = 1;
-        case 4
+        case {4, 9}
             prBase.propL(rr) = 0.1;
-        case 5
+        case {5, 10}
             prBase.propL(rr) = 0.9;
         otherwise
             error('Need to specify propL for this regionVariant case');
