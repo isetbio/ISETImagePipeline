@@ -145,7 +145,7 @@ prBase.targetSizeSPropThresholdDegs = 6/60;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-buildRenderMatrix = true;
+buildRenderMatrix = false;
 buildMosaicMontages = false;
 runReconstructions = true;
 summaryFigs = true;
