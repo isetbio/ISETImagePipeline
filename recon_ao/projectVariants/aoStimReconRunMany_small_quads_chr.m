@@ -14,7 +14,7 @@
 %   02/20/23  chr  Updates based on Tuten Meeting
 
 %% Clear
-% clear; close all;
+clear; close all;
 
 %% Control size of parpool, otherwise may crush memory
 % thePool = gcp('nocreate');
@@ -41,6 +41,55 @@ prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
 displayScaleFactorList = [1];
 
+%% Stimulus size
+prBase.stimSizeDegsList = [5.5]/60; %[10 5.5 3.5 2] / 60;
+
+%% Mosaic information
+%
+% The parameters here overide the default parameters
+% for different regions, with those parametrs specified below.
+% 
+% Here, a list of regions are defined as the focal region, and we can cycle
+% through L cone proportions and variants for that region.  Usually this is
+% the center, but other choices are possible.
+%
+% For each focal region specified, the code cycles through the variants in
+% the focalVariantList, replacing the corresponding value in
+% regionVariantList on each iteration.
+prBase.focalRegionList = ["center"];
+prBase.focalVariantList = [1];
+prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
+
+% Additional region variant params
+%
+% Set default variant and proportion L and S cones. Note that throughout
+% the simulations, these values will hold and only one per group will be
+% switched to the focal value 
+prBase.regionVariant = [1 1 1];
+prBase.propL = [0.67 0.67 0.67];
+
+% Set cone proportions for S for all regions.
+% 
+% Currently we are adjusting this by hand for different
+% stim sizes, because we want to make sure we get some
+% S cones in the central stimulated area even for the small
+% sizes.  To do this, we need to boost the underlying
+% proportion.  The conditional is handled in routine
+% prFromBase.
+prBase.propSLargeTarget = [0.1 0.07 0.07];  
+prBase.propSSmallTarget = [0.15 0.07 0.07];
+prBase.targetSizeSPropThresholdDegs = 6/60;
+
+%% Choose your journey
+%
+% Select what you would like to do, for efficiency's sake only recommend
+% having one set to true at a time (reconstruct, renderMatrices, or mosaic
+% montages)
+runReconstructions = false;
+buildRenderMatrix = false;
+buildMosaicMontages = false;
+summaryFigs = true;
+
 %% Spatial parameters
 %
 % Common to forward and recon models
@@ -61,25 +110,20 @@ prBase.reconEccVars = false;
 prBase.reconstructfromRenderMatrix = true;
 prBase.addPoissonNoise = false;
 
-%% Choose your journey
+%% Force rewrite of existing render matrices
 %
-% Select what you would like to do, for efficiency's sake only recommend
-% having one set to true at a time (reconstruct, renderMatrices, or mosaic
-% montages)
-runReconstructions = false;
-buildRenderMatrix = false;
-buildMosaicMontages = false;
-summaryFigs = true;
-
 % The two buildNew flags here force a build of existing matrices, while
 % if they are false and we are building, only ones that don't yet exist
-% are built.
+% are built.  Turn these to true with trepidation because the same render
+% matrix may get build over and over as one loops through conditions.  
+% Probably what you actually want to do is go delete render matrices that
+% you would like rebuilt.
 if buildRenderMatrix
     buildNewForward = false;
     buildNewRecon = false;
 end
 
-% Adjust desired visualization aspects of summary montages
+%% Adjust desired visualization aspects of summary montages
 figReconRows = false;
 scaleToMax = true;
 zoomToStim = true;
@@ -87,53 +131,24 @@ wavelengthUY = [580 570];
 
 %% Mosaic cone parameters
 %
-% Determine if we're going to make a fancy mosaic with cones specified and
+% Determine if we're going to make a mosaic with cones specified and
 % if we want to visualize region bounds. If equals false, default is base
-% mosaic. Also put wls calc at top level.
+% mosaic.
 prBase.useCustomMosaic = true;
 prBase.viewBounds = false;
-prBase.wls = (400:1:700)';
 
-% These are the specific values taken in by the AO script, for this project
-% want it to be relatively limited for the sake of speed. Of note,
-% regionList options include: center, nearSurround, distantSurround,
-% multiple, global
-prBase.stimSizeDegsList = [2]/60;%[2 3.5 10] / 60;
-prBase.focalRegionList = ["center"];
-prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
-prBase.focalVariantList = [1];
+% Wavelength specificaiton for calculations
+prBase.wls = (400:1:700)';
 
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
 % on the area the stimulus covers.  Just a little.
-prBase.forwardOpticalBlurStimSizeExpansionDegs = 0.2/60;
-
-% Set default variant and proportion L and S cones. Note that throughout
-% the simulations, these values will hold and only one per group will be
-% switched to the focal value 
-prBase.regionVariant = [1 1 1];
-%prBase.propL = [0.75 0.75 0.75];
-prBase.propL = [0.67 0.67 0.67];
-
-% 2 arcmin
-%     1.6870    2.3124
-%    -0.3123    0.3131
-
-% 3.5 arcmin
-
-
-% 10 armcin
-
-
-% The idea here is to turn this into a vector corresponding to each of the
-% 
-% stim sizes instead of a baseline. Example: we may want to use a
-% 0.10 baseline proportion S for 10 arcmin but 0.15 for 3.5 arcmin.
-%prBase.propS = [0.1 0.1 0.1];
-prBase.propS = [0.1 0.07 0.07];
-
-% Add indices of cones to be silence
-prBase.kConeIndices = [];
+%
+% This is handled by adding this number to the stimulus size in the call
+% made by buildRenderStruct to setConeProportions, thus leaving the target
+% size alone everywhere else. That is, this only affects the region of the
+% central portion of the mosaic where we set the cone proportions.
+prBase.forwardOpticalBlurStimSizeExpansionDegs = 0.5/60;
 
 %% Calculate the actual stimulus size given pixel quantization.
 %
@@ -170,9 +185,9 @@ monoGray = [0.4445; 0.5254; 0.5542];
 if (~isoLumRGAuto)
     % These are rgb values (linear, before gamma correction)
     prBase.stimBgVal = monoGray * monoBgScale;
-    stimrValList = 0.5%[0.4615 0.3846 0.3077 0.2308 0.1538 0.1154 0.0769 0.0385 0.0000];
-    stimgValList = 0.5%[0.0081 0.0242 0.0403 0.0565 0.0726 0.0807 0.0888 0.0968 0.1049];
-    stimbValList = 0.5%[0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005];
+    stimrValList = [0.4615 0.3846 0.3077 0.2308 0.1538 0.1154 0.0769 0.0385 0.0000];
+    stimgValList = [0.0081 0.0242 0.0403 0.0565 0.0726 0.0807 0.0888 0.0968 0.1049];
+    stimbValList = [0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005];
 else
     nEquiLumStimuli = 11;
     switch (prBase.displayName)
@@ -245,49 +260,38 @@ if (length(stimgValList) ~= length(stimrValList) || length(stimbValList) ~= leng
     error('Stimulus value lists must have same length');
 end
 
-%% Positions
-%
-% Input desired x and y position for stimulus to be centered over. Function
-% will end if values exceed pixel limits.
-%
-% Position specified in pixels, could consider specifying in minutes.
-shiftInMinutesListX = [0];
-shiftInMinutesListY = [0];
-fullSquareShift = false;
+% %% Position shifts
+% %
+% % Input desired x and y position for stimulus to be centered over. Function
+% % will end if values exceed pixel limits.
+% %
+% % DHB: Currently commented out all the shifting code.  We could put this
+% % back with a little thought, but I am inclined to remove completely to
+% % simplify reading this whole routine which is already pretty complicated.
+% %
+% % Position specified in pixels, could consider specifying in minutes.
+% % shiftInMinutesListX = [0];
+% % shiftInMinutesListY = [0];
+% 
+% % Convert the shifts to pixel positions.
+% %
+% % shiftInPixelsListX = round(prBase.pixelsPerMinute*shiftInMinutesListX);
+% % shiftInPixelsListY = round(prBase.pixelsPerMinute*shiftInMinutesListY);
+% % if (shiftInPixelsListX ~= 0 | shiftInPixelsListY ~= 0)
+% %     error('For right now assuming no shift in pixels specified');
+% % end
+% 
+% % Consider including the term "-(prBase.nPixels * 0.1)" to better center
+% % the quad stim at larger values so not pushing against the outer edge.
+% %
+% % DHB: I think prBase.stimCenter is now ignored in favor of the new
+% % way of positioning the sitmulus implemented in aoStimRecon.  I don't
+% % think it would be hard to put shifts back if we decide we need that.
+% % centerXPosition = prBase.trueCenter + shiftInPixelsListX;
+% % centerYPosition = prBase.trueCenter + shiftInPixelsListY;
 
-% Convert the shifts to pixel positions.
-%
-% DHB: Currently this is not used in the new asStimRecon.  Could add,
-% but at the moment throw an error if it is not zero.
-shiftInPixelsListX = round(prBase.pixelsPerMinute*shiftInMinutesListX);
-shiftInPixelsListY = round(prBase.pixelsPerMinute*shiftInMinutesListY);
-if (shiftInPixelsListX ~= 0 | shiftInPixelsListY ~= 0)
-    error('For right now assuming no shift in pixels specified');
-end
-
-% Consider including the term "-(prBase.nPixels * 0.1)" to better center
-% the quad stim at larger values so not pushing against the outer edge.
-%
-% DHB: I think prBase.stimCenter is now ignored in favor of the new
-% way of positioning the sitmulus implemented in aoStimRecon.  If
-% we delete prBase.stimCenter, also need to remove deltaCenterList
-% just below.
-% centerXPosition = prBase.trueCenter + shiftInPixelsListX;
-% centerYPosition = prBase.trueCenter + shiftInPixelsListY;
+%% Save center parameters as a vector.
 prBase.stimCenter = [prBase.trueCenter ; prBase.trueCenter];
-
-% Loop through created pixel positions if want to create a square grid of
-% movement instead of default horizontal shift.
-%
-% DHB: I think this is no longer used and should be deleted.  Added an
-% error message that is thrown if it is true.  
-if (fullSquareShift)
-    error('No longer want to support fullSquareShift set to true');
-    % centerXPosition = repelem(prBase.stimCenter(1,:), length(shiftInMinutesList));
-    % centerYPosition = repmat(prBase.stimCenter(1,:), [1,length(shiftInMinutesList)]);
-    % prBase.stimCenter = [centerXPosition; centerYPosition];
-end
-% deltaCenterList = [prBase.stimCenter - prBase.trueCenter];
 
 %% Prior parameters
 %
@@ -300,7 +304,7 @@ prBase.sparsePriorStr = 'conventional';
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 regParaList = [0.005]; %[0.1];
 prBase.stride = 2;
-prBase.maxReconIterations = 2;
+prBase.maxReconIterations = 2000;
 prBase.whiteNoiseStarts = 0;
 prBase.pinkNoiseStarts = 1;
 prBase.sparsePriorPatchStarts = 0;
@@ -339,45 +343,43 @@ for ss = 1:length(prBase.stimSizeDegsList)
         for vv = 1:length(prBase.focalVariantList)
             for oo = 1:length(prBase.focalPropLList)
                 for cc = 1:length(stimrValList)
-                    % for yy = 1:size(deltaCenterList,2)
-                        for ff = 1:length(forwardDefocusDioptersList)
-                            for rr = 1:length(regParaList)
-                                for pp = 1:length(forwardPupilDiamListMM)
-                                    for dsf = 1:length(displayScaleFactorList)
-                                        % These parameters do not affect mosaics or
-                                        % render matrices.
-                                        stimrVal(runIndex) = stimrValList(cc);
-                                        stimgVal(runIndex) = stimgValList(cc);
-                                        stimbVal(runIndex) = stimbValList(cc);
-                                        stimCenter(:,runIndex) = prBase.stimCenter; % deltaCenterList(:,yy);
-                                        regPara(runIndex) = regParaList(rr);
-                                        displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
-                                        
-                                        % These do affect mosaics because we
-                                        % design mosaics to have desired properties
-                                        % within the stimulus region and regions
-                                        % adjacent to it. This is taken into account
-                                        % when we build montages of mosaics.
-                                        stimSizeDegs(runIndex) = prBase.stimSizeDegs(ss) + prBase.forwardOpticalBlurStimSizeExpansionDegs;
-                                        stimSizePixels(runIndex) = prBase.stimSizePixels(ss);
-                                        focalRegion(runIndex) = prBase.focalRegionList(gg);
-                                        focalPropL(runIndex) = prBase.focalPropLList(oo);
-                                        focalVariant(runIndex) = prBase.focalVariantList(vv);
-                                        
-                                        % These parameters do by their nature directly affect either the mosaic
-                                        % or the render matrices beyond the scope of our current project
-                                        forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
-                                        reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
-                                        forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
-                                        reconPupilDiamMM(runIndex) = reconPupilDiamListMM(pp);
-                                        
-                                        % Bump condition index
-                                        runIndex = runIndex + 1;
-                                    end
+                    for ff = 1:length(forwardDefocusDioptersList)
+                        for rr = 1:length(regParaList)
+                            for pp = 1:length(forwardPupilDiamListMM)
+                                for dsf = 1:length(displayScaleFactorList)
+                                    % These parameters do not affect mosaics or
+                                    % render matrices.
+                                    stimrVal(runIndex) = stimrValList(cc);
+                                    stimgVal(runIndex) = stimgValList(cc);
+                                    stimbVal(runIndex) = stimbValList(cc);
+                                    stimCenter(:,runIndex) = prBase.stimCenter; % deltaCenterList(:,yy);
+                                    regPara(runIndex) = regParaList(rr);
+                                    displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
+
+                                    % These do affect mosaics because we
+                                    % design mosaics to have desired properties
+                                    % within the stimulus region and regions
+                                    % adjacent to it. This is taken into account
+                                    % when we build montages of mosaics.
+                                    stimSizeDegs(runIndex) = prBase.stimSizeDegs(ss);
+                                    stimSizePixels(runIndex) = prBase.stimSizePixels(ss);
+                                    focalRegion(runIndex) = prBase.focalRegionList(gg);
+                                    focalPropL(runIndex) = prBase.focalPropLList(oo);
+                                    focalVariant(runIndex) = prBase.focalVariantList(vv);
+
+                                    % These parameters do by their nature directly affect either the mosaic
+                                    % or the render matrices beyond the scope of our current project
+                                    forwardDefocusDiopters(runIndex) = forwardDefocusDioptersList(ff);
+                                    reconDefocusDiopters(runIndex) = reconDefocusDioptersList(ff);
+                                    forwardPupilDiamMM(runIndex) = forwardPupilDiamListMM(pp);
+                                    reconPupilDiamMM(runIndex) = reconPupilDiamListMM(pp);
+
+                                    % Bump condition index
+                                    runIndex = runIndex + 1;
                                 end
                             end
                         end
-                    % end
+                    end
                 end
             end
         end
@@ -387,28 +389,6 @@ end
 % Remvoew the final run index bump to match lengths
 runIndex = runIndex - 1;
 
-%% Set the multeiRenderMatrixParams flag properly based on condition lists
-%
-% Most of the time, we only need to build one set of reconstruction
-% mosaics, because many of the things we could vary are not in fact varied
-% across different reconstruction conditions.  For example, we typically
-% use the same regularization parameter across trials. Setting this flag
-% to false prevents us from making the same mosaics and render matrices
-% over and over and over again.
-%
-% Note however, that our build routine builds entire sets of mosaics and
-% render matrices that take the stimulus size into account, so we can still
-% keep this flag as false even when that list has length greater than 1.
-multRenderMatrixParams = false;
-if (    length(forwardDefocusDioptersList) == 1 & ...
-        length(reconDefocusDioptersList) == 1 & ...
-        length(forwardPupilDiamListMM) == 1 & ...
-        length(reconPupilDiamListMM) == 1 )
-    multRenderMatrixParams = false;
-else
-    multRenderMatrixParams = true;
-end
-
 %% Render Structures
 %
 % Build the render structures and note that being done in bulk so only run
@@ -417,7 +397,6 @@ end
 % through. (Suspect this might still have overcalculation/redundancy but
 % explore more later)
 if buildRenderMatrix
-    % If multRenderMatrixParams
     for pp = 1:runIndex
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists precreated above.
@@ -446,7 +425,6 @@ end
 % Building mosaics themselves is fast, and we control the random number
 % generator. Follows the same format as for the render matrices.
 if buildMosaicMontages
-    % If multRenderMatrixParams
     for pp = 1
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists precreated above.
@@ -560,7 +538,6 @@ if summaryFigs
         end
     end
 end
-
 
 %% Appendix 1
 %
