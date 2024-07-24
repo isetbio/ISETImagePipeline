@@ -42,7 +42,7 @@ prBase.displayGammaGamma = 2;
 displayScaleFactorList = [1];
 
 %% Stimulus size
-prBase.stimSizeDegsList = [4.5 5.5]/60; %[10 5.5 3.5 2] / 60;
+prBase.stimSizeDegsList = [4.5 3.5]/60; %[10 5.5 4.5 3.5 2] / 60;
 
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
@@ -99,19 +99,19 @@ prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 % track what happens for multiple instances of the same region variant
 % number with different cone proportions.  I think this is probably
 % OK.
-prBase.regionVariant = [1 1 1];
+prBase.regionVariant = [6 6 6];
 prBase.propL = [0.0 0.0 0.0];
 for rr = 2:3
     switch (prBase.regionVariant(rr))
-        case {1, 6}
+        case 1
             prBase.propL(rr) = 0.67;
-        case {2, 7}
+        case 2
             prBase.propL(rr) = 0;
-        case {3, 8}
+        case 3
             prBase.propL(rr) = 1;
-        case {4, 9}
+        case 4
             prBase.propL(rr) = 0.1;
-        case {5, 10}
+        case 5
             prBase.propL(rr) = 0.9;
         otherwise
             error('Need to specify propL for this regionVariant case');
@@ -145,9 +145,9 @@ prBase.targetSizeSPropThresholdDegs = 6/60;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-runReconstructions = false;
-buildRenderMatrix = false;
+buildRenderMatrix = true;
 buildMosaicMontages = false;
+runReconstructions = true;
 summaryFigs = true;
 
 %% Spatial parameters
@@ -215,7 +215,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
     prBase.stimSizeDegs(ss) = prBase.availStimSizesDegs(index);
     stimSizeMinutes(ss) = prBase.stimSizeDegs(ss)*60;
     fprintf('Nominal stimulus %d: %0.3f minutes, actual used %0.3f minutes, %d pixels, minutes per pixel is %0.4f\n', ...
-        ss,prBase.stimSizeDegsList(ss)*60,stimSizeMinutes,prBase.stimSizePixels,prBase.minutesPerPixel);
+        ss,prBase.stimSizeDegsList(ss)*60,stimSizeMinutes(ss),prBase.stimSizePixels(ss),prBase.minutesPerPixel);
     if (rem(prBase.stimSizePixels(ss),2) ~= 1)
         error('We are assuming odd numer of pixels and stim pixel size');
     end
@@ -582,8 +582,12 @@ if summaryFigs
                     
                 end
                 
+                % Make and save summary figures
                 buildSummaryFigs(pr, cnv, numStim, numProp, ...
                     fullReconSummary, stimSummary, 'wavelengthUY', wavelengthUY);
+
+                % Close up summary figures so they don't pile up
+                close all
             end
         end
     end
