@@ -42,7 +42,7 @@ prBase.displayGammaGamma = 2;
 displayScaleFactorList = [1];
 
 %% Stimulus size
-prBase.stimSizeDegsList = [4.5 3.5]/60; %[10 5.5 4.5 3.5 2] / 60;
+prBase.stimSizeDegsList = [4.5]/60; %[10 5.5 4.5 3.5 2] / 60;
 
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
@@ -145,7 +145,7 @@ prBase.targetSizeSPropThresholdDegs = 6/60;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-buildRenderMatrix = true;
+buildRenderMatrix = false;
 buildMosaicMontages = false;
 runReconstructions = true;
 summaryFigs = true;
