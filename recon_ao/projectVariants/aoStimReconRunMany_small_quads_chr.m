@@ -42,7 +42,7 @@ prBase.displayGammaGamma = 2;
 displayScaleFactorList = [1];
 
 %% Stimulus size
-prBase.stimSizeDegsList = [5.5]/60; %[10 5.5 4.5 3.5 2] / 60;
+prBase.stimSizeDegsList = [3.5]/60; %[10 7.5 5.5 4.5 3.5 2] / 60;
 
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
@@ -81,7 +81,7 @@ prBase.mosaicStimSizeDegsList = prBase.stimSizeDegsList;
 % the focalVariantList, replacing the corresponding value in
 % regionVariantList on each iteration.
 prBase.focalRegionList = ["center"];
-prBase.focalVariantList = [2];
+prBase.focalVariantList = [1];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
 % Additional region variant params
@@ -99,7 +99,7 @@ prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 % track what happens for multiple instances of the same region variant
 % number with different cone proportions.  I think this is probably
 % OK.
-prBase.regionVariant = [2 1 1];
+prBase.regionVariant = [1 1 1];
 prBase.propL = [0.0 0.0 0.0];
 for rr = 2:3
     switch (prBase.regionVariant(rr))
