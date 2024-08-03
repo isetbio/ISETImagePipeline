@@ -1,4 +1,4 @@
-%% stimManipulationExample
+%% t_dichromatMetamers
 %
 % This shows how to produce a metameric pair for a dichromat.  Along the
 % way, it illustrates how to figure out the spectral sensitivities of cones
