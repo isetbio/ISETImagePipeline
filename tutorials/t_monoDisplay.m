@@ -143,5 +143,33 @@ meanLuminanceCdPerM2 = [];
     meanLuminanceCdPerM2, monoDisplay);
 stimulusScene = sceneSet(stimulusScene, 'fov', 0.5);
 visualizeScene(stimulusScene, 'displayRadianceMaps', false, 'avoidAutomaticRGBscaling', true);
-% save monoDisplay monoDisplay
 figure; imshow(theImageRGB);
+
+%% Can save out the generated monoDisplay
+% save monoDisplay monoDisplay
+
+%% Can check that our standard mono display is the same produced here
+%
+% This mirrors our display load code for the project
+displayName = 'mono';
+displayFieldName = 'monoDisplay';
+overwriteDisplayGamma = true;
+displayGammaBits = 12;
+displayGammaGamma = 2;
+theDisplayLoad = load(fullfile(getpref('ISETImagePipeline','aoReconDir'), 'displays', [displayName 'Display.mat']));
+eval(['theDisplay = theDisplayLoad.' displayFieldName ';']);
+theDisplay = displaySet(theDisplay,'wave',wls);
+if (overwriteDisplayGamma)
+    gammaInput = linspace(0,1,2^displayGammaBits)';
+    gammaOutput = gammaInput.^displayGammaGamma;
+    theDisplay.gamma = gammaOutput(:,[1 1 1]);
+    monoDisplay.gamma = gammaOutupt(:,[1 1 1]);
+end
+clear theDisplayLoad;
+
+% Make figure
+figure; clf; hold on;
+plot(displayGet(theDisplay,'wave'),displayGet(theDisplay,'spd'),'-','Color','r','LineWidth',6);
+plot(displayGet(monoDisplay,'wave'),displayGet(monoDisplay,'spd'),':','Color','k','LineWidth',4);
+
+
