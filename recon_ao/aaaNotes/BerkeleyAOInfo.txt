@@ -1,0 +1,62 @@
+****
+WT: Wavelengths were 543 and 680 nm. Can check on the bandwidth when I get to lab. We presented them in various mixtures of equal luminance (~2800 cd/m2). Not sure off the top of my head what ratio appeared “yellow” but perhaps 
+@Ally Boehm can chime in with more details.
+
+AB: For the full raster (approx 0.95 deg) condition, the mean proportion red (680 nm) was 0.3170, 0.6830 green (543 nm). As you know, for the smaller spots it was highly variable. 
+
+AB: Average power measurements at max (linearized AOM output) were 6.087 microwatts for red channel, 0.1131 microwatts for green channel. These measurements were taken with 100 percent laser modulation, so in actuality the power of the stimulus was much smaller.
+
+DHB: So the proportions are in turn relative to the measured powers?
+
+AB: That's right. A yellow appearing field = 0.3170*6.087 uW 680 nm (red) + 0.6830*0.1131 uW 543 nm (green).
+****
+
+****
+DB: All, I got some time in on this over the weekend.
+I added a TbTb config to https://github.com/tutenws/ISETBio_UCB_AO_Labs.  Once it is checked out into your projects folder, tbUseProject('ISETBio_UCB_AO_Labs') will do its thing, and add the various toolboxes you'll need to date.
+
+I added isetSceneMulti_UY.m.  This constructs the ISETBio scene for the yellow stimulus using the parameters Ally posted above. It scales the luminance down to the ~2800 we had before.  The ratio looks yellow when the ISETBio scene is rendered by ISETBio, which is promising.  The luminance from the raw power comes out to about 6200, which is consistent with Ally's statement that the power is measured under conditions which make it high relative to the actual predicted stimulus.
+
+I wrote a tutorial, t_monoDisplay, for Lingqi to use to regenerate the prior.  
+@lingqi_zhang, this starts with an Apple LCD and creates a display with narrowband primaries that is otherwise the same.  It computes the matrix to transform primaries (not settings) from one display to the other so as to keep cone excitations constant across the two displays. You should be able to apply this to the display you used previously to generate your prior, to get a dataset for generating a prior that is appropriate for the display with monochromatic primaries.  I think it will be clear enough when you read it; let me know if not.
+
+Once Lingqi has a new prior set up, we can try the reconstructions again using the mixture stimulus and recovering onto a display that can actually reproduce the stimulus.  We'll still have to scale the stimulus down into the range of the monitor before we compute the cone responses we reconstruct from, but that should be easy enough.
+****
+
+WT: We used nominally equiluminant mixtures of 543 and 680 primaries, corrected for LCA and TCA. 7 mm pupil. Spots looked uniform/had no discernible structure.
+
+0.05 D residual defocus is still our best estimate on AO correction error.
+
+WT:What I meant was we used R/G mixtures to create metamers to the intermediate wavelengths between our two primaries, and that all of the mixtures were presented so they had the same luminance based on numbers taken from a photopic luminous efficiency function.
+
+DHB: I don't quite understand the nominally isoluminant part though - I thought the subject adjusted the mixture until it appeared unique yellow, so that the intensity ratio of the primaries would be a result of the experiment rather than an input to it.
+
+WT: What I meant was we used R/G mixtures to create metamers to the intermediate wavelengths between our two primaries, and that all of the mixtures were presented so they had the same luminance based on numbers taken from a photopic luminous efficiency function.
+
+I used “nominal” here because our assumptions about stimulus luminance might not hold for very small spots. The degree to which a small 100% red stimulus (no green in the mixture) evokes a response in the luminance mechanism will depend on the makeup of the cone mosaic sampling it.
+
+DB: t_monoDisplay might be useful.  Will thinks bg was on order of 26 cd/m2.
+
+WT: And metameric to EEW, according to Ally Boehm.
+****
+
+In the code, we are defining stimuli on the monochromatic monitor, that was set up in t_monoDisplay (now moved into this repo).
+
+We are specifying the prior based on parameters computed with respect to the conventional display.  These are read from the file conventionalSparsePrior.  Because they describe linear rgb values, their effect is determined through the stimulus display.  That is why we take some care to make the stimulus display roughly match up in its colorimetric properties with a conventional display.  See t_monoDisplay.
+
+We should write one routine to read displays, and also be consistent everywhere about overwriting gamma functions.  Need to unify in t_renderMonoDisplayImages, aoStimReconRenderRecons, and render matrix building, and anywhere else.
+mono -> monoDisplay.mat and gamma is overwritten
+conventional -> 'conventionalDisplay.mat'.  Gamma is sometimes overwritten and sometimes not.  Switch handles display variable name in the file.
+
+For render structures, the name of the start of the top level string gives the name of the rendering monitor.
+
+In the output dir string, the first display string is the stimulus monitor, followed by the monitor scale factor.  The second display string is for the prior.  Apparently nothing records what the rendering monitor was.
+
+Need to convince ourselves that prior is about right as expressed on the monochromatic monitor.  Render matrix depends on the monitor although if primaries don't change wavelengths I think we can adjust for changes in relative primary radiance without re-rendering.  This would be a generalization of our current displayScaleFactor.  Because it takes a long time to build render matrices, this might be the thing to do.
+
+Need to adjust monitor scale factor so that luminance matches stimulus, make the background EEW, and control the relation between bg and stimulus luminance.
+
+Integration time is just set to cMosaic default, which is 100 msec.  Want to control this.  100 msec isn't bad, but we want to get the mean photon count
+right for the effect of stimulus noise, at least if we are adding noise.
+
+Are we adding noise before recon, and if so where is that specified and controlled?
