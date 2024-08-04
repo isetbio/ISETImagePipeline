@@ -40,6 +40,11 @@ else
 end
 
 % Set the display name
+%
+% This switch sorts out what the name of the display variable
+% in the read in file is.  In some ideal world it would always
+% be yoked to the filename, or always be the same, but neither
+% of these is the case.
 switch (pr.displayName)
     case 'conventional'
         cnv.displayFieldName = 'CRT12BitDisplay';

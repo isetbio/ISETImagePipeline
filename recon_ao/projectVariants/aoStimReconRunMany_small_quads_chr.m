@@ -30,17 +30,6 @@ prBase = prBaseDefaults;
 % Helps us keep different calcs separate
 prBase.versEditor = 'small_quads_chr';
 
-%% Parameters
-%
-% Display, options are:
-%    'conventional'    - A conventional display
-%    'mono'            - A display with monochromatic primaries
-prBase.displayName = 'mono';
-prBase.viewingDisplayName = 'conventional';
-prBase.displayGammaBits = 12;
-prBase.displayGammaGamma = 2;
-displayScaleFactorList = [1];
-
 %% Stimulus size
 prBase.stimSizeDegsList = [2 1]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
 
@@ -84,7 +73,7 @@ prBase.focalRegionList = ["center"];
 prBase.focalVariantList = [2];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
-% Additional region variant params
+%% Additional region variant params
 %
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
@@ -118,17 +107,7 @@ for rr = 2:3
     end
 end
 
-% Want to run through
-% prBase.regionVariant = [1 3 1];
-% prBase.propL = [0.0 1.0 0.67];
-% 
-% prBase.regionVariant = [1 3 2];
-% prBase.propL = [0.0 1.0 0.0];
-% 
-% prBase.regionVariant = [1 3 3];
-% prBase.propL = [0.0 1.0 1.0];
-
-% Set cone proportions for S for all regions.
+%% Set cone proportions for S for all regions.
 % 
 % Currently we are adjusting this by hand for different
 % stim sizes, because we want to make sure we get some
@@ -221,89 +200,133 @@ for ss = 1:length(prBase.stimSizeDegsList)
     end
 end
 
+%% Display parameters
+%
+% Display, options are:
+%    'conventional'    - A conventional display
+%    'mono'            - A display with monochromatic primaries
+%
+% This controls what display we consider the images to be presnted on.
+% This monitor is read from a file in a directory set by project prefs
+% based on name in the prBase.viewingDisplayName field, with the file
+% having the name
+%   nameDisplay.mat
+% where name is what is in the field.
+prBase.displayName = 'mono';
+
+% Looking at images rendered directly via their RGB values on the stimulus
+% montior can be distorted because of that monitor's unusual properties
+% that can be set to mimic and AO stimulus presentation system.  So we have
+% a process to render images that are as close to metameric as possible, on
+% a separately specified monitor.  This monitor is read from a file in a
+% directory set by project prefs based on name in the
+% prBase.viewingDisplayName field, with the file having the name
+%   nameDisplay.mat
+% where name is what is in the field.
+prBase.viewingDisplayName = 'conventional';
+
+% We can use a high bit depth to avoid quantization artifacts throughout.  This
+% overrides what is in the display files. Whether it is invoked depends on
+% the display switch below
+prBase.displayGammaBits = 12;
+prBase.displayGammaGamma = 2;
+
+% This 
+displayScaleFactorList = [1];
+
 %% Stimulus color
+%
+% These define the stimuli to be reconstructed in terms of the
+% prBase.displayName montior specified just above.  
 %
 % We can either specify an explicit list of RGB values, or generate an
 % isoluminant series that varies between full green and full red.
 % Which we do is controlled by the isoLumRG flag.  Specific parameters
 % for each possibility are defined within the corresponding branch of the
 % conditional just below.
-isoLumRGAuto = false;
+
+% DHB: The isoLumRGAuto code here is not used. Having it complicates
+% understanding this code.  I have commented it out for now.
+%
+% DHB: 8/4/24: WE SHOULD FIGURE OUT WHERE THE VALUES BELOW GET DETERMINED AND EXPLAIN
+% HERE.
+%isoLumRGAuto = false;
 monoBgScale = 0.2;
 monoGray = [0.4445; 0.5254; 0.5542];
-
-if (~isoLumRGAuto)
-    % These are rgb values (linear, before gamma correction)
+%if (~isoLumRGAuto)
+    % These are rgb values (linear, before gamma correction).  They were
+    % computed outside this routine assuming the mono display.
     prBase.stimBgVal = monoGray * monoBgScale;
     stimrValList = [0.4615 0.3846 0.3077 0.2308 0.1538 0.1154 0.0769 0.0385 0.0000];
     stimgValList = [0.0081 0.0242 0.0403 0.0565 0.0726 0.0807 0.0888 0.0968 0.1049];
     stimbValList = [0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005];
-else
-    nEquiLumStimuli = 11;
-    switch (prBase.displayName)
-        case 'conventional'
-            displayFieldName = 'CRT12BitDisplay';
-            overwriteDisplayGamma = false;
-            prBase.stimBgVal = [0.1 0.1 0.1];
-        case 'mono'
-            displayFieldName = 'monoDisplay';
-            overwriteDisplayGamma = true;
-            
-            % The following values are the approximations for a 0.5 uniform
-            % field on a conventional display using the tutorial. These can
-            % be scaled accordingly for a lighter or darker background on
-            % the interval 0-1/max(monoGray). Temporary patch, once
-            % everything else is cleaned may consider replacing with a call
-            % to RGBRenderAcrossDisplays
-            monoGray = [0.444485445018075; ...
-                0.525384925401570; ...
-                0.554173733733909];
-            
-            % DON'T FORGET TO PUT IN AN ACTUAL VALUE FOR THE "1" HERE
-            prBase.stimBgVal = monoGray * monoBgScale;
-        otherwise
-            error('Unknown display specified');
-    end
-    
-    % Load the appropriate display
-    theDisplayLoad = load(fullfile(prBase.aoReconDir, 'displays', [prBase.displayName 'Display.mat']));
-    eval(['theDisplay = theDisplayLoad.' displayFieldName ';']);
-    
-    if (overwriteDisplayGamma)
-        gammaInput = linspace(0,1,2^prBase.displayGammaBits)';
-        gammaOutput = gammaInput.^prBase.displayGammaGamma;
-        theDisplay.gamma = gammaOutput(:,[1 1 1]);
-    end
-    
-    % Using the 1 nm sampling to agree w/ tutorial
-    theDisplay = displaySet(theDisplay, 'wave', prBase.wls);
-    
-    % Get information we need to render scenes from their spectra through
-    % the recon display.
-    theXYZStruct = load('T_xyz1931');
-    T_XYZ = SplineCmf(theXYZStruct.S_xyz1931,683*theXYZStruct.T_xyz1931,prBase.wls);
-    M_rgbToXYZ = T_XYZ*displayGet(theDisplay,'spd primaries')*(prBase.wls(2)-prBase.wls(1));
-    M_XYZTorgb = inv(M_rgbToXYZ);
-    rPrimaryLuminance = M_rgbToXYZ(2,1);
-    gPrimaryLuminance = M_rgbToXYZ(2,2);
-    
-    % Compute as set of equally spaced r/(r+g) values that lead
-    % to equal luminance stimuli.
-    thePrimaries = displayGet(theDisplay,'spd primaries');
-    rOverRPlusG = linspace(1,0,nEquiLumStimuli);
-    gOverRPlusG = 1-rOverRPlusG;
-    gPrimaryAdjust = rPrimaryLuminance/gPrimaryLuminance;
-    rRaw = rOverRPlusG;
-    gRaw = gOverRPlusG;
-    gAdjust = gRaw*rPrimaryLuminance/gPrimaryLuminance;
-    b = 0.001;
-    equiLumrgbValues = [rRaw ; gAdjust; b*ones(size(rRaw))];
-    inputLinearrgbValues = 0.5*equiLumrgbValues/max(equiLumrgbValues(:));
-    
-    stimrValList = inputLinearrgbValues(1,:);
-    stimgValList = inputLinearrgbValues(2,:);
-    stimbValList = inputLinearrgbValues(3,:);
-end
+% else
+%     nEquiLumStimuli = 9;
+%     switch (prBase.displayName)
+%         case 'conventional'
+%             displayFieldName = 'CRT12BitDisplay';
+%             overwriteDisplayGamma = false;
+%             prBase.stimBgVal = [0.1 0.1 0.1];
+%         case 'mono'
+%             displayFieldName = 'monoDisplay';
+%             overwriteDisplayGamma = true;
+% 
+%             % The following values are the approximations for a 0.5 uniform
+%             % field on a conventional display using the tutorial. These can
+%             % be scaled accordingly for a lighter or darker background on
+%             % the interval 0-1/max(monoGray). Temporary patch, once
+%             % everything else is cleaned may consider replacing with a call
+%             % to RGBRenderAcrossDisplays
+%             monoGray = [0.444485445018075; ...
+%                 0.525384925401570; ...
+%                 0.554173733733909];
+% 
+%             % DON'T FORGET TO PUT IN AN ACTUAL VALUE FOR THE "1" HERE
+%             prBase.stimBgVal = monoGray * monoBgScale;
+%         otherwise
+%             error('Unknown display specified');
+%     end
+% 
+%     % Load the appropriate display
+%     theDisplayLoad = load(fullfile(prBase.aoReconDir, 'displays', [prBase.displayName 'Display.mat']));
+%     eval(['theDisplay = theDisplayLoad.' displayFieldName ';']);
+% 
+%     % Overrwrite gamma if needed
+%     if (overwriteDisplayGamma)
+%         gammaInput = linspace(0,1,2^prBase.displayGammaBits)';
+%         gammaOutput = gammaInput.^prBase.displayGammaGamma;
+%         theDisplay.gamma = gammaOutput(:,[1 1 1]);
+%     end
+% 
+%     % Using the 1 nm sampling to agree w/ tutorial
+%     theDisplay = displaySet(theDisplay, 'wave', prBase.wls);
+% 
+%     % Get information we need to render scenes from their spectra through
+%     % the recon display.
+%     theXYZStruct = load('T_xyz1931');
+%     T_XYZ = SplineCmf(theXYZStruct.S_xyz1931,683*theXYZStruct.T_xyz1931,prBase.wls);
+%     M_rgbToXYZ = T_XYZ*displayGet(theDisplay,'spd primaries')*(prBase.wls(2)-prBase.wls(1));
+%     M_XYZTorgb = inv(M_rgbToXYZ);
+%     rPrimaryLuminance = M_rgbToXYZ(2,1);
+%     gPrimaryLuminance = M_rgbToXYZ(2,2);
+% 
+%     % Compute as set of equally spaced r/(r+g) values that lead
+%     % to equal luminance stimuli.
+%     thePrimaries = displayGet(theDisplay,'spd primaries');
+%     rOverRPlusG = linspace(1,0,nEquiLumStimuli);
+%     gOverRPlusG = 1-rOverRPlusG;
+%     gPrimaryAdjust = rPrimaryLuminance/gPrimaryLuminance;
+%     rRaw = rOverRPlusG;
+%     gRaw = gOverRPlusG;
+%     gAdjust = gRaw*rPrimaryLuminance/gPrimaryLuminance;
+%     b = 0.001;
+%     equiLumrgbValues = [rRaw ; gAdjust; b*ones(size(rRaw))];
+%     inputLinearrgbValues = 0.5*equiLumrgbValues/max(equiLumrgbValues(:));
+% 
+%     stimrValList = inputLinearrgbValues(1,:);
+%     stimgValList = inputLinearrgbValues(2,:);
+%     stimbValList = inputLinearrgbValues(3,:);
+% end
 
 % Check that all channels receive same number of inputs
 if (length(stimgValList) ~= length(stimrValList) || length(stimbValList) ~= length(stimrValList))
@@ -511,7 +534,7 @@ if runReconstructions
     end
 end
 
-%% Build Summary Figs
+%% Build summary figs
 %
 % Integrate the aoStimReconRerunFigs script into this one for a centralized
 % region of post processing. Set it up as another option.
