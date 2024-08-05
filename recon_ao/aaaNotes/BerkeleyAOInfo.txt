@@ -60,3 +60,6 @@ Integration time is just set to cMosaic default, which is 100 msec.  Want to con
 right for the effect of stimulus noise, at least if we are adding noise.
 
 Are we adding noise before recon, and if so where is that specified and controlled?
+
+****
+CR: Stimulus rgb are determined in a tutorial, t_renderMonoDisplayImage.
