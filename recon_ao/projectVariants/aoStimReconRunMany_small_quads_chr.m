@@ -140,6 +140,10 @@ prBase.propSLargeTarget = [0.1 0.07 0.07];
 prBase.propSSmallTarget = [0.15 0.07 0.07];
 prBase.targetSizeSPropThresholdDegs = 6/60;
 
+% Establish the size of the nearSurround annulus, input as a width value
+% in arcmin. Nominal stimulus, pixel adjustents, and padding all encompass
+% the center region, whereas this nearSurround begins just beyond that. 
+prBase.annulusWidthArc = 2; 
 %% Choose your journey
 %
 % Select what you would like to do, for efficiency's sake only recommend
@@ -147,7 +151,7 @@ prBase.targetSizeSPropThresholdDegs = 6/60;
 % montages)
 buildRenderMatrix = false;
 buildMosaicMontages = false;
-runReconstructions = true;
+runReconstructions = false;
 summaryFigs = true;
 
 %% Spatial parameters
@@ -515,6 +519,10 @@ end
 %
 % Integrate the aoStimReconRerunFigs script into this one for a centralized
 % region of post processing. Set it up as another option.
+%
+% Some of this is done rather precariously so care should be taken as the
+% project progresses to ensure the things being cycled over are actually
+% what we want
 if summaryFigs
     
     % Bookkeeping variables for number of stimuli and propL as dimensions
@@ -558,7 +566,7 @@ if summaryFigs
                 % Variable Four: Focal Prop L
                 for vf = 1:length(varInd4)
                     % Readjust the index value according to the levels that are
-                    % actuallu pertinent.
+                    % actually pertinent.
                     newInd = varInd4(vf);
                     
                     % Set up paramters structure for this loop, filling in fields that come
@@ -570,7 +578,16 @@ if summaryFigs
                     
                     % Compute convenience parameters
                     cnv = computeConvenienceParams(pr);
-                    
+
+                    % Patch propInfoFile.m to create the excel sheets with
+                    % mosaic information. This function will slow down code
+                    % noticeably since loading in each render structure to
+                    % get pertinent information (might want to rethink this
+                    % so can save the info at render creation). Should only
+                    % need to be run once for each render structure though,
+                    % after which it will see the file cached and ignore. 
+                    propInfoFile(pr,cnv);
+
                     % Call the function to build the summary plots.
                     [stimSummary, reconSummary] = grabImageInfo(pr, cnv, numStim, ...
                         "figReconRows", figReconRows, "scaleToMax", scaleToMax, ...
@@ -678,12 +695,12 @@ rectangle('Position', [xBounds(2,1) yBounds(2,1) ...
 % initial phases. 
 
 
-tempFig = figure; clf;
-forwardConeMosaic.Mosaic.visualize(...
-    'figureHandle', tempFig, ...
-    'axesHandle', [], ...
-    'withSuperimposedOpticalImage', forwardOI, ...
-    'outlinedConesWithIndices', pr.kConeIndices, ...
-    'plotTitle','Forward OI on Forward Mosaic','superimposedOIAlpha',0.7);
-
+% tempFig = figure; clf;
+% forwardConeMosaic.Mosaic.visualize(...
+%     'figureHandle', tempFig, ...
+%     'axesHandle', [], ...
+%     'withSuperimposedOpticalImage', forwardOI, ...
+%     'outlinedConesWithIndices', pr.kConeIndices, ...
+%     'plotTitle','Forward OI on Forward Mosaic','superimposedOIAlpha',0.7);
+% 
 
