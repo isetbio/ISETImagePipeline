@@ -116,14 +116,23 @@ switch pr.focalRegion
 end
 
 %% Name the output directories
-
+%
 % Nested directory chain going from general to most pertinent things to the
 % small quads routine, organized in a way that makes post-processing most
 % straightforward. This organization may not be the best suited for other
 % projects, but if so can expand from here (maybe make it versEditor
 % dependent).
+%
+% The code below is fancy in that it lets you define a series of mosaic
+% based subdirectory names of form outputSubdirMosaicX, X = 1:N and
+% a series of stimulus based subdirectory names of form outputSubdirStimX,
+% X = 1:M, and then chains these all together with appropriate general
+% conditions directories for recon output, forward render matrices and
+% recon render matrices in a way that one could in principle add more or
+% have fewer of the subdirs with various names and it will all still work.
+% Does this through the magic of Matlab string processing. 
 
-% General conditions for output files, largely constant
+% General conditions directory for output files, largely constant
 cnv.outputDirGeneral  = sprintf(['%s_%s_%0.2f_%0.2f_%d_%d_%s_%0.2f_' ...
     '%s_%0.1f_%0.1f_%0.6f_%d_%s_%d_%d_%d_%d_%s_%d'], ...
     cnv.forwardAOStr,cnv.reconAOStr,pr.forwardDefocusDiopters, ...
@@ -132,7 +141,7 @@ cnv.outputDirGeneral  = sprintf(['%s_%s_%0.2f_%0.2f_%d_%d_%s_%0.2f_' ...
     pr.regPara,pr.stride,cnv.exciteSource,pr.forwardEccVars, ...
     pr.reconEccVars,pr.forwardNoLCA,pr.reconNoLCA,noiseStr,pr.boundedSearch);
 
-% General conditions for forward render matrices
+% General conditions directory for forward render matrices
 if (pr.forwardAORender)
     cnv.forwardRenderDirGeneral = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_AO_%0.2f_%s_%d_%d', ...
         pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.forwardPupilDiamMM), ...
@@ -144,7 +153,7 @@ else
         pr.forwardEccVars, pr.forwardNoLCA);
 end
 
-% General conditions for recon render matrices
+% General conditions directory for recon render matrices
 if (pr.reconAORender)
     cnv.reconRenderDirGeneral = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_AO_%0.2f_%s_%d_%d', ...
         pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.reconPupilDiamMM), ...
@@ -156,7 +165,9 @@ else
         pr.reconEccVars, pr.reconNoLCA);
 end
 
-% Output sublevels pertaining to mosaic properties
+% Output sublevels pertaining to mosaic properties.  See comment below that
+% notes that there is one mosaic property that is indicated lower down
+% amidst the stimulus subdirectories.
 outputSubdirMosaic1 = sprintf(['%0.1fArcmin_%sRender'], ...
     60*pr.stimSizeDegs, pr.focalRegion);
 
@@ -168,7 +179,12 @@ outputSubdirMosaic3 = sprintf(['regionVariant_v%d_v%d_v%d_%0.2f'], ...
     regionVariant(1),regionVariant(2),regionVariant(3), ...
     60*pr.forwardOpticalBlurStimSizeExpansionDegs);
 
-% Output sublevels pertaining to stimulus properties
+% Output sublevels pertaining to stimulus properties.  Strictly speaking
+% these are not all determined by stimulus properties, as we include
+% the centerPropsL variation down in this chain. But it just snuck in
+% there; most of these are in fact stimulus determined.  The reason it
+% snuck in is that our main summarization code is interested in the cross
+% between focal region propL and stimulus in the reconstructions.
 outputSubdirStim1 = sprintf(['bgColor_%0.4f_%0.4f_%0.4f_' ...
     'stimSeriesVariant_%d_' ...
     'stimPosition_%d_%d'], ...
@@ -194,8 +210,7 @@ cnv.renderName = sprintf(['regionProps_%0.2fL_%0.2fL_%0.2fL_' ...
     '%0.2fS_%0.2fS_%0.2fS.mat'],propL(1),propL(2),propL(3), ...
     propS(1),propS(2),propS(3));
 
-
-%% Build the output directories
+%% Build recon computation output directory name
 %
 % Find all instances of subdirectory naming from above and capture. More
 % effort in creating this framework but also more resilient to changes in
@@ -221,30 +236,30 @@ nameStimSubdirs = strjoin(vars(indStimSubdirs(1:levelStimSubdirs)), ',');
 eval(['cnv.outputDirFull = fullfile(pr.aoReconDir, pr.versEditor,' ...
     'cnv.outputDirGeneral,' nameMosaicSubdirs ',' nameStimSubdirs ');']);
 
-% Add SummaryFigs dir in same output cascade if needed. This directory
-% cascade should end one level sooner than those for outputs. At this step,
-% wondering if this is the best approach or if would be better to just have
-% the names explicitly stated. 
+%% Build summary figs routine information
+%
+% Need to tell it where to loop over conditions that it will summarize
+% as well as where it should write the summary figure output.
+%
+% This directory is in same output cascade and ends two levels up from
+% where the recons get written for each mosaic/stim combination that we
+% want to summarize. We find this this by loping off 2 of the "stim"
+% subdirs, which in fact correspond to the mosaic focal region propL and
+% the stimulus set being run.
 levelMosaicSubdirs = length(indMosaicSubdirs); 
-levelStimSubdirs = 2;
-
+levelStimSubdirs = length(indStimSubdirs)-2;
 nameMosaicSubdirs = strjoin(vars(indMosaicSubdirs(1:levelMosaicSubdirs)), ',');
 nameStimSubdirs = strjoin(vars(indStimSubdirs(1:levelStimSubdirs)), ',');
-
-
 eval(['cnv.outputSubdirSummaryFigs = fullfile(pr.aoReconDir, pr.versEditor,' ...
     'cnv.outputDirGeneral,' nameMosaicSubdirs ',' nameStimSubdirs ...
     ', summaryFigsString);']);
-
 if (~exist(cnv.outputSubdirSummaryFigs,'dir'))
     mkdir(cnv.outputSubdirSummaryFigs);
 end
 
-
-% Build the nested render directories for forward and recon conditions
+%% Build the nested render matrix directories for forward and recon
 levelMosaicSubdirs = length(indMosaicSubdirs); 
 nameMosaicSubdirs = strjoin(vars(indMosaicSubdirs(1:levelMosaicSubdirs)), ',');
-
 eval(['cnv.forwardRenderDirFull = fullfile(pr.aoReconDir, pr.versEditor,' ...
     'xRenderString, cnv.forwardRenderDirGeneral,' nameMosaicSubdirs ');']);
 if (~exist(cnv.forwardRenderDirFull,'dir'))
@@ -256,7 +271,6 @@ eval(['cnv.reconRenderDirFull = fullfile(pr.aoReconDir, pr.versEditor,' ...
 if (~exist(cnv.reconRenderDirFull,'dir'))
     mkdir(cnv.reconRenderDirFull);
 end
-
 
 % %% Build mosaic montage directories
 % % Build the nested render directories for forward and recon conditions
