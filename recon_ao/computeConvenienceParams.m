@@ -9,6 +9,8 @@ function cnv = computeConvenienceParams(pr)
 %    The convenience parameters massage the parameters into
 %    a more directly useful form for some parts of the code.
 
+%% Set up some base variables
+%
 % Determine which method will be used for the reconstruction: ISETBIO or
 % Render Matrix
 if (pr.reconstructfromRenderMatrix)
@@ -85,8 +87,8 @@ else
 end
 
 % Initiate vectors and override default values with desired region
-% proportion and variant 
-regionVariant = pr.regionVariant; 
+% proportion and variant
+regionVariant = pr.regionVariant;
 propL = pr.propL;
 propS = pr.propS;
 
@@ -113,80 +115,16 @@ switch pr.focalRegion
         error(['Unrecognized focal region entered'])
 end
 
-%% Build render structure directories
-if (pr.forwardAORender)
-    cnv.forwardRenderDirFirst = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_AO_%0.2f_%s_%d_%d', ...
-        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.forwardPupilDiamMM), ...
-        pr.forwardDefocusDiopters,cnv.forwardSeedStr, pr.forwardEccVars, pr.forwardNoLCA);
-else
-    cnv.forwardRenderDirFirst = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_NOAO_%0.2f_%s_%d_%s_%d_%d', ...
-        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.forwardPupilDiamMM),...
-        pr.forwardDefocusDiopters,pr.forwardZernikeDataBase,pr.forwardSubjectID, cnv.forwardSeedStr,...
-        pr.forwardEccVars, pr.forwardNoLCA);
-end
-if (pr.reconAORender)
-    cnv.reconRenderDirFirst = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_AO_%0.2f_%s_%d_%d', ...
-        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.reconPupilDiamMM), ...
-        pr.reconDefocusDiopters, cnv.reconSeedStr, pr.reconEccVars, pr.reconNoLCA);
-else
-    cnv.reconRenderDirFirst = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_NOAO_%0.2f_%s_%d_%s_%d_%d', ...
-        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.reconPupilDiamMM),...
-        pr.reconDefocusDiopters, pr.reconZernikeDataBase,pr.reconSubjectID, cnv.reconSeedStr,...
-        pr.reconEccVars, pr.reconNoLCA);
-end
+%% Name the output directories
 
-% Subdirectory naming based on aspects relevant to the small_quads project,
-% for now this is constant between forward/recon conditions. 
-cnv.renderDirSecond = sprintf('%0.1fArcmin', ...
-    60*pr.stimSizeDegs);
-cnv.renderDirThird = sprintf('regionVariant_v%d_v%d_v%d_%0.2f', ...
-    regionVariant(1),regionVariant(2),regionVariant(3),60*pr.forwardOpticalBlurStimSizeExpansionDegs);
-
-% Build the nested render directories for forward and recon conditions
-cnv.forwardRenderDirFull = fullfile(pr.aoReconDir,pr.versEditor,'xRenderStructures', ...
-    cnv.forwardRenderDirFirst,cnv.renderDirSecond,cnv.renderDirThird);
-if (~exist(cnv.forwardRenderDirFull,'dir'))
-    mkdir(cnv.forwardRenderDirFull);
-end
-
-cnv.reconRenderDirFull = fullfile(pr.aoReconDir,pr.versEditor,'xRenderStructures', ...
-    cnv.reconRenderDirFirst,cnv.renderDirSecond,cnv.renderDirThird);
-if (~exist(cnv.reconRenderDirFull,'dir'))
-    mkdir(cnv.reconRenderDirFull);
-end
-
-% The actual file name is set to be the proportions since this is the most 
-% pertinent information when dealing with small_quads render structures.
-cnv.renderName = sprintf(['regionProps_%0.2fL_%0.2fL_%0.2fL_' ...
-    '%0.2fS_%0.2fS_%0.2fS.mat'],propL(1),propL(2),propL(3), ...
-    propS(1),propS(2),propS(3));
-
-
-%% Build mosaic montage directories
-% Build the nested render directories for forward and recon conditions
-cnv.forwardMontageDirFull = fullfile(pr.aoReconDir,pr.versEditor,'xRenderStructures', ...
-    cnv.forwardRenderDirFirst,'mosaicMontages');
-if (~exist(cnv.forwardMontageDirFull,'dir'))
-    mkdir(cnv.forwardMontageDirFull);
-end
-
-cnv.reconMontageDirFull = fullfile(pr.aoReconDir,pr.versEditor,'xRenderStructures', ...
-    cnv.reconRenderDirFirst,'mosaicMontages');
-if (~exist(cnv.reconMontageDirFull,'dir'))
-    mkdir(cnv.reconMontageDirFull);
-end
-
-%% Build output directories
-%
 % Nested directory chain going from general to most pertinent things to the
 % small quads routine, organized in a way that makes post-processing most
 % straightforward. This organization may not be the best suited for other
 % projects, but if so can expand from here (maybe make it versEditor
 % dependent).
 
-% General conditions are those that were found during the initial parameter
-% search and have since been constant throughout subsequent simulations
-cnv.generalConditions = sprintf(['%s_%s_%0.2f_%0.2f_%d_%d_%s_%0.2f_' ...
+% General conditions for output files, largely constant
+cnv.outputDirGeneral  = sprintf(['%s_%s_%0.2f_%0.2f_%d_%d_%s_%0.2f_' ...
     '%s_%0.1f_%0.1f_%0.6f_%d_%s_%d_%d_%d_%d_%s_%d'], ...
     cnv.forwardAOStr,cnv.reconAOStr,pr.forwardDefocusDiopters, ...
     pr.reconDefocusDiopters,pr.nPixels,pr.fieldSizeMinutes,pr.displayName, ...
@@ -194,25 +132,146 @@ cnv.generalConditions = sprintf(['%s_%s_%0.2f_%0.2f_%d_%d_%s_%0.2f_' ...
     pr.regPara,pr.stride,cnv.exciteSource,pr.forwardEccVars, ...
     pr.reconEccVars,pr.forwardNoLCA,pr.reconNoLCA,noiseStr,pr.boundedSearch);
 
-cnv.outputDirFirst = sprintf(['%0.1fArcmin_%s'], ...
-    60*pr.stimSizeDegs,pr.focalRegion);
-cnv.outputDirSecond = sprintf(['regionVariant_v%d_v%d_v%d_%0.2f'], ...
-    regionVariant(1),regionVariant(2),regionVariant(3),60*pr.forwardOpticalBlurStimSizeExpansionDegs);
-cnv.outputDirThird = sprintf(['regionProps_%0.2fL_%0.2fL_%0.2fL_' ...
-    '%0.2fS_%0.2fS_%0.2fS'],propL(1),propL(2),propL(3), ...
+% General conditions for forward render matrices
+if (pr.forwardAORender)
+    cnv.forwardRenderDirGeneral = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_AO_%0.2f_%s_%d_%d', ...
+        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.forwardPupilDiamMM), ...
+        pr.forwardDefocusDiopters,cnv.forwardSeedStr, pr.forwardEccVars, pr.forwardNoLCA);
+else
+    cnv.forwardRenderDirGeneral = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_NOAO_%0.2f_%s_%d_%s_%d_%d', ...
+        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.forwardPupilDiamMM),...
+        pr.forwardDefocusDiopters,pr.forwardZernikeDataBase,pr.forwardSubjectID, cnv.forwardSeedStr,...
+        pr.forwardEccVars, pr.forwardNoLCA);
+end
+
+% General conditions for recon render matrices
+if (pr.reconAORender)
+    cnv.reconRenderDirGeneral = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_AO_%0.2f_%s_%d_%d', ...
+        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.reconPupilDiamMM), ...
+        pr.reconDefocusDiopters, cnv.reconSeedStr, pr.reconEccVars, pr.reconNoLCA);
+else
+    cnv.reconRenderDirGeneral = sprintf('%sDisplayRender_%d_%0.2f_%0.2f_%d_%s_NOAO_%0.2f_%s_%d_%s_%d_%d', ...
+        pr.displayName,pr.fieldSizeMinutes,pr.eccXDegs,pr.eccYDegs,pr.nPixels,num2str(cnv.reconPupilDiamMM),...
+        pr.reconDefocusDiopters, pr.reconZernikeDataBase,pr.reconSubjectID, cnv.reconSeedStr,...
+        pr.reconEccVars, pr.reconNoLCA);
+end
+
+% Output sublevels pertaining to mosaic properties
+outputSubdirMosaic1 = sprintf(['%0.1fArcmin_%sRender'], ...
+    60*pr.stimSizeDegs, pr.focalRegion);
+
+outputSubdirMosaic2 = sprintf(['regionProps_%0.2fL_%0.2fL_' ...
+    '%0.2fS_%0.2fS_%0.2fS'],propL(2),propL(3), ...
     propS(1),propS(2),propS(3));
-cnv.outputDirFourth = sprintf(['stimColor_%0.4f_%0.4f_%0.4f_%0.4f_' ...
+
+outputSubdirMosaic3 = sprintf(['regionVariant_v%d_v%d_v%d_%0.2f'], ...
+    regionVariant(1),regionVariant(2),regionVariant(3), ...
+    60*pr.forwardOpticalBlurStimSizeExpansionDegs);
+
+% Output sublevels pertaining to stimulus properties
+outputSubdirStim1 = sprintf(['bgColor_%0.4f_%0.4f_%0.4f_' ...
+    'stimSeriesVariant_%d_' ...
     'stimPosition_%d_%d'], ...
-    pr.stimBgVal(1),pr.stimrVal,pr.stimgVal,pr.stimbVal, ...
-    pr.stimCenter(1), pr.stimCenter(2)); 
+    pr.stimBgVal(1), pr.stimBgVal(2), pr.stimBgVal(3), ...
+    pr.stimSeriesVariant, ...
+    pr.stimCenter(1), pr.stimCenter(2));
 
-cnv.outputDirFull = fullfile(pr.aoReconDir, pr.versEditor, cnv.generalConditions,...
-    cnv.outputDirFirst, cnv.outputDirSecond, cnv.outputDirThird, cnv.outputDirFourth);
+outputSubdirStim2 = sprintf(['%0.1fArcmin_%sStim'], ...
+    60*pr.stimSizeDegs, pr.focalRegion);
 
-% Add a component to make output directory for summary figures as well
-cnv.outputDirSummaryFigs = fullfile(pr.aoReconDir, pr.versEditor, cnv.generalConditions,...
-    cnv.outputDirFirst, cnv.outputDirSecond, 'summaryFigs');
-if (~exist(cnv.outputDirSummaryFigs,'dir'))
-    mkdir(cnv.outputDirSummaryFigs);
+outputSubdirStim3 = sprintf(['centerPropsL_%0.2fL'], ...
+    propL(1));
+
+outputSubdirStim4 = sprintf(['stimColor_%0.4f_%0.4f_%0.4f'], ...
+    pr.stimrVal,pr.stimgVal,pr.stimbVal);
+
+% Output sublevel strings pertaining to summary figs and render matrices
+summaryFigsString = 'summaryFigs'; 
+xRenderString = 'xRenderStructures';
+
+% Render matrix .mat file name
+cnv.renderName = sprintf(['regionProps_%0.2fL_%0.2fL_%0.2fL_' ...
+    '%0.2fS_%0.2fS_%0.2fS.mat'],propL(1),propL(2),propL(3), ...
+    propS(1),propS(2),propS(3));
+
+
+%% Build the output directories
+%
+% Find all instances of subdirectory naming from above and capture. More
+% effort in creating this framework but also more resilient to changes in
+% directory order / additional layers
+%
+% This will break because the outputSubdir values will need to be fed into
+% the cnv structure, should replace with a contains(fieldnames(cnv), 'output')
+vars = who();
+indMosaicSubdirsAll = contains(vars, 'outputSubdirMosaic');
+indStimSubdirsAll = contains(vars, 'outputSubdirStim');
+
+indMosaicSubdirs = find(indMosaicSubdirsAll == 1);
+indStimSubdirs = find(indStimSubdirsAll == 1);
+
+% Fullfile name for the simulation outputs, with identification of how many
+% layers of the full option set you want to go down 
+levelMosaicSubdirs = length(indMosaicSubdirs); 
+levelStimSubdirs = length(indStimSubdirs);
+
+nameMosaicSubdirs = strjoin(vars(indMosaicSubdirs(1:levelMosaicSubdirs)), ',');
+nameStimSubdirs = strjoin(vars(indStimSubdirs(1:levelStimSubdirs)), ',');
+
+eval(['cnv.outputDirFull = fullfile(pr.aoReconDir, pr.versEditor,' ...
+    'cnv.outputDirGeneral,' nameMosaicSubdirs ',' nameStimSubdirs ');']);
+
+% Add SummaryFigs dir in same output cascade if needed. This directory
+% cascade should end one level sooner than those for outputs. At this step,
+% wondering if this is the best approach or if would be better to just have
+% the names explicitly stated. 
+levelMosaicSubdirs = length(indMosaicSubdirs); 
+levelStimSubdirs = 2;
+
+nameMosaicSubdirs = strjoin(vars(indMosaicSubdirs(1:levelMosaicSubdirs)), ',');
+nameStimSubdirs = strjoin(vars(indStimSubdirs(1:levelStimSubdirs)), ',');
+
+
+eval(['cnv.outputSubdirSummaryFigs = fullfile(pr.aoReconDir, pr.versEditor,' ...
+    'cnv.outputDirGeneral,' nameMosaicSubdirs ',' nameStimSubdirs ...
+    ', summaryFigsString);']);
+
+if (~exist(cnv.outputSubdirSummaryFigs,'dir'))
+    mkdir(cnv.outputSubdirSummaryFigs);
 end
+
+
+% Build the nested render directories for forward and recon conditions
+levelMosaicSubdirs = length(indMosaicSubdirs); 
+nameMosaicSubdirs = strjoin(vars(indMosaicSubdirs(1:levelMosaicSubdirs)), ',');
+
+eval(['cnv.forwardRenderDirFull = fullfile(pr.aoReconDir, pr.versEditor,' ...
+    'xRenderString, cnv.forwardRenderDirGeneral,' nameMosaicSubdirs ');']);
+if (~exist(cnv.forwardRenderDirFull,'dir'))
+    mkdir(cnv.forwardRenderDirFull);
 end
+
+eval(['cnv.reconRenderDirFull = fullfile(pr.aoReconDir, pr.versEditor,' ...
+    'xRenderString, cnv.reconRenderDirGeneral,' nameMosaicSubdirs ');']);
+if (~exist(cnv.reconRenderDirFull,'dir'))
+    mkdir(cnv.reconRenderDirFull);
+end
+
+
+% %% Build mosaic montage directories
+% % Build the nested render directories for forward and recon conditions
+% cnv.forwardMontageDirFull = fullfile(pr.aoReconDir,pr.versEditor,'xRenderStructures', ...
+%     cnv.forwardRenderDirFirst,'mosaicMontages');
+% if (~exist(cnv.forwardMontageDirFull,'dir'))
+%     mkdir(cnv.forwardMontageDirFull);
+% end
+% 
+% cnv.reconMontageDirFull = fullfile(pr.aoReconDir,pr.versEditor,'xRenderStructures', ...
+%     cnv.reconRenderDirFirst,'mosaicMontages');
+% if (~exist(cnv.reconMontageDirFull,'dir'))
+%     mkdir(cnv.reconMontageDirFull);
+% end
+
+
+
+

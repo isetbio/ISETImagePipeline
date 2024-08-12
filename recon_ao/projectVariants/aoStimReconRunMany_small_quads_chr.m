@@ -144,6 +144,8 @@ prBase.targetSizeSPropThresholdDegs = 6/60;
 % in arcmin. Nominal stimulus, pixel adjustents, and padding all encompass
 % the center region, whereas this nearSurround begins just beyond that. 
 prBase.annulusWidthArc = 2; 
+
+prBase.stimSeriesVariant = 1; 
 %% Choose your journey
 %
 % Select what you would like to do, for efficiency's sake only recommend
