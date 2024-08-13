@@ -42,7 +42,7 @@ prBase.displayGammaGamma = 2;
 displayScaleFactorList = [1];
 
 %% Stimulus size
-prBase.stimSizeDegsList = [4.5]/60; %[10 5.5 4.5 3.5 2] / 60;
+prBase.stimSizeDegsList = [7.5]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
 
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
@@ -81,7 +81,7 @@ prBase.mosaicStimSizeDegsList = prBase.stimSizeDegsList;
 % the focalVariantList, replacing the corresponding value in
 % regionVariantList on each iteration.
 prBase.focalRegionList = ["center"];
-prBase.focalVariantList = [2];
+prBase.focalVariantList = [1];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
 % Additional region variant params
@@ -99,7 +99,7 @@ prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 % track what happens for multiple instances of the same region variant
 % number with different cone proportions.  I think this is probably
 % OK.
-prBase.regionVariant = [2 1 1];
+prBase.regionVariant = [1 1 1];
 prBase.propL = [0.0 0.0 0.0];
 for rr = 2:3
     switch (prBase.regionVariant(rr))
@@ -118,16 +118,6 @@ for rr = 2:3
     end
 end
 
-% Want to run through
-% prBase.regionVariant = [1 3 1];
-% prBase.propL = [0.0 1.0 0.67];
-% 
-% prBase.regionVariant = [1 3 2];
-% prBase.propL = [0.0 1.0 0.0];
-% 
-% prBase.regionVariant = [1 3 3];
-% prBase.propL = [0.0 1.0 1.0];
-
 % Set cone proportions for S for all regions.
 % 
 % Currently we are adjusting this by hand for different
@@ -140,12 +130,14 @@ prBase.propSLargeTarget = [0.1 0.07 0.07];
 prBase.propSSmallTarget = [0.15 0.07 0.07];
 prBase.targetSizeSPropThresholdDegs = 6/60;
 
-% Establish the size of the nearSurround annulus, input as a width value
-% in arcmin. Nominal stimulus, pixel adjustents, and padding all encompass
-% the center region, whereas this nearSurround begins just beyond that. 
+% Establish the size of the nearSurround annulus, input as a width value in
+% arcmin. Nominal stimulus, pixel adjustents, and padding all encompass the
+% center region, whereas this nearSurround begins just beyond that.
 prBase.annulusWidthArc = 2; 
 
+% Stimulus variant number
 prBase.stimSeriesVariant = 1; 
+
 %% Choose your journey
 %
 % Select what you would like to do, for efficiency's sake only recommend
@@ -153,7 +145,7 @@ prBase.stimSeriesVariant = 1;
 % montages)
 buildRenderMatrix = true;
 buildMosaicMontages = false;
-runReconstructions = false;
+runReconstructions = true;
 summaryFigs = true;
 
 %% Spatial parameters
@@ -524,8 +516,8 @@ end
 %
 % Some of this is done rather precariously so care should be taken as the
 % project progresses to ensure the things being cycled over are actually
-% what we want
-if summaryFigs
+% what we want.
+if actuasummaryFigs
     
     % Bookkeeping variables for number of stimuli and propL as dimensions
     % of future plots
@@ -589,7 +581,7 @@ if summaryFigs
                     % need to be run once for each render structure though,
                     % after which it will see the file cached and ignore. 
                     propInfoFile(pr,cnv);
-
+        
                     % Call the function to build the summary plots.
                     [stimSummary, reconSummary] = grabImageInfo(pr, cnv, numStim, ...
                         "figReconRows", figReconRows, "scaleToMax", scaleToMax, ...
@@ -612,91 +604,19 @@ if summaryFigs
     end
 end
 
-%% Appendix 1
+% DHB: This code was crashing so I commented out the whole section.
 %
-% This spot allows for quick visualization of a single mosaic without
-% having to produce an entire mosaic montage. Manually load in the desired
-% render structure from the proper directory. Then uncomment the needed
-% portion below and run in the command window. Be sure to comment it out
-% when finished.
-
-% % LOAD THE RENDER STRUCTURE FIRST
-% renderStructure.theConeMosaic.visualizeMosaic()
-
-tempFig = figure; clf;
-forwardConeMosaic.Mosaic.visualize(...
-    'figureHandle', tempFig, ...
-    'axesHandle', [], ...
-    'withSuperimposedOpticalImage', forwardOI, ...
-    'outlinedConesWithIndices', pr.kConeIndices, ...
-    'plotTitle','Forward OI on Forward Mosaic','superimposedOIAlpha',0.7);
+% %% Appendix 1
+% %
+% % This spot allows for quick visualization of a single mosaic without
+% % having to produce an entire mosaic montage. Manually load in the desired
+% % render structure from the proper directory. Then uncomment the needed
+% % portion below and run in the command window. Be sure to comment it out
+% % when finished.
 % 
-% Establish the new center point based on comparison with where the OI
-% actually lands. Also include scaling based on the OI
-% pr.eccXDegs = 1.9945; 
-% pr.eccYDegs = 0.0055;
-scaleForOI = 1; %1.23;
-% scales for [2 3.5 10] = [1.55 1.23 1.05]
-
-hold on; 
-plot(pr.eccXDegs, pr.eccYDegs, '.', 'MarkerSize', 40);
-
-xBounds = [];
-yBounds = [];
-xBounds(1,:) = [pr.eccXDegs pr.eccXDegs];
-yBounds(1,:) = [pr.eccYDegs pr.eccYDegs];
-centerWidth = scaleForOI * (pr.stimSizeDegs/2);
-xBounds(2,:) = [xBounds(1)-centerWidth, xBounds(2)+centerWidth];
-yBounds(2,:) = [yBounds(1)-centerWidth, yBounds(2)+centerWidth];
-
-% Outline the stimulus region
-hold on
-rectangle('Position', [xBounds(2,1) yBounds(2,1) ...
-    (xBounds(2,2) - xBounds(2,1)) ...
-    (yBounds(2,2) - yBounds(2,1))], 'LineWidth', 3)
-
+% % % LOAD THE RENDER STRUCTURE FIRST
+% % renderStructure.theConeMosaic.visualizeMosaic()
 % 
-% % Scale Factor
-% a = 1.639;
-% b = -1.598;
-% c = 1.009;
-% 
-% % Arcmin Anulus
-% % Data points represent number of arcmin added to the diameter of the
-% % stimulus
-% % a = 1.44;
-% % b = -0.7641;
-% % c = 0.2521;
-% 
-% % Power Fits (2-term)
-% val = a*x^b + c;
-% 
-% 
-% 
-% % Visaulize index numbers over each cone in the mosaic
-% for i=1:length(renderStructure.theConeMosaic.Mosaic.coneTypes)
-%     txt = int2str(i);
-%     t = text((renderStructure.theConeMosaic.Mosaic.coneRFpositionsDegs(i,1)-0.005), ...
-%         renderStructure.theConeMosaic.Mosaic.coneRFpositionsDegs(i,2),txt);
-%     t.FontSize=11;
-%     hold on
-% end
-% 
-% % Call function to manually select and swap cones (see mouseClick)
-% g = @(x, y) mouseClick(x, y, renderStructure.theConeMosaic);
-% set(gcf, 'WindowButtonDownFcn', g)
-% keyboard
-
-
-%% Appendix 2
-% 
-% Visualize the OI on the retinal mosaic, to be conducted after running the
-% aoStimRecon portion outside of the parfor loop and inserting a line break
-% somewhere near line 520. Use some easily identifiable and removable stim
-% color like 0.5 0.5 0.5 for a maxiteration of 2 to quickly get through the
-% initial phases. 
-
-
 % tempFig = figure; clf;
 % forwardConeMosaic.Mosaic.visualize(...
 %     'figureHandle', tempFig, ...
@@ -704,5 +624,79 @@ rectangle('Position', [xBounds(2,1) yBounds(2,1) ...
 %     'withSuperimposedOpticalImage', forwardOI, ...
 %     'outlinedConesWithIndices', pr.kConeIndices, ...
 %     'plotTitle','Forward OI on Forward Mosaic','superimposedOIAlpha',0.7);
+% % 
+% % Establish the new center point based on comparison with where the OI
+% % actually lands. Also include scaling based on the OI
+% % pr.eccXDegs = 1.9945; 
+% % pr.eccYDegs = 0.0055;
+% scaleForOI = 1; %1.23;
+% % scales for [2 3.5 10] = [1.55 1.23 1.05]
 % 
+% hold on; 
+% plot(pr.eccXDegs, pr.eccYDegs, '.', 'MarkerSize', 40);
+% 
+% xBounds = [];
+% yBounds = [];
+% xBounds(1,:) = [pr.eccXDegs pr.eccXDegs];
+% yBounds(1,:) = [pr.eccYDegs pr.eccYDegs];
+% centerWidth = scaleForOI * (pr.stimSizeDegs/2);
+% xBounds(2,:) = [xBounds(1)-centerWidth, xBounds(2)+centerWidth];
+% yBounds(2,:) = [yBounds(1)-centerWidth, yBounds(2)+centerWidth];
+% 
+% % Outline the stimulus region
+% hold on
+% rectangle('Position', [xBounds(2,1) yBounds(2,1) ...
+%     (xBounds(2,2) - xBounds(2,1)) ...
+%     (yBounds(2,2) - yBounds(2,1))], 'LineWidth', 3)
+% 
+% % 
+% % % Scale Factor
+% % a = 1.639;
+% % b = -1.598;
+% % c = 1.009;
+% % 
+% % % Arcmin Anulus
+% % % Data points represent number of arcmin added to the diameter of the
+% % % stimulus
+% % % a = 1.44;
+% % % b = -0.7641;
+% % % c = 0.2521;
+% % 
+% % % Power Fits (2-term)
+% % val = a*x^b + c;
+% % 
+% % 
+% % 
+% % % Visaulize index numbers over each cone in the mosaic
+% % for i=1:length(renderStructure.theConeMosaic.Mosaic.coneTypes)
+% %     txt = int2str(i);
+% %     t = text((renderStructure.theConeMosaic.Mosaic.coneRFpositionsDegs(i,1)-0.005), ...
+% %         renderStructure.theConeMosaic.Mosaic.coneRFpositionsDegs(i,2),txt);
+% %     t.FontSize=11;
+% %     hold on
+% % end
+% % 
+% % % Call function to manually select and swap cones (see mouseClick)
+% % g = @(x, y) mouseClick(x, y, renderStructure.theConeMosaic);
+% % set(gcf, 'WindowButtonDownFcn', g)
+% % keyboard
+% 
+% 
+% %% Appendix 2
+% % 
+% % Visualize the OI on the retinal mosaic, to be conducted after running the
+% % aoStimRecon portion outside of the parfor loop and inserting a line break
+% % somewhere near line 520. Use some easily identifiable and removable stim
+% % color like 0.5 0.5 0.5 for a maxiteration of 2 to quickly get through the
+% % initial phases. 
+% 
+% 
+% tempFig = figure; clf;
+% forwardConeMosaic.Mosaic.visualize(...
+%     'figureHandle', tempFig, ...
+%     'axesHandle', [], ...
+%     'withSuperimposedOpticalImage', forwardOI, ...
+%     'outlinedConesWithIndices', pr.kConeIndices, ...
+%     'plotTitle','Forward OI on Forward Mosaic','superimposedOIAlpha',0.7);
+
 
