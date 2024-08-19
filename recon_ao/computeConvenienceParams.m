@@ -207,7 +207,7 @@ outputSubdirStim4 = sprintf(['stimColor_%0.4f_%0.4f_%0.4f'], ...
     pr.stimrVal,pr.stimgVal,pr.stimbVal);
 
 % Output sublevel strings pertaining to summary figs and render matrices
-summaryFigsString = 'summaryFigs'; 
+summaryFigsString = 'summaryFigsX'; 
 xRenderString = 'xRenderStructures';
 
 % Render matrix .mat file name
@@ -220,9 +220,6 @@ cnv.renderName = sprintf(['regionProps_%0.2fL_%0.2fL_%0.2fL_' ...
 % Find all instances of subdirectory naming from above and capture. More
 % effort in creating this framework but also more resilient to changes in
 % directory order / additional layers
-%
-% This will break because the outputSubdir values will need to be fed into
-% the cnv structure, should replace with a contains(fieldnames(cnv), 'output')
 vars = who();
 indMosaicSubdirsAll = contains(vars, 'outputSubdirMosaic');
 indStimSubdirsAll = contains(vars, 'outputSubdirStim');
@@ -241,10 +238,9 @@ nameStimSubdirs = strjoin(vars(indStimSubdirs(1:levelStimSubdirs)), ',');
 eval(['cnv.outputDirFull = fullfile(pr.aoReconDir, pr.versEditor,' ...
     'cnv.outputDirGeneral,' nameMosaicSubdirs ',' nameStimSubdirs ');']);
 
-%% Build summary figs routine information
+%% Build summary figs routine output information
 %
-% Need to tell it where to loop over conditions that it will summarize
-% as well as where it should write the summary figure output.
+% Need to tell it where it should write the summary figure output.
 %
 % This directory is in same output cascade and ends two levels up from
 % where the recons get written for each mosaic/stim combination that we
@@ -261,6 +257,25 @@ eval(['cnv.outputSubdirSummaryFigs = fullfile(pr.aoReconDir, pr.versEditor,' ...
 if (~exist(cnv.outputSubdirSummaryFigs,'dir'))
     mkdir(cnv.outputSubdirSummaryFigs);
 end
+
+%% Build grabImageInfo routine information
+%
+% Need to tell it where to loop over conditions that it will summarize
+%
+% This directory is in same output cascade and ends one level up from
+% where the recons get written for each mosaic/stim combination that we
+% want to summarize. This takes us to the level of the propL values which
+% will be cycled through, and then within that the grabImageInfo.m routine
+% will cycle through each of the stimulus colors. 
+levelMosaicSubdirs = length(indMosaicSubdirs); 
+
+% Changing this to 2 for now while renaming files, this should be 1 though
+levelStimSubdirs = length(indStimSubdirs)-2;
+nameMosaicSubdirs = strjoin(vars(indMosaicSubdirs(1:levelMosaicSubdirs)), ',');
+nameStimSubdirs = strjoin(vars(indStimSubdirs(1:levelStimSubdirs)), ',');
+eval(['cnv.outputSubdirImageInfo = fullfile(pr.aoReconDir, pr.versEditor,' ...
+    'cnv.outputDirGeneral,' nameMosaicSubdirs ',' nameStimSubdirs ...
+    ');']);
 
 %% Build the nested render matrix directories for forward and recon
 levelMosaicSubdirs = length(indMosaicSubdirs); 
@@ -291,6 +306,27 @@ end
 %     mkdir(cnv.reconMontageDirFull);
 % end
 
+%% Patch to put old naming scheme and current naming scheme in agreement. 
+% 
+% Desired updates are as follows: 
+% Last level change to: stimColor_r_g_b
+% Second to last level change to: centerProps_#L
+
+outputSubdirStimColors = dir(cnv.outputSubdirImageInfo);
+subDirNames = extractfield(outputSubdirStimColors, 'name');
+subDirNamesFullString = cell2mat(subDirNames);
+if contains(subDirNamesFullString, '.DS_Store')
+    startDirIndex = 4;
+else
+    startDirIndex = 3;
+end
+
+    for i = startDirIndex:length(outputSubdirStimColors)
+        if outputSubdirStimColors(i).isdir
+            
+           test = 1; 
+           terry = 2; 
 
 
-
+        end
+    end
