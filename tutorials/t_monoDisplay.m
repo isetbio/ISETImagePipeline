@@ -3,6 +3,27 @@
 % Create a display with monochromatic primaries, and demonstrate
 % transformation from linear coordinates in a more standard diplsay
 % to this one.
+%
+% This is set up to match the Berkeley AO system used in the unique
+% yellow experiments.
+%      Primary wavelengths [680 543 and 440].  The system does not have
+%      a 440, but we need a third for convenience and to model the
+%      background.
+%
+%      Stimulus luminance for RG mixtures, ~2800 cd/m2
+%
+%      6.087 uW for 680, 0.1131 uW for 543. [These powers are for 100%
+%      laser modulation, so are high relative to what actually enters the
+%      eye in the experiment.  We use the 2800 cd/m2 number as a target
+%      scale factor.]
+%
+%      They assume a 7 mm pupil diameter.
+% 
+%      A mixture of these at 0.317@640 + 0.6830@543 is said to be a good
+%      yellow.
+%
+%      Background was metameric to EE white, and had luminance of about 26
+%      cd/m2.
 
 % History:
 %  10/12/22  Fix primary ordering, relative intensities
@@ -163,7 +184,7 @@ if (overwriteDisplayGamma)
     gammaInput = linspace(0,1,2^displayGammaBits)';
     gammaOutput = gammaInput.^displayGammaGamma;
     theDisplay.gamma = gammaOutput(:,[1 1 1]);
-    monoDisplay.gamma = gammaOutupt(:,[1 1 1]);
+    monoDisplay.gamma = gammaOutput(:,[1 1 1]);
 end
 clear theDisplayLoad;
 
