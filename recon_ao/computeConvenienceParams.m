@@ -311,9 +311,12 @@ end
 % Desired updates are as follows: 
 % Last level change to: stimColor_r_g_b
 % Second to last level change to: centerProps_#L
+% All of the names are the same exact length, so can afford to do something
+% hacky and pull out exact index values to piecemeal the right name back
+% together. 
 
-outputSubdirStimColors = dir(cnv.outputSubdirImageInfo);
-subDirNames = extractfield(outputSubdirStimColors, 'name');
+outputSubdirRegionProps = dir(cnv.outputSubdirImageInfo);
+subDirNames = extractfield(outputSubdirRegionProps, 'name');
 subDirNamesFullString = cell2mat(subDirNames);
 if contains(subDirNamesFullString, '.DS_Store')
     startDirIndex = 4;
@@ -321,12 +324,116 @@ else
     startDirIndex = 3;
 end
 
-    for i = startDirIndex:length(outputSubdirStimColors)
-        if outputSubdirStimColors(i).isdir
-            
-           test = 1; 
-           terry = 2; 
+
+    for i = startDirIndex:length(outputSubdirRegionProps)
+        if outputSubdirRegionProps(i).isdir
+            if contains(outputSubdirRegionProps(i).name, 'regionProp')
+               
+                % Go one step further first and rename all the values
+                % within this folder
 
 
+                outputSubdirStimColor = dir(fullfile(outputSubdirRegionProps(i).folder, ...
+                    outputSubdirRegionProps(i).name));
+
+                subDirNames2 = extractfield(outputSubdirStimColor, 'name');
+                subDirNamesFullString2 = cell2mat(subDirNames2);
+                if contains(subDirNamesFullString2, '.DS_Store')
+                    startDirIndex2 = 4;
+                else
+                    startDirIndex2 = 3;
+                end
+
+                for j = startDirIndex2:length(outputSubdirStimColor)
+                    if outputSubdirStimColor(j).isdir
+                        updatedName2 = [outputSubdirStimColor(j).name(1:10) ...
+                            outputSubdirStimColor(j).name(18:37)];                       
+                        oldPath2 = fullfile(outputSubdirStimColor(j).folder, ...
+                            outputSubdirStimColor(j).name);
+                        updatedPath2 = fullfile(outputSubdirStimColor(j).folder, ...
+                            updatedName2);
+                        movefile(oldPath2,updatedPath2)
+                    end
+                end
+
+
+
+                % Fix the name of the prop directory holding the stim info
+                updatedName = ['centerProps' outputSubdirRegionProps(i).name(12:17)];
+                oldPath = fullfile(outputSubdirRegionProps(i).folder, ...
+                    outputSubdirRegionProps(i).name);
+                updatedPath = fullfile(outputSubdirRegionProps(i).folder, ...
+                    updatedName);
+                movefile(oldPath,updatedPath)
+
+            end
         end
     end
+
+
+
+
+
+
+
+
+outputSubdirRegionProps = dir(cnv.outputSubdirImageInfo);
+subDirNames = extractfield(outputSubdirRegionProps, 'name');
+subDirNamesFullString = cell2mat(subDirNames);
+if contains(subDirNamesFullString, '.DS_Store')
+    startDirIndex = 4;
+else
+    startDirIndex = 3;
+end
+
+
+    for i = startDirIndex:length(outputSubdirRegionProps)
+        if outputSubdirRegionProps(i).isdir
+            if contains(outputSubdirRegionProps(i).name, 'regionProp')
+               
+                % Go one step further first and rename all the values
+                % within this folder
+
+
+                outputSubdirStimColor = dir(fullfile(outputSubdirRegionProps(i).folder, ...
+                    outputSubdirRegionProps(i).name));
+
+                subDirNames2 = extractfield(outputSubdirStimColor, 'name');
+                subDirNamesFullString2 = cell2mat(subDirNames2);
+                if contains(subDirNamesFullString2, '.DS_Store')
+                    startDirIndex2 = 4;
+                else
+                    startDirIndex2 = 3;
+                end
+
+                for j = startDirIndex2:length(outputSubdirStimColor)
+                    if outputSubdirStimColor(j).isdir
+                        updatedName2 = [outputSubdirStimColor(j).name(1:10) ...
+                            outputSubdirStimColor(j).name(18:37)];                       
+                        oldPath2 = fullfile(outputSubdirStimColor(j).folder, ...
+                            outputSubdirStimColor(j).name);
+                        updatedPath2 = fullfile(outputSubdirStimColor(j).folder, ...
+                            updatedName2);
+                        movefile(oldPath2,updatedPath2)
+                    end
+                end
+
+
+
+                % Fix the name of the prop directory holding the stim info
+                updatedName = ['centerProps' outputSubdirRegionProps(i).name(12:17)];
+                oldPath = fullfile(outputSubdirRegionProps(i).folder, ...
+                    outputSubdirRegionProps(i).name);
+                updatedPath = fullfile(outputSubdirRegionProps(i).folder, ...
+                    updatedName);
+                movefile(oldPath,updatedPath)
+
+            end
+        end
+    end
+
+
+
+
+
+end
