@@ -135,7 +135,7 @@ end
 % conditions directories for recon output, forward render matrices and
 % recon render matrices in a way that one could in principle add more or
 % have fewer of the subdirs with various names and it will all still work.
-% Does this through the magic of Matlab string processing. 
+% Does this through the magic of Matlab string processing.
 
 % General conditions directory for output files, largely constant
 cnv.outputDirGeneral  = sprintf(['%s_%s_%0.2f_%0.2f_%d_%d_%s_%0.2f_' ...
@@ -207,7 +207,7 @@ outputSubdirStim4 = sprintf(['stimColor_%0.4f_%0.4f_%0.4f'], ...
     pr.stimrVal,pr.stimgVal,pr.stimbVal);
 
 % Output sublevel strings pertaining to summary figs and render matrices
-summaryFigsString = 'summaryFigsX'; 
+summaryFigsString = 'summaryFigsX';
 xRenderString = 'xRenderStructures';
 
 % Render matrix .mat file name
@@ -228,8 +228,8 @@ indMosaicSubdirs = find(indMosaicSubdirsAll == 1);
 indStimSubdirs = find(indStimSubdirsAll == 1);
 
 % Fullfile name for the simulation outputs, with identification of how many
-% layers of the full option set you want to go down 
-levelMosaicSubdirs = length(indMosaicSubdirs); 
+% layers of the full option set you want to go down
+levelMosaicSubdirs = length(indMosaicSubdirs);
 levelStimSubdirs = length(indStimSubdirs);
 
 nameMosaicSubdirs = strjoin(vars(indMosaicSubdirs(1:levelMosaicSubdirs)), ',');
@@ -247,7 +247,7 @@ eval(['cnv.outputDirFull = fullfile(pr.aoReconDir, pr.versEditor,' ...
 % want to summarize. We find this this by loping off 2 of the "stim"
 % subdirs, which in fact correspond to the mosaic focal region propL and
 % the stimulus set being run.
-levelMosaicSubdirs = length(indMosaicSubdirs); 
+levelMosaicSubdirs = length(indMosaicSubdirs);
 levelStimSubdirs = length(indStimSubdirs)-2;
 nameMosaicSubdirs = strjoin(vars(indMosaicSubdirs(1:levelMosaicSubdirs)), ',');
 nameStimSubdirs = strjoin(vars(indStimSubdirs(1:levelStimSubdirs)), ',');
@@ -266,8 +266,8 @@ end
 % where the recons get written for each mosaic/stim combination that we
 % want to summarize. This takes us to the level of the propL values which
 % will be cycled through, and then within that the grabImageInfo.m routine
-% will cycle through each of the stimulus colors. 
-levelMosaicSubdirs = length(indMosaicSubdirs); 
+% will cycle through each of the stimulus colors.
+levelMosaicSubdirs = length(indMosaicSubdirs);
 
 % Changing this to 2 for now while renaming files, this should be 1 though
 levelStimSubdirs = length(indStimSubdirs)-2;
@@ -278,7 +278,7 @@ eval(['cnv.outputSubdirImageInfo = fullfile(pr.aoReconDir, pr.versEditor,' ...
     ');']);
 
 %% Build the nested render matrix directories for forward and recon
-levelMosaicSubdirs = length(indMosaicSubdirs); 
+levelMosaicSubdirs = length(indMosaicSubdirs);
 nameMosaicSubdirs = strjoin(vars(indMosaicSubdirs(1:levelMosaicSubdirs)), ',');
 eval(['cnv.forwardRenderDirFull = fullfile(pr.aoReconDir, pr.versEditor,' ...
     'xRenderString, cnv.forwardRenderDirGeneral,' nameMosaicSubdirs ');']);
@@ -299,21 +299,21 @@ end
 % if (~exist(cnv.forwardMontageDirFull,'dir'))
 %     mkdir(cnv.forwardMontageDirFull);
 % end
-% 
+%
 % cnv.reconMontageDirFull = fullfile(pr.aoReconDir,pr.versEditor,'xRenderStructures', ...
 %     cnv.reconRenderDirFirst,'mosaicMontages');
 % if (~exist(cnv.reconMontageDirFull,'dir'))
 %     mkdir(cnv.reconMontageDirFull);
 % end
 
-%% Patch to put old naming scheme and current naming scheme in agreement. 
-% 
-% Desired updates are as follows: 
+%% Patch to put old naming scheme and current naming scheme in agreement.
+%
+% Desired updates are as follows:
 % Last level change to: stimColor_r_g_b
 % Second to last level change to: centerProps_#L
 % All of the names are the same exact length, so can afford to do something
 % hacky and pull out exact index values to piecemeal the right name back
-% together. 
+% together.
 
 outputSubdirRegionProps = dir(cnv.outputSubdirImageInfo);
 subDirNames = extractfield(outputSubdirRegionProps, 'name');
@@ -325,50 +325,50 @@ else
 end
 
 
-    for i = startDirIndex:length(outputSubdirRegionProps)
-        if outputSubdirRegionProps(i).isdir
-            if contains(outputSubdirRegionProps(i).name, 'regionProp')
-               
-                % Go one step further first and rename all the values
-                % within this folder
+for i = startDirIndex:length(outputSubdirRegionProps)
+    if outputSubdirRegionProps(i).isdir
+        if contains(outputSubdirRegionProps(i).name, 'regionProp')
+
+            % Go one step further first and rename all the values
+            % within this folder
 
 
-                outputSubdirStimColor = dir(fullfile(outputSubdirRegionProps(i).folder, ...
-                    outputSubdirRegionProps(i).name));
+            outputSubdirStimColor = dir(fullfile(outputSubdirRegionProps(i).folder, ...
+                outputSubdirRegionProps(i).name));
 
-                subDirNames2 = extractfield(outputSubdirStimColor, 'name');
-                subDirNamesFullString2 = cell2mat(subDirNames2);
-                if contains(subDirNamesFullString2, '.DS_Store')
-                    startDirIndex2 = 4;
-                else
-                    startDirIndex2 = 3;
-                end
-
-                for j = startDirIndex2:length(outputSubdirStimColor)
-                    if outputSubdirStimColor(j).isdir
-                        updatedName2 = [outputSubdirStimColor(j).name(1:10) ...
-                            outputSubdirStimColor(j).name(18:37)];                       
-                        oldPath2 = fullfile(outputSubdirStimColor(j).folder, ...
-                            outputSubdirStimColor(j).name);
-                        updatedPath2 = fullfile(outputSubdirStimColor(j).folder, ...
-                            updatedName2);
-                        movefile(oldPath2,updatedPath2)
-                    end
-                end
-
-
-
-                % Fix the name of the prop directory holding the stim info
-                updatedName = ['centerProps' outputSubdirRegionProps(i).name(12:17)];
-                oldPath = fullfile(outputSubdirRegionProps(i).folder, ...
-                    outputSubdirRegionProps(i).name);
-                updatedPath = fullfile(outputSubdirRegionProps(i).folder, ...
-                    updatedName);
-                movefile(oldPath,updatedPath)
-
+            subDirNames2 = extractfield(outputSubdirStimColor, 'name');
+            subDirNamesFullString2 = cell2mat(subDirNames2);
+            if contains(subDirNamesFullString2, '.DS_Store')
+                startDirIndex2 = 4;
+            else
+                startDirIndex2 = 3;
             end
+
+            for j = startDirIndex2:length(outputSubdirStimColor)
+                if outputSubdirStimColor(j).isdir
+                    updatedName2 = [outputSubdirStimColor(j).name(1:10) ...
+                        outputSubdirStimColor(j).name(18:37)];
+                    oldPath2 = fullfile(outputSubdirStimColor(j).folder, ...
+                        outputSubdirStimColor(j).name);
+                    updatedPath2 = fullfile(outputSubdirStimColor(j).folder, ...
+                        updatedName2);
+                    movefile(oldPath2,updatedPath2)
+                end
+            end
+
+
+
+            % Fix the name of the prop directory holding the stim info
+            updatedName = ['centerProps' outputSubdirRegionProps(i).name(12:17)];
+            oldPath = fullfile(outputSubdirRegionProps(i).folder, ...
+                outputSubdirRegionProps(i).name);
+            updatedPath = fullfile(outputSubdirRegionProps(i).folder, ...
+                updatedName);
+            movefile(oldPath,updatedPath)
+
         end
     end
+end
 
 
 
@@ -388,50 +388,70 @@ else
 end
 
 
-    for i = startDirIndex:length(outputSubdirRegionProps)
-        if outputSubdirRegionProps(i).isdir
-            if contains(outputSubdirRegionProps(i).name, 'regionProp')
-               
-                % Go one step further first and rename all the values
-                % within this folder
+
+for i = startDirIndex:length(outputSubdirGeneral)
+    if outputSubdirGeneral(i).isdir
+
+        outputSubdirSize = dir(fullfile(outputSubdirGeneral(i).folder, ...
+            outputSubdirGeneral(i).name));
+
+        subDirNames2 = extractfield(outputSubdirSize, 'name');
+        subDirNamesFullString2 = cell2mat(subDirNames2);
+        if contains(subDirNamesFullString2, '.DS_Store')
+            startDirIndex2 = 4;
+        else
+            startDirIndex2 = 3;
+        end
 
 
-                outputSubdirStimColor = dir(fullfile(outputSubdirRegionProps(i).folder, ...
-                    outputSubdirRegionProps(i).name));
+        for j = startDirIndex2:length(outputSubdirSize)
+            if outputSubdirSize(j).isdir
 
-                subDirNames2 = extractfield(outputSubdirStimColor, 'name');
-                subDirNamesFullString2 = cell2mat(subDirNames2);
-                if contains(subDirNamesFullString2, '.DS_Store')
-                    startDirIndex2 = 4;
+                outputSubdirRegionProps = dir(fullfile(outputSubdirSize(j).folder, ...
+                    outputSubdirSize(j).name));
+
+                subDirNames3 = extractfield(outputSubdirRegionProps, 'name');
+                subDirNamesFullString3 = cell2mat(subDirNames3);
+                if contains(subDirNamesFullString3, '.DS_Store')
+                    startDirIndex3 = 4;
                 else
-                    startDirIndex2 = 3;
+                    startDirIndex3 = 3;
                 end
 
-                for j = startDirIndex2:length(outputSubdirStimColor)
-                    if outputSubdirStimColor(j).isdir
-                        updatedName2 = [outputSubdirStimColor(j).name(1:10) ...
-                            outputSubdirStimColor(j).name(18:37)];                       
-                        oldPath2 = fullfile(outputSubdirStimColor(j).folder, ...
-                            outputSubdirStimColor(j).name);
-                        updatedPath2 = fullfile(outputSubdirStimColor(j).folder, ...
-                            updatedName2);
-                        movefile(oldPath2,updatedPath2)
+
+                for k = startDirIndex3:length(outputSubdirRegionProps)
+                    if outputSubdirRegionProps(k).isdir
+
+                        outputSubdirVariant = dir(fullfile(outputSubdirRegionProps(k).folder, ...
+                            outputSubdirRegionProps(k).name));
+
+                        subDirNames4 = extractfield(outputSubdirVariant, 'name');
+                        subDirNamesFullString4 = cell2mat(subDirNames4);
+                        if contains(subDirNamesFullString4, '.DS_Store')
+                            startDirIndex4 = 4;
+                        else
+                            startDirIndex4 = 3;
+                        end
+
+                        for m = startDirIndex4:length(outputSubdirVariant)
+
+                            outputSubdirCenterProps = dir(fullfile(outputSubdirVariant(m).folder, ...
+                                outputSubdirVariant(m).name));
+
+                            % Fix the name of the prop directory holding the stim info
+                            updatedName = ['centerProps' outputSubdirCenterProps(m).name(12:17) '.mat'];
+                            oldPath = fullfile(outputSubdirCenterProps(m).folder, ...
+                                outputSubdirCenterProps(m).name);
+                            updatedPath = fullfile(outputSubdirCenterProps(m).folder, ...
+                                updatedName);
+                            movefile(oldPath,updatedPath)
+                        end
                     end
                 end
-
-
-
-                % Fix the name of the prop directory holding the stim info
-                updatedName = ['centerProps' outputSubdirRegionProps(i).name(12:17)];
-                oldPath = fullfile(outputSubdirRegionProps(i).folder, ...
-                    outputSubdirRegionProps(i).name);
-                updatedPath = fullfile(outputSubdirRegionProps(i).folder, ...
-                    updatedName);
-                movefile(oldPath,updatedPath)
-
             end
         end
     end
+end
 
 
 
