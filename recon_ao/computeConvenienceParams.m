@@ -375,10 +375,11 @@ end
 
 
 
+cnv.renderDirUpdate = fullfile(pr.aoReconDir, pr.versEditor, ...
+    xRenderString);
 
-
-outputSubdirRegionProps = dir(cnv.outputSubdirImageInfo);
-subDirNames = extractfield(outputSubdirRegionProps, 'name');
+outputSubdirGeneral = dir(cnv.renderDirUpdate);
+subDirNames = extractfield(outputSubdirGeneral, 'name');
 subDirNamesFullString = cell2mat(subDirNames);
 if contains(subDirNamesFullString, '.DS_Store')
     startDirIndex = 4;
