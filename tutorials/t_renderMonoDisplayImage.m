@@ -121,7 +121,7 @@ fprintf('Render primary luminances (r, g, b): %0.2f, %0.2f %0.2f\n',Mrecon_rgbTo
 % to equal luminance stimuli.
 if (useEquilumConstruct)
     startWithLinearRGB = true;
-    nEquiLumStimuli = 14;
+    nEquiLumStimuli = 14;   % CHR generated stimuli by setting this to 40 and picking out the subset he thought were equally spaced.
     forwardPrimaries = displayGet(forwardDisplay,'spd primaries');
     rOverRPlusG = linspace(1,0,nEquiLumStimuli);
     gOverRPlusG = 1-rOverRPlusG;
