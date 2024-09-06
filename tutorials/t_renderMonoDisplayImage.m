@@ -45,23 +45,17 @@ renderDisplayName = 'conventional';
 displayGammaBits = 12;
 displayGammaGamma = 2;
 overwriteDisplayGamma = true;
-renderDisplayScaleFactor = 1;
+
+% The first scale factor makes the stimulus luminance about 2800 cd/m2.
+% The second allows adjustment of relative intensity range of the two monitors.
+overallDisplayScaleFactor = 194.2;
+renderRelativeDisplayScaleFactor = 1;
 
 % Render in sRGB (true) or with respect to ISETBio viewing display (false)
 SRGB = false;
 
 % Set image size
 nPixels = 128;
-
-% Set a list of linear RGB to render as uniform swatches
-useEquilumConstruct = false;
-startWithLinearRGB = true;
-inputLinearrgbValues = ...
-   [0.1268    0.0971    0.0739   (0.0739 + 0.0536)/2  0.0536   0.0335    0.0255    0.0184    0.0123    0.0077    0.0040    0.0016    0.0001    0.0001 ;
-    0.0240    0.0270    0.0299   (0.0299 + 0.0328)/2  0.0328   0.0365    0.0385    0.0404    0.0426    0.0445    0.0467    0.0489    0.0511    0.0517 ;
-    0.0001    0.0001    0.0001   0.0001                        0.001     0.0001    0.0001    0.0001    0.0001    0.0001    0.0001    0.0001    0.0001    0.0001];
-inputLinearrgbValues = ...
-   [0.0739 ; 0.0299 ; 1.2076e-04];
 
 % Set up display specific fields
 switch (forwardDisplayName)
@@ -74,19 +68,19 @@ switch (forwardDisplayName)
 end
 switch (renderDisplayName)
     case 'conventional'
-        reconDisplayFieldName = 'CRT12BitDisplay';
+        renderDisplayFieldName = 'CRT12BitDisplay';
     case 'mono'
-        reconDisplayFieldName = 'monoDisplay';
+        renderDisplayFieldName = 'monoDisplay';
     otherwise
-        error('Unknown recon display specified');
+        error('Unknown render display specified');
 end
 
 % Get displays
 forwardDisplayLoad = load(fullfile(aoReconDir, 'displays', [forwardDisplayName 'Display.mat']));
 eval(['forwardDisplay = forwardDisplayLoad.' forwardDisplayFieldName ';']);
-reconDisplayLoad = load(fullfile(aoReconDir, 'displays', [renderDisplayName 'Display.mat']));
-eval(['reconDisplay = reconDisplayLoad.' reconDisplayFieldName ';']);
-clear forwardDisplayLoad reconDisplayLoad
+renderDisplayLoad = load(fullfile(aoReconDir, 'displays', [renderDisplayName 'Display.mat']));
+eval(['reconDisplay = renderDisplayLoad.' renderDisplayFieldName ';']);
+clear forwardDisplayLoad renderDisplayLoad
 
 % Fix up gamma and wavelengths sampling
 if (overwriteDisplayGamma)
@@ -99,8 +93,22 @@ wls = (400:1:700)';
 forwardDisplay = displaySet(forwardDisplay,'wave',wls);
 reconDisplay = displaySet(reconDisplay,'wave',wls);
 
+% Scale factor for both displays to bring luminance to where we want it.
+forwardDisplay = displaySet(forwardDisplay,'spd primaries',displayGet(forwardDisplay,'spd primaries')*overallDisplayScaleFactor);
+reconDisplay = displaySet(reconDisplay,'spd primaries',displayGet(reconDisplay,'spd primaries')*overallDisplayScaleFactor);
+
 % Scale recon display primaries to try to keep things in range
-reconDisplay = displaySet(reconDisplay,'spd primaries',displayGet(reconDisplay,'spd primaries')*renderDisplayScaleFactor);
+reconDisplay = displaySet(reconDisplay,'spd primaries',displayGet(reconDisplay,'spd primaries')*renderRelativeDisplayScaleFactor);
+
+% Make sure black is zero for our calculations
+forwardAmbient = displayGet(forwardDisplay,'black spd');
+if (any(forwardAmbient ~= 0))
+    error('Forward display ambient not all zeros');
+end
+reconAmbient = displayGet(reconDisplay,'black spd');
+if (any(reconAmbient ~= 0))
+    error('Recon ambient not all zero');
+end
 
 % Get information we need to render scenes from their spectra through
 % the recon display.
@@ -117,11 +125,13 @@ gPrimaryLuminance = Mforward_rgbToXYZ(2,2);
 fprintf('Forward primary luminances (r, g, b): %0.2f, %0.2f %0.2f\n',Mforward_rgbToXYZ(2,1),Mforward_rgbToXYZ(2,2),Mforward_rgbToXYZ(2,3));
 fprintf('Render primary luminances (r, g, b): %0.2f, %0.2f %0.2f\n',Mrecon_rgbToXYZ(2,1),Mrecon_rgbToXYZ(2,2),Mrecon_rgbToXYZ(2,3));
 
-% Compute as set of equally spaced r/(r+g) values that lead
-% to equal luminance stimuli.
+% Get input rgb values to analyze.  Can construct or use table.
+useEquilumConstruct = false;
 if (useEquilumConstruct)
+    % Compute as set of equally spaced r/(r+g) values that lead
+    % to equal luminance stimuli.
     startWithLinearRGB = true;
-    nEquiLumStimuli = 14;   % CHR generated stimuli by setting this to 40 and picking out the subset he thought were equally spaced.
+    nEquiLumStimuli = 14;   
     forwardPrimaries = displayGet(forwardDisplay,'spd primaries');
     rOverRPlusG = linspace(1,0,nEquiLumStimuli);
     gOverRPlusG = 1-rOverRPlusG;
@@ -132,6 +142,18 @@ if (useEquilumConstruct)
     b = 0.001;
     equiLumrgbValues = [rRaw ; gAdjust; b*ones(size(rRaw))];
     inputLinearrgbValues = 0.5*equiLumrgbValues/max(equiLumrgbValues(:));
+else
+    % Set a list of linear RGB to render as uniform swatches.  These
+    % were calculated at some earlier point using the useEquilumContrast option
+    % set to true, and then selected to have reasonable appearance spacing by
+    % hand. We think these were selected from 40 stimuli generated in the
+    % section above and then sampled.
+    startWithLinearRGB = true;
+    inputLinearrgbValues = (0.8/0.4615) * ...
+        [0.4615 0.3846 0.3077 0.2308 0.1538 0.1154 0.0769 0.0385 0.0000;
+        0.0081 0.0242 0.0403 0.0565 0.0726 0.0807 0.0888 0.0968 0.1049;
+        0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005];
+    inputLinearrgbValues = [inputLinearrgbValues [0.5 0.5 0.0]' [0.5 0.5 0.5]'];
 end
 
 % Loop over all the input values
@@ -182,6 +204,7 @@ for iii = 1:size(inputLinearrgbValues,2)
         theRenderImagergbCalFormat = Mrecon_XYZTorgb*theForwardImageXYZCalFormat;
     end
     theRenderImagergb{iii} = CalFormatToImage(theRenderImagergbCalFormat,m,n);
+    theLuminance(iii) = theForwardImageXYZCalFormat(2,1);
 
     % Plot chromaticities
     theForwardImagexyYCalFormat = XYZToxyY(theForwardImageXYZCalFormat);
@@ -224,8 +247,8 @@ for iii = 1:size(inputLinearrgbValues,2)
 
     % Do it with our function.
     %
-    % Note that we've incorporated the viewingDisplayScaleFactor into the
-    % reconDisplay object already, so when we call the function we set the
+    % Note that we've incorporated the renderDisplayScaleFactor into the
+    % renderDisplay object already, so when we call the function we set the
     % factor to one.
     if (~SRGB)
         % Note that the sRGB RGB image comes back as a double in the range
@@ -241,12 +264,6 @@ for iii = 1:size(inputLinearrgbValues,2)
             'viewingDisplayScaleFactor',1,'linearInput',false,'wls',wls,'verbose',true,'scaleToMax',false,'SRGB',SRGB);
     end
 
-    % 
-    % [reconImageRGBCurrent,reconImagergbTruncated,reconImagergb] = RGBRenderAcrossDisplays(reconImageRGBUncorrected, startDisplay, viewingDisplay, ...
-    %     'viewingDisplayScaleFactor',p.Results.viewingDisplayScaleFactor, ...
-    %     'linearInput',p.Results.linearInput,'verbose',p.Results.verbose, ...
-    %     'scaleToMax',p.Results.scaleToMax,'SRGB',p.Results.SRGB);
-
     % Reality check.
     if (max(abs(theRenderImagergbTruncated{iii}(:)-outputImagergbFromFunction(:))) > 1e-6)
         error('Not recreating same linear rgb output image through our function');
@@ -257,7 +274,8 @@ for iii = 1:size(inputLinearrgbValues,2)
     % back.
     theImageForEquivRGB = zeros(1,1,3);
     theImageForEquivRGB(1,1,:) = theInputGammaCorrectedRGB';
-    [~,eqWavelengthCal]= RGBToEquivWavelength(theImageForEquivRGB,forwardDisplay,'wls',wls);
+    [~,eqWavelengthCal(iii)]= RGBToEquivWavelength(theImageForEquivRGB,forwardDisplay,'wls',wls);
+    fprintf('Equivalent wavelength: %d\n',eqWavelengthCal(iii));
 
     % Add to chromaticity plot.
     %
@@ -269,13 +287,13 @@ for iii = 1:size(inputLinearrgbValues,2)
     %   black line:         Connects EEW and equiv wl points
     %   green circle:       original image chromacitity
     %   blue circle:        Rendered image chromaticity (might look black)
-    index = find(wls == eqWavelengthCal);
+    index = find(wls == eqWavelengthCal(iii));
     subplot(1,3,3);
     eewxy = [0.33 0.33]';
     plot(T_xyY(1,index),T_xyY(2,index),'cx','MarkerSize',16);
     plot(eewxy(1),eewxy(2),'kx','MarkerSize',16);
     plot([eewxy(1) T_xyY(1,index)],[eewxy(2) T_xyY(2,index)],'k','LineWidth',2);
-    title(sprintf('Equiv wavelength: %d',eqWavelengthCal));
+    title(sprintf('Equiv wavelength: %d',eqWavelengthCal(iii)));
     drawnow;
 
     fprintf('\n')
