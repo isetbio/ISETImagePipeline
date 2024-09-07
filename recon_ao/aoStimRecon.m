@@ -45,7 +45,7 @@ else
 end
 
 % Set forward variables from loaded/built structure. Scale matrix with display factor.
-forwardRenderMatrix = forwardRenderStructure.renderMatrix*pr.displayScaleFactor;
+forwardRenderMatrix = ScaleRenderMatrix(forwardRenderStructure.renderMatrix,pr.displayScaleFactor);
 forwardConeMosaic = forwardRenderStructure.theConeMosaic;
 forwardOI = forwardConeMosaic.PSF;
 clear forwardRenderStructure;
@@ -62,16 +62,22 @@ else
 end
 
 % Set recon variables from loaded/built structure. Scale matrix with display factor.
-reconRenderMatrix = reconRenderStructure.renderMatrix*pr.displayScaleFactor;
+reconRenderMatrix = ScaleRenderMatrix(reconRenderStructure.renderMatrix,pr.displayScaleFactor);
 reconConeMosaic = reconRenderStructure.theConeMosaic;
 reconOI = reconConeMosaic.PSF;
 clear reconRenderStructure;
 
 % Scale display to match scaling of render matrices above.
-forwardConeMosaic.Display = displaySet(forwardConeMosaic.Display,'spd primaries',displayGet(forwardConeMosaic.Display,'spd primaries')*pr.displayScaleFactor);
-forwardConeMosaic.Display.ambient = displayGet(forwardConeMosaic.Display,'black spd')*pr.displayScaleFactor;
-reconConeMosaic.Display = displaySet(reconConeMosaic.Display,'spd primaries',displayGet(reconConeMosaic.Display,'spd primaries')*pr.displayScaleFactor);
-reconConeMosaic.Display.ambient = displayGet(reconConeMosaic.Display,'black spd')*pr.displayScaleFactor;
+forwardPrimaries = displayGet(forwardConeMosaic.Display,'spd primaries')*diag(pr.displayScaleFactor);
+forwardConeMosaic.Display = displaySet(forwardConeMosaic.Display,'spd primaries',forwardPrimaries);
+if (any(displayGet(forwardConeMosaic.Display,'black spd')) ~= 0)
+    error('Expecting zero for ambient spd');
+end
+reconPrimaries = displayGet(reconConeMosaic.Display,'spd primaries')*diag(pr.displayScaleFactor);
+reconConeMosaic.Display = displaySet(reconConeMosaic.Display,'spd primaries',reconPrimaries);
+if (any(displayGet(forwardConeMosaic.Display,'black spd')) ~= 0)
+    error('Expecting zero for ambient spd');
+end
 
 % Current sanity check to ensure that cone type at a given position does
 % not change between forward/recon. At some point may want to make this an

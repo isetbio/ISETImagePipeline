@@ -39,7 +39,7 @@ prBase.displayName = 'mono';
 prBase.viewingDisplayName = 'conventional';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
-displayScaleFactorList = [1];
+displayScaleFactorList = {[1 1 1]'};
 
 %% Stimulus size
 prBase.stimSizeDegsList = [4.5]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
@@ -402,7 +402,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                     stimbVal(runIndex) = stimbValList(cc);
                                     stimCenter(:,runIndex) = prBase.stimCenter; % deltaCenterList(:,yy);
                                     regPara(runIndex) = regParaList(rr);
-                                    displayScaleFactor(runIndex) = displayScaleFactorList(dsf);
+                                    displayScaleFactor{runIndex} = displayScaleFactorList{dsf};
 
                                     % These do affect mosaics because we
                                     % design mosaics to have desired properties
