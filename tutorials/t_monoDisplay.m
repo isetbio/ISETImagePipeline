@@ -31,9 +31,10 @@
 %% Clear
 clear; close all;
 
+%% Can scale primaries in the display
+displayScaleFactor = [1 1 1];
+
 %% Load up a standard display
-%displayFile = 'CRT12BitDisplay.mat';
-%display = load(fullfile(dataBaseDir, displayFile));
 origDisplayFile = 'LCD-Apple';
 origDisplay = displayCreate(origDisplayFile);
 wls = displayGet(origDisplay,'wave');
@@ -149,6 +150,12 @@ extraCalData = ptb.ExtraCalData;
 extraCalData.distance = displayGet(origDisplay,'distance');
 monoDisplay = ptb.GenerateIsetbioDisplayObjectFromPTBCalStruct('MonoPrimaries', monoCalStruct, extraCalData, false);
 monoDisplay  = rmfield(monoDisplay,'dixel');
+if (overwriteDisplayGamma)
+    gammaInput = linspace(0,1,2^displayGammaBits)';
+    gammaOutput = gammaInput.^displayGammaGamma;
+    monoDisplay = displaySet(monoDisplay,'gamma',gammaOutput(:,[1 1 1]));
+end
+monoDisplay = ScaleDisplayPrimaries(monoDisplay,displayScaleFactor);
 
 %% Visualize some images on display
 %
@@ -178,19 +185,37 @@ overwriteDisplayGamma = true;
 displayGammaBits = 12;
 displayGammaGamma = 2;
 theDisplayLoad = load(fullfile(getpref('ISETImagePipeline','aoReconDir'), 'displays', [displayName 'Display.mat']));
-eval(['theDisplay = theDisplayLoad.' displayFieldName ';']);
-theDisplay = displaySet(theDisplay,'wave',wls);
+eval(['theLoadedDisplay = theDisplayLoad.' displayFieldName ';']);
+theLoadedDisplay = displaySet(theLoadedDisplay,'wave',wls);
 if (overwriteDisplayGamma)
-    gammaInput = linspace(0,1,2^displayGammaBits)';
-    gammaOutput = gammaInput.^displayGammaGamma;
-    theDisplay.gamma = gammaOutput(:,[1 1 1]);
-    monoDisplay.gamma = gammaOutput(:,[1 1 1]);
+    theLoadedDisplay = displaySet(theLoadedDisplay,'gamma',gammaOutput(:,[1 1 1]));
 end
+theDisplay = ScaleDisplayPrimaries(theLoadedDisplay,displayScaleFactor);
 clear theDisplayLoad;
 
-% Make figure
+%% Check that the display we created here matches
+%
+% The one we load in the code
+monoDisplaySpd = displayGet(monoDisplay,'spd');
+theDisplaySpd = displayGet(theLoadedDisplay,'spd');
+if (any(monoDisplaySpd(:) ~= theDisplaySpd(:) ))
+    error('Did not match loaded mono and created display primaries');
+end
+monoDisplayAmbient = displayGet(monoDisplay,'black spd');
+theDisplayAmbient = displayGet(theLoadedDisplay,'black spd');
+if (any(monoDisplayAmbient(:) ~= theDisplayAmbient(:)))
+    error('Did not match  loaded mono and created display ambient spectrum');
+end
+
+monoDisplayGamma = displayGet(monoDisplay,'gamma');
+theDisplayGamma = displayGet(theLoadedDisplay,'gamma');
+if (any(monoDisplayGamma(:) ~= theDisplayGamma(:)))
+    error('Did not match  loaded mono and created display gamma');
+end
+
+% Make figure of primaries matched up
 figure; clf; hold on;
-plot(displayGet(theDisplay,'wave'),displayGet(theDisplay,'spd'),'-','Color','r','LineWidth',6);
+plot(displayGet(theLoadedDisplay,'wave'),displayGet(theLoadedDisplay,'spd'),'-','Color','r','LineWidth',6);
 plot(displayGet(monoDisplay,'wave'),displayGet(monoDisplay,'spd'),':','Color','k','LineWidth',4);
 
 

@@ -39,7 +39,9 @@ prBase.displayName = 'mono';
 prBase.viewingDisplayName = 'conventional';
 prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
-displayScaleFactorList = {[1 1 1]'};
+
+% This puts the display where we want it.  See t_renderMonoDisplay
+pr.displayScaleFactor = [272.5887  163.5532  218.0710];
 
 %% Stimulus size
 prBase.stimSizeDegsList = [4.5]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
@@ -221,87 +223,14 @@ end
 
 %% Stimulus color
 %
-% We can either specify an explicit list of RGB values, or generate an
-% isoluminant series that varies between full green and full red.
-% Which we do is controlled by the isoLumRG flag.  Specific parameters
-% for each possibility are defined within the corresponding branch of the
-% conditional just below.
-isoLumRGAuto = false;
-monoBgScale = 0.2;
-monoGray = [0.4445; 0.5254; 0.5542];
-
-if (~isoLumRGAuto)
-    % These are rgb values (linear, before gamma correction)
-    prBase.stimBgVal = monoGray * monoBgScale;
-    stimrValList = [0.4615 0.3846 0.3077 0.2308 0.1538 0.1154 0.0769 0.0385 0.0000];
-    stimgValList = [0.0081 0.0242 0.0403 0.0565 0.0726 0.0807 0.0888 0.0968 0.1049];
-    stimbValList = [0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005];
-else
-    nEquiLumStimuli = 11;
-    switch (prBase.displayName)
-        case 'conventional'
-            displayFieldName = 'CRT12BitDisplay';
-            overwriteDisplayGamma = false;
-            prBase.stimBgVal = [0.1 0.1 0.1];
-        case 'mono'
-            displayFieldName = 'monoDisplay';
-            overwriteDisplayGamma = true;
-            
-            % The following values are the approximations for a 0.5 uniform
-            % field on a conventional display using the tutorial. These can
-            % be scaled accordingly for a lighter or darker background on
-            % the interval 0-1/max(monoGray). Temporary patch, once
-            % everything else is cleaned may consider replacing with a call
-            % to RGBRenderAcrossDisplays
-            monoGray = [0.444485445018075; ...
-                0.525384925401570; ...
-                0.554173733733909];
-            
-            % DON'T FORGET TO PUT IN AN ACTUAL VALUE FOR THE "1" HERE
-            prBase.stimBgVal = monoGray * monoBgScale;
-        otherwise
-            error('Unknown display specified');
-    end
-    
-    % Load the appropriate display
-    theDisplayLoad = load(fullfile(prBase.aoReconDir, 'displays', [prBase.displayName 'Display.mat']));
-    eval(['theDisplay = theDisplayLoad.' displayFieldName ';']);
-    
-    if (overwriteDisplayGamma)
-        gammaInput = linspace(0,1,2^prBase.displayGammaBits)';
-        gammaOutput = gammaInput.^prBase.displayGammaGamma;
-        theDisplay.gamma = gammaOutput(:,[1 1 1]);
-    end
-    
-    % Using the 1 nm sampling to agree w/ tutorial
-    theDisplay = displaySet(theDisplay, 'wave', prBase.wls);
-    
-    % Get information we need to render scenes from their spectra through
-    % the recon display.
-    theXYZStruct = load('T_xyz1931');
-    T_XYZ = SplineCmf(theXYZStruct.S_xyz1931,683*theXYZStruct.T_xyz1931,prBase.wls);
-    M_rgbToXYZ = T_XYZ*displayGet(theDisplay,'spd primaries')*(prBase.wls(2)-prBase.wls(1));
-    M_XYZTorgb = inv(M_rgbToXYZ);
-    rPrimaryLuminance = M_rgbToXYZ(2,1);
-    gPrimaryLuminance = M_rgbToXYZ(2,2);
-    
-    % Compute as set of equally spaced r/(r+g) values that lead
-    % to equal luminance stimuli.
-    thePrimaries = displayGet(theDisplay,'spd primaries');
-    rOverRPlusG = linspace(1,0,nEquiLumStimuli);
-    gOverRPlusG = 1-rOverRPlusG;
-    gPrimaryAdjust = rPrimaryLuminance/gPrimaryLuminance;
-    rRaw = rOverRPlusG;
-    gRaw = gOverRPlusG;
-    gAdjust = gRaw*rPrimaryLuminance/gPrimaryLuminance;
-    b = 0.001;
-    equiLumrgbValues = [rRaw ; gAdjust; b*ones(size(rRaw))];
-    inputLinearrgbValues = 0.5*equiLumrgbValues/max(equiLumrgbValues(:));
-    
-    stimrValList = inputLinearrgbValues(1,:);
-    stimgValList = inputLinearrgbValues(2,:);
-    stimbValList = inputLinearrgbValues(3,:);
-end
+% Specify an explicit list of RGB values. These are computed in
+% t_renderMonoDisplayImage.
+%
+% These are rgb values (linear, before gamma correction)
+prBase.stimBgVal = [0.00109, 0.00160, 0.00114];
+stimrValList = [0.5941    0.5159    0.3518    0.2658    0.2033    0.1720    0.1173    0.0704    0.0078];
+stimgValList = [0.0082    0.0355    0.0929    0.1230    0.1449    0.1558    0.1749    0.1913    0.2132];
+stimbValList = [0         0         0         0         0         0         0         0         0];
 
 % Check that all channels receive same number of inputs
 if (length(stimgValList) ~= length(stimrValList) || length(stimbValList) ~= length(stimrValList))
