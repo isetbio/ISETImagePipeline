@@ -375,86 +375,86 @@ end
 
 
 
-cnv.renderDirUpdate = fullfile(pr.aoReconDir, pr.versEditor, ...
-    xRenderString);
-
-outputSubdirGeneral = dir(cnv.renderDirUpdate);
-subDirNames = extractfield(outputSubdirGeneral, 'name');
-subDirNamesFullString = cell2mat(subDirNames);
-if contains(subDirNamesFullString, '.DS_Store')
-    startDirIndex = 4;
-else
-    startDirIndex = 3;
-end
-
-
-
-for i = startDirIndex:length(outputSubdirGeneral)
-    if outputSubdirGeneral(i).isdir
-
-        outputSubdirSize = dir(fullfile(outputSubdirGeneral(i).folder, ...
-            outputSubdirGeneral(i).name));
-
-        subDirNames2 = extractfield(outputSubdirSize, 'name');
-        subDirNamesFullString2 = cell2mat(subDirNames2);
-        if contains(subDirNamesFullString2, '.DS_Store')
-            startDirIndex2 = 4;
-        else
-            startDirIndex2 = 3;
-        end
-
-
-        for j = startDirIndex2:length(outputSubdirSize)
-            if outputSubdirSize(j).isdir
-
-                outputSubdirRegionProps = dir(fullfile(outputSubdirSize(j).folder, ...
-                    outputSubdirSize(j).name));
-
-                subDirNames3 = extractfield(outputSubdirRegionProps, 'name');
-                subDirNamesFullString3 = cell2mat(subDirNames3);
-                if contains(subDirNamesFullString3, '.DS_Store')
-                    startDirIndex3 = 4;
-                else
-                    startDirIndex3 = 3;
-                end
-
-
-                for k = startDirIndex3:length(outputSubdirRegionProps)
-                    if outputSubdirRegionProps(k).isdir
-
-                        outputSubdirVariant = dir(fullfile(outputSubdirRegionProps(k).folder, ...
-                            outputSubdirRegionProps(k).name));
-
-                        subDirNames4 = extractfield(outputSubdirVariant, 'name');
-                        subDirNamesFullString4 = cell2mat(subDirNames4);
-                        if contains(subDirNamesFullString4, '.DS_Store')
-                            startDirIndex4 = 4;
-                        else
-                            startDirIndex4 = 3;
-                        end
-
-                        for m = startDirIndex4:length(outputSubdirVariant)
-
-                            outputSubdirCenterProps = dir(fullfile(outputSubdirVariant(m).folder, ...
-                                outputSubdirVariant(m).name));
-
-                            % Fix the name of the prop directory holding the stim info
-                            updatedName = ['centerProps' outputSubdirCenterProps(m).name(12:17) '.mat'];
-                            oldPath = fullfile(outputSubdirCenterProps(m).folder, ...
-                                outputSubdirCenterProps(m).name);
-                            updatedPath = fullfile(outputSubdirCenterProps(m).folder, ...
-                                updatedName);
-                            movefile(oldPath,updatedPath)
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-
-
-
-
-
-end
+% cnv.renderDirUpdate = fullfile(pr.aoReconDir, pr.versEditor, ...
+%     xRenderString);
+% 
+% outputSubdirGeneral = dir(cnv.renderDirUpdate);
+% subDirNames = extractfield(outputSubdirGeneral, 'name');
+% subDirNamesFullString = cell2mat(subDirNames);
+% if contains(subDirNamesFullString, '.DS_Store')
+%     startDirIndex = 4;
+% else
+%     startDirIndex = 3;
+% end
+% 
+% 
+% 
+% for i = startDirIndex:length(outputSubdirGeneral)
+%     if outputSubdirGeneral(i).isdir
+% 
+%         outputSubdirSize = dir(fullfile(outputSubdirGeneral(i).folder, ...
+%             outputSubdirGeneral(i).name));
+% 
+%         subDirNames2 = extractfield(outputSubdirSize, 'name');
+%         subDirNamesFullString2 = cell2mat(subDirNames2);
+%         if contains(subDirNamesFullString2, '.DS_Store')
+%             startDirIndex2 = 4;
+%         else
+%             startDirIndex2 = 3;
+%         end
+% 
+% 
+%         for j = startDirIndex2:length(outputSubdirSize)
+%             if outputSubdirSize(j).isdir
+% 
+%                 outputSubdirRegionProps = dir(fullfile(outputSubdirSize(j).folder, ...
+%                     outputSubdirSize(j).name));
+% 
+%                 subDirNames3 = extractfield(outputSubdirRegionProps, 'name');
+%                 subDirNamesFullString3 = cell2mat(subDirNames3);
+%                 if contains(subDirNamesFullString3, '.DS_Store')
+%                     startDirIndex3 = 4;
+%                 else
+%                     startDirIndex3 = 3;
+%                 end
+% 
+% 
+%                 for k = startDirIndex3:length(outputSubdirRegionProps)
+%                     if outputSubdirRegionProps(k).isdir
+% 
+%                         outputSubdirVariant = dir(fullfile(outputSubdirRegionProps(k).folder, ...
+%                             outputSubdirRegionProps(k).name));
+% 
+%                         subDirNames4 = extractfield(outputSubdirVariant, 'name');
+%                         subDirNamesFullString4 = cell2mat(subDirNames4);
+%                         if contains(subDirNamesFullString4, '.DS_Store')
+%                             startDirIndex4 = 4;
+%                         else
+%                             startDirIndex4 = 3;
+%                         end
+% 
+%                         for m = startDirIndex4:length(outputSubdirVariant)
+% 
+%                             outputSubdirCenterProps = dir(fullfile(outputSubdirVariant(m).folder, ...
+%                                 outputSubdirVariant(m).name));
+% 
+%                             % Fix the name of the prop directory holding the stim info
+%                             updatedName = ['centerProps' outputSubdirCenterProps(m).name(12:17) '.mat'];
+%                             oldPath = fullfile(outputSubdirCenterProps(m).folder, ...
+%                                 outputSubdirCenterProps(m).name);
+%                             updatedPath = fullfile(outputSubdirCenterProps(m).folder, ...
+%                                 updatedName);
+%                             movefile(oldPath,updatedPath)
+%                         end
+%                     end
+%                 end
+%             end
+%         end
+%     end
+% end
+% 
+% 
+% 
+% 
+% 
+% end
