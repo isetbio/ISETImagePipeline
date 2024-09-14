@@ -41,7 +41,7 @@ prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
 
 % This puts the display where we want it.  See t_renderMonoDisplay
-pr.displayScaleFactor = [272.5887  163.5532  218.0710];
+prBase.displayScaleFactorList = {[272.5887  163.5532  218.0710]};
 
 %% Stimulus size
 prBase.stimSizeDegsList = [4.5]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
@@ -83,7 +83,7 @@ prBase.mosaicStimSizeDegsList = prBase.stimSizeDegsList;
 % the focalVariantList, replacing the corresponding value in
 % regionVariantList on each iteration.
 prBase.focalRegionList = ["center"];
-prBase.focalVariantList = [2];
+prBase.focalVariantList = [1];
 prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
 % Additional region variant params
@@ -323,7 +323,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
                     for ff = 1:length(forwardDefocusDioptersList)
                         for rr = 1:length(regParaList)
                             for pp = 1:length(forwardPupilDiamListMM)
-                                for dsf = 1:length(displayScaleFactorList)
+                                for dsf = 1:length(prBase.displayScaleFactorList)
                                     % These parameters do not affect mosaics or
                                     % render matrices.
                                     stimrVal(runIndex) = stimrValList(cc);
@@ -331,7 +331,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                     stimbVal(runIndex) = stimbValList(cc);
                                     stimCenter(:,runIndex) = prBase.stimCenter; % deltaCenterList(:,yy);
                                     regPara(runIndex) = regParaList(rr);
-                                    displayScaleFactor{runIndex} = displayScaleFactorList{dsf};
+                                    displayScaleFactor{runIndex} = prBase.displayScaleFactorList{dsf};
 
                                     % These do affect mosaics because we
                                     % design mosaics to have desired properties
