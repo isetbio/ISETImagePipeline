@@ -292,7 +292,10 @@ if (~exist(cnv.reconRenderDirFull,'dir'))
     mkdir(cnv.reconRenderDirFull);
 end
 
-% %% Build mosaic montage directories
+%% Build mosaic montage directories
+%
+% ** Not being done right now. **
+%
 % % Build the nested render directories for forward and recon conditions
 % cnv.forwardMontageDirFull = fullfile(pr.aoReconDir,pr.versEditor,'xRenderStructures', ...
 %     cnv.forwardRenderDirFirst,'mosaicMontages');
@@ -307,6 +310,9 @@ end
 % end
 
 %% Patch to put old naming scheme and current naming scheme in agreement.
+%
+% *** This is code that can be run by hand to patch up a past naming scheme
+% ***
 %
 % Desired updates are as follows:
 % Last level change to: stimColor_r_g_b
