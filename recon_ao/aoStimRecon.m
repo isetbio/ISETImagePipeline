@@ -72,7 +72,7 @@ forwardConeMosaic.Display = ScaleDisplayPrimaries(forwardConeMosaic.Display,pr.d
 if (any(displayGet(forwardConeMosaic.Display,'black spd')) ~= 0)
     error('Expecting zero for ambient spd');
 end
-reconConeMosaic.Display = ScaleDisplayPrimaries(reconConeMosaic.Display,pr.displayScaleFactors);
+reconConeMosaic.Display = ScaleDisplayPrimaries(reconConeMosaic.Display,pr.displayScaleFactor);
 if (any(displayGet(forwardConeMosaic.Display,'black spd')) ~= 0)
     error('Expecting zero for ambient spd');
 end
