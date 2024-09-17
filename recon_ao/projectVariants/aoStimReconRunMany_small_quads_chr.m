@@ -145,10 +145,13 @@ prBase.stimSeriesVariant = 1;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-buildRenderMatrix = true;
+buildRenderMatrix = false;
 buildMosaicMontages = false;
-runReconstructions = true;
+runReconstructions = false;
 summaryFigs = true;
+
+% Not sure why we have this
+actualSummaryFigs = true;
 
 %% Spatial parameters
 %
@@ -446,7 +449,7 @@ end
 % Some of this is done rather precariously so care should be taken as the
 % project progresses to ensure the things being cycled over are actually
 % what we want.
-if actuasummaryFigs
+if actualSummaryFigs
     
     % Bookkeeping variables for number of stimuli and propL as dimensions
     % of future plots
