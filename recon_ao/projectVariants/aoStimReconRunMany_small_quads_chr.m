@@ -41,7 +41,33 @@ prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
 
 % This puts the display where we want it.  See t_renderMonoDisplay
-prBase.displayScaleFactorList = {[272.5887  163.5532  218.0710]};
+prBase.displayScaleFactorListRaw = {[272.5887  163.5532  218.0710]};
+
+% Mosaic integration time.
+%
+% The mosaic is built by peripheral model with a fixed integration time
+% of 0.1 seconds.  This is a reasonable number for an integration time,
+% but it does affect the signal to noise of the calculations and in 
+% particular the effect of the reconstruction method regularization depends
+% on SNR in complex ways.  So we may want to muck with the integration
+% time. Another related factor is the stimulus duration. This is not
+% explicitly dissociated in this code, since we do all of our computations 
+% for a single scene and there is no explicit concept of frame rate or
+% scene duration by the time we get to the compute, as far as I can see.
+%
+% The easiest way to deal with changing the integration time/duration at
+% this point in the project is to fold it into the display scaling.  This
+% makes reading the output a little tricky if we want to play with both
+% of these factors, but since they are not identifiably different in the
+% current calcs, I think that is OK.
+prBase.cMosaicIntegrationTime = 0.1;
+prBase.useIntegrationTime = 0.001;
+integrationTimeFactor = prBase.useIntegrationTime/prBase.cMosaicIntegrationTime;
+for ii = 1:length(prBase.displayScaleFactorListRaw)
+    prBase.displayScaleFactorList{ii} = integrationTimeFactor*prBase.displayScaleFactorListRaw{ii};
+end
+
+
 
 %% Stimulus size
 prBase.stimSizeDegsList = [10]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
