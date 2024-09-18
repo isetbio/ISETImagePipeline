@@ -67,8 +67,6 @@ for ii = 1:length(prBase.displayScaleFactorListRaw)
     prBase.displayScaleFactorList{ii} = integrationTimeFactor*prBase.displayScaleFactorListRaw{ii};
 end
 
-
-
 %% Stimulus size
 prBase.stimSizeDegsList = [10]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
 
