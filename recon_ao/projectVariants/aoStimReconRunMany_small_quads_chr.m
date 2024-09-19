@@ -61,7 +61,7 @@ prBase.displayScaleFactorListRaw = {[272.5887  163.5532  218.0710]};
 % of these factors, but since they are not identifiably different in the
 % current calcs, I think that is OK.
 prBase.cMosaicIntegrationTime = 0.1;
-prBase.useIntegrationTime = 0.0003;
+prBase.useIntegrationTime = 0.001;
 integrationTimeFactor = prBase.useIntegrationTime/prBase.cMosaicIntegrationTime;
 for ii = 1:length(prBase.displayScaleFactorListRaw)
     prBase.displayScaleFactorList{ii} = integrationTimeFactor*prBase.displayScaleFactorListRaw{ii};
@@ -255,7 +255,7 @@ end
 % t_renderMonoDisplayImage.
 %
 % These are rgb values (linear, before gamma correction)
-prBase.stimBgVal = [0.00109, 0.00160, 0.00114];
+prBase.stimBgVal = 20*[0.00109, 0.00160, 0.00114];
 stimrValList = [0.5941    0.5159    0.3518    0.2658    0.2033    0.1720    0.1173    0.0704    0.0078];
 stimgValList = [0.0082    0.0355    0.0929    0.1230    0.1449    0.1558    0.1749    0.1913    0.2132];
 stimbValList = [0         0         0         0         0         0         0         0         0];
