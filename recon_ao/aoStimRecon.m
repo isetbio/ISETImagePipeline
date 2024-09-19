@@ -182,8 +182,7 @@ if (length(pr.stimBgVal) == 1 || length(pr.stimBgVal) == 3)
     stimImagergb(idxYRange, idxXRange, 2) = pr.stimgVal;
     stimImagergb(idxYRange, idxXRange, 3) = pr.stimbVal;
 
-
-    % Otherwise, treat passed pr.stimBgVal as an actual image
+% Otherwise, treat passed pr.stimBgVal as an actual imageinput
 else
     stimImagergb = pr.stimBgVal;
     nPixelsCheck = size(stimImagergb,1);
