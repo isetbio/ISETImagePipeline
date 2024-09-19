@@ -305,8 +305,9 @@ prBase.sparsePriorStr = 'conventional';
 
 %% Reconstruction parameters
 %
-% Should cycle through a few of these regs to optimize for 58x58 pixels
+% Should cycle through a few of these regs to optimize 
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
+% The right value varies with pixel size and light level.
 regParaList = [0.005]; %[0.1];
 prBase.stride = 2;
 prBase.maxReconIterations = 2000;
@@ -471,7 +472,7 @@ end
 % Integrate the aoStimReconRerunFigs script into this one for a centralized
 % region of post processing. Set it up as another option.
 %
-% Some of this is done rather precariously so care should be taken as the
+% This is done rather precariously so care should be taken as the
 % project progresses to ensure the things being cycled over are actually
 % what we want.
 if actualSummaryFigs
@@ -512,6 +513,7 @@ if actualSummaryFigs
                 [~, varInd4] = unique(mainVars(4,:));
                 varInd4 = [varInd3(ve) - 1 + varInd4'];
                 
+                % Set up space for the summary
                 fullReconSummary = [];
                 
                 % Variable Four: Focal Prop L
@@ -546,8 +548,7 @@ if actualSummaryFigs
                     
                     % Store the collected info in a running cell and utilize when actually
                     % building the full summary figures.
-                    fullReconSummary = [fullReconSummary; reconSummary];
-                    
+                    fullReconSummary = [fullReconSummary; reconSummary];     
                 end
                 
                 % Make and save summary figures
