@@ -61,7 +61,7 @@ prBase.displayScaleFactorListRaw = {[272.5887  163.5532  218.0710]};
 % of these factors, but since they are not identifiably different in the
 % current calcs, I think that is OK.
 prBase.cMosaicIntegrationTime = 0.1;
-prBase.useIntegrationTime = 0.001;
+prBase.useIntegrationTime = 0.0003;
 integrationTimeFactor = prBase.useIntegrationTime/prBase.cMosaicIntegrationTime;
 for ii = 1:length(prBase.displayScaleFactorListRaw)
     prBase.displayScaleFactorList{ii} = integrationTimeFactor*prBase.displayScaleFactorListRaw{ii};
@@ -108,7 +108,8 @@ prBase.mosaicStimSizeDegsList = prBase.stimSizeDegsList;
 % regionVariantList on each iteration.
 prBase.focalRegionList = ["center"];
 prBase.focalVariantList = [1];
-prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
+% prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
+prBase.focalPropLList = [0.4 0.5];
 
 % Additional region variant params
 %
