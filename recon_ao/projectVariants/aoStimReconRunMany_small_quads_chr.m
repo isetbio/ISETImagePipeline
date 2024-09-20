@@ -47,11 +47,11 @@ prBase.displayScaleFactorListRaw = {[272.5887  163.5532  218.0710]};
 %
 % The mosaic is built by peripheral model with a fixed integration time
 % of 0.1 seconds.  This is a reasonable number for an integration time,
-% but it does affect the signal to noise of the calculations and in 
+% but it does affect the signal to noise of the calculations and in
 % particular the effect of the reconstruction method regularization depends
 % on SNR in complex ways.  So we may want to muck with the integration
 % time. Another related factor is the stimulus duration. This is not
-% explicitly dissociated in this code, since we do all of our computations 
+% explicitly dissociated in this code, since we do all of our computations
 % for a single scene and there is no explicit concept of frame rate or
 % scene duration by the time we get to the compute, as far as I can see.
 %
@@ -94,11 +94,11 @@ prBase.mosaicStimSizeDegsList = prBase.stimSizeDegsList;
 
 % At some point we should expose the parameter that controls the size of
 % the immediate surround, because we may be interested in how varying that
-% affects things. 
+% affects things.
 
 % The parameters here overide the default parameters
 % for different regions, with those parametrs specified below.
-% 
+%
 % Here, a list of regions are defined as the focal region, and we can cycle
 % through L cone proportions and variants for that region.  Usually this is
 % the center, but other choices are possible.
@@ -115,7 +115,7 @@ prBase.focalPropLList = [0.4 0.5];
 %
 % Set default variant and proportion L and S cones. Note that throughout
 % the simulations, these values will hold and only one per group will be
-% switched to the focal value 
+% switched to the focal value
 
 % L proportions switch.  Sets cone proportions matched to region
 % variant number.  This wasn't our original intent with how we
@@ -146,24 +146,24 @@ for rr = 2:3
 end
 
 % Set cone proportions for S for all regions.
-% 
+%
 % Currently we are adjusting this by hand for different
 % stim sizes, because we want to make sure we get some
 % S cones in the central stimulated area even for the small
 % sizes.  To do this, we need to boost the underlying
 % proportion.  The conditional is handled in routine
 % prFromBase.
-prBase.propSLargeTarget = [0.1 0.07 0.07];  
+prBase.propSLargeTarget = [0.1 0.07 0.07];
 prBase.propSSmallTarget = [0.15 0.07 0.07];
 prBase.targetSizeSPropThresholdDegs = 6/60;
 
 % Establish the size of the nearSurround annulus, input as a width value in
 % arcmin. Nominal stimulus, pixel adjustents, and padding all encompass the
 % center region, whereas this nearSurround begins just beyond that.
-prBase.annulusWidthArc = 2; 
+prBase.annulusWidthArc = 2;
 
 % Stimulus variant number
-prBase.stimSeriesVariant = 1; 
+prBase.stimSeriesVariant = 1;
 
 %% Choose your journey
 %
@@ -203,7 +203,7 @@ prBase.addPoissonNoise = false;
 % The two buildNew flags here force a build of existing matrices, while
 % if they are false and we are building, only ones that don't yet exist
 % are built.  Turn these to true with trepidation because the same render
-% matrix may get build over and over as one loops through conditions.  
+% matrix may get build over and over as one loops through conditions.
 % Probably what you actually want to do is go delete render matrices that
 % you would like rebuilt.
 if buildRenderMatrix
@@ -277,7 +277,7 @@ end
 % % Position specified in pixels, could consider specifying in minutes.
 % % shiftInMinutesListX = [0];
 % % shiftInMinutesListY = [0];
-% 
+%
 % % Convert the shifts to pixel positions.
 % %
 % % shiftInPixelsListX = round(prBase.pixelsPerMinute*shiftInMinutesListX);
@@ -285,7 +285,7 @@ end
 % % if (shiftInPixelsListX ~= 0 | shiftInPixelsListY ~= 0)
 % %     error('For right now assuming no shift in pixels specified');
 % % end
-% 
+%
 % % Consider including the term "-(prBase.nPixels * 0.1)" to better center
 % % the quad stim at larger values so not pushing against the outer edge.
 % %
@@ -305,7 +305,7 @@ prBase.sparsePriorStr = 'conventional';
 
 %% Reconstruction parameters
 %
-% Should cycle through a few of these regs to optimize 
+% Should cycle through a few of these regs to optimize
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 % The right value varies with pixel size and light level.
 regParaList = [0.05]; %[0.005]; %[0.1];
@@ -411,13 +411,13 @@ if buildRenderMatrix
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
             focalRegion, focalPropL, focalVariant);
         cnv = computeConvenienceParams(pr);
-        
+
         % Build foward cone mosaic and render matrix if needed
         if (buildNewForward || ~exist(fullfile(cnv.forwardRenderDirFull, cnv.renderName),'file'))
             renderStructure = buildRenderStruct(pr, cnv, "forward");
             clear renderStructure;
         end
-        
+
         % Build recon cone mosaic and render structure if needed
         if (buildNewRecon || ~exist(fullfile(cnv.reconRenderDirFull, cnv.renderName),'file'))
             renderStructure = buildRenderStruct(pr, cnv, "recon");
@@ -451,17 +451,17 @@ end
 % issue is likley a masked issue within the aoStimRecon file. Just remember
 % to turn it back to a parfor loop when finished.
 if runReconstructions
-    for pp = 1:runIndex        
+    for pp = 1:runIndex
         % Set up parameters structure for this loop, filling in fields that come
         % out of lists above.
         pr = prFromBase(prBase,pp,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
             focalRegion, focalPropL, focalVariant);
-        
+
         % Compute convenience parameters
         cnv = computeConvenienceParams(pr);
-        
+
         % Call the driving function
         aoStimRecon(pr,cnv);
     end
@@ -475,186 +475,109 @@ end
 % This is done rather precariously so care should be taken as the
 % project progresses to ensure the things being cycled over are actually
 % what we want.
-if actualSummaryFigs
-    
+if (actualSummaryFigs)
     % Bookkeeping variables for number of stimuli and propL as dimensions
     % of future plots
     numStim = length(stimrValList);
     numProp = length(prBase.focalPropLList);
-    
-    % Identify the main variables we're concerned about for these
-    % simulations for ease of computation, except for the final output
-    % level (i.e. dont include stimrVal despite the fact that we also
-    % change color since those directories contain the xRunOutput.m file).
-    mainVars = [stimSizeDegs; focalRegion; focalVariant; focalPropL];
-    [~, mainVarsInd] = unique(mainVars.', 'rows', 'stable');
-    
-    % Cycle only over the instances where the main variables change.
-    [~, varInd1] = unique(mainVars(1,:));
-    varInd1 = [varInd1' (length(mainVars)+1)];
 
-    % Variable One: Stim Size
-    for vo = 1:length(varInd1)-1
-        holderVars1 = mainVars(: , varInd1(vo):varInd1(vo+1)-1);
-        [~, varInd2] = unique(mainVars(2,:));
-        varInd2 = [varInd2' (length(holderVars1)+1)];
-        varInd2 = [varInd1(vo) - 1 + varInd2];
-        
-        % Variable Two: Focal Region
-        for vt = 1:length(varInd2)-1
-            holderVars2 = mainVars(: , varInd2(vt):varInd2(vt+1)-1);
-            [~, varInd3] = unique(mainVars(3,:));
-            varInd3 = [varInd3' (length(holderVars2)+1)];
-            varInd3 = [varInd2(vt) - 1 + varInd3];
-            
-            % Variable Three: Focal Variant
-            for ve = 1:length(varInd3)-1
-                holderVars3 = mainVars(: , varInd3(ve):varInd3(ve+1)-1);
-                [~, varInd4] = unique(mainVars(4,:));
-                varInd4 = [varInd3(ve) - 1 + varInd4'];
-                
-                % Set up space for the summary
-                fullReconSummary = [];
-                
-                % Variable Four: Focal Prop L
-                for vf = 1:length(varInd4)
-                    % Readjust the index value according to the levels that are
-                    % actually pertinent.
-                    newInd = varInd4(vf);
-                    
-                    % Set up paramters structure for this loop, filling in fields that come
-                    % out of lists above.
-                    pr = prFromBase(prBase,newInd,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
-                        stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-                        forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
-                        focalRegion, focalPropL, focalVariant);
-                    
-                    % Compute convenience parameters
-                    cnv = computeConvenienceParams(pr);
+    % Loop over ancillary parameters that aren't part of the figure logic below,
+    % but which can vary and which we do want to handle.
+    for ff = 1:length(forwardDefocusDioptersList)
+        forwardDefocusDiopters = forwardDefocusDioptersList(ff);
+        reconDefocusDiopters = reconDefocusDioptersList(ff);
 
-                    % Patch propInfoFile.m to create the excel sheets with
-                    % mosaic information. This function will slow down code
-                    % noticeably since loading in each render structure to
-                    % get pertinent information (might want to rethink this
-                    % so can save the info at render creation). Should only
-                    % need to be run once for each render structure though,
-                    % after which it will see the file cached and ignore. 
-                    propInfoFile(pr,cnv);
-        
-                    % Call the function to build the summary plots.
-                    [stimSummary, reconSummary] = grabImageInfo(pr, cnv, numStim, ...
-                        "figReconRows", figReconRows, "scaleToMax", scaleToMax, ...
-                        "wls", pr.wls, "zoomToStim", zoomToStim);
-                    
-                    % Store the collected info in a running cell and utilize when actually
-                    % building the full summary figures.
-                    fullReconSummary = [fullReconSummary; reconSummary];     
+        for rr = 1:length(regParaList)
+            regPara = regParaList(rr);
+
+            for pp = 1:length(forwardPupilDiamListMM)
+                forwardPupilDiamMM = forwardPupilDiamListMM(pp);
+                reconPupilDiamMM = reconPupilDiamListMM(pp);
+
+                for dsf = 1:length(prBase.displayScaleFactorList)
+                    displayScaleFactor = prBase.displayScaleFactorList{dsf};
+
+                    % Identify the main variables we're concerned about for these
+                    % simulations for ease of computation, except for the final output
+                    % level (i.e. dont include stimrVal despite the fact that we also
+                    % change color since those directories contain the xRunOutput.m file).
+                    mainVars = [stimSizeDegs; focalRegion; focalVariant; focalPropL; ];
+                    [~, mainVarsInd] = unique(mainVars.', 'rows', 'stable');
+
+                    % Cycle only over the instances where the main variables change.
+                    [~, varInd1] = unique(mainVars(1,:));
+                    varInd1 = [varInd1' (length(mainVars)+1)];
+
+                    % Variable One: Stim Size
+                    for vo = 1:length(varInd1)-1
+                        holderVars1 = mainVars(: , varInd1(vo):varInd1(vo+1)-1);
+                        [~, varInd2] = unique(mainVars(2,:));
+                        varInd2 = [varInd2' (length(holderVars1)+1)];
+                        varInd2 = [varInd1(vo) - 1 + varInd2];
+
+                        % Variable Two: Focal Region
+                        for vt = 1:length(varInd2)-1
+                            holderVars2 = mainVars(: , varInd2(vt):varInd2(vt+1)-1);
+                            [~, varInd3] = unique(mainVars(3,:));
+                            varInd3 = [varInd3' (length(holderVars2)+1)];
+                            varInd3 = [varInd2(vt) - 1 + varInd3];
+
+                            % Variable Three: Focal Variant
+                            for ve = 1:length(varInd3)-1
+                                holderVars3 = mainVars(: , varInd3(ve):varInd3(ve+1)-1);
+                                [~, varInd4] = unique(mainVars(4,:));
+                                varInd4 = [varInd3(ve) - 1 + varInd4'];
+
+                                % Set up space for the summary
+                                fullReconSummary = [];
+
+                                % Variable Four: Focal Prop L
+                                for vf = 1:length(varInd4)
+                                    % Readjust the index value according to the levels that are
+                                    % actually pertinent.
+                                    newInd = varInd4(vf);
+
+                                    % Set up paramters structure for this loop, filling in fields that come
+                                    % out of lists above.
+                                    pr = prFromBase(prBase,newInd,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
+                                        stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
+                                        forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
+                                        focalRegion, focalPropL, focalVariant);
+
+                                    % Compute convenience parameters
+                                    cnv = computeConvenienceParams(pr);
+
+                                    % Patch propInfoFile.m to create the excel sheets with
+                                    % mosaic information. This function will slow down code
+                                    % noticeably since loading in each render structure to
+                                    % get pertinent information (might want to rethink this
+                                    % so can save the info at render creation). Should only
+                                    % need to be run once for each render structure though,
+                                    % after which it will see the file cached and ignore.
+                                    propInfoFile(pr,cnv);
+
+                                    % Call the function to build the summary plots.
+                                    [stimSummary, reconSummary] = grabImageInfo(pr, cnv, numStim, ...
+                                        "figReconRows", figReconRows, "scaleToMax", scaleToMax, ...
+                                        "wls", pr.wls, "zoomToStim", zoomToStim);
+
+                                    % Store the collected info in a running cell and utilize when actually
+                                    % building the full summary figures.
+                                    fullReconSummary = [fullReconSummary; reconSummary];
+                                end
+
+                                % Make and save summary figures
+                                buildSummaryFigs(pr, cnv, numStim, numProp, ...
+                                    fullReconSummary, stimSummary, 'wavelengthUY', wavelengthUY);
+
+                                % Close up summary figures so they don't pile up
+                                close all
+                            end
+                        end
+                    end
                 end
-                
-                % Make and save summary figures
-                buildSummaryFigs(pr, cnv, numStim, numProp, ...
-                    fullReconSummary, stimSummary, 'wavelengthUY', wavelengthUY);
-
-                % Close up summary figures so they don't pile up
-                close all
             end
         end
     end
 end
-
-% DHB: This code was crashing so I commented out the whole section.
-%
-% %% Appendix 1
-% %
-% % This spot allows for quick visualization of a single mosaic without
-% % having to produce an entire mosaic montage. Manually load in the desired
-% % render structure from the proper directory. Then uncomment the needed
-% % portion below and run in the command window. Be sure to comment it out
-% % when finished.
-% 
-% % % LOAD THE RENDER STRUCTURE FIRST
-% % renderStructure.theConeMosaic.visualizeMosaic()
-% 
-% tempFig = figure; clf;
-% forwardConeMosaic.Mosaic.visualize(...
-%     'figureHandle', tempFig, ...
-%     'axesHandle', [], ...
-%     'withSuperimposedOpticalImage', forwardOI, ...
-%     'outlinedConesWithIndices', pr.kConeIndices, ...
-%     'plotTitle','Forward OI on Forward Mosaic','superimposedOIAlpha',0.7);
-% % 
-% % Establish the new center point based on comparison with where the OI
-% % actually lands. Also include scaling based on the OI
-% % pr.eccXDegs = 1.9945; 
-% % pr.eccYDegs = 0.0055;
-% scaleForOI = 1; %1.23;
-% % scales for [2 3.5 10] = [1.55 1.23 1.05]
-% 
-% hold on; 
-% plot(pr.eccXDegs, pr.eccYDegs, '.', 'MarkerSize', 40);
-% 
-% xBounds = [];
-% yBounds = [];
-% xBounds(1,:) = [pr.eccXDegs pr.eccXDegs];
-% yBounds(1,:) = [pr.eccYDegs pr.eccYDegs];
-% centerWidth = scaleForOI * (pr.stimSizeDegs/2);
-% xBounds(2,:) = [xBounds(1)-centerWidth, xBounds(2)+centerWidth];
-% yBounds(2,:) = [yBounds(1)-centerWidth, yBounds(2)+centerWidth];
-% 
-% % Outline the stimulus region
-% hold on
-% rectangle('Position', [xBounds(2,1) yBounds(2,1) ...
-%     (xBounds(2,2) - xBounds(2,1)) ...
-%     (yBounds(2,2) - yBounds(2,1))], 'LineWidth', 3)
-% 
-% % 
-% % % Scale Factor
-% % a = 1.639;
-% % b = -1.598;
-% % c = 1.009;
-% % 
-% % % Arcmin Anulus
-% % % Data points represent number of arcmin added to the diameter of the
-% % % stimulus
-% % % a = 1.44;
-% % % b = -0.7641;
-% % % c = 0.2521;
-% % 
-% % % Power Fits (2-term)
-% % val = a*x^b + c;
-% % 
-% % 
-% % 
-% % % Visaulize index numbers over each cone in the mosaic
-% % for i=1:length(renderStructure.theConeMosaic.Mosaic.coneTypes)
-% %     txt = int2str(i);
-% %     t = text((renderStructure.theConeMosaic.Mosaic.coneRFpositionsDegs(i,1)-0.005), ...
-% %         renderStructure.theConeMosaic.Mosaic.coneRFpositionsDegs(i,2),txt);
-% %     t.FontSize=11;
-% %     hold on
-% % end
-% % 
-% % % Call function to manually select and swap cones (see mouseClick)
-% % g = @(x, y) mouseClick(x, y, renderStructure.theConeMosaic);
-% % set(gcf, 'WindowButtonDownFcn', g)
-% % keyboard
-% 
-% 
-% %% Appendix 2
-% % 
-% % Visualize the OI on the retinal mosaic, to be conducted after running the
-% % aoStimRecon portion outside of the parfor loop and inserting a line break
-% % somewhere near line 520. Use some easily identifiable and removable stim
-% % color like 0.5 0.5 0.5 for a maxiteration of 2 to quickly get through the
-% % initial phases. 
-% 
-% 
-% tempFig = figure; clf;
-% forwardConeMosaic.Mosaic.visualize(...
-%     'figureHandle', tempFig, ...
-%     'axesHandle', [], ...
-%     'withSuperimposedOpticalImage', forwardOI, ...
-%     'outlinedConesWithIndices', pr.kConeIndices, ...
-%     'plotTitle','Forward OI on Forward Mosaic','superimposedOIAlpha',0.7);
-
 
