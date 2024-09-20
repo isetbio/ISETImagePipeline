@@ -46,11 +46,15 @@ displayGammaBits = 12;
 displayGammaGamma = 2;
 overwriteDisplayGamma = true;
 
-% The first scale factor makes the stimulus luminance about 2800 cd/m2.
+% The first scale factor makes the stimulus incremental luminance about 3000 cd/m2.
 % The second allows adjustment of relative intensity range of the two monitors.
-overallDisplayScaleFactor = 2.5*(2800/4987)*194.2;
+overallDisplayScaleFactor = 2.5*(3000/4987)*194.2;
 renderRelativeDisplayScaleFactor = 1;
 baseDisplayScaleVector = [1 0.6 0.8];
+fprintf('Overall display scale factors: %0.2f, %0.2f, %0.2f\n', ...
+    overallDisplayScaleFactor*baseDisplayScaleVector(1), ...
+    overallDisplayScaleFactor*baseDisplayScaleVector(2), ...
+    overallDisplayScaleFactor*baseDisplayScaleVector(3));
 
 % Render in sRGB (true) or with respect to ISETBio viewing display (false)
 SRGB = false;
@@ -334,7 +338,7 @@ end
 
 
 %% Compute background rgb
-backgroundxyY = [0.33 0.33 26]';
+backgroundxyY = [0.33 0.33 1500]';
 backgroundXYZ = xyYToXYZ(backgroundxyY);
 backgroundrgbLinear = Mforward_XYZTorgb*backgroundXYZ;
 fprintf('Forward stimulus background xyY: %0.4f, %0.4f, %0.2f cd/m2\n',backgroundxyY(1),backgroundxyY(2),backgroundxyY(3));
