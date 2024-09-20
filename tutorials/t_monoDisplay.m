@@ -24,6 +24,10 @@
 %
 %      Background was metameric to EE white, and had luminance of about 26
 %      cd/m2.
+%
+% The Greene et al. paper is not quite consistent with the above,
+% particularly with respect to the background luminance.  See Slack
+% 2024-09-20, iset_small_spot thread.
 
 % History:
 %  10/12/22  Fix primary ordering, relative intensities
