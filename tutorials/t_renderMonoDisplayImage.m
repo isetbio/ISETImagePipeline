@@ -162,8 +162,8 @@ else
         % 0.0081 0.0242 0.0403 0.0565 0.0726 0.0807 0.0888 0.0968 0.1049;
         % 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005];
 end
-inputLinearrgbValues = [inputLinearrgbValues [0.4 0.4 0.0]' [0.4 0.4 0.4]'];
-nExtraStim = 2;
+inputLinearrgbValues = [inputLinearrgbValues [0.4 0.4 0.0]' [0.4 0.4 0.4]' [0.05887, 0.08592, 0.06156]'];
+nExtraStim = 3;
 
 % Loop over all the input values
 for iii = 1:size(inputLinearrgbValues,2)
@@ -335,7 +335,6 @@ for iii = 1:size(inputLinearrgbValues,2)
     end
     fprintf('\n')
 end
-
 
 %% Compute background rgb
 backgroundxyY = [0.33 0.33 1500]';
