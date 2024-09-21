@@ -41,7 +41,7 @@ prBase.displayGammaBits = 12;
 prBase.displayGammaGamma = 2;
 
 % This puts the display where we want it.  See t_renderMonoDisplay
-prBase.displayScaleFactorListRaw = {[292.06, 175.24, 233.65]};
+displayFactorListRaw = {[292.06, 175.24, 233.65]};
 
 % Mosaic integration time.
 %
@@ -63,8 +63,8 @@ prBase.displayScaleFactorListRaw = {[292.06, 175.24, 233.65]};
 prBase.cMosaicIntegrationTime = 0.1;
 prBase.useIntegrationTime = 0.1;
 integrationTimeFactor = prBase.useIntegrationTime/prBase.cMosaicIntegrationTime;
-for ii = 1:length(prBase.displayScaleFactorListRaw)
-    prBase.displayScaleFactorList{ii} = integrationTimeFactor*prBase.displayScaleFactorListRaw{ii};
+for ii = 1:length(displayFactorListRaw)
+    displayFactorList{ii} = integrationTimeFactor*displayFactorListRaw{ii};
 end
 
 %% Stimulus size
@@ -170,13 +170,10 @@ prBase.stimSeriesVariant = 1;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-buildRenderMatrix = true;
+buildRenderMatrix = false;
 buildMosaicMontages = false;
-runReconstructions = true;
+runReconstructions = false;
 summaryFigs = true;
-
-% Not sure why we have this
-actualSummaryFigs = true;
 
 %% Spatial parameters
 %
@@ -255,7 +252,7 @@ end
 % t_renderMonoDisplayImage.
 %
 % These are rgb values (linear, before gamma correction)
-prBase.stimBgVal = [0.05887, 0.08592, 0.06156]; %20*[0.00109, 0.00160, 0.00114];
+prBase.stimBgVal = [0.05887, 0.08592, 0.06156]; %200*[0.00109, 0.00160, 0.00114];
 stimrValList = [0.5941    0.5159    0.3518    0.2658    0.2033    0.1720    0.1173    0.0704    0.0078];
 stimgValList = [0.0082    0.0355    0.0929    0.1230    0.1449    0.1558    0.1749    0.1913    0.2132];
 stimbValList = [0         0         0         0         0         0         0         0         0];
@@ -308,7 +305,7 @@ prBase.sparsePriorStr = 'conventional';
 % Should cycle through a few of these regs to optimize
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 % The right value varies with pixel size and light level.
-regParaList = [0.05]; %[0.005]; %[0.1];
+regParaList = [0.5 0.25 0.1 0.05]; %[0.005]; %[0.1];
 prBase.stride = 2;
 prBase.maxReconIterations = 2000;
 prBase.whiteNoiseStarts = 0;
@@ -352,7 +349,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
                     for ff = 1:length(forwardDefocusDioptersList)
                         for rr = 1:length(regParaList)
                             for pp = 1:length(forwardPupilDiamListMM)
-                                for dsf = 1:length(prBase.displayScaleFactorList)
+                                for dsf = 1:length(displayFactorList)
                                     % These parameters do not affect mosaics or
                                     % render matrices.
                                     stimrVal(runIndex) = stimrValList(cc);
@@ -360,7 +357,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                     stimbVal(runIndex) = stimbValList(cc);
                                     stimCenter(:,runIndex) = prBase.stimCenter; % deltaCenterList(:,yy);
                                     regPara(runIndex) = regParaList(rr);
-                                    displayScaleFactor{runIndex} = prBase.displayScaleFactorList{dsf};
+                                    displayScaleFactor{runIndex} = displayFactorList{dsf};
 
                                     % These do affect mosaics because we
                                     % design mosaics to have desired properties
@@ -475,7 +472,7 @@ end
 % This is done rather precariously so care should be taken as the
 % project progresses to ensure the things being cycled over are actually
 % what we want.
-if (actualSummaryFigs)
+if (summaryFigs)
     % Bookkeeping variables for number of stimuli and propL as dimensions
     % of future plots
     numStim = length(stimrValList);
@@ -484,19 +481,9 @@ if (actualSummaryFigs)
     % Loop over ancillary parameters that aren't part of the figure logic below,
     % but which can vary and which we do want to handle.
     for ff = 1:length(forwardDefocusDioptersList)
-        forwardDefocusDiopters = forwardDefocusDioptersList(ff);
-        reconDefocusDiopters = reconDefocusDioptersList(ff);
-
         for rr = 1:length(regParaList)
-            regPara = regParaList(rr);
-
             for pp = 1:length(forwardPupilDiamListMM)
-                forwardPupilDiamMM = forwardPupilDiamListMM(pp);
-                reconPupilDiamMM = reconPupilDiamListMM(pp);
-
-                for dsf = 1:length(prBase.displayScaleFactorList)
-                    displayScaleFactor = prBase.displayScaleFactorList{dsf};
-
+                for dsf = 1:length(displayFactorList)
                     % Identify the main variables we're concerned about for these
                     % simulations for ease of computation, except for the final output
                     % level (i.e. dont include stimrVal despite the fact that we also
@@ -538,10 +525,17 @@ if (actualSummaryFigs)
                                     newInd = varInd4(vf);
 
                                     % Set up paramters structure for this loop, filling in fields that come
-                                    % out of lists above.
+                                    % out of lists above.  Hack into
+                                    % previous interface to prFromBase
+                                    forwardDefocusDioptersForSummaryFigs(newInd) = forwardDefocusDioptersList(ff);
+                                    reconDefocusDioptersForSummaryFigs(newInd) = reconDefocusDioptersList(ff);
+                                    regParaForSummaryFigs(newInd) = regParaList(rr);
+                                    forwardPupilDiamMMForSummaryFigs(newInd) = forwardPupilDiamListMM(pp);
+                                    reconPupilDiamMMForSummaryFigs(newInd) = reconPupilDiamListMM(pp);
+                                    displayScaleFactorForSummaryFigs{newInd} = displayFactorList{dsf};
                                     pr = prFromBase(prBase,newInd,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
-                                        stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
-                                        forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
+                                        stimCenter,forwardDefocusDioptersForSummaryFigs,reconDefocusDioptersForSummaryFigs,regParaForSummaryFigs, ...
+                                        forwardPupilDiamMMForSummaryFigs,reconPupilDiamMMForSummaryFigs,displayScaleFactorForSummaryFigs, ...
                                         focalRegion, focalPropL, focalVariant);
 
                                     % Compute convenience parameters
