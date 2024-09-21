@@ -348,8 +348,6 @@ M_rgbToxyz = T_xyz*displayGet(forwardConeMosaic.Display,'spd primaries')*(wls(2)
 % M_rgbToxyz1 = displayGet(forwardConeMosaic.Display,'rgb2xyz');
 M_xyzTorgb = inv(M_rgbToxyz);
 
-
-
 % % Let's make sure we understand how to get the scene.  This all seems
 % % to check out, and is now commented out.
 %
@@ -374,7 +372,6 @@ M_xyzTorgb = inv(M_rgbToxyz);
 % stimulusScenergb(stimulusScenergb > 1) = 1;
 % stimulusSceneRGB1 = gammaCorrection(CalFormatToImage(stimulusScenergb,m,n),forwardConeMosaic.Display);
 % figure; clf; imshow(stimulusSceneRGB1);
-
 
 %% Summary plot of what happened
 for ii = 1:length(multistartStruct.initTypes)
@@ -412,13 +409,10 @@ for ii = 1:length(multistartStruct.initTypes)
     reconSceneTemp = sceneSet(reconSceneTemp, 'fov', cnv.fieldSizeDegs);
     reconImageLinearTemp = reconImageLinearTemp*reconScaleFactor(ii);
 
-
-    % Visualize recon after being corrected for Display
+    % Visualize recon after being corrected for display
     reconImageLinear = multistartStruct.reconImages{ii};
-
     reconInfo = compareRenderingEW(reconImageLinear, pr.displayName, ...
         pr.viewingDisplayName, idxXRange, 'wls', pr.wls);
-
     imwrite(reconInfo.imageRGBAcrossDisplays, fullfile(cnv.outputDirFull,'ReconDispCorrected.tiff'),'tiff');
 
 

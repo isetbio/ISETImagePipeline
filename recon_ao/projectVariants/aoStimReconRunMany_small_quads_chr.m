@@ -108,8 +108,7 @@ prBase.mosaicStimSizeDegsList = prBase.stimSizeDegsList;
 % regionVariantList on each iteration.
 prBase.focalRegionList = ["center"];
 prBase.focalVariantList = [1];
-% prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
-prBase.focalPropLList = [0.4 0.5];
+prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
 % Additional region variant params
 %
@@ -170,9 +169,9 @@ prBase.stimSeriesVariant = 1;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-buildRenderMatrix = false;
+buildRenderMatrix = true;
 buildMosaicMontages = false;
-runReconstructions = false;
+runReconstructions = true;
 summaryFigs = true;
 
 %% Spatial parameters
@@ -262,36 +261,6 @@ if (length(stimgValList) ~= length(stimrValList) || length(stimbValList) ~= leng
     error('Stimulus value lists must have same length');
 end
 
-% %% Position shifts
-% %
-% % Input desired x and y position for stimulus to be centered over. Function
-% % will end if values exceed pixel limits.
-% %
-% % DHB: Currently commented out all the shifting code.  We could put this
-% % back with a little thought, but I am inclined to remove completely to
-% % simplify reading this whole routine which is already pretty complicated.
-% %
-% % Position specified in pixels, could consider specifying in minutes.
-% % shiftInMinutesListX = [0];
-% % shiftInMinutesListY = [0];
-%
-% % Convert the shifts to pixel positions.
-% %
-% % shiftInPixelsListX = round(prBase.pixelsPerMinute*shiftInMinutesListX);
-% % shiftInPixelsListY = round(prBase.pixelsPerMinute*shiftInMinutesListY);
-% % if (shiftInPixelsListX ~= 0 | shiftInPixelsListY ~= 0)
-% %     error('For right now assuming no shift in pixels specified');
-% % end
-%
-% % Consider including the term "-(prBase.nPixels * 0.1)" to better center
-% % the quad stim at larger values so not pushing against the outer edge.
-% %
-% % DHB: I think prBase.stimCenter is now ignored in favor of the new
-% % way of positioning the sitmulus implemented in aoStimRecon.  I don't
-% % think it would be hard to put shifts back if we decide we need that.
-% % centerXPosition = prBase.trueCenter + shiftInPixelsListX;
-% % centerYPosition = prBase.trueCenter + shiftInPixelsListY;
-
 %% Save center parameters as a vector.
 prBase.stimCenter = [prBase.trueCenter ; prBase.trueCenter];
 
@@ -305,7 +274,7 @@ prBase.sparsePriorStr = 'conventional';
 % Should cycle through a few of these regs to optimize
 % Previous pairs: 100x100 at 5e-3, 128x128 at 1e-2
 % The right value varies with pixel size and light level.
-regParaList = [0.5 0.25 0.1 0.05]; %[0.005]; %[0.1];
+regParaList = [0.05]; %[0.005]; %[0.1];
 prBase.stride = 2;
 prBase.maxReconIterations = 2000;
 prBase.whiteNoiseStarts = 0;
