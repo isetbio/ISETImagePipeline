@@ -417,7 +417,7 @@ end
 % issue is likley a masked issue within the aoStimRecon file. Just remember
 % to turn it back to a parfor loop when finished.
 if runReconstructions
-    for pp = 1:runIndex
+    parfor pp = 1:runIndex
         % Set up parameters structure for this loop, filling in fields that come
         % out of lists above.
         pr = prFromBase(prBase,pp,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
