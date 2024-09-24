@@ -9,7 +9,7 @@
 %   08/15/22  dhb  Wrote after converting aoStimRecon to a function
 %   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
 %   09/22/22  chr  Convert to its own dichrom file
-%   09/27/22  chr  Incorporate inputs for stimulus centering position
+%   09/27/22  chr  IncoƒprBrporate inputs for stimulus centering position
 %   10/05/22  dhb  Lots of changes for parallel
 %   02/20/23  chr  Updates based on Tuten Meeting
 
@@ -68,7 +68,7 @@ for ii = 1:length(displayFactorListRaw)
 end
 
 %% Stimulus size
-prBase.stimSizeDegsList = [7.5 5.5 4.5 3.5 2 1]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
+prBase.stimSizeDegsList = [10 5.5]/60; % [7.5 5.5 4.5 3.5 2 ]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
 
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
@@ -78,7 +78,7 @@ prBase.stimSizeDegsList = [7.5 5.5 4.5 3.5 2 1]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 
 % made by buildRenderStruct to setConeProportions, thus leaving the target
 % size alone everywhere else. That is, this only affects the region of the
 % central portion of the mosaic where we set the cone proportions.
-prBase.forwardOpticalBlurStimSizeExpansionDegs = 1/60;
+prBase.forwardOpticalBlurStimSizeExpansionDegs = 0.5/60;
 
 %% Mosaic information
 %
