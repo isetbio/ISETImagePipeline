@@ -68,7 +68,7 @@ for ii = 1:length(displayFactorListRaw)
 end
 
 %% Stimulus size
-prBase.stimSizeDegsList = [10 5.5]/60; % [7.5 5.5 4.5 3.5 2 ]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
+prBase.stimSizeDegsList = [5.5]/60; % [7.5 5.5 4.5 3.5 2 ]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
 
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
