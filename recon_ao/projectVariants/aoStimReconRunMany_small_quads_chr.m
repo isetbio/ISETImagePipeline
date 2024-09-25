@@ -125,7 +125,7 @@ prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 % track what happens for multiple instances of the same region variant
 % number with different cone proportions.  I think this is probably
 % OK.
-prBase.regionVariant = [1 1 1];
+prBase.regionVariant = [1 2 3];
 prBase.propL = [0.0 0.0 0.0];
 for rr = 2:3
     switch (prBase.regionVariant(rr))
