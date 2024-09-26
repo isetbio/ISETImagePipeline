@@ -1,7 +1,7 @@
 function pr = prFromBase(prBase,index,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
     stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
     forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor,focalRegion, ...
-    focalPropL, focalVariant)
+    focalPropL, focalVariant, mosaicStimSizeDegs)
 
 % Create pr structure from base structure plus filling in parameters in the
 % passed arrays,according to index
@@ -22,6 +22,7 @@ pr.displayScaleFactor = displayScaleFactor{index};
 pr.focalRegion = focalRegion(index);
 pr.focalPropL = focalPropL(index);
 pr.focalVariant = focalVariant(index);
+pr.mosaicStimSizeDegs = mosaicStimSizeDegs;
 
 % Set propS field based on stimSizeDegs. This
 % is done to allow us to drive the number of S

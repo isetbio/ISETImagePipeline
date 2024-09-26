@@ -6,8 +6,8 @@
 % See also: aoStimRecon
 
 % History:
-%   08/15/22  dhb  Wrote after converting aoStimRecon to a function
-%   08/26/22  dhb, chr  Convert to main file, edit cone mosaic options
+%   08/15/22  dhb  Wrote after converting aoStimRecon to aƒusefffff function
+%   08/26/22  dhb, chr  Convert to main file, edit cone ƒmosaic options
 %   09/22/22  chr  Convert to its own dichrom file
 %   09/27/22  chr  IncoƒprBrporate inputs for stimulus centering position
 %   10/05/22  dhb  Lots of changes for parallel
@@ -68,7 +68,7 @@ for ii = 1:length(displayFactorListRaw)
 end
 
 %% Stimulus size
-prBase.stimSizeDegsList = [5.5]/60; % [7.5 5.5 4.5 3.5 2 ]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
+prBase.stimSizeDegsList = [10 7.5 5.5 4.5 3.5 2 1] / 60; % [7.5 5.5 4.5 3.5 2 ]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
 
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
@@ -78,19 +78,18 @@ prBase.stimSizeDegsList = [5.5]/60; % [7.5 5.5 4.5 3.5 2 ]/60; %[10 7.5 5.5 4.5 
 % made by buildRenderStruct to setConeProportions, thus leaving the target
 % size alone everywhere else. That is, this only affects the region of the
 % central portion of the mosaic where we set the cone proportions.
-prBase.forwardOpticalBlurStimSizeExpansionDegs = 0.5/60;
+prBase.forwardOpticalBlurStimSizeExpansionDegs = 1/60;
 
 %% Mosaic information
 %
 % Mosaics are built to be matched to the stimulus size, generally.  Because
 % building the render matrix is very slow, we may want to dissociate this a
-% little at some point.  The first step in that direction is simply to
-% define a separate parameter for the mosaic size specification and set
-% it to be the same as the stimulus size specfication.  We will need to
-% spend a little time on directory naming and parameter passing to actually
-% dissociate these two things, so this next line should not be changed
-% until that work is done.
-prBase.mosaicStimSizeDegsList = prBase.stimSizeDegsList;
+% little at some point.  This parameter causes the stim size used for the
+% mosaic to be the first one in the stimulus size list, which is still a
+% bit inflexible but meets th immedidate need.  The setting of the values
+% is done below according to this variable, after rounding the stimulus
+% size as desired.
+fixMosaicCenterSize = true; 
 
 % At some point we should expose the parameter that controls the size of
 % the immediate surround, because we may be interested in how varying that
@@ -108,7 +107,7 @@ prBase.mosaicStimSizeDegsList = prBase.stimSizeDegsList;
 % regionVariantList on each iteration.
 prBase.focalRegionList = ["center"];
 prBase.focalVariantList = [1];
-prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
+prBase.focalPropLList = 0.67; % [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 
 % Additional region variant params
 %
@@ -125,7 +124,7 @@ prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
 % track what happens for multiple instances of the same region variant
 % number with different cone proportions.  I think this is probably
 % OK.
-prBase.regionVariant = [1 2 3];
+prBase.regionVariant = [1 1 1];
 prBase.propL = [0.0 0.0 0.0];
 for rr = 2:3
     switch (prBase.regionVariant(rr))
@@ -220,6 +219,9 @@ wavelengthUY = [580 570];
 % mosaic.
 prBase.useCustomMosaic = true;
 prBase.viewBounds = false;
+if (~prBase.useCustomMoscaic)
+    error('Make sure you really want to set useCustomMosaic to false.');
+end
 
 % Wavelength specificaiton for calculations
 prBase.wls = (400:1:700)';
@@ -237,6 +239,11 @@ for ss = 1:length(prBase.stimSizeDegsList)
     [~,index]= min(abs(prBase.availStimSizesDegs - stimSizeDegsNominal));
     prBase.stimSizePixels(ss) = prBase.availStimSizesPixels(index);
     prBase.stimSizeDegs(ss) = prBase.availStimSizesDegs(index);
+    if (fixMosaicCenterSize)
+        prBase.mosaicStimSizeDegs(ss) = prBase.stimSizeDegs(1);
+    else
+        prBase.mosaicStimSizeDegs(ss) = prBase.stimSizeDegs(ss);
+    end
     stimSizeMinutes(ss) = prBase.stimSizeDegs(ss)*60;
     fprintf('Nominal stimulus %d: %0.3f minutes, actual used %0.3f minutes, %d pixels, minutes per pixel is %0.4f\n', ...
         ss,prBase.stimSizeDegsList(ss)*60,stimSizeMinutes(ss),prBase.stimSizePixels(ss),prBase.minutesPerPixel);
@@ -334,8 +341,12 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                     % adjacent to it. This is taken into account
                                     % when we build montages of mosaics.
                                     stimSizeDegs(runIndex) = prBase.stimSizeDegs(ss);
+                                    mosaicSizeDegs(runIndex) = prBase.mosaicSizeDegs(ss);
                                     stimSizePixels(runIndex) = prBase.stimSizePixels(ss);
                                     focalRegion(runIndex) = prBase.focalRegionList(gg);
+                                    if (~strcmp(focalRegion(runIndex),"center"))
+                                        error('Double check that code does what you want when focalRegion is not set to center');
+                                    end
                                     focalPropL(runIndex) = prBase.focalPropLList(oo);
                                     focalVariant(runIndex) = prBase.focalVariantList(vv);
 
@@ -403,7 +414,7 @@ if buildMosaicMontages
         pr = prFromBase(prBase,pp,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
-            focalRegion, focalPropL, focalVariant);
+            focalRegion, focalPropL, focalVariant, mosaicSizeDegs);
         cnv = computeConvenienceParams(pr);
         buildMosaicMontage(pr, cnv, "forward");
         buildMosaicMontage(pr, cnv, "recon");
