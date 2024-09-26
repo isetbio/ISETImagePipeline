@@ -89,7 +89,8 @@ prBase.forwardOpticalBlurStimSizeExpansionDegs = 1/60;
 % bit inflexible but meets th immedidate need.  The setting of the values
 % is done below according to this variable, after rounding the stimulus
 % size as desired.
-fixMosaicCenterSize = true; 
+prBase.fixMosaicStimSize = true; 
+prBase.fixedMosaicStimSizeDegs = 10/60;
 
 % At some point we should expose the parameter that controls the size of
 % the immediate surround, because we may be interested in how varying that
@@ -219,7 +220,7 @@ wavelengthUY = [580 570];
 % mosaic.
 prBase.useCustomMosaic = true;
 prBase.viewBounds = false;
-if (~prBase.useCustomMoscaic)
+if (~prBase.useCustomMosaic)
     error('Make sure you really want to set useCustomMosaic to false.');
 end
 
@@ -239,8 +240,9 @@ for ss = 1:length(prBase.stimSizeDegsList)
     [~,index]= min(abs(prBase.availStimSizesDegs - stimSizeDegsNominal));
     prBase.stimSizePixels(ss) = prBase.availStimSizesPixels(index);
     prBase.stimSizeDegs(ss) = prBase.availStimSizesDegs(index);
-    if (fixMosaicCenterSize)
-        prBase.mosaicStimSizeDegs(ss) = prBase.stimSizeDegs(1);
+    if (prBase.fixMosaicStimSize)
+        [~,index]= min(abs(prBase.availStimSizesDegs - prBase.fixedMosaicStimSizeDegs));
+        prBase.mosaicStimSizeDegs(ss) = prBase.availStimSizesDegs(index);
     else
         prBase.mosaicStimSizeDegs(ss) = prBase.stimSizeDegs(ss);
     end
@@ -251,6 +253,10 @@ for ss = 1:length(prBase.stimSizeDegsList)
         error('We are assuming odd numer of pixels and stim pixel size');
     end
 end
+
+% Set fixed mosaic size from same list of available sizes
+[~,index]= min(abs(prBase.availStimSizesDegs - prBase.fixedMosaicStimSizeDegs));
+prBase.stimSizeDegs(ss) = prBase.availStimSizesDegs(index);
 
 %% Stimulus color
 %
@@ -341,7 +347,7 @@ for ss = 1:length(prBase.stimSizeDegsList)
                                     % adjacent to it. This is taken into account
                                     % when we build montages of mosaics.
                                     stimSizeDegs(runIndex) = prBase.stimSizeDegs(ss);
-                                    mosaicSizeDegs(runIndex) = prBase.mosaicSizeDegs(ss);
+                                    mosaicStimSizeDegs(runIndex) = prBase.mosaicStimSizeDegs(ss);
                                     stimSizePixels(runIndex) = prBase.stimSizePixels(ss);
                                     focalRegion(runIndex) = prBase.focalRegionList(gg);
                                     if (~strcmp(focalRegion(runIndex),"center"))
@@ -383,7 +389,7 @@ if buildRenderMatrix
     for pp = 1:runIndex
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists precreated above.
-        pr = prFromBase(prBase,pp,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
+        pr = prFromBase(prBase,pp,stimSizeDegs,mosaicStimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
             focalRegion, focalPropL, focalVariant);
@@ -408,10 +414,12 @@ end
 % Building mosaics themselves is fast, and we control the random number
 % generator. Follows the same format as for the render matrices.
 if buildMosaicMontages
+    error('Need to update build mosaic montage for concept of pr.mosaicStimSizeDegs')
+
     for pp = 1
         % Set up paramters structure for this loop, filling in fields that come
         % out of lists precreated above.
-        pr = prFromBase(prBase,pp,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
+        pr = prFromBase(prBase,pp,stimSizeDegs,mosaicStimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
             focalRegion, focalPropL, focalVariant, mosaicSizeDegs);
@@ -431,7 +439,7 @@ if runReconstructions
     parfor pp = 1:runIndex
         % Set up parameters structure for this loop, filling in fields that come
         % out of lists above.
-        pr = prFromBase(prBase,pp,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
+        pr = prFromBase(prBase,pp,stimSizeDegs,stimSizePixels,mosaicStimSizeDegs,stimrVal,stimgVal,stimbVal, ...
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
             focalRegion, focalPropL, focalVariant);
@@ -452,7 +460,7 @@ end
 % This is done rather precariously so care should be taken as the
 % project progresses to ensure the things being cycled over are actually
 % what we want.
-if (summaryFigs)
+if (summaryFigs & ~prBase.fixMosaicStimSize)
     % Bookkeeping variables for number of stimuli and propL as dimensions
     % of future plots
     numStim = length(stimrValList);
@@ -513,7 +521,7 @@ if (summaryFigs)
                                     forwardPupilDiamMMForSummaryFigs(newInd) = forwardPupilDiamListMM(pp);
                                     reconPupilDiamMMForSummaryFigs(newInd) = reconPupilDiamListMM(pp);
                                     displayScaleFactorForSummaryFigs{newInd} = displayFactorList{dsf};
-                                    pr = prFromBase(prBase,newInd,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
+                                    pr = prFromBase(prBase,newInd,stimSizeDegs,stimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
                                         stimCenter,forwardDefocusDioptersForSummaryFigs,reconDefocusDioptersForSummaryFigs,regParaForSummaryFigs, ...
                                         forwardPupilDiamMMForSummaryFigs,reconPupilDiamMMForSummaryFigs,displayScaleFactorForSummaryFigs, ...
                                         focalRegion, focalPropL, focalVariant);
