@@ -175,6 +175,9 @@ end
 % amidst the stimulus subdirectories.
 outputSubdirMosaic1 = sprintf(['%0.1fArcmin_%sRender'], ...
     60*pr.mosaicStimSizeDegs, pr.focalRegion);
+if (60*pr.mosaicStimSizeDegs > 12 )
+    echo('Yes')
+end
 
 outputSubdirMosaic2 = sprintf(['regionProps_%0.2fL_%0.2fL_' ...
     '%0.2fS_%0.2fS_%0.2fS'],propL(2),propL(3), ...
@@ -255,8 +258,14 @@ nameStimSubdirs = strjoin(vars(indStimSubdirs(1:levelStimSubdirs)), ',');
 eval(['cnv.outputSubdirSummaryFigs = fullfile(pr.aoReconDir, pr.versEditor,' ...
     'cnv.outputDirGeneral,' nameMosaicSubdirs ',' nameStimSubdirs ...
     ', summaryFigsString);']);
-if (~exist(cnv.outputSubdirSummaryFigs,'dir'))
-    mkdir(cnv.outputSubdirSummaryFigs);
+
+% Only make directory if we're doing the default rendering setup.  Probably
+% should pass the variable that controls making the summary figures to here
+% and use that in the conditional as well.
+if (~pr.fixMosaicStimSize)
+    if (~exist(cnv.outputSubdirSummaryFigs,'dir'))
+        mkdir(cnv.outputSubdirSummaryFigs);
+    end
 end
 
 %% Build grabImageInfo routine information

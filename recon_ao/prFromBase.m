@@ -27,7 +27,7 @@ pr.mosaicStimSizeDegs = mosaicStimSizeDegs(index);
 % Set propS field based on stimSizeDegs. This
 % is done to allow us to drive the number of S
 % cones in small focal stimulated regions.
-if (pr.stimSizeDegs < prBase.targetSizeSPropThresholdDegs)
+if (pr.mosaicStimSizeDegs < prBase.targetSizeSPropThresholdDegs)
     pr.propS = prBase.propSSmallTarget;
 else
     pr.propS = prBase.propSLargeTarget;

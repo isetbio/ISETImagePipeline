@@ -90,7 +90,7 @@ prBase.forwardOpticalBlurStimSizeExpansionDegs = 1/60;
 % is done below according to this variable, after rounding the stimulus
 % size as desired.
 prBase.fixMosaicStimSize = true; 
-prBase.fixedMosaicStimSizeDegs = 10/60;
+prBase.fixedMosaicStimSizeDegs = 5.5/60;
 
 % At some point we should expose the parameter that controls the size of
 % the immediate surround, because we may be interested in how varying that
@@ -253,10 +253,6 @@ for ss = 1:length(prBase.stimSizeDegsList)
         error('We are assuming odd numer of pixels and stim pixel size');
     end
 end
-
-% Set fixed mosaic size from same list of available sizes
-[~,index]= min(abs(prBase.availStimSizesDegs - prBase.fixedMosaicStimSizeDegs));
-prBase.stimSizeDegs(ss) = prBase.availStimSizesDegs(index);
 
 %% Stimulus color
 %
@@ -439,7 +435,7 @@ if runReconstructions
     parfor pp = 1:runIndex
         % Set up parameters structure for this loop, filling in fields that come
         % out of lists above.
-        pr = prFromBase(prBase,pp,stimSizeDegs,stimSizePixels,mosaicStimSizeDegs,stimrVal,stimgVal,stimbVal, ...
+        pr = prFromBase(prBase,pp,stimSizeDegs,mosaicStimSizeDegs,stimSizePixels,stimrVal,stimgVal,stimbVal, ...
             stimCenter,forwardDefocusDiopters,reconDefocusDiopters,regPara, ...
             forwardPupilDiamMM,reconPupilDiamMM,displayScaleFactor, ...
             focalRegion, focalPropL, focalVariant);
