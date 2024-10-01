@@ -210,7 +210,11 @@ outputSubdirStim4 = sprintf(['stimColor_%0.4f_%0.4f_%0.4f'], ...
     pr.stimrVal,pr.stimgVal,pr.stimbVal);
 
 % Output sublevel strings pertaining to summary figs and render matrices
-summaryFigsString = 'summaryFigs';
+if (~pr.fixedMosaicStimSizeDegs)
+    summaryFigsString = 'summaryFigs';
+else
+    summaryFigsString = 'summaryFigsFixedMosaic';
+end
 xRenderString = 'xRenderStructures';
 
 % Render matrix .mat file name
