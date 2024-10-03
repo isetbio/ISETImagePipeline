@@ -68,7 +68,7 @@ for ii = 1:length(displayFactorListRaw)
 end
 
 %% Stimulus size
-prBase.stimSizeDegsList = [10 7.5 5.5 4.5 3.5 2 1] / 60; % [5 4 3 2.5 1.5] / 60; % [7.5 5.5 4.5 3.5 2 ]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
+prBase.stimSizeDegsList = [5.5] / 60; % [5 4 3 2.5 1.5] / 60; % [7.5 5.5 4.5 3.5 2 ]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
 
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
@@ -89,7 +89,7 @@ prBase.forwardOpticalBlurStimSizeExpansionDegs = 1/60;
 % bit inflexible but meets th immedidate need.  The setting of the values
 % is done below according to this variable, after rounding the stimulus
 % size as desired.
-prBase.fixMosaicStimSize = true; 
+prBase.fixMosaicStimSize = false; 
 prBase.fixedMosaicStimSizeDegs = 5.5/60;
 
 % At some point we should expose the parameter that controls the size of
@@ -106,9 +106,12 @@ prBase.fixedMosaicStimSizeDegs = 5.5/60;
 % For each focal region specified, the code cycles through the variants in
 % the focalVariantList, replacing the corresponding value in
 % regionVariantList on each iteration.
+%
+% Some logic (unfortunately) counts on the focalPropLLList being in
+% increasing order.
 prBase.focalRegionList = ["center"];
 prBase.focalVariantList = [1];
-prBase.focalPropLList = [0.7 0.6 0.5 0.4 0.3]; % [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0];
+prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0]; %[0.3 0.4 0.5 0.6 0.67 0.7]; % ;
 
 % Additional region variant params
 %
@@ -169,9 +172,9 @@ prBase.stimSeriesVariant = 1;
 % Select what you would like to do, for efficiency's sake only recommend
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
-buildRenderMatrix = true;
+buildRenderMatrix = false;
 buildMosaicMontages = false;
-runReconstructions = true;
+runReconstructions = false;
 summaryFigs = true;
 
 %% Spatial parameters
