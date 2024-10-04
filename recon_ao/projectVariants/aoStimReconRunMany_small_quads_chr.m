@@ -68,7 +68,7 @@ for ii = 1:length(displayFactorListRaw)
 end
 
 %% Stimulus size
-prBase.stimSizeDegsList = [5.5] / 60; % [5 4 3 2.5 1.5] / 60; % [7.5 5.5 4.5 3.5 2 ]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
+prBase.stimSizeDegsList = [10 7.5 5.5 4.5 3.5 2 1] / 60; % [5 4 3 2.5 1.5] / 60; % [7.5 5.5 4.5 3.5 2 ]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
 
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
@@ -89,7 +89,7 @@ prBase.forwardOpticalBlurStimSizeExpansionDegs = 1/60;
 % bit inflexible but meets th immedidate need.  The setting of the values
 % is done below according to this variable, after rounding the stimulus
 % size as desired.
-prBase.fixMosaicStimSize = false; 
+prBase.fixMosaicStimSize = true; 
 prBase.fixedMosaicStimSizeDegs = 5.5/60;
 
 % At some point we should expose the parameter that controls the size of
@@ -174,7 +174,7 @@ prBase.stimSeriesVariant = 1;
 % montages)
 buildRenderMatrix = false;
 buildMosaicMontages = false;
-runReconstructions = false;
+runReconstructions = true;
 summaryFigs = true;
 
 %% Spatial parameters
