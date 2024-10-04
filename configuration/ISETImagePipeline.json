@@ -43,7 +43,7 @@
 		"hook": "",
 		"importance": "",
 		"localHookTemplate": "",
-		"name": "ISETBioCSFGenerator",
+		"name": "ISETBioCSFGenerator-isetbiostandalone",
 		"pathPlacement": "append",
 		"subfolder": "",
 		"toolboxRoot": "",
