@@ -151,20 +151,6 @@ if (length(pr.stimBgVal) == 1 || length(pr.stimBgVal) == 3)
     idxYRange = (idxLB:idxUB);
     % Could add back in the pixel shift here
 
-    % OLD STIM PLACEMENT CODE.
-    % idxLB = round(pr.nPixels * (0.5 - stimSizeFraction / 2));
-    % if (idxLB < 1)
-    %     idxLB = 1;
-    % end
-    % idxUB = round(pr.nPixels * (0.5 + stimSizeFraction / 2));
-    % if (idxUB > pr.nPixels)
-    %     idxUB = pr.nPixels;
-    % end
-    %
-    % Shift the stimulus to be centered on desired values
-    % idxXRange = (idxLB:idxUB) + pr.stimCenter(1);
-    % idxYRange = (idxLB:idxUB) + pr.stimCenter(2);
-
     % Check stimulus position. Ends function and deletes the created
     % directory if the stimulus position exceeds bounds.
     if min(idxYRange) <= 0 || max(idxYRange) > pr.nPixels ...
@@ -415,23 +401,20 @@ for ii = 1:length(multistartStruct.initTypes)
         pr.viewingDisplayName, idxXRange, 'wls', pr.wls);
     imwrite(reconInfo.imageRGBAcrossDisplays, fullfile(cnv.outputDirFull,'ReconDispCorrected.tiff'),'tiff');
 
-
     % Include portion for scaling of the corrected stim and recon images
-    % based on the max across both, upscaled so the max is reset to 1
-
-
+    % based on the max across both, upscaled so the max is reset to 
     %
     %     cfvStim.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
     %     cfvRecon.scaleFactor(ii) = max([max(cfvStim.imageRGBNoGamma(:)) max(cfvRecon.imageRGBNoGamma(:))]);
     %     cfvStim.stimulusRGBScaled{ii} = gammaCorrection(cfvStim.imageRGBNoGamma/cfvStim.scaleFactor(ii), cfvStim.viewingDisplay);
     %     cfvRecon.reconScaledRGB{ii} = gammaCorrection(cfvRecon.imageRGBNoGamma/cfvRecon.scaleFactor(ii), cfvRecon.viewingDisplay);
 
-
     % Get forward and reconstruction OI's computed on reconstruction.  Take
     % difference in pupil size into account with reconOI.
     forwardOI = oiCompute(stimulusScene,forwardOI);
     forwardOIToReconTemp = oiCompute(reconSceneTemp,forwardOI);
     reconOIToReconTemp = oiCompute(reconSceneTemp,reconOI);
+    stimReconOIToReconTemp = oiCompute(stimulusScene,reconOI);
 
     % Get recon excitations to stimulus
     reconExcitationsToStimulusTemp = reconRenderMatrixPupilScaled*stimulusImageLinear(:);
@@ -472,9 +455,6 @@ for ii = 1:length(multistartStruct.initTypes)
     else
         title({sprintf('Stimulus Image, input scale %0.4f',pr.inputImageScaleFactor)  ; 'Scaled with recon' ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxStimulusScaledR(ii),maxStimulusScaledG(ii),maxStimulusScaledB(ii)) ; sprintf('%0.4f, %0.4f, %0.4f, %0.4f',pr.stimBgVal(1),pr.stimrVal,pr.stimgVal,pr.stimbVal)});
     end
-    %     if (ii == reconIndex)
-    %         imwrite(stimulusRGBScaled{ii},fullfile(cnv.outputDirFull,'StimulusScaled.tiff'),'tiff');
-    %     end
 
     % Visualize stimulus after being corrected for Display
     theAxes = subplot(3,7,7);
@@ -482,7 +462,6 @@ for ii = 1:length(multistartStruct.initTypes)
     %     title({sprintf('Stim on %s, viewed on %s', pr.displayName, pr.viewingDisplayName); ...
     %         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvStim.bounds(1,1),cfvStim.bounds(1,2),cfvStim.bounds(1,3)); ...
     %         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvStim.bounds(2,1),cfvStim.bounds(2,2),cfvStim.bounds(2,3))})
-
 
     % Contour plot of forward PSF
     theAxes = subplot(3,7,2);
@@ -524,9 +503,9 @@ for ii = 1:length(multistartStruct.initTypes)
     figureHandle = theFig;
     forwardConeMosaic.visualizeMosaic(figureHandle,theAxes);
     title('Forward Mosaic');
+    drawnow
 
     % Forward excitations used for recon in mosaic form
-    drawnow
     theAxes = subplot(3,7,5);
     figureHandle = theFig;
     forwardConeMosaic.Mosaic.visualize(...
@@ -544,6 +523,20 @@ for ii = 1:length(multistartStruct.initTypes)
             'outlinedConesWithIndices', [], ...
             'plotTitle','Forward OI on Forward Mosaic','superimposedOIAlpha',0.7);
         saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('forwardOIOnForwardMosaic.tiff',ii)),'tiff');
+        close(tempFig);
+        figure(theFig);
+    end
+
+    % Forward stimulus through the recon optics and mosaic
+    if (ii == reconIndex)
+        tempFig = figure; clf;
+        reconConeMosaic.Mosaic.visualize(...
+            'figureHandle', tempFig, ...
+            'axesHandle', [], ...
+            'withSuperimposedOpticalImage', reconOIToStimTemp, ...
+            'outlinedConesWithIndices', [], ...
+            'plotTitle','Forward OI on Forward Mosaic','superimposedOIAlpha',0.7);
+        saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('stimReconOIOnReconMosaic.tiff',ii)),'tiff');
         close(tempFig);
         figure(theFig);
     end
@@ -569,14 +562,12 @@ for ii = 1:length(multistartStruct.initTypes)
         title({sprintf('Reconstructed Image, reg %0.5f',pr.regPara) ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxReconScaledR(ii),maxReconScaledG(ii),maxReconScaledB(ii)) ; 'Unbounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
     end
 
-
     % Show corrected recon image
     theAxes = subplot(3,7,14);
     imshow(reconInfo.imageRGBAcrossDisplays);
     %     title({sprintf('Recon on %s, viewed on %s', pr.displayName, pr.viewingDisplayName); ...
     %         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(1,1),cfvRecon.bounds(1,2),cfvRecon.bounds(1,3)); ...
     %         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvRecon.bounds(2,1),cfvRecon.bounds(2,2),cfvRecon.bounds(2,3))})
-
 
     % Contour plot of recon PSF
     theAxes = subplot(3,7,9);
@@ -618,9 +609,9 @@ for ii = 1:length(multistartStruct.initTypes)
     figureHandle = theFig;
     reconConeMosaic.visualizeMosaic(figureHandle,theAxes);
     title('Recon Mosaic');
+    drawnow
 
     % Recon oi on recon mosaic
-    drawnow
     theAxes = subplot(3,7,12);
     figureHandle = theFig;
     reconConeMosaic.Mosaic.visualize(...
@@ -641,9 +632,9 @@ for ii = 1:length(multistartStruct.initTypes)
         close(tempFig);
         figure(theFig);
     end
+    drawnow
 
     % Recon excitations
-    drawnow
     theAxes = subplot(3,7,13);
     figureHandle = theFig;
     reconConeMosaic.Mosaic.visualize(...
@@ -675,6 +666,7 @@ for ii = 1:length(multistartStruct.initTypes)
         close(tempFig);
         figure(theFig);
     end
+    drawnow
 
     % Make sure excitations used match what comes back from multistart
     if (any(forwardExcitationsToStimulusUse ~= multistartStruct.coneVec))
@@ -683,7 +675,6 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Compute recon excitations to stimulus and compare with
     % scaled forward excitations to stimulus.
-    drawnow
     subplot(3,7,15); hold on;
     if (pr.reconstructfromRenderMatrix)
         title({'Recon excittions to stim' ; 'Excitations from render matrix'});
@@ -693,7 +684,6 @@ for ii = 1:length(multistartStruct.initTypes)
         forwardExcitationsToReconTemp = forwardConeMosaic.Mosaic.compute(forwardOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered');
         forwardExcitationsToReconTemp = squeeze(forwardExcitationsToReconTemp);
     end
-
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.lConeIndices),reconExcitationsToStimulusTemp(reconConeMosaic.Mosaic.lConeIndices),'ro','MarkerFaceColor','r','MarkerSize',6); hold on;
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.mConeIndices),reconExcitationsToStimulusTemp(reconConeMosaic.Mosaic.mConeIndices),'go','MarkerFaceColor','g','MarkerSize',6); hold on;
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.sConeIndices),reconExcitationsToStimulusTemp(reconConeMosaic.Mosaic.sConeIndices),'bo','MarkerFaceColor','b','MarkerSize',6); hold on;
@@ -717,12 +707,9 @@ for ii = 1:length(multistartStruct.initTypes)
         forwardExcitationsToReconTemp = (forwardConeMosaic.Mosaic.compute(forwardOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
         forwardExcitationsToReconTemp = squeeze(forwardExcitationsToReconTemp);
     end
-    %plot(forwardExcitationsToStimulusUse*scaleFactor,forwardExcitationsToReconTemp,'ro','MarkerFaceColor','r','MarkerSize',6);
-
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.lConeIndices),forwardExcitationsToReconTemp(forwardConeMosaic.Mosaic.lConeIndices),'ro','MarkerFaceColor','r','MarkerSize',6); hold on;
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.mConeIndices),forwardExcitationsToReconTemp(forwardConeMosaic.Mosaic.mConeIndices),'go','MarkerFaceColor','g','MarkerSize',6); hold on;
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.sConeIndices),forwardExcitationsToReconTemp(forwardConeMosaic.Mosaic.sConeIndices),'bo','MarkerFaceColor','b','MarkerSize',6); hold on;
-
     axis('square');
     minVal = 0.9*min([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
     maxVal = 1.1*max([forwardExcitationsToStimulusUse; forwardExcitationsToReconTemp]);
@@ -743,11 +730,9 @@ for ii = 1:length(multistartStruct.initTypes)
         reconExcitationsToReconTemp = (reconConeMosaic.Mosaic.compute(reconOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
         reconExcitationsToReconTemp = squeeze(reconExcitationsToReconTemp);
     end
-
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.lConeIndices),reconExcitationsToReconTemp(reconConeMosaic.Mosaic.lConeIndices),'ro','MarkerFaceColor','r','MarkerSize',6); hold on;
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.mConeIndices),reconExcitationsToReconTemp(reconConeMosaic.Mosaic.mConeIndices),'go','MarkerFaceColor','g','MarkerSize',6); hold on;
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.sConeIndices),reconExcitationsToReconTemp(reconConeMosaic.Mosaic.sConeIndices),'bo','MarkerFaceColor','b','MarkerSize',6); hold on;
-
     axis('square');
     minVal = 0.9*min([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
     maxVal = 1.1*max([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
@@ -755,7 +740,6 @@ for ii = 1:length(multistartStruct.initTypes)
     xlim([minVal maxVal]); ylim([minVal maxVal]);
     xlabel('Forward excitations to stimulus');
     ylabel('Recon excitations to recon');
-
 
     % Check that we know what we are doing.  Small difference may be gamma
     % correction and inverse gamma correction between the two predictions
