@@ -173,9 +173,16 @@ prBase.stimSeriesVariant = 1;
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
 buildRenderMatrix = false;
-buildMosaicMontages = false;
-runReconstructions = true;
+runReconstructions = false;
 summaryFigs = true;
+
+%% This doesn't work anymore so should stay false
+%
+% Keeping in case we fix it up
+buildMosaicMontages = false;
+if (buildMosaicMontages)
+    error('Build mosaic montages needs work before it will run');
+end
 
 %% Spatial parameters
 %
@@ -566,7 +573,7 @@ if (summaryFigs & ~prBase.fixMosaicStimSize)
 % This requires picking out what we read in for the summary
 % a little differently.
 elseif (summaryFigs & prBase.fixMosaicStimSize)
-% Bookkeeping variables for number of stimuli and propL as dimensions
+    % Bookkeeping variables for number of stimuli and propL as dimensions
     % of future plots
     numStim = length(stimrValList);
     numProp = length(prBase.focalPropLList);
@@ -666,6 +673,5 @@ elseif (summaryFigs & prBase.fixMosaicStimSize)
             end
         end
     end
-
 end
 
