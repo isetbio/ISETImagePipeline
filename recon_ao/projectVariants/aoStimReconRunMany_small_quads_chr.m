@@ -111,7 +111,7 @@ prBase.fixedMosaicStimSizeDegs = 5.5/60;
 % increasing order.
 prBase.focalRegionList = ["center"];
 prBase.focalVariantList = [1];
-prBase.focalPropLList = [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0]; %[0.3 0.4 0.5 0.6 0.67 0.7]; % ;
+prBase.focalPropLList = [0.3 0.4 0.5 0.6 0.67 0.7]; [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0]; %[0.3 0.4 0.5 0.6 0.67 0.7]; % ;
 
 % Additional region variant params
 %
@@ -173,7 +173,7 @@ prBase.stimSeriesVariant = 1;
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
 buildRenderMatrix = false;
-runReconstructions = false;
+runReconstructions = true;
 summaryFigs = true;
 
 %% This doesn't work anymore so should stay false
