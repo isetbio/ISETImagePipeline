@@ -852,6 +852,7 @@ clear estimator
 clear reconScaledRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
 clear reconImageLinearTemp psfSupportTemp initImageLinearTemp
 clear tempFig theAxes theFig axesHandle temp initSceneTemp
+clear prior stimReconOIToReconTemp stimulusScene
 % No longer clearing the coneMosaics for analysis but be aware might lead
 % to a crash of storage. Also might not be necessary as of now. 
 clear forwardConeMosaic reconConeMosaic
