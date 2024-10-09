@@ -25,7 +25,7 @@ function aoStimRecon(pr, cnv)
 %% Close existing figures and set prior name
 close all;
 
-% Sparse prior name
+% Sparse prior nameƒrecpm
 sparsePriorName = [pr.sparsePriorStr 'SparsePrior.mat'];
 
 %% Grab render matrices/files
@@ -206,8 +206,8 @@ imwrite(stimInfo.imageRGBAcrossDisplays, ...
 %% Compute forward retinal image and excitations using ISETBio
 %
 % We may or may not reconstruct from these
-forwardOI = oiCompute(stimulusScene,forwardOI);
-forwardExcitationsToStimulusISETBio = squeeze(forwardConeMosaic.Mosaic.compute(forwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
+stimForwardOI = oiCompute(stimulusScene,forwardOI);
+forwardExcitationsToStimulusISETBio = squeeze(forwardConeMosaic.Mosaic.compute(stimForwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
 
 % Check forward exciations calculation another way.  Also shows another way
 % to visualize the retinal image.
@@ -411,10 +411,13 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Get forward and reconstruction OI's computed on reconstruction.  Take
     % difference in pupil size into account with reconOI.
-    forwardOI = oiCompute(stimulusScene,forwardOI);
-    forwardOIToReconTemp = oiCompute(reconSceneTemp,forwardOI);
-    reconOIToReconTemp = oiCompute(reconSceneTemp,reconOI);
-    stimReconOIToReconTemp = oiCompute(stimulusScene,reconOI);
+    %
+    % Note that stimForwardOI was computed above so we don't do it again
+    % here.
+    % stimForwardOI = oiCompute(stimulusScene,forwardOI);
+    stimReconOI = oiCompute(stimulusScene,reconOI);
+    reconForwardOI = oiCompute(reconSceneTemp,forwardOI);
+    reconReconOI = oiCompute(reconSceneTemp,reconOI);
 
     % Get recon excitations to stimulus
     reconExcitationsToStimulusTemp = reconRenderMatrixPupilScaled*stimulusImageLinear(:);
@@ -424,10 +427,10 @@ for ii = 1:length(multistartStruct.initTypes)
     % irradiance conversion and we don't want to unpack that here.  So we
     % scale both OI's we want to visualize to the same range.  We also
     % assume they are both the same size.
-    [forwardOIxyz,m,n] = ImageToCalFormat(oiGet(forwardOI,'xyz'));
+    [forwardOIxyz,m,n] = ImageToCalFormat(oiGet(stimForwardOI,'xyz'));
     forwardOIrgb = M_xyzTorgb*forwardOIxyz;
     forwardOITitleStr = {sprintf('Min/max (arb units) of forward OI image:  %0.4f, %0.4f\n',min(forwardOIrgb(:)),max(forwardOIrgb(:)))};
-    [reconOIxyz,m,n] = ImageToCalFormat(oiGet(reconOIToReconTemp,'xyz'));
+    [reconOIxyz,m,n] = ImageToCalFormat(oiGet(reconReconOI,'xyz'));
     reconOIrgb = M_xyzTorgb*reconOIxyz;
     reconOITitleStr = {sprintf('Min/max (arb units) of recon OI image: %0.4f, %0.3f\n',min(reconOIrgb(:)),max(reconOIrgb(:)))};
     oiScaleFactor = max([forwardOIrgb(:) ; reconOIrgb(:)]);
@@ -459,9 +462,6 @@ for ii = 1:length(multistartStruct.initTypes)
     % Visualize stimulus after being corrected for Display
     theAxes = subplot(3,7,7);
     imshow(stimInfo.imageRGBAcrossDisplays);
-    %     title({sprintf('Stim on %s, viewed on %s', pr.displayName, pr.viewingDisplayName); ...
-    %         sprintf('Min: %0.2f, %0.2f, %0.2f',cfvStim.bounds(1,1),cfvStim.bounds(1,2),cfvStim.bounds(1,3)); ...
-    %         sprintf('Max: %0.2f, %0.2f, %0.2f',cfvStim.bounds(2,1),cfvStim.bounds(2,2),cfvStim.bounds(2,3))})
 
     % Contour plot of forward PSF
     theAxes = subplot(3,7,2);
@@ -469,8 +469,8 @@ for ii = 1:length(multistartStruct.initTypes)
     alpha = 0.75;
     contourLineColor = [0.2 0.2 0.2];
     zLevels = 0.05:0.15:0.95;
-    psfSupportTemp = opticsGet(oiGet(forwardOI,'optics'),'psf support');
-    psfPolyTemp = opticsGet(oiGet(forwardOI,'optics'),'psf data');
+    psfSupportTemp = opticsGet(oiGet(stimForwardOI,'optics'),'psf support');
+    psfPolyTemp = opticsGet(oiGet(stimForwardOI,'optics'),'psf data');
     psfTemp = zeros(size(squeeze(psfPolyTemp(:,:,1))));
     for ww = 1:size(T_xyz,2)
         psfTemp = psfTemp+T_xyz(2,ww)*squeeze(psfPolyTemp(:,:,ww));
@@ -494,9 +494,14 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Optical image of stimulus
     theAxes = subplot(3,7,3);
-    % visualizeOpticalImage(forwardOI, 'axesHandle',theAxes,'avoidAutomaticRGBscaling', true, 'displayRadianceMaps', false);
     imshow(forwardOIRGB);
     title(forwardOITitleStr);
+    if (ii == reconIndex)
+        tempFig = figure; clf;
+        imshow(forwardOIRGB);
+        title(forwardOITitleStr);
+        saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('forwardOI.tiff',ii)),'tiff');
+    end
 
     % Show forward mosaic
     theAxes = subplot(3,7,4);
@@ -511,7 +516,7 @@ for ii = 1:length(multistartStruct.initTypes)
     forwardConeMosaic.Mosaic.visualize(...
         'figureHandle', figureHandle, ...
         'axesHandle', theAxes, ...
-        'withSuperimposedOpticalImage', forwardOI, ...
+        'withSuperimposedOpticalImage', stimForwardOI, ...
         'outlinedConesWithIndices', [], ...
         'plotTitle','Stimulus on Forward OI/Mosaic','superimposedOIAlpha',0.7);
     if (ii == reconIndex)
@@ -519,10 +524,17 @@ for ii = 1:length(multistartStruct.initTypes)
         forwardConeMosaic.Mosaic.visualize(...
             'figureHandle', tempFig, ...
             'axesHandle', [], ...
-            'withSuperimposedOpticalImage', forwardOI, ...
+            'withSuperimposedOpticalImage', stimForwardOI, ...
             'outlinedConesWithIndices', [], ...
             'plotTitle','Stimulus on Forward OI/Mosaic','superimposedOIAlpha',0.7);
-        saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('forwardOIOnForwardMosaic.tiff',ii)),'tiff');
+
+        % Get rid of old name version to minimize confusion
+        if (exist('forwardOIOnForwardMosaic.tiff','file'))
+            rm('forwardOIOnForwardMosaic.tiff');
+        end
+
+        % Save
+        saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('stimForwardOIOnForwardMosaic.tiff',ii)),'tiff');
         close(tempFig);
         figure(theFig);
     end
@@ -533,7 +545,7 @@ for ii = 1:length(multistartStruct.initTypes)
         reconConeMosaic.Mosaic.visualize(...
             'figureHandle', tempFig, ...
             'axesHandle', [], ...
-            'withSuperimposedOpticalImage', stimReconOIToReconTemp, ...
+            'withSuperimposedOpticalImage', stimReconOI, ...
             'outlinedConesWithIndices', [], ...
             'plotTitle','Stimulus on Recon OI/Mosaic','superimposedOIAlpha',0.7);
         saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('stimReconOIOnReconMosaic.tiff',ii)),'tiff');
@@ -554,7 +566,6 @@ for ii = 1:length(multistartStruct.initTypes)
 
     theAxes = subplot(3,7,8);
     drawnow
-    %visualizeScene(reconSceneTemp, 'displayRadianceMaps', false,'avoidAutomaticRGBscaling', true,'axesHandle',theAxes);
     imshow(reconScaledRGB{ii});
     if (pr.boundedSearch)
         title({sprintf('Reconstructed Image, reg %0.5f',pr.regPara) ; sprintf('Max scaled (image) RGB: %0.4f, %0.4f, %0.4f',maxReconScaledR(ii),maxReconScaledG(ii),maxReconScaledB(ii)) ; 'Bounded search' ; sprintf('Recon scale factor %0.3g',reconScaleFactor(ii))});
@@ -600,9 +611,14 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Optical image of recon
     theAxes = subplot(3,7,10);
-    % visualizeOpticalImage(reconOIToReconTemp, 'axesHandle',theAxes,'avoidAutomaticRGBscaling', true, 'displayRadianceMaps', false);
     imshow(reconOIRGB);
     title(reconOITitleStr);
+    if (ii == reconIndex)
+        tempFig = figure; clf;
+        imshow(reconOIRGB);
+        title(reconOITitleStr);
+        saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('reconOI.tiff',ii)),'tiff');
+    end
 
     % Show recon mosaic
     theAxes = subplot(3,7,11);
@@ -618,7 +634,7 @@ for ii = 1:length(multistartStruct.initTypes)
         'figureHandle', figureHandle, ...
         'axesHandle', theAxes, ...
         'outlinedConesWithIndices', [], ...
-        'withSuperimposedOpticalImage', reconOIToReconTemp, ...
+        'withSuperimposedOpticalImage', reconReconOI, ...
         'plotTitle','Recon on Recon OI/Mosaic','superimposedOIAlpha',0.7);
     if (ii == reconIndex)
         tempFig = figure; clf;
@@ -626,7 +642,7 @@ for ii = 1:length(multistartStruct.initTypes)
             'figureHandle', tempFig, ...
             'axesHandle', [], ...
             'outlinedConesWithIndices', [], ...
-            'withSuperimposedOpticalImage', reconOIToReconTemp, ...
+            'withSuperimposedOpticalImage', reconReconOI, ...
             'plotTitle','Recon on Recon OI/Mosaic','superimposedOIAlpha',0.7);
         saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('reconOIOnReconMosaic.tiff',ii)),'tiff');
         close(tempFig);
@@ -681,7 +697,7 @@ for ii = 1:length(multistartStruct.initTypes)
         forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
     else
         title({'Recon excittions to stim' ; 'Excitations from ISETBio'});
-        forwardExcitationsToReconTemp = forwardConeMosaic.Mosaic.compute(forwardOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered');
+        forwardExcitationsToReconTemp = forwardConeMosaic.Mosaic.compute(reconForwardOI, 'opticalImagePositionDegs', 'mosaic-centered');
         forwardExcitationsToReconTemp = squeeze(forwardExcitationsToReconTemp);
     end
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.lConeIndices),reconExcitationsToStimulusTemp(reconConeMosaic.Mosaic.lConeIndices),'ro','MarkerFaceColor','r','MarkerSize',6); hold on;
@@ -704,7 +720,7 @@ for ii = 1:length(multistartStruct.initTypes)
         forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
     else
         title({'Forward excitations to recon' ; 'Excitations from ISETBio'});
-        forwardExcitationsToReconTemp = (forwardConeMosaic.Mosaic.compute(forwardOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+        forwardExcitationsToReconTemp = (forwardConeMosaic.Mosaic.compute(reconForwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
         forwardExcitationsToReconTemp = squeeze(forwardExcitationsToReconTemp);
     end
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.lConeIndices),forwardExcitationsToReconTemp(forwardConeMosaic.Mosaic.lConeIndices),'ro','MarkerFaceColor','r','MarkerSize',6); hold on;
@@ -727,7 +743,7 @@ for ii = 1:length(multistartStruct.initTypes)
         reconExcitationsToReconTemp = reconExcitationsToReconCheck;
     else
         title({'Recon excitations to recon' ; 'Excitations from ISETBio'});
-        reconExcitationsToReconTemp = (reconConeMosaic.Mosaic.compute(reconOIToReconTemp, 'opticalImagePositionDegs', 'mosaic-centered'));
+        reconExcitationsToReconTemp = (reconConeMosaic.Mosaic.compute(reconReconOI, 'opticalImagePositionDegs', 'mosaic-centered'));
         reconExcitationsToReconTemp = squeeze(reconExcitationsToReconTemp);
     end
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.lConeIndices),reconExcitationsToReconTemp(reconConeMosaic.Mosaic.lConeIndices),'ro','MarkerFaceColor','r','MarkerSize',6); hold on;
@@ -847,14 +863,16 @@ imwrite(reconScaledRGB{reconIndex},fullfile(cnv.outputDirFull,'Recon.tiff'),'tif
 
 %% Save workspace without really big variables
 close all;
-clear forwardRenderMatrix reconRenderMatrixPupilScaled reconSceneTemp forwardOI reconOIToReconTemp psfDataStruct forwardOIToReconTemp forwardOIRGB
+clear forwardRenderMatrix reconRenderMatrixPupilScaled reconSceneTemp stimForwardOI stimReconOI stimReconOI reconReconOI psfDataStruct reconForwardOI forwardOIRGB
 clear estimator
 clear reconScaledRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
 clear reconImageLinearTemp psfSupportTemp initImageLinearTemp
 clear tempFig theAxes theFig axesHandle temp initSceneTemp
-clear prior stimReconOIToReconTemp stimulusScene
+clear prior  stimulusScene
 % No longer clearing the coneMosaics for analysis but be aware might lead
 % to a crash of storage. Also might not be necessary as of now. 
 clear forwardConeMosaic reconConeMosaic
 save(fullfile(cnv.outputDirFull,'xRunOutput.mat'), '-v7.3');
 end
+
+
