@@ -25,7 +25,7 @@ function aoStimRecon(pr, cnv)
 %% Close existing figures and set prior name
 close all;
 
-% Sparse prior nameƒrecpm
+% Sparse prior name
 sparsePriorName = [pr.sparsePriorStr 'SparsePrior.mat'];
 
 %% Grab render matrices/files
