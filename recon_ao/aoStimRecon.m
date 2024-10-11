@@ -256,23 +256,6 @@ if (pr.reconstructfromRenderMatrix)
 else
     titleStr = 'Excitations using ISETBio';
 end
-figureHandle = figure(); axesHandle = [];
-forwardConeMosaic.Mosaic.visualize(...
-    'figureHandle', figureHandle, ...
-    'axesHandle', axesHandle, ...
-    'outlinedConesWithIndices', [], ...
-    'activation', reshape(forwardExcitationsToStimulusUse,1,1,length(forwardExcitationsToStimulusUse)), ...
-    'activationRange', [0 max(forwardExcitationsToStimulusUse)], ...
-    'plotTitle',  titleStr,'labelConesInActivationMap', false);
-saveas(gcf,fullfile(cnv.outputDirFull,'forwardMosaicExcitations.tiff'),'tiff');
-forwardConeMosaic.Mosaic.visualize(...
-    'figureHandle', figureHandle, ...
-    'axesHandle', axesHandle, ...
-    'outlinedConesWithIndices', [], ...
-    'activation', reshape(forwardExcitationsToStimulusUse,1,1,length(forwardExcitationsToStimulusUse)), ...
-    'activationRange', [0 max(forwardExcitationsToStimulusUse)], ...
-    'plotTitle',  titleStr,'labelConesInActivationMap', true);
-saveas(gcf,fullfile(cnv.outputDirFull,'forwardMosaicExcitationsTypes.tiff'),'tiff');
 
 %% Run reconstruction
 %
@@ -505,28 +488,35 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Show forward mosaic
     theAxes = subplot(3,7,4);
-    figureHandle = theFig;
-    forwardConeMosaic.visualizeMosaic(figureHandle,theAxes);
+    tempFig = theFig;
+    forwardConeMosaic.visualizeMosaic(tempFig,theAxes);
     title('Forward Mosaic');
     drawnow
 
     % Forward excitations used for recon in mosaic form
     theAxes = subplot(3,7,5);
-    figureHandle = theFig;
+    tempFig = theFig;
+    oiSpatialSupportMeters = oiGet(stimForwardOI, 'spatial support');
+    oiSpatialSupportMicrons = squeeze(oiSpatialSupportMeters(1,1:end,1)) * 1e6;
+
     forwardConeMosaic.Mosaic.visualize(...
-        'figureHandle', figureHandle, ...
+        'figureHandle', tempFig, ...
         'axesHandle', theAxes, ...
-        'withSuperimposedOpticalImage', stimForwardOI, ...
+        'withSuperimposedRGBopticalImage', forwardOIRGB, ...
+        'withSuperimposedRGBopticalImageSpatialSupportMicrons', oiSpatialSupportMicrons, ...
         'outlinedConesWithIndices', [], ...
-        'plotTitle','Stimulus on Forward OI/Mosaic','superimposedOIAlpha',0.7);
+        'plotTitle','Stimulus on Forward OI/Mosaic', ...
+        'withSuperimposedRGBopticalImageAlpha',0.7);
     if (ii == reconIndex)
         tempFig = figure; clf;
         forwardConeMosaic.Mosaic.visualize(...
             'figureHandle', tempFig, ...
             'axesHandle', [], ...
-            'withSuperimposedOpticalImage', stimForwardOI, ...
+            'withSuperimposedRGBopticalImage',forwardOIRGB, ...
+            'withSuperimposedRGBopticalImageSpatialSupportMicrons', oiSpatialSupportMicrons, ...
             'outlinedConesWithIndices', [], ...
-            'plotTitle','Stimulus on Forward OI/Mosaic','superimposedOIAlpha',0.7);
+            'plotTitle','Stimulus on Forward OI/Mosaic','withSuperimposedRGBopticalImageAlpha',0.7);
+        % 'withSuperimposedOpticalImage', stimForwardOI, ...
 
         % Get rid of old name version to minimize confusion
         if (exist('forwardOIOnForwardMosaic.tiff','file'))
@@ -545,9 +535,12 @@ for ii = 1:length(multistartStruct.initTypes)
         reconConeMosaic.Mosaic.visualize(...
             'figureHandle', tempFig, ...
             'axesHandle', [], ...
-            'withSuperimposedOpticalImage', stimReconOI, ...
+            'withSuperimposedRGBopticalImage',reconOIRGB, ...
+            'withSuperimposedRGBopticalImageSpatialSupportMicrons', oiSpatialSupportMicrons, ...
             'outlinedConesWithIndices', [], ...
-            'plotTitle','Stimulus on Recon OI/Mosaic','superimposedOIAlpha',0.7);
+            'plotTitle','Stimulus on Recon OI/Mosaic','withSuperimposedRGBopticalImageAlpha',0.7);
+            % 'withSuperimposedOpticalImage', stimReconOI, ...
+
         saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('stimReconOIOnReconMosaic.tiff',ii)),'tiff');
         close(tempFig);
         figure(theFig);
@@ -555,9 +548,9 @@ for ii = 1:length(multistartStruct.initTypes)
 
     theAxes = subplot(3,7,6);
     drawnow
-    figureHandle = theFig;
+    tempFig = theFig;
     forwardConeMosaic.Mosaic.visualize(...
-        'figureHandle', figureHandle, ...
+        'figureHandle', tempFig, ...
         'axesHandle', theAxes, ...
         'outlinedConesWithIndices', [], ...
         'activation', reshape(multistartStruct.coneVec,1,1,length(forwardExcitationsToStimulusUse)), ...
@@ -622,28 +615,30 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Show recon mosaic
     theAxes = subplot(3,7,11);
-    figureHandle = theFig;
-    reconConeMosaic.visualizeMosaic(figureHandle,theAxes);
+    tempFig = theFig;
+    reconConeMosaic.visualizeMosaic(tempFig,theAxes);
     title('Recon Mosaic');
     drawnow
 
     % Recon oi on recon mosaic
     theAxes = subplot(3,7,12);
-    figureHandle = theFig;
+    tempFig = theFig;
     reconConeMosaic.Mosaic.visualize(...
-        'figureHandle', figureHandle, ...
+        'figureHandle', tempFig, ...
         'axesHandle', theAxes, ...
         'outlinedConesWithIndices', [], ...
-        'withSuperimposedOpticalImage', reconReconOI, ...
-        'plotTitle','Recon on Recon OI/Mosaic','superimposedOIAlpha',0.7);
+        'withSuperimposedRGBopticalImage', reconOIRGB, ...
+        'withSuperimposedRGBopticalImageSpatialSupportMicrons', oiSpatialSupportMicrons, ...
+        'plotTitle','Recon on Recon OI/Mosaic','withSuperimposedRGBopticalImageAlpha',0.7);
     if (ii == reconIndex)
         tempFig = figure; clf;
         reconConeMosaic.Mosaic.visualize(...
             'figureHandle', tempFig, ...
             'axesHandle', [], ...
             'outlinedConesWithIndices', [], ...
-            'withSuperimposedOpticalImage', reconReconOI, ...
-            'plotTitle','Recon on Recon OI/Mosaic','superimposedOIAlpha',0.7);
+            'withSuperimposedRGBopticalImage', reconOIRGB, ...
+            'withSuperimposedRGBopticalImageSpatialSupportMicrons', oiSpatialSupportMicrons, ...
+            'plotTitle','Recon on Recon OI/Mosaic','withSuperimposedRGBopticalImageAlpha',0.7);
         saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('reconOIOnReconMosaic.tiff',ii)),'tiff');
         close(tempFig);
         figure(theFig);
@@ -652,14 +647,15 @@ for ii = 1:length(multistartStruct.initTypes)
 
     % Recon excitations
     theAxes = subplot(3,7,13);
-    figureHandle = theFig;
+    tempFig = theFig;
     reconConeMosaic.Mosaic.visualize(...
-        'figureHandle', figureHandle, ...
+        'figureHandle', tempFig, ...
         'axesHandle', theAxes, ...
         'outlinedConesWithIndices', [], ...
         'activation', reshape(multistartStruct.reconPreds(:,ii),1,1,length(forwardExcitationsToStimulusUse)), ...
         'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
         'plotTitle',  'Recon excitations','labelConesInActivationMap', false);
+
     if (ii == reconIndex)
         tempFig = figure; clf;
         reconConeMosaic.Mosaic.visualize(...
@@ -669,7 +665,9 @@ for ii = 1:length(multistartStruct.initTypes)
             'activation', reshape(multistartStruct.reconPreds(:,ii),1,1,length(forwardExcitationsToStimulusUse)), ...
             'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
             'plotTitle',  'Recon excitations','labelConesInActivationMap', false);
+        drawnow;
         saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('reconMosaicExcitations.tiff',ii)),'tiff');
+
         clf;
         reconConeMosaic.Mosaic.visualize(...
             'figureHandle', tempFig, ...
@@ -678,11 +676,44 @@ for ii = 1:length(multistartStruct.initTypes)
             'activation', reshape(multistartStruct.reconPreds(:,ii),1,1,length(forwardExcitationsToStimulusUse)), ...
             'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
             'plotTitle',  'Recon excitations','labelConesInActivationMap', true);
+        drawnow;
         saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('reconMosaicExcitationsTypes.tiff',ii)),'tiff');
+
+        clf;
+        reconConeMosaic.Mosaic.visualize(...
+            'figureHandle', tempFig, ...
+            'axesHandle', [], ...
+            'outlinedConesWithIndices', [], ...
+            'activation', reshape(reconExcitationsToStimulusTemp,1,1,length(forwardExcitationsToStimulusUse)), ...
+            'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
+            'plotTitle',  'Recon excitations','labelConesInActivationMap', false);
+        drawnow;
+        saveas(tempFig,fullfile(cnv.outputDirFull,sprintf('reconMosaicExcitationsToStimulus.tiff',ii)),'tiff');
+        close(tempFig);
+
+        tempFig = figure();
+        forwardConeMosaic.Mosaic.visualize(...
+            'figureHandle', tempFig, ...
+            'axesHandle', [], ...
+            'outlinedConesWithIndices', [], ...
+            'activation', reshape(forwardExcitationsToStimulusUse,1,1,length(forwardExcitationsToStimulusUse)), ...
+            'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
+            'plotTitle',  titleStr,'labelConesInActivationMap', false);
+        drawnow;
+        saveas(gcf,fullfile(cnv.outputDirFull,'forwardMosaicExcitations.tiff'),'tiff');
+
+        forwardConeMosaic.Mosaic.visualize(...
+            'figureHandle', tempFig, ...
+            'axesHandle', [], ...
+            'outlinedConesWithIndices', [], ...
+            'activation', reshape(forwardExcitationsToStimulusUse,1,1,length(forwardExcitationsToStimulusUse)), ...
+            'activationRange', 1.1*[0 max([multistartStruct.coneVec ; multistartStruct.reconPreds(:,ii)])], ...
+            'plotTitle',  titleStr,'labelConesInActivationMap', true);
+        drawnow;
+        saveas(gcf,fullfile(cnv.outputDirFull,'forwardMosaicExcitationsTypes.tiff'),'tiff');
         close(tempFig);
         figure(theFig);
     end
-    drawnow
 
     % Make sure excitations used match what comes back from multistart
     if (any(forwardExcitationsToStimulusUse ~= multistartStruct.coneVec))
@@ -711,6 +742,32 @@ for ii = 1:length(multistartStruct.initTypes)
     xlim([minVal maxVal]); ylim([minVal maxVal]);
     xlabel('Forward excitations to stimulus');
     ylabel('Recon excitations to stimulus');
+    if (ii == reconIndex)
+        tempFig = figure; clf; hold on;
+        if (pr.reconstructfromRenderMatrix)
+            title({'Recon excittions to stim' ; 'Excitations from render matrix'});
+            forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
+        else
+            title({'Recon excittions to stim' ; 'Excitations from ISETBio'});
+            forwardExcitationsToReconTemp = forwardConeMosaic.Mosaic.compute(reconForwardOI, 'opticalImagePositionDegs', 'mosaic-centered');
+            forwardExcitationsToReconTemp = squeeze(forwardExcitationsToReconTemp);
+        end
+        plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.lConeIndices),reconExcitationsToStimulusTemp(reconConeMosaic.Mosaic.lConeIndices),'ro','MarkerFaceColor','r','MarkerSize',6); hold on;
+        plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.mConeIndices),reconExcitationsToStimulusTemp(reconConeMosaic.Mosaic.mConeIndices),'go','MarkerFaceColor','g','MarkerSize',6); hold on;
+        plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.sConeIndices),reconExcitationsToStimulusTemp(reconConeMosaic.Mosaic.sConeIndices),'bo','MarkerFaceColor','b','MarkerSize',6); hold on;
+
+        axis('square');
+        minVal = 0.9*min([forwardExcitationsToStimulusUse;reconExcitationsToStimulusTemp]);
+        maxVal = 1.1*max([forwardExcitationsToStimulusUse;reconExcitationsToStimulusTemp]);
+        plot([minVal maxVal],[minVal maxVal],'k');
+        xlim([minVal maxVal]); ylim([minVal maxVal]);
+        xlabel('Forward excitations to stimulus');
+        ylabel('Recon excitations to stimulus');
+        dwawnow;
+        saveas(gcf,fullfile(cnv.outputDirFull,sprintf('StimReconVsStimForwardExcitations.tiff',ii)),'tiff');
+        close(tempFig);
+        figure(theFig);
+    end
 
     % Compute forward excitations from reconstruction
     % and compare with scaled stimulus excitations
@@ -720,7 +777,7 @@ for ii = 1:length(multistartStruct.initTypes)
         forwardExcitationsToReconTemp = forwardRenderMatrix*reconImageLinearTemp(:);
     else
         title({'Forward excitations to recon' ; 'Excitations from ISETBio'});
-        forwardExcitationsToReconTemp = (forwardConeMosaic.Mosaic.compute(reconForwardOI, 'opticalImagePositionDegs', 'mosaic-centered'));
+        forwardExcitationsToReconTemp = (forwardConeMosaic.Mosaic.compute(reconForwardOI, 'op.viticalImagePositionDegs', 'mosaic-centered'));
         forwardExcitationsToReconTemp = squeeze(forwardExcitationsToReconTemp);
     end
     plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.lConeIndices),forwardExcitationsToReconTemp(forwardConeMosaic.Mosaic.lConeIndices),'ro','MarkerFaceColor','r','MarkerSize',6); hold on;
@@ -756,11 +813,37 @@ for ii = 1:length(multistartStruct.initTypes)
     xlim([minVal maxVal]); ylim([minVal maxVal]);
     xlabel('Forward excitations to stimulus');
     ylabel('Recon excitations to recon');
+    drawnow;
+    if (ii == reconIndex)
+        tempFig = figure; clf; hold on;
+        reconExcitationsToReconCheck = reconRenderMatrixPupilScaled*reconImageLinearTemp(:);
+        if (pr.reconstructfromRenderMatrix)
+            title({'Recon excitations to recon' ; 'Excitations from render matrix'});
+            reconExcitationsToReconTemp = reconExcitationsToReconCheck;
+        else
+            title({'Recon excitations to recon' ; 'Excitations from ISETBio'});
+            reconExcitationsToReconTemp = (reconConeMosaic.Mosaic.compute(reconReconOI, 'opticalImagePositionDegs', 'mosaic-centered'));
+            reconExcitationsToReconTemp = squeeze(reconExcitationsToReconTemp);
+        end
+        plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.lConeIndices),reconExcitationsToReconTemp(reconConeMosaic.Mosaic.lConeIndices),'ro','MarkerFaceColor','r','MarkerSize',6); hold on;
+        plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.mConeIndices),reconExcitationsToReconTemp(reconConeMosaic.Mosaic.mConeIndices),'go','MarkerFaceColor','g','MarkerSize',6); hold on;
+        plot(forwardExcitationsToStimulusUse(forwardConeMosaic.Mosaic.sConeIndices),reconExcitationsToReconTemp(reconConeMosaic.Mosaic.sConeIndices),'bo','MarkerFaceColor','b','MarkerSize',6); hold on;
+        axis('square');
+        minVal = 0.9*min([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
+        maxVal = 1.1*max([forwardExcitationsToStimulusUse; reconExcitationsToReconTemp]);
+        plot([minVal maxVal],[minVal maxVal],'k');
+        xlim([minVal maxVal]); ylim([minVal maxVal]);
+        xlabel('Forward excitations to stimulus');
+        ylabel('Recon excitations to recon');
+        drawnow;
+        saveas(gcf,fullfile(cnv.outputDirFull,sprintf('StimForwardVsReconReconExcitations.tiff',ii)),'tiff');
+        close(tempFig);
+    end
 
     % Check that we know what we are doing.  Small difference may be gamma
     % correction and inverse gamma correction between the two predictions
     if (max(abs(multistartStruct.reconPreds(:,ii)-reconExcitationsToReconCheck)./reconExcitationsToReconCheck) > 1e-3)
-        figure; clf; hold on;
+        tempFig = figure; clf; hold on;
         plot(multistartStruct.reconPreds(:,ii),reconExcitationsToReconCheck,'ro','MarkerFaceColor','r','MarkerSize',10);
         axis('square')
         minVal = 0.9*min([multistartStruct.reconPreds(:,ii); reconExcitationsToReconCheck]);
@@ -770,7 +853,9 @@ for ii = 1:length(multistartStruct.initTypes)
         title('Excitations to recon in two ways');
         xlabel('Excitations from multistart struct');
         ylabel('Excitations from aoStimRecon')
+        drawnow;
         saveas(gcf,fullfile(cnv.outputDirFull,sprintf('ReconExcitationsCheckError%d.tiff',ii)),'tiff');
+        close(tempFig);
         figure(theFig);
     end
 
@@ -783,8 +868,6 @@ for ii = 1:length(multistartStruct.initTypes)
     set(gca,'XTickLabel',sprintf('Recon %d',ii))
     ylabel('Log Prior');
     axis('square');
-
-    % Prior summary
     if (multistartStruct.reconLogPriors(ii) > -stimNegLogPrior)
         if (multistartStruct.reconLogPriors(ii) > multistartStruct.initLogPriors(ii))
             title({'Init/Recon/Stim Log Priors' ; 'Recon BETTER than Stim' ; 'Recon BETTER than Init'});
@@ -798,6 +881,34 @@ for ii = 1:length(multistartStruct.initTypes)
             title({'Init/Recon/Stim Log Priors' ; 'Recon WORSE than Stim' ; 'Recon WORSE than Init'});
         end
     end
+    drawnow;
+    if (ii == reconIndex)
+        tempFig = figure; clf; hold on;
+        bar([1]', ...
+            [multistartStruct.initLogPriors(ii)  ; ...
+            multistartStruct.reconLogPriors(ii) ; ...
+            -stimNegLogPrior]');
+        set(gca,'XTickLabel',sprintf('Recon %d',ii))
+        ylabel('Log Prior');
+        axis('square');
+        if (multistartStruct.reconLogPriors(ii) > -stimNegLogPrior)
+            if (multistartStruct.reconLogPriors(ii) > multistartStruct.initLogPriors(ii))
+                title({'Init/Recon/Stim Log Priors' ; 'Recon BETTER than Stim' ; 'Recon BETTER than Init'});
+            else
+                title({'Init/Recon/Stim Log Priors' ; 'Recon BETTER than Stim' ; 'Recon WORSE than Init'});
+            end
+        else
+            if (multistartStruct.reconLogPriors(ii) > multistartStruct.initLogPriors(ii))
+                title({'Init/Recon/Stim Log Priors' ; 'Recon WORSE than Stim' ; 'Recon BETTER than Init'});
+            else
+                title({'Init/Recon/Stim Log Priors' ; 'Recon WORSE than Stim' ; 'Recon WORSE than Init'});
+            end
+        end
+        drawnow;
+        saveas(gcf,fullfile(cnv.outputDirFull,sprintf('PriorSummary.tiff',ii)),'tiff');
+        close(tempFig);
+        figure(theFig);
+    end
 
     % Likelihoods
     subplot(3,7,19);
@@ -808,8 +919,6 @@ for ii = 1:length(multistartStruct.initTypes)
     set(gca,'XTickLabel',sprintf('Recon %d',ii))
     ylabel('Log Likelihood');
     axis('square');
-
-    % Likelihood summary
     if (multistartStruct.reconLogLikelihoods(ii) > -stimNegLogLikely)
         if (multistartStruct.reconLogLikelihoods(ii) > multistartStruct.initLogLikelihoods(ii))
             title({'Init/Recon/Stim Log Likelihoods' ; 'Recon BETTER than Stim' ; 'Recon BETTER than Init'});
@@ -823,6 +932,34 @@ for ii = 1:length(multistartStruct.initTypes)
             title({'Init/Recon/Stim Log Likelihoods' ; 'Recon WORSE than Stim' ; 'Recon WORSE than Init'});
         end
     end
+    drawnow;
+    if (ii == reconIndex)
+        tempFig = figure; clf; hold on;
+        bar([1]', ...
+            [multistartStruct.initLogLikelihoods(ii)  ; ...
+            multistartStruct.reconLogLikelihoods(ii) ; ...
+            -stimNegLogLikely]');
+        set(gca,'XTickLabel',sprintf('Recon %d',ii))
+        ylabel('Log Likelihood');
+        axis('square');
+        if (multistartStruct.reconLogLikelihoods(ii) > -stimNegLogLikely)
+            if (multistartStruct.reconLogLikelihoods(ii) > multistartStruct.initLogLikelihoods(ii))
+                title({'Init/Recon/Stim Log Likelihoods' ; 'Recon BETTER than Stim' ; 'Recon BETTER than Init'});
+            else
+                title({'Init/Recon/Stim Log Likelihoods' ; 'Recon BETTER than Stim' ; 'Recon WORSE than Init'});
+            end
+        else
+            if (multistartStruct.reconLogLikelihoods(ii) > multistartStruct.initLogLikelihoods(ii))
+                title({'Init/Recon/Stim Log Likelihoods' ; 'Recon WORSE than Stim' ; 'Recon BETTER than Init'});
+            else
+                title({'Init/Recon/Stim Log Likelihoods' ; 'Recon WORSE than Stim' ; 'Recon WORSE than Init'});
+            end
+        end
+        drawnow;
+        saveas(gcf,fullfile(cnv.outputDirFull,sprintf('LikelihoodSummary.tiff',ii)),'tiff');
+        close(tempFig);
+        figure(theFig);
+    end
 
     % Loss value (negative, so plus is good)
     subplot(3,7,20);
@@ -833,8 +970,6 @@ for ii = 1:length(multistartStruct.initTypes)
     set(gca,'XTickLabel',sprintf('Recon %d',ii))
     ylabel('Neg Loss');
     axis('square');
-
-    % The loss figure title gives a useful summary
     if (multistartStruct.reconLosses(ii) < stimLoss)
         if (multistartStruct.reconLosses(ii) < multistartStruct.initLosses(ii))
             title({'Init/Recon/Stim Neg Losses' ; 'Recon BETTER than Stim' ; 'Recon BETTER than Init'});
@@ -847,6 +982,34 @@ for ii = 1:length(multistartStruct.initTypes)
         else
             title({'Init/Recon/Stim Neg Losses' ; 'Recon WORSE than Stim' ; 'Recon WORSE than Init'});
         end
+    end
+    drawnow;
+    if (ii == reconIndex)
+        tempFig = figure; clf; hold on;
+        bar([1]', ...
+            [-multistartStruct.initLosses(ii)  ; ...
+            -multistartStruct.reconLosses(ii) ; ...
+            -stimLoss]');
+        set(gca,'XTickLabel',sprintf('Recon %d',ii))
+        ylabel('Neg Loss');
+        axis('square');
+        if (multistartStruct.reconLosses(ii) < stimLoss)
+            if (multistartStruct.reconLosses(ii) < multistartStruct.initLosses(ii))
+                title({'Init/Recon/Stim Neg Losses' ; 'Recon BETTER than Stim' ; 'Recon BETTER than Init'});
+            else
+                title({'Init/Recon/Stim Neg Losses' ; 'Recon BETTER than Stim' ; 'Recon WORSE than Init'});
+            end
+        else
+            if (multistartStruct.reconLosses(ii) < multistartStruct.initLosses(ii))
+                title({'Init/Recon/Stim Neg Losses' ; 'Recon WORSE than Stim' ; 'Recon BETTER than Init'});
+            else
+                title({'Init/Recon/Stim Neg Losses' ; 'Recon WORSE than Stim' ; 'Recon WORSE than Init'});
+            end
+        end
+        drawnow;
+        saveas(gcf,fullfile(cnv.outputDirFull,sprintf('LossSummary.tiff',ii)),'tiff');
+        close(tempFig);
+        figure(theFig);
     end
 
     % Save
@@ -863,7 +1026,7 @@ imwrite(reconScaledRGB{reconIndex},fullfile(cnv.outputDirFull,'Recon.tiff'),'tif
 
 %% Save workspace without really big variables
 close all;
-clear forwardRenderMatrix reconRenderMatrixPupilScaled reconSceneTemp stimForwardOI stimReconOI stimReconOI reconReconOI psfDataStruct reconForwardOI forwardOIRGB
+clear forwardRenderMatrix reconRenderMatrixPupilScaled reconSceneTemp forwardOI stimForwardOI stimReconOI stimReconOI reconReconOI psfDataStruct reconForwardOI forwardOIRGB
 clear estimator
 clear reconScaledRGB stimulusRGBScaled reconOI psfTemp psfPolyTemp
 clear reconImageLinearTemp psfSupportTemp initImageLinearTemp
