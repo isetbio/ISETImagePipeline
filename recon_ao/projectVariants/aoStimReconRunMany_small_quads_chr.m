@@ -68,7 +68,7 @@ for ii = 1:length(displayFactorListRaw)
 end
 
 %% Stimulus size
-prBase.stimSizeDegsList = 5.5/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60; % [5 4 3 2.5 1.5] / 60; % [7.5 5.5 4.5 3.5 2 ]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
+prBase.stimSizeDegsList = [10 7.5 5.5 4.5 3.5 2 1] / 60; %5.5 r% [5 4 3 2.5 1.5] / 60; % [7.5 5.5 4.5 3.5 2 ]/60; %[10 7.5 5.5 4.5 3.5 2 1] / 60;
 
 % When we construct mosaics, add this much to the size of the stimulus
 % area that we control, to account for effect of forward optical blur
@@ -83,7 +83,8 @@ prBase.forwardOpticalBlurStimSizeExpansionDegs = 1/60;
 %% Mosaic information
 %
 % Mosaics are built to be matched to the stimulus size, generally.  Because
-% building the render matrix is very slow, we may want to dissociate this a
+% building the render matrix is very slow, we may want to dissociate this
+% affffffffff
 % little at some point.  This parameter causes the stim size used for the
 % mosaic to be the first one in the stimulus size list, which is still a
 % bit inflexible but meets th immedidate need.  The setting of the values
@@ -111,7 +112,7 @@ prBase.fixedMosaicStimSizeDegs = 5.5/60;
 % increasing order.
 prBase.focalRegionList = ["center"];
 prBase.focalVariantList = [1];
-prBase.focalPropLList = [0.3 0.4 0.5 0.6 0.67 0.7]; [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0]; %[0.3 0.4 0.5 0.6 0.67 0.7]; % ;
+prBase.focalPropLList = [0.3 0.4 0.5 0.6 0.67 0.7]; %0.67 [0.0 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 1.0]; %[0.3 0.4 0.5 0.6 0.67 0.7]; % ;
 
 % Additional region variant params
 %
@@ -173,7 +174,7 @@ prBase.stimSeriesVariant = 1;
 % having one set to true at a time (reconstruct, renderMatrices, or mosaic
 % montages)
 buildRenderMatrix = false;
-runReconstructions = true;
+runReconstructions = false;
 summaryFigs = true;
 
 %% This doesn't work anymore so should stay false

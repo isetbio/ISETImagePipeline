@@ -763,7 +763,7 @@ for ii = 1:length(multistartStruct.initTypes)
         xlim([minVal maxVal]); ylim([minVal maxVal]);
         xlabel('Forward excitations to stimulus');
         ylabel('Recon excitations to stimulus');
-        dwawnow;
+        drawnow;
         saveas(gcf,fullfile(cnv.outputDirFull,sprintf('StimReconVsStimForwardExcitations.tiff',ii)),'tiff');
         close(tempFig);
         figure(theFig);
