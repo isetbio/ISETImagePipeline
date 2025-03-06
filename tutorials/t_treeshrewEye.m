@@ -52,7 +52,7 @@ retina.visualizeExcitation();
 % The training set needs to be at least as larger as the number
 % of pixels in the image times the number of color channels.
 minNTrain = prod(imageSize);
-nTrain = 1.3*minNTrain;
+nTrain = round(1.3*minNTrain);
 
 % Allocate space for training set
 allConeVec   = zeros(nTrain, length(coneVec));
